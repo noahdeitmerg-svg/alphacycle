@@ -119,6 +119,94 @@ def _compute_cycle_position(
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# ALPHA CYCLE POSITION SCORE
+# 0 = cycle bottom (maximum opportunity) | 100 = cycle top (maximum risk)
+# Weights: 35% MA-200W | 25% Drawdown from ATH | 20% Fear&Greed | 20% Liquidity
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _compute_alpha_cycle_position(
+    btc_price:       float,
+    ma_200w:         float,
+    ath_price:       float,
+    fear_greed:      float,
+    liquidity_score: float,
+) -> float:
+    """
+    Proper weighted AlphaCycle Position Score.
+    Replaces the bugged 100% output from _compute_cycle_position.
+
+    Returns float 0.0–100.0.
+    0  = deep cycle bottom (extreme opportunity)
+    100 = cycle top (extreme risk)
+    """
+    price = _sf(btc_price,   50000.0)
+    ma    = _sf(ma_200w,     40000.0)
+    ath   = _sf(ath_price,   max(price, 1.0))
+    fg    = _clamp(_sf(fear_greed,      50.0))
+    liq   = _clamp(_sf(liquidity_score, 50.0))
+
+    # Guard: if ath is 0 or less than price, use price as ath
+    if ath <= 0 or ath < price:
+        ath = price
+
+    # ── Component 1: Price vs 200-Week MA (weight: 35%) ──────────────────────
+    # deviation: negative = below MA (bottom zone), positive = above MA (top zone)
+    if ma > 0:
+        deviation = (price - ma) / ma
+    else:
+        deviation = 0.0
+
+    # Normalize deviation → 0–100
+    # -100% below MA → 0 (extreme bottom)
+    #    0% at MA     → 40 (neutral-low)
+    #  +100% above MA → 75
+    #  +300% above MA → 100 (extreme top, like 2021)
+    if deviation <= -1.0:
+        ma_score = 0.0
+    elif deviation < 0.0:
+        ma_score = _clamp(40.0 + deviation * 40.0)
+    elif deviation < 1.0:
+        ma_score = _clamp(40.0 + deviation * 35.0)
+    elif deviation < 3.0:
+        ma_score = _clamp(75.0 + (deviation - 1.0) * 12.5)
+    else:
+        ma_score = 100.0
+
+    # ── Component 2: Drawdown from ATH (weight: 25%) ─────────────────────────
+    # drawdown = 0.0 at ATH, 1.0 = total loss
+    drawdown = _clamp((ath - price) / ath, 0.0, 1.0)
+
+    # High drawdown → LOW score (near bottom)
+    # Low drawdown  → HIGH score (near top)
+    # 0% DD (at ATH) → 100
+    # 30% DD         → ~55
+    # 50% DD         → ~25
+    # 80%+ DD        → ~0
+    drawdown_score = _clamp((1.0 - drawdown) ** 1.5 * 100.0)
+
+    # ── Component 3: Fear & Greed / Sentiment (weight: 20%) ──────────────────
+    # Direct use: 0=Extreme Fear (bottom), 100=Extreme Greed (top)
+    sentiment_score = fg
+
+    # ── Component 4: Liquidity Score (weight: 20%) ────────────────────────────
+    # Direct use: already normalized 0–100
+    # NOTE: macro_score from scoring.py is passed here.
+    # Low macro score = tight liquidity = early cycle = LOW position score
+    # High macro score = easy liquidity = late cycle = HIGH position score
+    liquidity_final = liq
+
+    # ── Weighted Final Score ──────────────────────────────────────────────────
+    score = (
+        ma_score        * 0.35 +
+        drawdown_score  * 0.25 +
+        sentiment_score * 0.20 +
+        liquidity_final * 0.20
+    )
+
+    return round(_clamp(score), 1)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # PART 2 — WALL STREET PSYCHOLOGY MODEL
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -680,6 +768,8 @@ class CycleAnalyzer:
         liquidity_trend:   float,      # macro liquidity score 0-100
         score_history:     list,       # [{"t": ms, "v": score}, ...]
         btc_price_history: list,       # list of float prices
+        ma_200w:           float = 0.0,
+        ath_price:         float = 0.0,
         now:               Optional[datetime] = None,
     ) -> dict:
         """
@@ -702,19 +792,31 @@ class CycleAnalyzer:
                 score_history      or [],
                 btc_price_history  or [],
                 now,
+                ma_200w   = _sf(ma_200w,   0.0),
+                ath_price = _sf(ath_price, 0.0),
             )
         except Exception as e:
             logger.error(f"CycleAnalyzer.analyze failed: {e}", exc_info=True)
             return self._fallback_output(now)
 
     def _run(self, combined, btc, eth, macro, fg, price, dd, liq_trend,
-             history, price_history, now) -> dict:
+             history, price_history, now,
+             ma_200w=0.0, ath_price=0.0) -> dict:
 
         # ── 1. Cycle Position
         cycle_position = _compute_cycle_position(
             combined, btc, fg, dd, macro, history
         )
         phase, phase_desc = _get_cycle_phase(cycle_position)
+
+        # ── 1b. AlphaCycle Position Score (corrected weighted model)
+        alpha_cycle_position = _compute_alpha_cycle_position(
+            btc_price       = price,
+            ma_200w         = ma_200w,
+            ath_price       = ath_price,
+            fear_greed      = fg,
+            liquidity_score = macro,
+        )
 
         # ── 2. Psychology
         psychology_phase, wall_street_phase = _get_psychology(cycle_position)
@@ -765,6 +867,7 @@ class CycleAnalyzer:
             "phase":                   phase,
             "phase_description":       phase_desc,
             "cycle_position_percent":  round(cycle_position, 1),
+            "alpha_cycle_position":    alpha_cycle_position,
 
             # Psychology
             "psychology_phase":        psychology_phase,
@@ -821,6 +924,7 @@ class CycleAnalyzer:
             "phase":                   "Accumulation",
             "phase_description":       "Data loading. Retry in 30 seconds.",
             "cycle_position_percent":  50.0,
+            "alpha_cycle_position":    50.0,
             "psychology_phase":        "Disbelief",
             "wall_street_phase":       "Dead Cat Bounce",
             "seasonality_phase":       seas["seasonality_phase"],
