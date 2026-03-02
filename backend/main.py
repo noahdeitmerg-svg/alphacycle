@@ -425,10 +425,14 @@ async def get_cycle_anchor():
 async def get_backtest():
     """
     Historical AlphaCycle backtest endpoint.
-    Returns BTC price+score history as JSON.
+    Returns BTC price+score history as JSON. On failure returns 200 with results=[] and error message.
     """
-    data = await run_backtest()
-    return api_response(data)
+    try:
+        data = await run_backtest()
+        return api_response(data)
+    except Exception as e:
+        logger.exception("Backtest endpoint failed")
+        return api_response({"results": [], "error": str(e)})
 
 
 @app.get("/api/liquidity-regime")
