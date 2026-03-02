@@ -1,0 +1,6 @@
+cd alphacycle-main
+git init
+git add .
+git commit -m "Alpha Cycle v2.0"
+git remote add origin https://github.com/DEINNAME/alphacycle.git
+git push -u origin main
