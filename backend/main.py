@@ -58,6 +58,11 @@ try:
 except ImportError:
     from backend.cycle_anchor import compute_cycle_anchor
 
+try:
+    from services.backtest_engine import run_backtest
+except ImportError:
+    from backend.services.backtest_engine import run_backtest
+
 # ── LOGGING ──────────────────────────────────────────────────────────────────
 logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
@@ -413,6 +418,16 @@ async def get_fear_greed():
 async def get_cycle_anchor():
     """Cycle Anchor Engine: objective cycle timing from historical Bitcoin structure."""
     data = compute_cycle_anchor()
+    return api_response(data)
+
+
+@app.get("/api/backtest")
+async def get_backtest():
+    """
+    Historical AlphaCycle backtest endpoint.
+    Returns BTC price+score history as JSON.
+    """
+    data = await run_backtest()
     return api_response(data)
 
 
