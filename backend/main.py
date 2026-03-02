@@ -53,6 +53,11 @@ try:
 except ImportError:
     from backend.liquidity_engine import compute_liquidity_regime
 
+try:
+    from cycle_anchor import compute_cycle_anchor
+except ImportError:
+    from backend.cycle_anchor import compute_cycle_anchor
+
 # ── LOGGING ──────────────────────────────────────────────────────────────────
 logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
@@ -402,6 +407,13 @@ async def get_history():
 async def get_fear_greed():
     c = _require_cache()
     return api_response(c["raw"]["fear_greed"])
+
+
+@app.get("/api/cycle-anchor")
+async def get_cycle_anchor():
+    """Cycle Anchor Engine: objective cycle timing from historical Bitcoin structure."""
+    data = compute_cycle_anchor()
+    return api_response(data)
 
 
 @app.get("/api/liquidity-regime")
