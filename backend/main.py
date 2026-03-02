@@ -13,6 +13,7 @@ Endpoints:
   GET /api/fear-greed
   GET /api/analyzer
   GET /api/decision
+  GET /api/cycle-anchor
 """
 import os, time, math, logging, asyncio
 from contextlib import asynccontextmanager
@@ -49,19 +50,9 @@ except ImportError:
     from backend.decision_engine import decision_engine
 
 try:
-    from liquidity_engine import compute_liquidity_regime
-except ImportError:
-    from backend.liquidity_engine import compute_liquidity_regime
-
-try:
     from cycle_anchor import compute_cycle_anchor
 except ImportError:
     from backend.cycle_anchor import compute_cycle_anchor
-
-try:
-    from services.backtest_engine import run_backtest
-except ImportError:
-    from backend.services.backtest_engine import run_backtest
 
 # ── LOGGING ──────────────────────────────────────────────────────────────────
 logging.basicConfig(level=logging.INFO,
@@ -394,8 +385,10 @@ async def get_history():
     hist    = c.get("score_history", {"btc": [], "eth": [], "macro": [], "combined": []})
     tvl_raw = c["raw"].get("tvl_series", [])
     fg_hist = c["raw"]["fear_greed"]["history"][-90:]
+    stable_raw = c["raw"].get("stable_series", [])
 
     tvl_hist = [{"t": i["t"], "v": safe_float(i["v"]) / 1e9} for i in tvl_raw[-365:]]
+    stable_hist = [{"t": i["t"], "v": safe_float(i["v"])} for i in stable_raw[-365:]]
 
     return api_response({
         "scores":   hist,
@@ -405,6 +398,7 @@ async def get_history():
         "eth_full": _prices_to_series(c["raw"]["eth_prices"], 730),
         "walcl":    [{"t": i["t"], "v": safe_float(i["v"]) / 1e6}
                      for i in c["raw"].get("walcl_series", [])[-260:]],
+        "stable":   stable_hist,
     })
 
 
@@ -421,47 +415,6 @@ async def get_cycle_anchor():
     return api_response(data)
 
 
-@app.get("/api/backtest")
-async def get_backtest():
-    """
-    Historical AlphaCycle backtest endpoint.
-    Returns BTC price+score history as JSON. On failure returns 200 with results=[] and error message.
-    """
-    try:
-        data = await run_backtest()
-        return api_response(data)
-    except Exception as e:
-        logger.exception("Backtest endpoint failed")
-        return api_response({"results": [], "error": str(e)})
-
-
-@app.get("/api/liquidity-regime")
-async def get_liquidity_regime():
-    """
-    Global Liquidity Regime Engine™ endpoint.
-    Uses WALCL, stablecoins, BTC and macro proxies from cache.
-    """
-    c = _require_cache()
-    raw = c["raw"]
-
-    walcl_series = raw.get("walcl_series", [])
-    stable_series = raw.get("stable_series", [])
-    btc_prices = raw.get("btc_prices", [])
-    eth_prices = raw.get("eth_prices", [])
-    us10y_series = raw.get("us10y_series", [])
-    dxy_series = raw.get("dxy_series", [])
-
-    data = compute_liquidity_regime(
-        walcl_series=walcl_series,
-        stablecoin_series=stable_series,
-        btc_prices=btc_prices,
-        eth_prices=eth_prices,
-        us10y_series=us10y_series,
-        dxy_series=dxy_series,
-    )
-    return api_response(data)
-
-
 @app.get("/api/analyzer")
 async def get_analyzer():
     from datetime import datetime
@@ -470,15 +423,12 @@ async def get_analyzer():
 
     bm           = raw.get("btc_market", {})
     btc_price    = safe_float(bm.get("price", 0))
-    ath_price    = safe_float(bm.get("ath", 0))
     btc_drawdown = safe_float(bm.get("ath_change_pct", -30.0))
     if btc_drawdown == 0.0 and raw.get("btc_prices"):
         prices       = raw["btc_prices"]
         peak         = max(prices) if prices else btc_price
         btc_drawdown = ((btc_price - peak) / peak * 100) if peak > 0 else -30.0
 
-    # ma_200w from btc_scores component (already computed in scoring.py)
-    ma_200w       = safe_float(c["btc_scores"].get("ma_200w_raw", 0.0))
     score_history = c.get("score_history", {}).get("combined", [])
 
     result = cycle_analyzer.analyze(
@@ -492,8 +442,6 @@ async def get_analyzer():
         liquidity_trend   = c["macro_scores"].get("walcl_trend",      50.0),
         score_history     = score_history,
         btc_price_history = raw.get("btc_prices", []),
-        ma_200w           = ma_200w,
-        ath_price         = ath_price,
         now               = datetime.utcnow(),
     )
     return api_response(result)
@@ -529,15 +477,12 @@ async def get_decision():
         liquidity_trend   = c["macro_scores"].get("walcl_trend",      50.0),
         score_history     = score_history,
         btc_price_history = raw.get("btc_prices", []),
-        ma_200w           = safe_float(c["btc_scores"].get("ma_200w_raw", 0.0)),
-        ath_price         = safe_float(raw.get("btc_market", {}).get("ath", 0.0)),
         now               = datetime.utcnow(),
     )
 
     result = decision_engine.decide(
         phase               = analysis.get("phase",                 "Accumulation"),
-        cycle_position      = analysis.get("alpha_cycle_position",
-                              analysis.get("cycle_position_percent", 50.0)),
+        cycle_position      = analysis.get("cycle_position_percent", 50.0),
         combined_score      = c["combined"].get("combined_score",    50.0),
         btc_score           = c["btc_scores"].get("btc_score",       50.0),
         eth_score           = c["eth_scores"].get("eth_score",       50.0),
