@@ -25,6 +25,11 @@ import logging
 from datetime import datetime
 from typing import Optional
 
+try:
+    from liquidity_engine import compute_liquidity_regime
+except ImportError:  # pragma: no cover - fallback when used as backend.module
+    from backend.liquidity_engine import compute_liquidity_regime
+
 logger = logging.getLogger(__name__)
 
 
@@ -224,40 +229,6 @@ def _leverage_recommendation(
     if pos >= 65:
         return "AVOID LEVERAGE"
     return "NO LEVERAGE"
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# 5. LIQUIDITY REGIME ENGINE
-# ─────────────────────────────────────────────────────────────────────────────
-
-def _liquidity_regime(
-    walcl_series:   list,
-    stable_series:  list,
-    macro_score:    float,
-) -> str:
-    """
-    EXPANDING  — Fed balance sheet growing + stablecoin supply growing
-    CONTRACTING — Both tightening
-    NEUTRAL    — Mixed signals
-    """
-    walcl_v  = [_sf(i.get("v", 0) if isinstance(i, dict) else i) for i in walcl_series  if i]
-    stable_v = [_sf(i.get("v", 0) if isinstance(i, dict) else i) for i in stable_series if i]
-
-    walcl_trend  = _trend(walcl_v,  window=26)
-    stable_trend = _trend(stable_v, window=90)
-    mac          = _clamp(_sf(macro_score, 50.0))
-
-    # Composite liquidity signal
-    liq_score = (
-        walcl_trend  * 0.40 +
-        stable_trend * 0.35 +
-        (100.0 - mac)* 0.25    # low macro score = loose = expanding
-    )
-    liq_score = _clamp(liq_score)
-
-    if liq_score >= 58:   return "EXPANDING"
-    elif liq_score <= 42: return "CONTRACTING"
-    else:                 return "NEUTRAL"
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -719,7 +690,15 @@ class DecisionEngine:
         alpha_pos = _alpha_cycle_position(cycle_position)
 
         # ── 5. Liquidity Regime (needed early for downstream)
-        liq_regime = _liquidity_regime(walcl_series, stable_series, macro_score)
+        liq_data = compute_liquidity_regime(
+            walcl_series=walcl_series,
+            stablecoin_series=stable_series,
+            btc_prices=[],
+            eth_prices=[],
+            us10y_series=[],
+            dxy_series=[],
+        )
+        liq_regime = liq_data.get("liquidity_regime", "NEUTRAL")
 
         # ── 8. Drawdown Risk
         dr_risk = _drawdown_risk(alpha_pos, top_prob, liq_regime, macro_score, fear_greed)
