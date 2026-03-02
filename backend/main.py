@@ -48,6 +48,11 @@ try:
 except ImportError:
     from backend.decision_engine import decision_engine
 
+try:
+    from liquidity_engine import compute_liquidity_regime
+except ImportError:
+    from backend.liquidity_engine import compute_liquidity_regime
+
 # ── LOGGING ──────────────────────────────────────────────────────────────────
 logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
@@ -397,6 +402,33 @@ async def get_history():
 async def get_fear_greed():
     c = _require_cache()
     return api_response(c["raw"]["fear_greed"])
+
+
+@app.get("/api/liquidity-regime")
+async def get_liquidity_regime():
+    """
+    Global Liquidity Regime Engine™ endpoint.
+    Uses WALCL, stablecoins, BTC and macro proxies from cache.
+    """
+    c = _require_cache()
+    raw = c["raw"]
+
+    walcl_series = raw.get("walcl_series", [])
+    stable_series = raw.get("stable_series", [])
+    btc_prices = raw.get("btc_prices", [])
+    eth_prices = raw.get("eth_prices", [])
+    us10y_series = raw.get("us10y_series", [])
+    dxy_series = raw.get("dxy_series", [])
+
+    data = compute_liquidity_regime(
+        walcl_series=walcl_series,
+        stablecoin_series=stable_series,
+        btc_prices=btc_prices,
+        eth_prices=eth_prices,
+        us10y_series=us10y_series,
+        dxy_series=dxy_series,
+    )
+    return api_response(data)
 
 
 @app.get("/api/analyzer")
