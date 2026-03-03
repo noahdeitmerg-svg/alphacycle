@@ -1226,13 +1226,14 @@ canvas.sparkline {
       <div style="display:grid;
         grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:0.75rem">
         <div style="background:var(--surface2);border-radius:10px;padding:0.9rem">
-          <div style="font-size:0.6rem;color:var(--muted);
+          <div id="ca-days-label" style="font-size:0.6rem;color:var(--muted);
             letter-spacing:0.08em;margin-bottom:0.4rem">DAYS TO TOP</div>
-          <div id="ca-days-top" style="font-size:1.3rem;font-weight:700;
+          <div id="ca-days-value" style="font-size:1.3rem;font-weight:700;
             font-family:var(--font-mono)">—</div>
+          <span id="ca-extended-note" style="display:none;font-size:0.75rem;color:var(--accent-warn);margin-top:0.25rem">Cycle extended beyond historical average</span>
         </div>
         <div style="background:var(--surface2);border-radius:10px;padding:0.9rem">
-          <div style="font-size:0.6rem;color:var(--muted);
+          <div id="ca-top-label" style="font-size:0.6rem;color:var(--muted);
             letter-spacing:0.08em;margin-bottom:0.4rem">EXPECTED TOP</div>
           <div id="ca-top-date" style="font-size:1rem;font-weight:700;
             font-family:var(--font-mono)">—</div>
@@ -1874,7 +1875,9 @@ async function loadAllData() {
           if (!el) return;
 
           const position = data?.cycle_position_percent ?? 0;
-          const daysToTop = data?.days_to_next_cycle_top ?? '—';
+          const rawDaysToTop = data?.days_to_next_cycle_top;
+          const daysToTop = typeof rawDaysToTop === 'number' ? rawDaysToTop : 0;
+          const isPastTop = daysToTop < 0;
           const topDate = data?.expected_cycle_top_date ?? '—';
           const halvingPct = data?.halving_cycle_position_percent ?? 0;
           const confidence = data?.cycle_time_confidence ?? 0;
@@ -1885,9 +1888,31 @@ async function loadAllData() {
           const bar = document.getElementById('ca-progress-bar');
           if (bar) bar.style.width = `${Math.min(100, Math.round(position))}%`;
 
-          const daysEl = document.getElementById('ca-days-top');
-          if (daysEl) daysEl.textContent =
-            typeof daysToTop === 'number' ? `${daysToTop}d` : daysToTop;
+          const daysLabelEl = document.getElementById('ca-days-label');
+          if (daysLabelEl) {
+            daysLabelEl.textContent = isPastTop ? 'DAYS PAST EST. TOP' : 'DAYS TO TOP';
+          }
+
+          const daysValEl = document.getElementById('ca-days-value');
+          if (daysValEl) {
+            const v = Math.abs(daysToTop);
+            daysValEl.textContent = Number.isFinite(v) ? `${v}d` : '—';
+          }
+
+          const noteEl = document.getElementById('ca-extended-note');
+          if (noteEl) {
+            if (isPastTop) {
+              noteEl.style.display = 'block';
+              noteEl.textContent = 'Cycle extended beyond historical average';
+            } else {
+              noteEl.style.display = 'none';
+            }
+          }
+
+          const topLabelEl = document.getElementById('ca-top-label');
+          if (topLabelEl) {
+            topLabelEl.textContent = isPastTop ? 'EST. TOP WINDOW' : 'EXPECTED TOP';
+          }
 
           const dateEl = document.getElementById('ca-top-date');
           if (dateEl) dateEl.textContent = topDate.slice(0, 7);
