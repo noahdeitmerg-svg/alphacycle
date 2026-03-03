@@ -357,11 +357,60 @@ body::before {
 ════════════════════════════════════════════════════════════════ */
 .scores-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(2, 1fr);
   gap: 12px;
   margin-bottom: 14px;
 }
-@media(min-width:600px){ .scores-grid { grid-template-columns: repeat(3,1fr); } }
+@media(min-width:600px){ .scores-grid { grid-template-columns: repeat(2,1fr); } }
+
+#btc-card.hero-card {
+  max-width: 640px;
+  margin: 0 auto 2rem auto;
+  padding: 2rem 2.5rem;
+}
+#btc-card.hero-card .gauge-wrap svg {
+  width: 260px;
+  height: 170px;
+}
+#btc-card.hero-card .gauge-val {
+  font-size: clamp(3rem, 6vw, 4.5rem);
+}
+.hero-subtitle {
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  color: var(--tx-sec);
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.decision-card { padding: 1.5rem 2rem; }
+.decision-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 1rem;
+}
+@media(min-width:600px) { .decision-grid { grid-template-columns: repeat(4,1fr); } }
+.decision-item { display: flex; flex-direction: column; gap: 0.35rem; }
+.decision-label { font-size: 0.65rem; letter-spacing: 0.1em; color: var(--tx-sec); text-transform: uppercase; }
+.decision-value { font-size: 1.3rem; font-weight: 700; color: var(--tx-pri); }
+.decision-note { font-size: 0.7rem; color: var(--tx-sec); border-top: 1px solid var(--border); padding-top: 0.75rem; }
+
+.short-term-card { padding: 1.25rem 1.5rem; background: rgba(255,255,255,0.015); }
+.short-term-warning {
+  font-size: 0.65rem; letter-spacing: 0.08em; color: var(--yellow);
+  text-transform: uppercase; margin-bottom: 1rem;
+  padding: 0.4rem 0.75rem;
+  background: rgba(245,158,11,0.06);
+  border: 1px solid rgba(245,158,11,0.2);
+  border-radius: 4px;
+}
+.sec-tag {
+  font-size: 0.6rem; color: var(--tx-sec);
+  border: 1px solid var(--border);
+  border-radius: 3px; padding: 1px 5px;
+  margin-left: 0.5rem; vertical-align: middle;
+}
 
 .score-card {
   padding: 20px 18px 16px;
@@ -875,6 +924,19 @@ canvas.sparkline {
 
 /* Hover glow on score cards */
 .score-card:hover { box-shadow: 0 8px 40px rgba(0,0,0,0.4); }
+
+/* Skeleton loading */
+.skeleton {
+  background: linear-gradient(90deg, var(--ink2) 25%, var(--ink3, #1e293b) 50%, var(--ink2) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+  color: transparent !important;
+}
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
 </style>
 </head>
 <body>
@@ -903,6 +965,7 @@ canvas.sparkline {
   </a>
   <div class="nav-right">
     <div class="nav-time" id="nav-clock"></div>
+    <span class="nav-loading" id="nav-loading" style="display:none;margin-right:8px;font-size:11px;color:var(--tx-sec);">Loading…</span>
     <div class="nav-pill live"><div class="live-dot"></div>LIVE</div>
     <button class="refresh-btn" id="refresh-btn" onclick="manualRefresh()">
       <span class="r-icon">⟳</span><span>REFRESH</span>
@@ -947,71 +1010,133 @@ canvas.sparkline {
 <!-- MAIN -->
 <main class="container">
 
-  <!-- ── SECTION: CYCLE SCORES ── -->
-  <div class="sec-header anim d1">
-    <div class="sec-title">Cycle Scores</div>
+  <!-- SECTION: HERO AlphaCycle Index -->
+  <div class="card score-card card-glow-btc hero-card anim d1" id="btc-card">
+    <div class="card-accent accent-btc"></div>
+    <div class="score-card-header">
+      <div class="score-label">
+        <div class="score-label-dot" style="background:var(--btc)"></div>
+        AlphaCycle Index
+        <div class="hero-subtitle">Proprietary Cycle Risk Index (0–100)</div>
+      </div>
+      <div class="score-tag" id="btc-tag" style="color:var(--btc);border-color:rgba(14,165,233,0.3);background:var(--btc-dim)">—</div>
+    </div>
+    <div class="gauge-wrap">
+      <svg viewBox="0 0 200 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="btc-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%"   stop-color="#22c55e"/>
+            <stop offset="35%"  stop-color="#3b82f6"/>
+            <stop offset="70%"  stop-color="#f59e0b"/>
+            <stop offset="100%" stop-color="#ef4444"/>
+          </linearGradient>
+          <filter id="glow-btc">
+            <feGaussianBlur stdDeviation="2.5" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <path d="M 20 120 A 80 80 0 0 1 180 120" stroke="rgba(255,255,255,0.05)" stroke-width="14" stroke-linecap="round"/>
+        <path d="M 20 120 A 80 80 0 0 1 180 120" stroke="url(#btc-grad)" stroke-width="14" stroke-linecap="round" opacity="0.12"/>
+        <path id="btc-arc" d="M 20 120 A 80 80 0 0 1 180 120" stroke="url(#btc-grad)"
+              stroke-width="14" stroke-linecap="round"
+              stroke-dasharray="251.2" stroke-dashoffset="251.2"
+              filter="url(#glow-btc)"
+              style="transition:stroke-dashoffset 1.4s cubic-bezier(0.16,1,0.3,1)"/>
+        <circle id="btc-dot" cx="100" cy="40" r="5" fill="var(--btc)" opacity="0"
+                style="transition:all 1.4s cubic-bezier(0.16,1,0.3,1)"/>
+      </svg>
+      <div class="gauge-center">
+        <div class="gauge-val" id="btc-score-val" style="color:var(--btc)">—</div>
+        <div class="gauge-denom">/100</div>
+      </div>
+    </div>
+    <div class="score-footer">
+      <div class="score-phase" id="btc-phase" style="color:var(--btc)">—</div>
+      <div class="score-price" id="btc-price-sm">—</div>
+    </div>
+    <div class="components-grid" id="btc-components"></div>
+  </div>
+
+  <!-- DECISION ENGINE -->
+  <div class="sec-header anim d2">
+    <div class="sec-title">Decision Engine</div>
+    <div class="sec-line"></div>
+  </div>
+  <div class="card decision-card anim d2" id="decision-card">
+    <div class="card-accent accent-btc"></div>
+    <div class="decision-grid">
+      <div class="decision-item">
+        <div class="decision-label">Suggested Position</div>
+        <div class="decision-value" id="dec-position">—</div>
+      </div>
+      <div class="decision-item">
+        <div class="decision-label">Spot Allocation</div>
+        <div class="decision-value" id="dec-allocation">—</div>
+      </div>
+      <div class="decision-item">
+        <div class="decision-label">12M Expected Range</div>
+        <div class="decision-value" id="dec-range">—</div>
+      </div>
+      <div class="decision-item">
+        <div class="decision-label">Confidence</div>
+        <div class="decision-value" id="dec-confidence">—</div>
+      </div>
+    </div>
+    <div class="decision-note">Based on AlphaCycle Index: <span id="dec-index-val">—</span></div>
+  </div>
+
+  <!-- SHORT TERM ENGINE -->
+  <div class="sec-header anim d2">
+    <div class="sec-title">Short Term Tactical Layer <span class="sec-tag">30–90d</span></div>
+    <div class="sec-line"></div>
+  </div>
+  <div class="card short-term-card anim d2" id="short-term-card">
+    <div class="short-term-warning">
+      &#9889; Tactical layer only — does not override AlphaCycle Index
+    </div>
+    <div class="components-grid" id="short-term-components"></div>
+  </div>
+
+  <!-- CYCLE ANCHOR -->
+  <div class="sec-header anim d2">
+    <div class="sec-title">Cycle Anchor</div>
+    <div class="sec-line"></div>
+  </div>
+  <div class="card cycle-anchor-card anim d2" id="cycle-anchor-card">
+    <div class="decision-grid">
+      <div class="decision-item">
+        <div class="decision-label">Days Since Bottom</div>
+        <div class="decision-value" id="ca-days-since">—</div>
+      </div>
+      <div class="decision-item">
+        <div class="decision-label">Halving Position</div>
+        <div class="decision-value" id="ca-halving-pos">—</div>
+      </div>
+      <div class="decision-item">
+        <div class="decision-label">Est. Cycle Window</div>
+        <div class="decision-value" id="ca-window">—</div>
+      </div>
+      <div class="decision-item">
+        <div class="decision-label">Time Confidence</div>
+        <div class="decision-value" id="ca-confidence">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION: Sub-Analysis -->
+  <div class="sec-header anim d2">
+    <div class="sec-title">Sub-Analysis</div>
     <div class="sec-line"></div>
     <div class="sec-badge" id="last-updated">LOADING…</div>
   </div>
 
   <div class="scores-grid anim d2">
-    <!-- BTC Score Card -->
-    <div class="card score-card card-glow-btc" id="btc-card">
-      <div class="card-accent accent-btc"></div>
-      <div class="score-card-header">
-        <div class="score-label">
-          <div class="score-label-dot" style="background:var(--btc)"></div>
-          Bitcoin Cycle
-        </div>
-        <div class="score-tag" id="btc-tag" style="color:var(--btc);border-color:rgba(14,165,233,0.3);background:var(--btc-dim)">—</div>
-      </div>
-      <div class="gauge-wrap">
-        <svg viewBox="0 0 200 130" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="btc-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%"   stop-color="#22c55e"/>
-              <stop offset="35%"  stop-color="#3b82f6"/>
-              <stop offset="70%"  stop-color="#f59e0b"/>
-              <stop offset="100%" stop-color="#ef4444"/>
-            </linearGradient>
-            <filter id="glow-btc">
-              <feGaussianBlur stdDeviation="2.5" result="blur"/>
-              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-            </filter>
-          </defs>
-          <!-- Track -->
-          <path d="M 20 120 A 80 80 0 0 1 180 120" stroke="rgba(255,255,255,0.05)" stroke-width="14" stroke-linecap="round"/>
-          <!-- Zone markers -->
-          <path d="M 20 120 A 80 80 0 0 1 180 120" stroke="url(#btc-grad)" stroke-width="14" stroke-linecap="round" opacity="0.12"/>
-          <!-- Active arc -->
-          <path id="btc-arc" d="M 20 120 A 80 80 0 0 1 180 120" stroke="url(#btc-grad)"
-                stroke-width="14" stroke-linecap="round"
-                stroke-dasharray="251.2" stroke-dashoffset="251.2"
-                filter="url(#glow-btc)"
-                style="transition:stroke-dashoffset 1.4s cubic-bezier(0.16,1,0.3,1)"/>
-          <!-- Needle dot -->
-          <circle id="btc-dot" cx="100" cy="40" r="5" fill="var(--btc)" opacity="0"
-                  style="transition:all 1.4s cubic-bezier(0.16,1,0.3,1)"/>
-        </svg>
-        <div class="gauge-center">
-          <div class="gauge-val" id="btc-score-val" style="color:var(--btc)">—</div>
-          <div class="gauge-denom">/100</div>
-        </div>
-      </div>
-      <div class="score-footer">
-        <div class="score-phase" id="btc-phase" style="color:var(--btc)">—</div>
-        <div class="score-price" id="btc-price-sm">—</div>
-      </div>
-      <div class="components-grid" id="btc-components"></div>
-    </div>
-
-    <!-- ETH Score Card -->
     <div class="card score-card card-glow-eth" id="eth-card">
       <div class="card-accent accent-eth"></div>
       <div class="score-card-header">
         <div class="score-label">
           <div class="score-label-dot" style="background:var(--eth)"></div>
-          Ethereum Cycle
+          ETH Relative Strength
         </div>
         <div class="score-tag" id="eth-tag" style="color:var(--eth);border-color:rgba(143,165,255,0.3);background:var(--eth-dim)">—</div>
       </div>
@@ -1055,7 +1180,7 @@ canvas.sparkline {
       <div class="score-card-header">
         <div class="score-label">
           <div class="score-label-dot" style="background:var(--mac)"></div>
-          Macro Liquidity
+          Liquidity Regime
         </div>
         <div class="score-tag" id="mac-tag" style="color:var(--mac);border-color:rgba(0,229,170,0.3);background:var(--mac-dim)">—</div>
       </div>
@@ -1094,19 +1219,18 @@ canvas.sparkline {
     </div>
   </div>
 
-  <!-- ── PHASE BANNER ── -->
   <div id="phase-banner" class="phase-banner anim d3">
     <div class="card-accent accent-combined"></div>
     <div class="phase-inner">
       <div class="phase-icon-wrap" id="phase-icon">⏳</div>
       <div class="phase-meta">
-        <div class="phase-eyebrow">Current Market Cycle Phase</div>
+        <div class="phase-eyebrow" id="phase-eyebrow">Market Cycle Phase</div>
         <div class="phase-name" id="phase-name">Loading…</div>
         <div class="phase-desc" id="phase-desc">Fetching real-time data from 4 sources…</div>
       </div>
       <div class="phase-score-widget">
         <div class="phase-score-num" id="phase-combined">—</div>
-        <div class="phase-score-lbl">Combined</div>
+        <div class="phase-score-lbl" id="phase-score-lbl">AlphaCycle Index</div>
       </div>
     </div>
   </div>
@@ -1260,6 +1384,9 @@ const S = {
   alphaCyclePosition: null,
   analyzerPhase:       null,
   analyzerSignal:      null,
+  btcShortTerm:        null,
+  cycleAnchor:         null,
+  ethComponents:       null,
   fgCurrent:    50,
   fgLabel:      'Neutral',
   tvlCurrent:   0,
@@ -1526,13 +1653,14 @@ async function loadAllData() {
   // If backend is configured, use it — much faster (single request)
   if (BACKEND_URL) {
     try {
-      const [prices, btcC, ethC, macC, hist, analyzer] = await Promise.all([
+      const [prices, btcC, ethC, macC, hist, analyzer, anchor] = await Promise.all([
         apiFetch(`${BACKEND_URL}/api/prices`),
         apiFetch(`${BACKEND_URL}/api/cycle/btc`),
         apiFetch(`${BACKEND_URL}/api/cycle/eth`),
         apiFetch(`${BACKEND_URL}/api/cycle/macro`),
         apiFetch(`${BACKEND_URL}/api/history`),
         apiFetch(`${BACKEND_URL}/api/analyzer`),
+        apiFetch(`${BACKEND_URL}/api/cycle-anchor`),
       ]);
 
       if(prices) {
@@ -1557,6 +1685,7 @@ async function loadAllData() {
       // Use backend scores directly
       S.btcScore = safeNum(btcC?.score, computeBTCScore());
       S.btcComponents = btcC?.components || null;
+      S.btcShortTerm = btcC?.short_term || null;
       S.ethScore = safeNum(ethC?.score, computeETHScore());
       S.ethComponents = ethC?.components || null;
       S.macScore = safeNum(macC?.score, computeMacroScore());
@@ -1572,6 +1701,8 @@ async function loadAllData() {
         S.analyzerPhase       = null;
         S.analyzerSignal      = null;
       }
+
+      S.cycleAnchor = anchor || null;
 
       if(macC?.data) {
         S.walclCurrent  = safeNum(macC.data.walcl_current_T)*1e12;
@@ -1690,12 +1821,12 @@ function updatePhaseBanner() {
   $('phase-icon').textContent    = phaseIcon(phase);
   $('phase-name').textContent    = phase;
   $('phase-desc').textContent    = S.analyzerSignal ? `${S.analyzerSignal} — ${phaseDesc(phase)}` : phaseDesc(phase);
-  $('phase-combined').textContent = Math.round(positionScore);
+  $('phase-combined').textContent = Math.round(S.btcScore);
   $('phase-combined').style.color = col;
   const eyebrow = $('phase-eyebrow');
-  if(eyebrow) eyebrow.textContent = S.alphaCyclePosition != null ? 'Alpha Cycle Position™' : 'Current Market Cycle Phase';
+  if(eyebrow) eyebrow.textContent = 'Market Cycle Phase';
   const lbl = $('phase-score-lbl');
-  if(lbl) lbl.textContent = S.alphaCyclePosition != null ? 'Position' : 'Combined';
+  if(lbl) lbl.textContent = 'AlphaCycle Index';
 }
 
 // ── TICKER & SCORES UPDATE ──────────────────────────────────────────────────
@@ -1747,9 +1878,7 @@ function updateUI() {
       {label:'200W MA Dev',  score: ma200Score(S.btcPrices)},
       {label:'Drawdown',     score: drawdownScore(S.btcPrices)},
       {label:'Fear & Greed', score: clamp(S.fgCurrent)},
-      {label:'RSI',          score: rsiToScore(computeRSI(btcWeekly,14))},
-      {label:'Macro Liq',    score: S.walclHistory.length>2
-        ? clamp(100-trendScore(S.walclHistory.map(x=>x.v),26)) : 50},
+      {label:'Liquidity',    score: 50},
     ]);
   }
   renderComponents('eth-components', [
@@ -1765,6 +1894,63 @@ function updateUI() {
   ]);
 
   updatePhaseBanner();
+
+  // Decision Engine — derived from AlphaCycle Index (btcScore)
+  (function renderDecision() {
+    const score = S.btcScore;
+    let position, allocation, range, confidence;
+    if (score < 25) {
+      position = 'ACCUMULATE'; allocation = '80–100%';
+      range = '+150% – +400%'; confidence = 'High';
+    } else if (score < 45) {
+      position = 'BUY / HOLD'; allocation = '60–80%';
+      range = '+50% – +150%'; confidence = 'Moderate-High';
+    } else if (score < 60) {
+      position = 'HOLD'; allocation = '40–60%';
+      range = '+10% – +50%'; confidence = 'Moderate';
+    } else if (score < 75) {
+      position = 'REDUCE'; allocation = '20–40%';
+      range = '-10% – +20%'; confidence = 'Low-Moderate';
+    } else {
+      position = 'DEFENSIVE'; allocation = '0–20%';
+      range = '-30% – 0%'; confidence = 'Low';
+    }
+    const col = scoreColor(score);
+    setText('dec-position',   position, col);
+    setText('dec-allocation', allocation);
+    setText('dec-range',      range);
+    setText('dec-confidence', confidence);
+    setText('dec-index-val',  Math.round(score), col);
+  })();
+
+  // Short Term Engine — from btcC short_term data
+  (function renderShortTerm() {
+    const st = S.btcShortTerm || {};
+    renderComponents('short-term-components', [
+      {label:'RSI',       score: st.rsi       ?? 50},
+      {label:'Funding',   score: st.funding   ?? 50},
+      {label:'Power Law', score: st.power_law ?? 50},
+      {label:'MVRV',      score: st.mvrv      ?? 50},
+    ]);
+  })();
+
+  // Cycle Anchor — from /api/cycle-anchor if available, else skip
+  (function renderCycleAnchor() {
+    if (!S.cycleAnchor) return;
+    const ca = S.cycleAnchor;
+    const days = ca.days_since_bottom ?? ca.days_since_last_bottom;
+    if (days != null) setText('ca-days-since', days + 'd');
+    const halvPos = ca.halving_cycle_position_percent;
+    if (halvPos != null) setText('ca-halving-pos', Math.round(halvPos) + '%');
+    const daysToTop = ca.days_to_next_cycle_top;
+    if (daysToTop != null) {
+      setText('ca-window', daysToTop < 0
+        ? Math.abs(daysToTop) + 'd past est.'
+        : daysToTop + 'd remaining');
+    }
+    const conf = ca.cycle_time_confidence;
+    if (conf != null) setText('ca-confidence', Math.round(conf * 100) + '%');
+  })();
 
   // Price cards
   updatePriceCard('pc-btc-price','pc-btc-chg','pc-btc-vol',
@@ -2003,6 +2189,32 @@ function drawSparkline(canvasId, vals, color) {
 function renderCharts() {
 }
 
+function showSkeletons() {
+  document.querySelectorAll('.score-value, .gauge-val').forEach(el => {
+    el.classList.add('skeleton');
+    el.dataset.original = el.textContent;
+    el.textContent = '—';
+  });
+  document.querySelectorAll('.price-value, .live-price, .tick-val, .score-price').forEach(el => {
+    el.classList.add('skeleton');
+    el.dataset.original = el.textContent;
+    el.textContent = el.classList.contains('tick-val') || el.classList.contains('score-price') ? '$—' : '—';
+  });
+  document.querySelectorAll('.component-bar-fill, .comp-fill').forEach(el => {
+    el.style.width = '30%';
+    el.classList.add('skeleton');
+  });
+}
+
+function removeSkeletons() {
+  document.querySelectorAll('.skeleton').forEach(el => {
+    el.classList.remove('skeleton');
+  });
+  document.querySelectorAll('.comp-fill').forEach(el => {
+    el.style.width = '';
+  });
+}
+
 function renderSparklines() {
   drawSparkline('spark-btc', S.btcPrices.slice(-30), '#0ea5e9');
   drawSparkline('spark-eth', S.ethPrices.slice(-30), '#8fa5ff');
@@ -2016,15 +2228,21 @@ async function doRefresh() {
   isRefreshing=true;
   const btn=$('refresh-btn');
   if(btn) btn.classList.add('loading');
+  const loadingEl = $('nav-loading');
+  if(loadingEl) loadingEl.style.display = 'inline';
+  showSkeletons();
 
   try {
     await loadAllData();
     updateUI();
+    removeSkeletons();
   } catch(e) {
     console.error('Refresh error:', e);
+    removeSkeletons();
   } finally {
     isRefreshing=false;
     if(btn) btn.classList.remove('loading');
+    if(loadingEl) loadingEl.style.display = 'none';
     resetCountdown();
   }
 }
@@ -2052,6 +2270,15 @@ const BOOT_STEPS=[
 ];
 
 async function boot() {
+  const overlay = $('loading');
+  if (overlay) {
+    overlay.classList.add('done');
+    setTimeout(() => overlay.remove(), 400);
+  }
+  showSkeletons();
+  const loadingEl = $('nav-loading');
+  if (loadingEl) loadingEl.style.display = 'inline';
+
   let step=0;
   const stepTimer=setInterval(()=>{
     if(step<BOOT_STEPS.length){
@@ -2065,16 +2292,16 @@ async function boot() {
   try {
     await loadAllData();
     updateUI();
+    removeSkeletons();
   } catch(e) {
     console.error('Boot error:', e);
+    removeSkeletons();
   } finally {
     clearInterval(stepTimer);
     const bar=$('load-bar'), stat=$('load-status');
     if(bar) bar.style.width='100%';
     if(stat) stat.textContent='READY.';
-    await new Promise(r=>setTimeout(r,350));
-    const overlay=$('loading');
-    if(overlay){ overlay.classList.add('done'); setTimeout(()=>overlay.remove(),600); }
+    if(loadingEl) loadingEl.style.display = 'none';
     resetCountdown();
   }
 }
