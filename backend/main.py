@@ -1,6 +1,6 @@
 """
-main.py — Alpha Cycle Intelligence — FastAPI Backend
-Production-grade. Zero NaN. Auto-refresh every 60s.
+main.py - Alpha Cycle Intelligence v3.0
+FastAPI Backend. Zero NaN. Auto-refresh every 60s.
 
 Endpoints:
   GET /health
@@ -11,15 +11,11 @@ Endpoints:
   GET /api/cycle/combined
   GET /api/history
   GET /api/fear-greed
-  GET /api/cycle-anchor
+  GET /api/analyzer
+  GET /api/decision
 """
-import os
-import time
-import math
-import logging
-import asyncio
+import os, time, math, logging, asyncio
 from contextlib import asynccontextmanager
-
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -28,6 +24,7 @@ try:
     from fetcher import fetch_all, _synthetic_walcl
 except ImportError:
     from backend.fetcher import fetch_all, _synthetic_walcl
+
 try:
     from scoring import (
         compute_btc_score, compute_eth_score,
@@ -40,25 +37,43 @@ except ImportError:
         compute_macro_score, compute_combined,
         clamp, safe_float,
     )
+
+try:
+    from analyzer import analyzer as cycle_analyzer
+except ImportError:
+    from backend.analyzer import analyzer as cycle_analyzer
+
+try:
+    from decision_engine import decision_engine
+except ImportError:
+    from backend.decision_engine import decision_engine
+
+try:
+    from liquidity_engine import compute_liquidity_regime
+except ImportError:
+    from backend.liquidity_engine import compute_liquidity_regime
+
 try:
     from cycle_anchor import compute_cycle_anchor
 except ImportError:
     from backend.cycle_anchor import compute_cycle_anchor
 
-# -----------------------------------------------------------------------------
-# LOGGING
-# -----------------------------------------------------------------------------
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-)
+try:
+    from backtest_engine import run_backtest
+except ImportError:
+    try:
+        from backend.backtest_engine import run_backtest
+    except ImportError:
+        run_backtest = None
+
+# -- LOGGING ------------------------------------------------------------------
+logging.basicConfig(level=logging.INFO,
+                    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger(__name__)
 
-# -----------------------------------------------------------------------------
-# CACHE - in-memory, refreshed every 60 seconds
-# -----------------------------------------------------------------------------
+# -- CACHE --------------------------------------------------------------------
 CACHE: dict = {}
-CACHE_TTL = int(os.getenv("CACHE_TTL_SECONDS", "60"))
+CACHE_TTL   = int(os.getenv("CACHE_TTL_SECONDS", "60"))
 _cache_lock = asyncio.Lock()
 _last_refresh = 0.0
 
@@ -68,31 +83,50 @@ async def refresh_cache(force: bool = False):
     async with _cache_lock:
         now = time.time()
         if not force and (now - _last_refresh) < CACHE_TTL:
-            return  # still fresh
+            return
 
-        logger.info("Alpha Cycle — refreshing data cache…")
+        logger.info("Alpha Cycle - refreshing data cache...")
         try:
             raw = await fetch_all()
 
             btc_p  = raw["btc_prices"]
             eth_p  = raw["eth_prices"]
-            walcl  = [item["v"] for item in raw["walcl_series"]]
-            stable = [item["v"] for item in raw["stable_series"]]
-            tvl    = [item["v"] for item in raw["tvl_series"]]
+            walcl  = [item["v"] for item in raw.get("walcl_series", [])]
+            stable = [item["v"] for item in raw.get("stable_series", [])]
+            tvl    = [item["v"] for item in raw.get("tvl_series",   [])]
             us10y  = [item["v"] for item in raw.get("us10y_series", [])]
             fg     = raw["fear_greed"]["current"]
 
-            btc_scores   = compute_btc_score(btc_p, fg, walcl, stable)
-            eth_scores   = compute_eth_score(eth_p, btc_p, tvl, stable, fg)
-            macro_scores = compute_macro_score(walcl, stable, btc_p,
-                                               us10y_series=us10y)
-            combined     = compute_combined(
+            # New v3 data
+            indicators   = raw.get("indicators",   {})
+            funding_data = raw.get("funding_data", {})
+            global_data  = raw.get("global_data",  {})
+            btc_dom      = global_data.get("btc_dominance", 50.0)
+
+            btc_scores = compute_btc_score(
+                btc_p, fg, walcl, stable,
+                indicators=indicators,
+                funding_data=funding_data,
+                btc_dominance=btc_dom,
+            )
+            eth_scores = compute_eth_score(
+                eth_p, btc_p, tvl, stable, fg,
+                funding_data=funding_data,
+            )
+            macro_scores = compute_macro_score(
+                walcl, stable, btc_p,
+                us10y_series=us10y,
+                global_data=global_data,
+                funding_data=funding_data,
+            )
+            combined = compute_combined(
                 btc_scores["btc_score"],
                 eth_scores["eth_score"],
                 macro_scores["macro_score"],
             )
 
-            hist = CACHE.get("score_history", {"btc": [], "eth": [], "macro": [], "combined": []})
+            hist = CACHE.get("score_history",
+                             {"btc": [], "eth": [], "macro": [], "combined": []})
             ts = int(time.time() * 1000)
             for key, val in [
                 ("btc",      btc_scores["btc_score"]),
@@ -101,30 +135,26 @@ async def refresh_cache(force: bool = False):
                 ("combined", combined["combined_score"]),
             ]:
                 hist[key].append({"t": ts, "v": val})
-                hist[key] = hist[key][-2880:]  # keep 48h at 60s intervals
+                hist[key] = hist[key][-2880:]
 
             CACHE.update({
-                "raw":           raw,
-                "btc_scores":    btc_scores,
-                "eth_scores":    eth_scores,
-                "macro_scores":  macro_scores,
-                "combined":      combined,
-                "score_history": hist,
-                "refreshed_at":  ts,
+                "raw":          raw,
+                "btc_scores":   btc_scores,
+                "eth_scores":   eth_scores,
+                "macro_scores": macro_scores,
+                "combined":     combined,
+                "score_history":hist,
+                "refreshed_at": ts,
             })
             _last_refresh = now
             logger.info(
-                f"Cache OK — BTC:{btc_scores['btc_score']:.1f} "
+                f"Cache OK - BTC:{btc_scores['btc_score']:.1f} "
                 f"ETH:{eth_scores['eth_score']:.1f} "
                 f"MACRO:{macro_scores['macro_score']:.1f}"
             )
         except Exception as e:
             logger.error(f"Cache refresh failed: {e}", exc_info=True)
 
-
-# -----------------------------------------------------------------------------
-# BACKGROUND REFRESH LOOP
-# -----------------------------------------------------------------------------
 
 async def _refresh_loop():
     while True:
@@ -135,13 +165,9 @@ async def _refresh_loop():
         await asyncio.sleep(CACHE_TTL)
 
 
-# -----------------------------------------------------------------------------
-# APP LIFECYCLE
-# -----------------------------------------------------------------------------
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Alpha Cycle Intelligence API starting…")
+    logger.info("Alpha Cycle Intelligence API starting...")
     await refresh_cache(force=True)
     task = asyncio.create_task(_refresh_loop())
     yield
@@ -151,14 +177,10 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Alpha Cycle Intelligence API",
-    version="2.0.0",
-    description="Proprietary crypto market cycle scoring. Zero NaN.",
+    version="3.0.0",
+    description="Institutional crypto cycle intelligence. Zero NaN.",
     lifespan=lifespan,
 )
-
-# -----------------------------------------------------------------------------
-# CORS - allow all origins (public read-only API)
-# -----------------------------------------------------------------------------
 
 app.add_middleware(
     CORSMiddleware,
@@ -169,163 +191,207 @@ app.add_middleware(
 )
 
 
-# -----------------------------------------------------------------------------
-# HELPERS
-# -----------------------------------------------------------------------------
+# -- HELPERS ------------------------------------------------------------------
 
 def _require_cache():
     if not CACHE:
         raise HTTPException(503, "Data not yet available. Retry in 10s.")
     return CACHE
 
-
 def _clean(obj):
-    """Recursively replace NaN/Inf with 0.0 for JSON safety."""
-    if isinstance(obj, dict):
-        return {k: _clean(v) for k, v in obj.items()}
-    if isinstance(obj, list):
-        return [_clean(v) for v in obj]
+    if isinstance(obj, dict):  return {k: _clean(v) for k, v in obj.items()}
+    if isinstance(obj, list):  return [_clean(v) for v in obj]
     if isinstance(obj, float):
-        if math.isnan(obj) or math.isinf(obj):
-            return 0.0
-        return round(obj, 6)
+        return 0.0 if (math.isnan(obj) or math.isinf(obj)) else round(obj, 6)
     return obj
-
 
 def api_response(data: dict) -> JSONResponse:
     cleaned = _clean(data)
     cleaned["_ts"] = int(time.time() * 1000)
     return JSONResponse(content=cleaned)
 
+def _prices_to_series(prices: list, days: int) -> list:
+    if not prices: return []
+    subset = prices[-days:]
+    now_ms = int(time.time() * 1000)
+    return [{"t": now_ms - (len(subset)-1-i)*86_400_000, "v": safe_float(p)}
+            for i, p in enumerate(subset)]
 
-# -----------------------------------------------------------------------------
-# ENDPOINTS
-# -----------------------------------------------------------------------------
+def _build_ratio_series(btc_prices, eth_prices, days) -> list:
+    btc = btc_prices[-days:] if btc_prices else []
+    eth = eth_prices[-days:] if eth_prices else []
+    n   = min(len(btc), len(eth))
+    if not n: return []
+    now_ms = int(time.time() * 1000)
+    return [{"t": now_ms-(n-1-i)*86_400_000,
+             "v": safe_float(eth[-(n-i)]) / safe_float(btc[-(n-i)], 1.0)}
+            for i in range(n)]
+
+
+# -- ENDPOINTS ----------------------------------------------------------------
 
 @app.get("/health")
 async def health():
-    cache_age = max(0, int(time.time() - _last_refresh))
     return {
         "status":    "ok",
         "service":   "Alpha Cycle Intelligence API",
-        "cache_age": cache_age,
+        "cache_age": max(0, int(time.time() - _last_refresh)),
         "has_data":  bool(CACHE),
-        "version":   "2.0.0",
+        "version":   "3.0.0",
     }
 
 
 @app.get("/api/prices")
 async def get_prices():
-    c = _require_cache()
+    c  = _require_cache()
     bm = c["raw"]["btc_market"]
     em = c["raw"]["eth_market"]
     fg = c["raw"]["fear_greed"]
+    gd = c["raw"].get("global_data", {})
+    fd = c["raw"].get("funding_data", {})
 
-    btc_hist   = _prices_to_series(c["raw"]["btc_prices"], 90)
-    eth_hist   = _prices_to_series(c["raw"]["eth_prices"], 90)
-    ratio_hist = _build_ratio_series(c["raw"]["btc_prices"], c["raw"]["eth_prices"], 90)
+    # Stablecoin current
+    stable_series = c["raw"].get("stable_series", [])
+    stable_b = safe_float(stable_series[-1]["v"]) / 1e9 if stable_series else 0.0
 
     return api_response({
         "btc": {
-            "price":         safe_float(bm.get("price", 0)),
-            "change_24h":    safe_float(bm.get("change_24h", 0)),
-            "market_cap":    safe_float(bm.get("market_cap", 0)),
-            "volume_24h":    safe_float(bm.get("volume", 0)),
-            "ath":           safe_float(bm.get("ath", 0)),
-            "ath_change_pct":safe_float(bm.get("ath_change_pct", 0)),
-            "history":       btc_hist,
+            "price":          safe_float(bm.get("price", 0)),
+            "change_24h":     safe_float(bm.get("change_24h", 0)),
+            "market_cap":     safe_float(bm.get("market_cap", 0)),
+            "volume_24h":     safe_float(bm.get("volume", 0)),
+            "volume":         safe_float(bm.get("volume", 0)),
+            "ath":            safe_float(bm.get("ath", 0)),
+            "ath_change_pct": safe_float(bm.get("ath_change_pct", 0)),
+            "athChgPct":      safe_float(bm.get("ath_change_pct", 0)),
+            "history":        _prices_to_series(c["raw"]["btc_prices"], 90),
         },
         "eth": {
-            "price":         safe_float(em.get("price", 0)),
-            "change_24h":    safe_float(em.get("change_24h", 0)),
-            "market_cap":    safe_float(em.get("market_cap", 0)),
-            "volume_24h":    safe_float(em.get("volume", 0)),
-            "ath":           safe_float(em.get("ath", 0)),
-            "ath_change_pct":safe_float(em.get("ath_change_pct", 0)),
-            "history":       eth_hist,
+            "price":          safe_float(em.get("price", 0)),
+            "change_24h":     safe_float(em.get("change_24h", 0)),
+            "market_cap":     safe_float(em.get("market_cap", 0)),
+            "volume_24h":     safe_float(em.get("volume", 0)),
+            "volume":         safe_float(em.get("volume", 0)),
+            "ath":            safe_float(em.get("ath", 0)),
+            "ath_change_pct": safe_float(em.get("ath_change_pct", 0)),
+            "athChgPct":      safe_float(em.get("ath_change_pct", 0)),
+            "history":        _prices_to_series(c["raw"]["eth_prices"], 90),
         },
-        "eth_btc_ratio": ratio_hist,
+        "eth_btc_ratio": _build_ratio_series(
+            c["raw"]["btc_prices"], c["raw"]["eth_prices"], 90),
         "fear_greed":    fg,
+        "global": {
+            "btc_dominance":    safe_float(gd.get("btc_dominance", 50)),
+            "total_market_cap": safe_float(gd.get("total_market_cap", 0)),
+        },
+        "funding": {
+            "btc_funding_rate": safe_float(fd.get("btc_funding_rate", 0)),
+            "eth_funding_rate": safe_float(fd.get("eth_funding_rate", 0)),
+        },
+        "stablecoin_cap_B": stable_b,
     })
 
 
 @app.get("/api/cycle/btc")
 async def get_btc_cycle():
     c = _require_cache()
-    s = c["btc_scores"]
-    return api_response({
-        "score":         s.get("btc_score", 50.0),
-        "current_price": s.get("current_price", 0.0),
+    d = {**c["raw"], "fetched_at": c.get("refreshed_at", 0)}
+    s = compute_btc_score(
+        d["btc_prices"], d["fear_greed"]["current"],
+        [x["v"] for x in d.get("walcl_series", [])],
+        [x["v"] for x in d.get("stable_series", [])],
+        indicators=d.get("indicators"),
+        funding_data=d.get("funding_data"),
+        btc_dominance=d.get("global_data", {}).get("btc_dominance", 50.0),
+    )
+    return {
+        "score": s["btc_score"],
+        "current_price": s["current_price"],
         "components": {
-            "rsi":           {"score": s.get("rsi", 50.0),       "raw": s.get("rsi_raw", 50.0)},
-            "ma_200w":       {"score": s.get("ma_200w", 50.0),   "deviation_pct": s.get("ma_200w_dev_pct", 0.0), "value": s.get("ma_200w_raw", 0.0)},
-            "drawdown":      {"score": s.get("drawdown", 50.0)},
-            "fear_greed":    {"score": s.get("fear_greed", 50.0),"raw": c["raw"]["fear_greed"]["current"]},
-            "macro_liq":     {"score": s.get("macro_liq", 50.0)},
-            "stable_supply": {"score": s.get("stable_supply", 50.0)},
-            "power_law":     {"score": s.get("power_law", 50.0)},
+            "ma_200w":       {"score": round(s["ma_200w"], 1),
+                              "deviation_pct": s.get("ma_200w_dev_pct", 0),
+                              "value": s.get("ma_200w_raw", 0)},
+            "drawdown":      {"score": round(s["drawdown"], 1)},
+            "fear_greed":    {"score": round(s["fear_greed"], 1),
+                              "raw": d["fear_greed"]["current"]},
+            "liquidity":     {"score": round(s["liquidity"], 1),
+                              "macro_liq": round(s["macro_liq"], 1),
+                              "stable_supply": round(s["stable_supply"], 1)},
         },
         "weights": {
-            "rsi": 0.18, "ma_200w": 0.22, "drawdown": 0.15,
-            "fear_greed": 0.20, "macro_liq": 0.12,
-            "stable_supply": 0.08, "power_law": 0.05,
+            "ma_200w":    0.30,
+            "drawdown":   0.25,
+            "fear_greed": 0.20,
+            "liquidity":  0.25,
         },
-    })
+        "short_term": s.get("short_term", {}),
+        "_ts": d.get("fetched_at", 0),
+    }
 
 
 @app.get("/api/cycle/eth")
 async def get_eth_cycle():
     c = _require_cache()
-    s = c["eth_scores"]
-    return api_response({
-        "score":         s.get("eth_score", 50.0),
-        "current_price": s.get("current_price", 0.0),
+    d = {**c["raw"], "fetched_at": c.get("refreshed_at", 0)}
+    s = compute_eth_score(
+        d["eth_prices"], d["btc_prices"],
+        [x["v"] for x in d.get("tvl_series", [])],
+        [x["v"] for x in d.get("stable_series", [])],
+        d["fear_greed"]["current"],
+        funding_data=d.get("funding_data"),
+    )
+    return {
+        "score": s["eth_score"],
+        "current_price": s["current_price"],
         "components": {
-            "eth_btc_ratio":  {"score": s.get("eth_btc_ratio", 50.0),    "raw": s.get("eth_btc_ratio_raw", 0.05)},
-            "price_trend_30d":{"score": s.get("price_trend_30d", 50.0)},
-            "price_trend_90d":{"score": s.get("price_trend_90d", 50.0)},
-            "tvl_trend":      {"score": s.get("tvl_trend", 50.0)},
-            "stable_growth":  {"score": s.get("stable_growth", 50.0)},
-            "rsi":            {"score": s.get("rsi", 50.0)},
-            "ma_200w":        {"score": s.get("ma_200w", 50.0)},
-            "drawdown":       {"score": s.get("drawdown", 50.0)},
-            "fear_greed":     {"score": s.get("fear_greed", 50.0)},
+            "eth_btc_ratio": {"score": round(s["eth_btc_ratio"], 1),
+                               "raw": s.get("eth_btc_ratio_raw", 0)},
+            "drawdown":      {"score": round(s["drawdown"], 1)},
+            "fear_greed":    {"score": round(s["fear_greed"], 1),
+                              "raw": d["fear_greed"]["current"]},
+            "liquidity":     {"score": round(s["liquidity"], 1),
+                              "stable_growth": round(s.get("stable_growth", 50.0), 1),
+                              "tvl_trend": round(s.get("tvl_trend", 50.0), 1)},
         },
         "weights": {
-            "eth_btc_ratio": 0.22, "price_trend_30d": 0.12,
-            "price_trend_90d": 0.10, "tvl_trend": 0.18,
-            "stable_growth": 0.08, "rsi": 0.12,
-            "ma_200w": 0.10, "drawdown": 0.05, "fear_greed": 0.03,
+            "eth_btc_ratio": 0.25,
+            "drawdown":      0.25,
+            "fear_greed":    0.20,
+            "liquidity":     0.30,
         },
-    })
+        "short_term": s.get("short_term", {}),
+        "_ts": d.get("fetched_at", 0),
+    }
 
 
 @app.get("/api/cycle/macro")
 async def get_macro_cycle():
     c = _require_cache()
     s = c["macro_scores"]
-    walcl_hist  = [{"t": item["t"], "v": safe_float(item["v"])}
-                   for item in c["raw"]["walcl_series"][-180:]]
-    stable_hist = [{"t": item["t"], "v": safe_float(item["v"]) / 1e9}
-                   for item in c["raw"]["stable_series"][-180:]]
+    walcl_hist  = [{"t": i["t"], "v": safe_float(i["v"])}
+                   for i in c["raw"].get("walcl_series", [])[-180:]]
+    stable_hist = [{"t": i["t"], "v": safe_float(i["v"]) / 1e9}
+                   for i in c["raw"].get("stable_series", [])[-180:]]
     return api_response({
         "score": s.get("macro_score", 50.0),
         "components": {
-            "walcl_trend":  {"score": s.get("walcl_trend", 50.0)},
-            "stable_trend": {"score": s.get("stable_trend", 50.0)},
-            "btc_risk_on":  {"score": s.get("btc_risk_on", 50.0)},
-            "dxy_trend":    {"score": s.get("dxy_trend", 50.0)},
-            "yield_trend":  {"score": s.get("yield_trend", 50.0)},
+            "walcl_trend":   {"score": s.get("walcl_trend", 50.0)},
+            "stable_trend":  {"score": s.get("stable_trend", 50.0)},
+            "btc_risk_on":   {"score": s.get("btc_risk_on", 50.0)},
+            "dxy_trend":     {"score": s.get("dxy_trend", 50.0)},
+            "yield_trend":   {"score": s.get("yield_trend", 50.0)},
+            "btc_dom_macro": {"score": s.get("btc_dom_macro", 50.0)},
         },
         "data": {
-            "walcl_current_T":  s.get("walcl_current", 8.0),
-            "walcl_yoy_pct":    s.get("walcl_yoy_pct", 0.0),
-            "stable_current_B": s.get("stable_current_B", 150.0),
+            "walcl_current_T":    s.get("walcl_current", 8.0),
+            "walcl_yoy_pct":      s.get("walcl_yoy_pct", 0.0),
+            "stable_current_B":   s.get("stable_current_B", 150.0),
+            "btc_dominance_pct":  s.get("btc_dominance_pct", 50.0),
         },
-        "history":  {"walcl": walcl_hist, "stable": stable_hist},
+        "history": {"walcl": walcl_hist, "stable": stable_hist},
         "weights": {
-            "walcl_trend": 0.35, "stable_trend": 0.25,
-            "btc_risk_on": 0.20, "dxy_trend": 0.10, "yield_trend": 0.10,
+            "walcl_trend": 0.30, "stable_trend": 0.22, "btc_risk_on": 0.18,
+            "dxy_trend": 0.10, "yield_trend": 0.10, "btc_dom_macro": 0.10,
         },
     })
 
@@ -336,8 +402,8 @@ async def get_combined():
     return api_response({
         **c["combined"],
         "scores": {
-            "btc":   c["btc_scores"].get("btc_score", 50.0),
-            "eth":   c["eth_scores"].get("eth_score", 50.0),
+            "btc":   c["btc_scores"].get("btc_score",   50.0),
+            "eth":   c["eth_scores"].get("eth_score",   50.0),
             "macro": c["macro_scores"].get("macro_score", 50.0),
         },
         "refreshed_at": c.get("refreshed_at", 0),
@@ -346,11 +412,12 @@ async def get_combined():
 
 @app.get("/api/history")
 async def get_history():
-    c = _require_cache()
-    hist     = c.get("score_history", {"btc": [], "eth": [], "macro": [], "combined": []})
-    tvl_hist = [{"t": item["t"], "v": safe_float(item["v"]) / 1e9}
-                for item in c["raw"]["tvl_series"][-365:]]
-    fg_hist  = c["raw"]["fear_greed"]["history"][-90:]
+    c       = _require_cache()
+    hist    = c.get("score_history", {"btc": [], "eth": [], "macro": [], "combined": []})
+    tvl_raw = c["raw"].get("tvl_series", [])
+    fg_hist = c["raw"]["fear_greed"]["history"][-90:]
+
+    tvl_hist = [{"t": i["t"], "v": safe_float(i["v"]) / 1e9} for i in tvl_raw[-365:]]
 
     return api_response({
         "scores":   hist,
@@ -358,8 +425,8 @@ async def get_history():
         "fg":       fg_hist,
         "btc_full": _prices_to_series(c["raw"]["btc_prices"], 730),
         "eth_full": _prices_to_series(c["raw"]["eth_prices"], 730),
-        "walcl":    [{"t": item["t"], "v": safe_float(item["v"]) / 1e6}
-                     for item in c["raw"]["walcl_series"][-260:]],
+        "walcl":    [{"t": i["t"], "v": safe_float(i["v"]) / 1e6}
+                     for i in c["raw"].get("walcl_series", [])[-260:]],
     })
 
 
@@ -376,31 +443,202 @@ async def get_cycle_anchor():
     return api_response(data)
 
 
-# -----------------------------------------------------------------------------
-# INTERNAL HELPERS
-# -----------------------------------------------------------------------------
+@app.get("/api/backtest")
+async def get_backtest():
+    """
+    Historical AlphaCycle backtest endpoint.
+    Returns BTC price+score history as JSON. On failure returns 200 with results=[] and error message.
+    """
+    try:
+        if run_backtest is None:
+            return api_response({"results": [], "error": "Backtest module not available"})
+        data = await run_backtest()
+        return api_response(data)
+    except Exception as e:
+        logger.exception("Backtest endpoint failed")
+        return api_response({"results": [], "error": str(e)})
 
-def _prices_to_series(prices: list, days: int) -> list:
-    if not prices:
-        return []
-    subset = prices[-days:]
-    now_ms = int(time.time() * 1000)
-    return [
-        {"t": now_ms - (len(subset) - 1 - i) * 86_400_000, "v": safe_float(p)}
-        for i, p in enumerate(subset)
-    ]
+
+@app.get("/api/debug")
+async def get_debug():
+    """
+    Transparente Debug-Ausgabe fur den BTC-Kern-Score.
+    Gibt die wesentlichen Zwischenwerte der 4-Komponenten-Formel zuruck.
+    """
+    c   = _require_cache()
+    raw = c["raw"]
+
+    prices = [safe_float(p) for p in raw.get("btc_prices", []) if p and safe_float(p) > 0]
+    if prices:
+        price = prices[-1]
+        ath   = max(prices)
+        drawdown_percent = ((price - ath) / ath * 100) if ath > 0 else 0.0
+    else:
+        price = safe_float(c["btc_scores"].get("current_price", 0.0))
+        ath   = price
+        drawdown_percent = 0.0
+
+    btc_scores = c["btc_scores"]
+    fg_value   = safe_float(raw.get("fear_greed", {}).get("current", 50.0))
+
+    debug_payload = {
+        "price":            round(price, 2),
+        "ath":              round(ath, 2),
+        "drawdown_percent": round(drawdown_percent, 2),
+        "components": {
+            "ma_200w":       {
+                "score":  clamp(btc_scores.get("ma_200w", 50.0)),
+                "raw":    btc_scores.get("ma_200w_raw", 0.0),
+                "dev_pct": btc_scores.get("ma_200w_dev_pct", 0.0),
+            },
+            "drawdown":      {"score": clamp(btc_scores.get("drawdown",      50.0))},
+            "mvrv":          {"score": clamp(btc_scores.get("mvrv",          50.0))},
+            "fear_greed":    {"score": clamp(btc_scores.get("fear_greed",    50.0)), "raw": fg_value},
+            "pi_cycle":      {"score": clamp(btc_scores.get("pi_cycle",      50.0))},
+            "puell":         {"score": clamp(btc_scores.get("puell",         50.0))},
+            "rsi":           {"score": clamp(btc_scores.get("rsi",           50.0)), "raw": btc_scores.get("rsi_raw", 50.0)},
+            "funding":       {"score": clamp(btc_scores.get("funding",       50.0)), "raw": btc_scores.get("funding_raw", 0.0)},
+            "stable_supply": {"score": clamp(btc_scores.get("stable_supply", 50.0))},
+        },
+        "weights": {
+            "ma_200w":       0.25,
+            "drawdown":      0.20,
+            "mvrv":          0.15,
+            "fear_greed":    0.12,
+            "pi_cycle":      0.10,
+            "puell":         0.10,
+            "rsi":           0.05,
+            "funding":       0.02,
+            "stable_supply": 0.01,
+        },
+        "final_score": clamp(btc_scores.get("btc_score", 50.0)),
+    }
+    debug_payload["fred_key_status"] = (
+        "SET" if (os.getenv("FRED_API_KEY","").strip()
+        not in ("","your_key_here")) else "MISSING"
+    )
+    return api_response(debug_payload)
 
 
-def _build_ratio_series(btc_prices: list, eth_prices: list, days: int) -> list:
-    btc = btc_prices[-days:] if btc_prices else []
-    eth = eth_prices[-days:] if eth_prices else []
-    n   = min(len(btc), len(eth))
-    if not n:
-        return []
-    now_ms = int(time.time() * 1000)
-    result = []
-    for i in range(n):
-        b = safe_float(btc[-(n - i)], 1.0)
-        e = safe_float(eth[-(n - i)], 0.0)
-        result.append({"t": now_ms - (n - 1 - i) * 86_400_000, "v": e / b if b > 0 else 0.0})
-    return result
+@app.get("/api/liquidity-regime")
+async def get_liquidity_regime():
+    """
+    Global Liquidity Regime Engine(TM) endpoint.
+    Uses WALCL, stablecoins, BTC and macro proxies from cache.
+    """
+    c = _require_cache()
+    raw = c["raw"]
+
+    walcl_series = raw.get("walcl_series", [])
+    stable_series = raw.get("stable_series", [])
+    btc_prices = raw.get("btc_prices", [])
+    eth_prices = raw.get("eth_prices", [])
+    us10y_series = raw.get("us10y_series", [])
+    dxy_series = raw.get("dxy_series", [])
+
+    data = compute_liquidity_regime(
+        walcl_series=walcl_series,
+        stablecoin_series=stable_series,
+        btc_prices=btc_prices,
+        eth_prices=eth_prices,
+        us10y_series=us10y_series,
+        dxy_series=dxy_series,
+    )
+    return api_response(data)
+
+
+@app.get("/api/analyzer")
+async def get_analyzer():
+    from datetime import datetime
+    c   = _require_cache()
+    raw = c["raw"]
+
+    bm           = raw.get("btc_market", {})
+    btc_price    = safe_float(bm.get("price", 0))
+    ath_price    = safe_float(bm.get("ath", 0))
+    btc_drawdown = safe_float(bm.get("ath_change_pct", -30.0))
+    if btc_drawdown == 0.0 and raw.get("btc_prices"):
+        prices       = raw["btc_prices"]
+        peak         = max(prices) if prices else btc_price
+        btc_drawdown = ((btc_price - peak) / peak * 100) if peak > 0 else -30.0
+
+    # ma_200w from btc_scores component (already computed in scoring.py)
+    ma_200w       = safe_float(c["btc_scores"].get("ma_200w_raw", 0.0))
+    score_history = c.get("score_history", {}).get("combined", [])
+
+    result = cycle_analyzer.analyze(
+        combined_score    = c["combined"].get("combined_score",       50.0),
+        btc_score         = c["btc_scores"].get("btc_score",          50.0),
+        eth_score         = c["eth_scores"].get("eth_score",          50.0),
+        macro_score       = c["macro_scores"].get("macro_score",      50.0),
+        fear_greed        = raw.get("fear_greed", {}).get("current",  50.0),
+        btc_price         = btc_price,
+        btc_drawdown_pct  = btc_drawdown,
+        liquidity_trend   = c["macro_scores"].get("walcl_trend",      50.0),
+        score_history     = score_history,
+        btc_price_history = raw.get("btc_prices", []),
+        ma_200w           = ma_200w,
+        ath_price         = ath_price,
+        now               = datetime.utcnow(),
+    )
+    return api_response(result)
+
+
+@app.get("/api/decision")
+async def get_decision():
+    from datetime import datetime
+    c   = _require_cache()
+    raw = c["raw"]
+
+    bm           = raw.get("btc_market", {})
+    em           = raw.get("eth_market", {})
+    btc_price    = safe_float(bm.get("price", 0))
+    eth_price    = safe_float(em.get("price", 0))
+    btc_drawdown = safe_float(bm.get("ath_change_pct", -30.0))
+    if btc_drawdown == 0.0 and raw.get("btc_prices"):
+        prices       = raw["btc_prices"]
+        peak         = max(prices) if prices else btc_price
+        btc_drawdown = ((btc_price - peak) / peak * 100) if peak > 0 else -30.0
+
+    score_history = c.get("score_history", {}).get("combined", [])
+
+    # Run analyzer for cycle intelligence inputs
+    analysis = cycle_analyzer.analyze(
+        combined_score    = c["combined"].get("combined_score",       50.0),
+        btc_score         = c["btc_scores"].get("btc_score",          50.0),
+        eth_score         = c["eth_scores"].get("eth_score",          50.0),
+        macro_score       = c["macro_scores"].get("macro_score",      50.0),
+        fear_greed        = raw.get("fear_greed", {}).get("current",  50.0),
+        btc_price         = btc_price,
+        btc_drawdown_pct  = btc_drawdown,
+        liquidity_trend   = c["macro_scores"].get("walcl_trend",      50.0),
+        score_history     = score_history,
+        btc_price_history = raw.get("btc_prices", []),
+        ma_200w           = safe_float(c["btc_scores"].get("ma_200w_raw", 0.0)),
+        ath_price         = safe_float(raw.get("btc_market", {}).get("ath", 0.0)),
+        now               = datetime.utcnow(),
+    )
+
+    result = decision_engine.decide(
+        phase               = analysis.get("phase",                 "Accumulation"),
+        cycle_position      = analysis.get("alpha_cycle_position",
+                              analysis.get("cycle_position_percent", 50.0)),
+        combined_score      = c["combined"].get("combined_score",    50.0),
+        btc_score           = c["btc_scores"].get("btc_score",       50.0),
+        eth_score           = c["eth_scores"].get("eth_score",       50.0),
+        macro_score         = c["macro_scores"].get("macro_score",   50.0),
+        seasonality_score   = analysis.get("seasonality_score",      50.0),
+        seasonality_bias    = analysis.get("seasonality_bias",       "NEUTRAL"),
+        bottom_probability  = analysis.get("bottom_probability",     50.0),
+        top_probability     = analysis.get("top_probability",        10.0),
+        confidence          = analysis.get("confidence",             50.0),
+        years_since_halving = analysis.get("seasonality_detail", {}).get("years_since_halving", 1.0),
+        btc_price           = btc_price,
+        eth_price           = eth_price,
+        btc_drawdown_pct    = btc_drawdown,
+        fear_greed          = raw.get("fear_greed", {}).get("current", 50.0),
+        walcl_series        = raw.get("walcl_series", []),
+        stable_series       = raw.get("stable_series", []),
+        score_history       = score_history,
+    )
+    return api_response(result)
