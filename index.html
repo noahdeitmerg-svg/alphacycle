@@ -25,7 +25,6 @@
   --ink4:     #162540;
   --glass:    rgba(10,18,40,0.6);
   --glass2:   rgba(15,28,58,0.4);
-  --card-bg:  rgba(10,18,40,0.6);
 
   --border:   rgba(255,255,255,0.06);
   --border2:  rgba(255,255,255,0.10);
@@ -63,7 +62,6 @@
   --bear:         #ef4444;
 
   /* Text */
-  --tx:      #f0f4ff;
   --tx-pri:   #f0f4ff;
   --tx-sec:   #8b9dc3;
   --tx-ter:   #3d5580;
@@ -363,7 +361,7 @@ body::before {
   gap: 12px;
   margin-bottom: 14px;
 }
-@media(min-width:600px){ .scores-grid { grid-template-columns: repeat(2,1fr); } }
+@media(min-width:600px){ .scores-grid { grid-template-columns: repeat(3,1fr); } }
 
 .score-card {
   padding: 20px 18px 16px;
@@ -952,13 +950,6 @@ canvas.sparkline {
   <!-- ── SECTION: CYCLE SCORES ── -->
   <div class="sec-header anim d1">
     <div class="sec-title">Cycle Scores</div>
-    <div style="margin-top:0.4rem">
-      <span style="font-size:0.6rem;letter-spacing:0.1em;
-        padding:0.25rem 0.65rem;border-radius:20px;
-        background:rgba(14,165,233,0.12);color:var(--btc);
-        border:1px solid rgba(14,165,233,0.2);
-        font-weight:600">VALUATION-BASED POSITION</span>
-    </div>
     <div class="sec-line"></div>
     <div class="sec-badge" id="last-updated">LOADING…</div>
   </div>
@@ -1057,16 +1048,7 @@ canvas.sparkline {
       </div>
       <div class="components-grid" id="eth-components"></div>
     </div>
-  </div>
 
-  <div style="margin-top:1rem;margin-bottom:0.5rem">
-    <span style="font-size:0.6rem;letter-spacing:0.1em;
-      padding:0.25rem 0.65rem;border-radius:20px;
-      background:rgba(0,229,170,0.1);color:var(--mac);
-      border:1px solid rgba(0,229,170,0.2);
-      font-weight:600">MACRO LIQUIDITY CONTEXT</span>
-  </div>
-  <div style="margin-bottom:1rem">
     <!-- Macro Score Card -->
     <div class="card score-card card-glow-mac" id="mac-card">
       <div class="card-accent accent-mac"></div>
@@ -1112,147 +1094,22 @@ canvas.sparkline {
     </div>
   </div>
 
-  <section id="hero-decision" class="hero-decision anim d1" 
-    style="display:none; margin-bottom:1.5rem; position:relative;
-    background:linear-gradient(135deg,rgba(15,23,42,0.95),rgba(20,30,55,0.95));
-    border:1px solid rgba(255,255,255,0.06); border-radius:20px;
-    overflow:hidden; padding:2rem 2rem 1.5rem;">
-    
+  <!-- ── PHASE BANNER ── -->
+  <div id="phase-banner" class="phase-banner anim d3">
     <div class="card-accent accent-combined"></div>
-    
-    <!-- Top row: Signal + Phase + Score -->
-    <div style="display:flex; align-items:flex-start; 
-      justify-content:space-between; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
-      
-      <!-- Left: Signal -->
-      <div>
-        <div style="font-size:0.6rem;letter-spacing:0.15em;
-          color:var(--muted);margin-bottom:0.5rem">ALPHA SIGNAL</div>
-        <div id="ai-signal" style="font-size:2.5rem;font-weight:800;
-          letter-spacing:-0.02em;line-height:1">—</div>
+    <div class="phase-inner">
+      <div class="phase-icon-wrap" id="phase-icon">⏳</div>
+      <div class="phase-meta">
+        <div class="phase-eyebrow">Current Market Cycle Phase</div>
+        <div class="phase-name" id="phase-name">Loading…</div>
+        <div class="phase-desc" id="phase-desc">Fetching real-time data from 4 sources…</div>
       </div>
-      
-      <!-- Center: Phase -->
-      <div style="text-align:center">
-        <div style="font-size:0.6rem;letter-spacing:0.15em;
-          color:var(--muted);margin-bottom:0.5rem">MARKET PHASE</div>
-        <div id="phase-name" style="font-size:1.4rem;font-weight:700">Loading…</div>
-        <div id="phase-desc" style="font-size:0.75rem;color:var(--muted);
-          margin-top:0.3rem;max-width:320px">Fetching real-time data…</div>
-      </div>
-      
-      <!-- Right: Combined Score -->
-      <div style="text-align:right">
-        <div style="font-size:0.6rem;letter-spacing:0.15em;
-          color:var(--muted);margin-bottom:0.5rem">COMBINED SCORE</div>
-        <div style="display:flex;align-items:baseline;gap:0.3rem;justify-content:flex-end">
-          <div id="phase-combined" style="font-size:2.5rem;font-weight:800;
-            font-family:var(--font-mono);letter-spacing:-0.02em">—</div>
-          <div style="font-size:1rem;color:var(--muted)">/100</div>
-        </div>
-        <div id="phase-icon" style="font-size:0.9rem;margin-top:0.2rem">⏳</div>
+      <div class="phase-score-widget">
+        <div class="phase-score-num" id="phase-combined">—</div>
+        <div class="phase-score-lbl">Combined</div>
       </div>
     </div>
-    
-    <!-- Bottom row: 4 metrics -->
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
-      gap:0.75rem;padding-top:1rem;
-      border-top:1px solid rgba(255,255,255,0.06)">
-      
-      <div style="background:rgba(255,255,255,0.03);border-radius:10px;padding:0.9rem">
-        <div style="font-size:0.58rem;color:var(--muted);
-          letter-spacing:0.1em;margin-bottom:0.35rem">CYCLE POSITION</div>
-        <div id="ai-position" style="font-size:1.2rem;font-weight:700;
-          font-family:var(--font-mono)">—</div>
-        <div id="ai-phase" style="font-size:0.7rem;color:var(--muted);margin-top:0.2rem">—</div>
-      </div>
-      
-      <div style="background:rgba(255,255,255,0.03);border-radius:10px;padding:0.9rem">
-        <div style="font-size:0.58rem;color:var(--muted);
-          letter-spacing:0.1em;margin-bottom:0.35rem">ALLOCATION</div>
-        <div id="ai-alloc" style="font-size:0.95rem;font-weight:600">—</div>
-      </div>
-      
-      <div style="background:rgba(255,255,255,0.03);border-radius:10px;padding:0.9rem">
-        <div style="font-size:0.58rem;color:var(--muted);
-          letter-spacing:0.1em;margin-bottom:0.35rem">EXP. RETURN 12M</div>
-        <div id="ai-return" style="font-size:1.2rem;font-weight:700;
-          font-family:var(--font-mono)">—</div>
-      </div>
-      
-      <div style="background:rgba(255,255,255,0.03);border-radius:10px;padding:0.9rem">
-        <div style="font-size:0.58rem;color:var(--muted);
-          letter-spacing:0.1em;margin-bottom:0.35rem">CONFIDENCE</div>
-        <div id="ai-confidence" style="font-size:1.2rem;font-weight:700;
-          font-family:var(--font-mono)">—</div>
-      </div>
-    </div>
-    
-    <!-- Strategy -->
-    <div style="margin-top:1rem;padding-top:0.75rem;
-      border-top:1px solid rgba(255,255,255,0.04)">
-      <span style="font-size:0.6rem;letter-spacing:0.1em;
-        color:var(--muted);margin-right:0.5rem">STRATEGY</span>
-      <span id="ai-strategy" style="font-size:0.8rem;color:var(--tx-sec)">—</span>
-    </div>
-  </section>
-
-  <div style="margin-top:1.5rem;margin-bottom:0.5rem">
-    <span style="font-size:0.6rem;letter-spacing:0.1em;
-      padding:0.25rem 0.65rem;border-radius:20px;
-      background:rgba(245,158,11,0.12);color:#f59e0b;
-      border:1px solid rgba(245,158,11,0.2);
-      font-weight:600">TIME-BASED CYCLE POSITION</span>
   </div>
-
-  <section class="card" id="cycle-anchor-section" 
-    style="display:none; margin-bottom:1rem;">
-    <div class="card-accent" style="background:linear-gradient(90deg,#f59e0b,#ef4444);opacity:0.4"></div>
-    <div style="padding:1.2rem 1.5rem 1rem">
-      <div style="font-size:0.65rem;letter-spacing:0.12em;
-        color:var(--muted);margin-bottom:1rem">CYCLE ANCHOR</div>
-      <div style="margin-bottom:1rem">
-        <div style="display:flex;justify-content:space-between;
-          font-size:0.7rem;color:var(--muted);margin-bottom:0.4rem">
-          <span>CYCLE POSITION</span>
-          <span id="ca-position-pct">—</span>
-        </div>
-        <div style="height:6px;background:var(--surface2);border-radius:3px;overflow:hidden">
-          <div id="ca-progress-bar" style="height:100%;width:0%;
-            background:linear-gradient(90deg,#22c55e,#f59e0b,#ef4444);
-            border-radius:3px;transition:width 0.6s ease"></div>
-        </div>
-      </div>
-      <div style="display:grid;
-        grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:0.75rem">
-        <div style="background:var(--surface2);border-radius:10px;padding:0.9rem">
-          <div id="ca-days-label" style="font-size:0.6rem;color:var(--muted);
-            letter-spacing:0.08em;margin-bottom:0.4rem">DAYS TO TOP</div>
-          <div id="ca-days-value" style="font-size:1.3rem;font-weight:700;
-            font-family:var(--font-mono)">—</div>
-          <span id="ca-extended-note" style="display:none;font-size:0.75rem;color:var(--accent-warn);margin-top:0.25rem">Cycle extended beyond historical average</span>
-        </div>
-        <div style="background:var(--surface2);border-radius:10px;padding:0.9rem">
-          <div id="ca-top-label" style="font-size:0.6rem;color:var(--muted);
-            letter-spacing:0.08em;margin-bottom:0.4rem">EXPECTED TOP</div>
-          <div id="ca-top-date" style="font-size:1rem;font-weight:700;
-            font-family:var(--font-mono)">—</div>
-        </div>
-        <div style="background:var(--surface2);border-radius:10px;padding:0.9rem">
-          <div style="font-size:0.6rem;color:var(--muted);
-            letter-spacing:0.08em;margin-bottom:0.4rem">HALVING POSITION</div>
-          <div id="ca-halving-pct" style="font-size:1.3rem;font-weight:700;
-            font-family:var(--font-mono)">—</div>
-        </div>
-        <div style="background:var(--surface2);border-radius:10px;padding:0.9rem">
-          <div style="font-size:0.6rem;color:var(--muted);
-            letter-spacing:0.08em;margin-bottom:0.4rem">CONFIDENCE</div>
-          <div id="ca-confidence" style="font-size:1.3rem;font-weight:700;
-            font-family:var(--font-mono)">—</div>
-        </div>
-      </div>
-    </div>
-  </section>
 
   <!-- ── KEY INDICATORS ── -->
   <div class="sec-header anim d3">
@@ -1319,70 +1176,6 @@ canvas.sparkline {
     </div>
   </div>
 
-  <!-- ── CHARTS ── -->
-  <div class="sec-header anim d4">
-    <div class="sec-title">Price &amp; Cycle History</div>
-    <div class="sec-line"></div>
-  </div>
-
-  <div class="card chart-card anim d4" style="margin-bottom:10px">
-    <div class="card-accent accent-btc"></div>
-    <div class="chart-header">
-      <div class="chart-title"><div class="chart-title-dot" style="background:var(--btc)"></div>Bitcoin Price + 200W MA</div>
-      <div class="chart-meta-row">
-        <div class="chart-stat"><div class="chart-stat-lbl">200W MA</div><div class="chart-stat-val" id="cs-ma200">—</div></div>
-        <div class="chart-stat"><div class="chart-stat-lbl">vs MA</div><div class="chart-stat-val" id="cs-ma-dev">—</div></div>
-      </div>
-    </div>
-    <canvas id="chart-btc" style="width:100%;height:200px;display:block"></canvas>
-  </div>
-
-  <div class="charts-2col anim d5">
-    <div class="card chart-card">
-      <div class="card-accent accent-btc"></div>
-      <div class="chart-header">
-        <div class="chart-title"><div class="chart-title-dot" style="background:var(--yellow)"></div>Fear &amp; Greed (90d)</div>
-        <div class="chart-meta-row">
-          <div class="chart-stat"><div class="chart-stat-lbl">Current</div><div class="chart-stat-val" id="cs-fg">—</div></div>
-        </div>
-      </div>
-      <canvas id="chart-fg" style="width:100%;height:140px;display:block"></canvas>
-    </div>
-    <div class="card chart-card">
-      <div class="card-accent accent-eth"></div>
-      <div class="chart-header">
-        <div class="chart-title"><div class="chart-title-dot" style="background:var(--eth)"></div>ETH TVL (DeFiLlama)</div>
-        <div class="chart-meta-row">
-          <div class="chart-stat"><div class="chart-stat-lbl">Current</div><div class="chart-stat-val" id="cs-tvl">—</div></div>
-        </div>
-      </div>
-      <canvas id="chart-tvl" style="width:100%;height:140px;display:block"></canvas>
-    </div>
-  </div>
-
-  <div class="charts-2col anim d5">
-    <div class="card chart-card">
-      <div class="card-accent accent-eth"></div>
-      <div class="chart-header">
-        <div class="chart-title"><div class="chart-title-dot" style="background:var(--eth)"></div>ETH/BTC Ratio</div>
-        <div class="chart-meta-row">
-          <div class="chart-stat"><div class="chart-stat-lbl">Current</div><div class="chart-stat-val" id="cs-ratio">—</div></div>
-        </div>
-      </div>
-      <canvas id="chart-ratio" style="width:100%;height:140px;display:block"></canvas>
-    </div>
-    <div class="card chart-card">
-      <div class="card-accent accent-mac"></div>
-      <div class="chart-header">
-        <div class="chart-title"><div class="chart-title-dot" style="background:var(--mac)"></div>Fed Balance Sheet (WALCL)</div>
-        <div class="chart-meta-row">
-          <div class="chart-stat"><div class="chart-stat-lbl">Current</div><div class="chart-stat-val" id="cs-walcl">—</div></div>
-        </div>
-      </div>
-      <canvas id="chart-walcl" style="width:100%;height:140px;display:block"></canvas>
-    </div>
-  </div>
-
   <!-- ── CYCLE LEGEND ── -->
   <div class="sec-header anim d5">
     <div class="sec-title">Cycle Phase Guide</div>
@@ -1412,18 +1205,12 @@ canvas.sparkline {
     <div class="sec-title">Data Sources</div>
     <div class="sec-line"></div>
   </div>
-  <div id="backend-retry-banner" style="display:none; padding:14px 18px; margin-bottom:12px; background:rgba(245,158,11,0.12); border:1px solid rgba(245,158,11,0.35); border-radius:12px; font-size:13px;">
-  <strong>Backend (Render) wird gestartet oder nicht erreicht.</strong> Auf Netlify kommen die Daten nur über dein Backend. Bitte in 30–60 Sekunden auf <button type="button" onclick="document.getElementById('backend-retry-banner').style.display='none'; doRefresh();" style="margin-left:8px; padding:6px 14px; background:var(--ink3); border:1px solid var(--border2); border-radius:8px; color:var(--btc); cursor:pointer; font-weight:600;">Erneut versuchen</button> klicken.
-  </div>
   <div class="status-row anim d6">
     <div class="status-src" id="src-cg"><span class="status-dot"></span>CoinGecko</div>
     <div class="status-src" id="src-fg"><span class="status-dot"></span>Alt.me Fear&amp;Greed</div>
     <div class="status-src" id="src-dl"><span class="status-dot"></span>DeFiLlama TVL</div>
     <div class="status-src" id="src-stable"><span class="status-dot"></span>DeFiLlama Stablecoins</div>
-    <div class="status-src" id="src-fred">
-      <span class="status-dot"></span>
-      <span id="fred-source-label">FRED (synthetic)</span>
-    </div>
+    <div class="status-src warn" id="src-fred"><span class="status-dot"></span>FRED (synthetic fallback)</div>
     <div class="status-src" id="src-ts"><span class="status-dot"></span><span id="src-ts-lbl">—</span></div>
   </div>
 
@@ -1452,8 +1239,7 @@ canvas.sparkline {
 // ⚡ STEP 1: After deploying backend to Render, paste your URL here:
 // Example: const BACKEND_URL = 'https://alphacycle-api.onrender.com';
 // Leave as '' to run standalone (direct browser API calls, no backend needed).
-// Für Netlify: Backend-URL eintragen, sonst sind auf Netlify die APIs oft blockiert (CORS).
-const BACKEND_URL = "https://alphacycle-production.up.railway.app";
+const BACKEND_URL = window.BACKEND_URL || 'https://alphacycle-production.up.railway.app';
 const REFRESH_INTERVAL = 60; // seconds
 
 // ── GLOBAL STATE ─────────────────────────────────────────────────────────
@@ -1471,6 +1257,9 @@ const S = {
   ethScore:     50,
   macScore:     50,
   combined:     50,
+  alphaCyclePosition: null,
+  analyzerPhase:       null,
+  analyzerSignal:      null,
   fgCurrent:    50,
   fgLabel:      'Neutral',
   tvlCurrent:   0,
@@ -1668,21 +1457,6 @@ async function apiFetch(url) {
   return r.json();
 }
 
-// Backend mit längerem Timeout (Render Cold Start ~30s)
-async function apiFetchBackend(url, timeoutMs=55000) {
-  const ctrl=new AbortController();
-  const t=setTimeout(()=>ctrl.abort(), timeoutMs);
-  try {
-    const r=await fetch(url,{headers:{'Accept':'application/json'}, signal:ctrl.signal});
-    clearTimeout(t);
-    if(!r.ok) throw new Error(r.status);
-    return r.json();
-  } catch(e) {
-    clearTimeout(t);
-    throw e;
-  }
-}
-
 async function fetchCoinGecko(coinId, days=365) {
   const d=await apiFetch(
     `https://api.coingecko.com/api/v3/coins/${coinId}/market_chart?vs_currency=usd&days=${days}&interval=daily`
@@ -1751,203 +1525,62 @@ async function loadAllData() {
 
   // If backend is configured, use it — much faster (single request)
   if (BACKEND_URL) {
-    const isDeployedSite = window.location.protocol !== 'file:' &&
-      !['localhost','127.0.0.1'].includes(window.location.hostname);
-    const BACKEND_RETRIES = 3;
-    const BACKEND_TIMEOUT = 55000; // Render cold start ~30s
+    try {
+      const [prices, btcC, ethC, macC, hist, analyzer] = await Promise.all([
+        apiFetch(`${BACKEND_URL}/api/prices`),
+        apiFetch(`${BACKEND_URL}/api/cycle/btc`),
+        apiFetch(`${BACKEND_URL}/api/cycle/eth`),
+        apiFetch(`${BACKEND_URL}/api/cycle/macro`),
+        apiFetch(`${BACKEND_URL}/api/history`),
+        apiFetch(`${BACKEND_URL}/api/analyzer`),
+      ]);
 
-    for (let attempt = 1; attempt <= BACKEND_RETRIES; attempt++) {
-      try {
-        const [prices, btcC, ethC, macC, hist, combinedC] = await Promise.all([
-          apiFetchBackend(`${BACKEND_URL}/api/prices`, BACKEND_TIMEOUT),
-          apiFetchBackend(`${BACKEND_URL}/api/cycle/btc`, BACKEND_TIMEOUT),
-          apiFetchBackend(`${BACKEND_URL}/api/cycle/eth`, BACKEND_TIMEOUT),
-          apiFetchBackend(`${BACKEND_URL}/api/cycle/macro`, BACKEND_TIMEOUT),
-          apiFetchBackend(`${BACKEND_URL}/api/history`, BACKEND_TIMEOUT),
-          apiFetchBackend(`${BACKEND_URL}/api/cycle/combined`, BACKEND_TIMEOUT),
-        ]);
-
-        if(prices) {
-          S.btcMarket  = prices.btc;
-          S.ethMarket  = prices.eth;
-          S.btcPrices  = (prices.btc?.history||[]).map(x=>x.v);
-          S.ethPrices  = (prices.eth?.history||[]).map(x=>x.v);
-          S.fgCurrent  = prices.fear_greed?.current??50;
-          S.fgLabel    = prices.fear_greed?.label??'Neutral';
-          S.fgHistory  = prices.fear_greed?.history||[];
-          S.ratioHistory = prices.eth_btc_ratio||[];
-        }
-        if(hist) {
-          S.tvlHistory    = hist.tvl||[];
-          S.stableHistory = (hist.stable||hist.stablecoin||[]);
-          S.walclHistory  = hist.walcl||[];
-          const fredEl = document.getElementById('fred-source-label');
-          if (fredEl) {
-            const isReal = S.walclHistory && S.walclHistory.length > 10;
-            fredEl.textContent = isReal ? 'FRED (live ✓)' : 'FRED (synthetic)';
-            const srcFred = document.getElementById('src-fred');
-            if (srcFred) {
-              srcFred.classList.toggle('warn', !isReal);
-              srcFred.classList.toggle('ok', isReal);
-            }
-          }
-          S.fgHistory     = hist.fg||S.fgHistory;
-          if(hist.btc_full?.length) S.btcPrices = hist.btc_full.map(x=>x.v);
-          if(hist.eth_full?.length) S.ethPrices = hist.eth_full.map(x=>x.v);
-        }
-        S.btcScore      = safeNum(btcC?.score, computeBTCScore());
-        S.btcComponents = btcC?.components || null;
-        S.ethScore      = safeNum(ethC?.score, computeETHScore());
-        S.ethComponents = ethC?.components || null;
-        S.macScore      = safeNum(macC?.score, computeMacroScore());
-        S.macComponents = macC?.components || null;
-        S.combined = safeNum(
-          combinedC?.combined_score,
-          clamp(S.btcScore*0.45+S.ethScore*0.30+S.macScore*0.25)
-        );
-
-        if(macC?.data) {
-          S.walclCurrent  = safeNum(macC.data.walcl_current_T)*1e12;
-          S.stableCurrent = safeNum(macC.data.stable_current_B)*1e9;
-        }
-
-        // Optional: Alpha Intelligence (analyzer + decision)
-        let analyzer = null, decision = null, cycleAnchor = null;
-        try {
-          [analyzer, decision, cycleAnchor] = await Promise.all([
-            apiFetchBackend(`${BACKEND_URL}/api/analyzer`, 10000),
-            apiFetchBackend(`${BACKEND_URL}/api/decision`, 10000),
-            apiFetchBackend(`${BACKEND_URL}/api/cycle-anchor`, 10000),
-          ]);
-        } catch (_) { }
-
-        function renderAlphaIntelligence(analyzer, decision) {
-          const el = document.getElementById('hero-decision');
-          if (!el) return;
-
-          const signal = decision?.alpha_signal ?? '—';
-          const position = decision?.alpha_cycle_position ?? 50;
-          const phase = decision?.market_phase ?? '—';
-          const alloc = decision?.spot_allocation ?? {};
-          const expReturn = decision?.expected_return_12m ?? '—';
-          const confidence = decision?.confidence ?? 0;
-          const strategy = decision?.strategy_summary ?? '—';
-
-          const signalColors = {
-            'STRONG_ACCUMULATE': '#22c55e',
-            'ACCUMULATE': '#86efac',
-            'HOLD': '#f59e0b',
-            'REDUCE': '#f97316',
-            'EXIT': '#ef4444',
-          };
-          const signalEl = document.getElementById('ai-signal');
-          if (signalEl) {
-            signalEl.textContent = signal.replace('_', ' ');
-            signalEl.style.color = signalColors[signal] ?? 'var(--text)';
-          }
-
-          const posEl = document.getElementById('ai-position');
-          if (posEl) posEl.textContent = `${Math.round(position)}%`;
-          const phaseEl = document.getElementById('ai-phase');
-          if (phaseEl) phaseEl.textContent = phase;
-
-          const allocEl = document.getElementById('ai-alloc');
-          if (allocEl) allocEl.innerHTML =
-            `BTC ${alloc.btc ?? 0}% · ETH ${alloc.eth ?? 0}% · Cash ${alloc.cash ?? 0}%`;
-
-          const retEl = document.getElementById('ai-return');
-          if (retEl) retEl.textContent = expReturn;
-
-          const confEl = document.getElementById('ai-confidence');
-          if (confEl) {
-            confEl.textContent = `${Math.round(confidence)}%`;
-            confEl.style.color = scoreColor(confidence);
-          }
-
-          const stratEl = document.getElementById('ai-strategy');
-          if (stratEl) stratEl.textContent = strategy;
-
-          el.style.display = 'block';
-        }
-
-        function renderCycleAnchor(data) {
-          const el = document.getElementById('cycle-anchor-section');
-          if (!el) return;
-
-          const position = data?.cycle_position_percent ?? 0;
-          const rawDaysToTop = data?.days_to_next_cycle_top;
-          const daysToTop = typeof rawDaysToTop === 'number' ? rawDaysToTop : 0;
-          const isPastTop = daysToTop < 0;
-          const topDate = data?.expected_cycle_top_date ?? '—';
-          const halvingPct = data?.halving_cycle_position_percent ?? 0;
-          const confidence = data?.cycle_time_confidence ?? 0;
-
-          const posEl = document.getElementById('ca-position-pct');
-          if (posEl) posEl.textContent = `${Math.round(position)}%`;
-
-          const bar = document.getElementById('ca-progress-bar');
-          if (bar) bar.style.width = `${Math.min(100, Math.round(position))}%`;
-
-          const daysLabelEl = document.getElementById('ca-days-label');
-          if (daysLabelEl) {
-            daysLabelEl.textContent = isPastTop ? 'DAYS PAST EST. TOP' : 'DAYS TO TOP';
-          }
-
-          const daysValEl = document.getElementById('ca-days-value');
-          if (daysValEl) {
-            const v = Math.abs(daysToTop);
-            daysValEl.textContent = Number.isFinite(v) ? `${v}d` : '—';
-          }
-
-          const noteEl = document.getElementById('ca-extended-note');
-          if (noteEl) {
-            if (isPastTop) {
-              noteEl.style.display = 'block';
-              noteEl.textContent = 'Cycle extended beyond historical average';
-            } else {
-              noteEl.style.display = 'none';
-            }
-          }
-
-          const topLabelEl = document.getElementById('ca-top-label');
-          if (topLabelEl) {
-            topLabelEl.textContent = isPastTop ? 'EST. TOP WINDOW' : 'EXPECTED TOP';
-          }
-
-          const dateEl = document.getElementById('ca-top-date');
-          if (dateEl) dateEl.textContent = topDate.slice(0, 7);
-
-          const halvingEl = document.getElementById('ca-halving-pct');
-          if (halvingEl) halvingEl.textContent = `${Math.round(halvingPct)}%`;
-
-          const confEl = document.getElementById('ca-confidence');
-          if (confEl) {
-            confEl.textContent = `${Math.round(confidence)}%`;
-            confEl.style.color = scoreColor(confidence);
-          }
-
-          el.style.display = 'block';
-        }
-
-        if(analyzer && decision) renderAlphaIntelligence(analyzer, decision);
-        if(cycleAnchor) renderCycleAnchor(cycleAnchor);
-
-        markSources(errors);
-        return;
-      } catch(e) {
-        if (attempt < BACKEND_RETRIES) {
-          await new Promise(r=>setTimeout(r, 3000));
-          continue;
-        }
-        if (isDeployedSite) {
-          const banner = document.getElementById('backend-retry-banner');
-          if (banner) banner.style.display = 'block';
-          markSources({ backend: e.message || 'Timeout' });
-          return;
-        }
-        console.warn('Backend unavailable, falling back to direct APIs:', e.message);
-        break;
+      if(prices) {
+        S.btcMarket  = prices.btc;
+        S.ethMarket  = prices.eth;
+        S.btcPrices  = (prices.btc?.history||[]).map(x=>x.v);
+        S.ethPrices  = (prices.eth?.history||[]).map(x=>x.v);
+        S.fgCurrent  = prices.fear_greed?.current??50;
+        S.fgLabel    = prices.fear_greed?.label??'Neutral';
+        S.fgHistory  = prices.fear_greed?.history||[];
+        S.ratioHistory = prices.eth_btc_ratio||[];
       }
+      if(hist) {
+        S.tvlHistory    = hist.tvl||[];
+        S.stableHistory = (hist.stablecoin||[]);
+        S.walclHistory  = hist.walcl||[];
+        S.fgHistory     = hist.fg||S.fgHistory;
+        // Full price history for scoring
+        if(hist.btc_full?.length) S.btcPrices = hist.btc_full.map(x=>x.v);
+        if(hist.eth_full?.length) S.ethPrices = hist.eth_full.map(x=>x.v);
+      }
+      // Use backend scores directly
+      S.btcScore = safeNum(btcC?.score, computeBTCScore());
+      S.btcComponents = btcC?.components || null;
+      S.ethScore = safeNum(ethC?.score, computeETHScore());
+      S.macScore = safeNum(macC?.score, computeMacroScore());
+      S.combined = clamp(S.btcScore*0.45+S.ethScore*0.30+S.macScore*0.25);
+
+      // Alpha Cycle Position from analyzer (corrected score; do NOT use cycle_position_percent)
+      if(analyzer && typeof analyzer.alpha_cycle_position === 'number') {
+        S.alphaCyclePosition = clamp(analyzer.alpha_cycle_position);
+        S.analyzerPhase       = analyzer.phase || null;
+        S.analyzerSignal      = analyzer.signal || null;
+      } else {
+        S.alphaCyclePosition = null;
+        S.analyzerPhase       = null;
+        S.analyzerSignal      = null;
+      }
+
+      if(macC?.data) {
+        S.walclCurrent  = safeNum(macC.data.walcl_current_T)*1e12;
+        S.stableCurrent = safeNum(macC.data.stable_current_B)*1e9;
+      }
+
+      markSources(errors);
+      return;
+    } catch(e) {
+      console.warn('Backend unavailable, falling back to direct APIs:', e.message);
     }
   }
 
@@ -2036,9 +1669,11 @@ function renderComponents(containerId, components) {
 
 // ── PHASE BANNER ────────────────────────────────────────────────────────────
 function updatePhaseBanner() {
-  const phase = phaseOf(S.combined);
-  const col   = scoreColor(S.combined);
-  const banner = document.getElementById('hero-decision');
+  // Use Alpha Cycle Position from backend when available (corrected score); else combined
+  const positionScore = S.alphaCyclePosition != null ? S.alphaCyclePosition : S.combined;
+  const phase = S.analyzerPhase || phaseOf(positionScore);
+  const col   = scoreColor(positionScore);
+  const banner = $('phase-banner');
 
   const phaseStyles = {
     Accumulation: {bg:'rgba(34,197,94,0.06)', border:'rgba(34,197,94,0.22)'},
@@ -2047,18 +1682,19 @@ function updatePhaseBanner() {
     'Bear Market':{bg:'rgba(239,68,68,0.06)',  border:'rgba(239,68,68,0.22)'},
   };
   const st=phaseStyles[phase]||phaseStyles['Bull Market'];
-  if (banner) {
-    banner.style.background   = st.bg;
-    banner.style.borderColor  = st.border;
-    banner.style.color        = col;
-    banner.style.display      = 'block';
-  }
+  banner.style.background   = st.bg;
+  banner.style.borderColor  = st.border;
+  banner.style.color        = col;
 
   $('phase-icon').textContent    = phaseIcon(phase);
   $('phase-name').textContent    = phase;
-  $('phase-desc').textContent    = phaseDesc(phase);
-  $('phase-combined').textContent = Math.round(S.combined);
+  $('phase-desc').textContent    = S.analyzerSignal ? `${S.analyzerSignal} — ${phaseDesc(phase)}` : phaseDesc(phase);
+  $('phase-combined').textContent = Math.round(positionScore);
   $('phase-combined').style.color = col;
+  const eyebrow = $('phase-eyebrow');
+  if(eyebrow) eyebrow.textContent = S.alphaCyclePosition != null ? 'Alpha Cycle Position™' : 'Current Market Cycle Phase';
+  const lbl = $('phase-score-lbl');
+  if(lbl) lbl.textContent = S.alphaCyclePosition != null ? 'Position' : 'Combined';
 }
 
 // ── TICKER & SCORES UPDATE ──────────────────────────────────────────────────
@@ -2120,44 +1756,18 @@ function updateUI() {
         ? clamp(100-trendScore(S.walclHistory.map(x=>x.v),26)) : 50},
     ]);
   }
-  if (S.ethComponents) {
-    renderComponents('eth-components', [
-      {label:'ETH/BTC Trend', score: S.ethComponents.eth_btc_ratio?.score      ?? 50},
-      {label:'TVL Trend',     score: S.ethComponents.tvl_trend?.score          ?? 50},
-      {label:'Price 30d',     score: S.ethComponents.price_trend_30d?.score    ?? 50},
-      {label:'RSI',           score: S.ethComponents.rsi?.score                ?? 50},
-      {label:'200W MA Dev',   score: S.ethComponents.ma_200w?.score            ?? 50},
-      {label:'Price 90d',     score: S.ethComponents.price_trend_90d?.score    ?? 50},
-      {label:'Drawdown',      score: S.ethComponents.drawdown?.score           ?? 50},
-      {label:'Stable Growth', score: S.ethComponents.stable_growth?.score      ?? 50},
-      {label:'Fear & Greed',  score: S.ethComponents.fear_greed?.score         ?? 50},
-      {label:'Funding',       score: S.ethComponents.eth_funding?.score        ?? 50},
-    ]);
-  } else {
-    renderComponents('eth-components', [
-      {label:'ETH/BTC Trend', score:S.ratioHistory.length>2?trendScore(S.ratioHistory.map(x=>x.v),60):50},
-      {label:'TVL Trend',     score:S.tvlHistory.length>2?trendScore(S.tvlHistory.map(x=>x.v),90):50},
-      {label:'RSI',           score:rsiToScore(computeRSI(ethWeekly,14))},
-      {label:'200W MA Dev',   score:ma200Score(S.ethPrices)},
-      {label:'Price 30d',     score:trendScore(S.ethPrices,30)},
-    ]);
-  }
-  if (S.macComponents) {
-    renderComponents('mac-components', [
-      {label:'WALCL Trend',   score: S.macComponents.walcl_trend?.score    ?? 50},
-      {label:'Stable Trend',  score: S.macComponents.stable_trend?.score   ?? 50},
-      {label:'BTC Risk-On',   score: S.macComponents.btc_risk_on?.score    ?? 50},
-      {label:'DXY Trend',     score: S.macComponents.dxy_trend?.score      ?? 50},
-      {label:'Yield Trend',   score: S.macComponents.yield_trend?.score    ?? 50},
-      {label:'BTC Dominance', score: S.macComponents.btc_dom_macro?.score  ?? 50},
-    ]);
-  } else {
-    renderComponents('mac-components', [
-      {label:'WALCL Trend',   score:S.walclHistory.length>2?clamp(100-trendScore(S.walclHistory.map(x=>x.v),26)):50},
-      {label:'Stable Supply', score:S.stableHistory.length>2?clamp(100-trendScore(S.stableHistory.map(x=>x.v),90)):50},
-      {label:'BTC Risk-On',   score:S.btcPrices.length>2?trendScore(S.btcPrices,60):50},
-    ]);
-  }
+  renderComponents('eth-components', [
+    {label:'ETH/BTC Trend',score:S.ratioHistory.length>2?trendScore(S.ratioHistory.map(x=>x.v),60):50},
+    {label:'TVL Trend',    score:S.tvlHistory.length>2?trendScore(S.tvlHistory.map(x=>x.v),90):50},
+    {label:'RSI',          score:rsiToScore(computeRSI(ethWeekly,14))},
+    {label:'200W MA Dev',  score:ma200Score(S.ethPrices)},
+    {label:'Price 30d',    score:trendScore(S.ethPrices,30)},
+  ]);
+  renderComponents('mac-components', [
+    {label:'WALCL Trend',  score:S.walclHistory.length>2?clamp(100-trendScore(S.walclHistory.map(x=>x.v),26)):50},
+    {label:'Stable Supply',score:S.stableHistory.length>2?clamp(100-trendScore(S.stableHistory.map(x=>x.v),90)):50},
+    {label:'BTC Risk-On',  score:S.btcPrices.length>2?trendScore(S.btcPrices,60):50},
+  ]);
 
   updatePhaseBanner();
 
@@ -2396,57 +2006,6 @@ function drawSparkline(canvasId, vals, color) {
 }
 
 function renderCharts() {
-  const ms2xy = arr => arr.map(x=>({x:x.t, y:safeNum(x.v)})).filter(p=>p.y>0);
-
-  // BTC price + 200W MA
-  if(S.btcPrices.length) {
-    const now=Date.now(), step=86400000;
-    const btcData=S.btcPrices.slice(-365).map((p,i,a)=>({
-      x:now-(a.length-1-i)*step, y:p
-    }));
-    // 200W MA
-    const weekly=S.btcPrices.filter((_,i)=>i%7===0);
-    const ma200pts=[]; const now2=Date.now();
-    for(let i=199;i<weekly.length;i++){
-      const ma=safeMean(weekly.slice(i-199,i+1));
-      const offset=(weekly.length-1-i)*7*86400000;
-      ma200pts.push({x:now2-offset, y:ma});
-    }
-    const ma200recent=ma200pts.slice(-53);
-    drawChart('chart-btc', [
-      {data:btcData,    color:'#0ea5e9',width:1.8,fill:true},
-      {data:ma200recent,color:'#60a5fa',width:1.2,dash:[5,4]},
-    ], {height:200, yFmt:v=>`$${v>=1000?(v/1000).toFixed(0)+'K':v.toFixed(0)}`});
-  }
-
-  // F&G bar chart
-  if(S.fgHistory.length) {
-    drawBarChart('chart-fg', S.fgHistory.slice(-60).map(x=>({v:x.v})), {height:140});
-  }
-
-  // TVL
-  if(S.tvlHistory.length) {
-    drawChart('chart-tvl', [{
-      data:ms2xy(S.tvlHistory.slice(-180)).map(d=>({...d,y:d.y/1e9})),
-      color:'#8fa5ff',width:1.5,fill:true
-    }], {height:140, yFmt:v=>`$${v.toFixed(0)}B`, lpad:46});
-  }
-
-  // ETH/BTC ratio
-  if(S.ratioHistory.length) {
-    drawChart('chart-ratio', [{
-      data:ms2xy(S.ratioHistory.slice(-365)),
-      color:'#8fa5ff',width:1.5,fill:true
-    }], {height:140, yFmt:v=>v.toFixed(4), lpad:46});
-  }
-
-  // WALCL
-  if(S.walclHistory.length) {
-    drawChart('chart-walcl', [{
-      data:ms2xy(S.walclHistory.slice(-260)),
-      color:'#00e5aa',width:1.5,fill:true
-    }], {height:140, yFmt:v=>`$${v.toFixed(1)}T`, lpad:46});
-  }
 }
 
 function renderSparklines() {
