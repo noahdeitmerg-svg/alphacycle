@@ -161,22 +161,32 @@ def compute_btc_score(prices_daily, fear_greed, walcl_values, stablecoin_supply,
     dom=safe_float(btc_dominance,50.0)
     s["btc_dom"]=btc_dominance_to_score(dom); s["btc_dom_raw"]=round(dom,1)
 
-    # OFFICIAL BTC SCORE MODEL v1.0
-    # Components: 9 | Weights sum: 1.00
-    # DO NOT modify weights without architect approval
-    final = (
-        clamp(s["ma_200w"])       * 0.25 +
-        clamp(s["drawdown"])      * 0.20 +
-        clamp(s["mvrv"])          * 0.15 +
-        clamp(s["fear_greed"])    * 0.12 +
-        clamp(s["pi_cycle"])      * 0.10 +
-        clamp(s["puell"])         * 0.10 +
-        clamp(s["rsi"])           * 0.05 +
-        clamp(s["funding"])       * 0.02 +
-        clamp(s["stable_supply"]) * 0.01
+    # MAIN SCORE — Long-Term Valuation Only (v2.0)
+    # Weights sum: 1.00 | Architect approved
+    liquidity_score = clamp(
+        clamp(s["macro_liq"]) * 0.60 +
+        clamp(s["stable_supply"]) * 0.40
     )
+    s["liquidity"] = round(liquidity_score, 1)
 
-    s["btc_score"]=round(clamp(final),1)
+    final = (
+        clamp(s["ma_200w"])    * 0.30 +
+        clamp(s["drawdown"])   * 0.25 +
+        clamp(s["fear_greed"]) * 0.20 +
+        clamp(s["liquidity"])  * 0.25
+    )
+    s["btc_score"] = round(clamp(final), 1)
+
+    # Short-term indicators — excluded from Main Score
+    s["short_term"] = {
+        "rsi":       round(clamp(s.get("rsi", 50.0)), 1),
+        "funding":   round(clamp(s.get("funding", 50.0)), 1),
+        "mvrv":      round(clamp(s.get("mvrv", 50.0)), 1),
+        "pi_cycle":  round(clamp(s.get("pi_cycle", 50.0)), 1),
+        "puell":     round(clamp(s.get("puell", 50.0)), 1),
+        "power_law": round(clamp(s.get("power_law", 50.0)), 1),
+    }
+
     s["current_price"]=round(current,2)
     return s
 
@@ -220,12 +230,30 @@ def compute_eth_score(eth_prices, btc_prices, tvl_series, stablecoin_supply,
     fd=funding_data or {}
     s["eth_funding"]=funding_rate_to_score(fd.get("eth_funding_rate",0.0))
 
-    weights={
-        "eth_btc_ratio":0.20,"tvl_trend":0.17,"price_trend_30d":0.12,
-        "rsi":0.12,"ma_200w":0.10,"price_trend_90d":0.09,
-        "drawdown":0.07,"stable_growth":0.06,"fear_greed":0.04,"eth_funding":0.03,
+    # MAIN SCORE — Long-Term Valuation Only (v2.0)
+    # Weights sum: 1.00 | Architect approved
+    eth_liquidity = clamp(
+        clamp(s.get("stable_growth", 50.0)) * 0.60 +
+        clamp(s.get("tvl_trend", 50.0)) * 0.40
+    )
+    s["liquidity"] = round(eth_liquidity, 1)
+
+    eth_weights = {
+        "eth_btc_ratio": 0.25,
+        "drawdown":      0.25,
+        "fear_greed":    0.20,
+        "liquidity":     0.30,
     }
-    s["eth_score"]=_weighted(s,weights)
+    s["eth_score"] = _weighted(s, eth_weights)
+
+    # Short-term indicators — excluded from Main Score
+    s["short_term"] = {
+        "rsi":            round(clamp(s.get("rsi", 50.0)), 1),
+        "eth_funding":    round(clamp(s.get("eth_funding", 50.0)), 1),
+        "price_trend_30d": round(clamp(s.get("price_trend_30d", 50.0)), 1),
+        "price_trend_90d": round(clamp(s.get("price_trend_90d", 50.0)), 1),
+    }
+
     s["current_price"]=round(eth[-1],2) if eth else 0.0
     return s
 
