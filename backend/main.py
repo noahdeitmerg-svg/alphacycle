@@ -306,10 +306,15 @@ async def get_btc_cycle():
             "power_law":     {"score": s.get("power_law", 50.0)},
         },
         "weights": {
-            "ma_200w": 0.18, "mvrv": 0.15, "fear_greed": 0.12,
-            "drawdown": 0.10, "rsi": 0.10, "puell": 0.10,
-            "pi_cycle": 0.08, "macro_liq": 0.08, "stable_supply": 0.05,
-            "funding": 0.02, "power_law": 0.02,
+            "ma_200w":       0.25,
+            "drawdown":      0.20,
+            "mvrv":          0.15,
+            "fear_greed":    0.12,
+            "pi_cycle":      0.10,
+            "puell":         0.10,
+            "rsi":           0.05,
+            "funding":       0.02,
+            "stable_supply": 0.01,
         },
     })
 
@@ -433,6 +438,63 @@ async def get_backtest():
     except Exception as e:
         logger.exception("Backtest endpoint failed")
         return api_response({"results": [], "error": str(e)})
+
+
+@app.get("/api/debug")
+async def get_debug():
+    """
+    Transparente Debug-Ausgabe für den BTC-Kern-Score.
+    Gibt die wesentlichen Zwischenwerte der 4-Komponenten-Formel zurück.
+    """
+    c   = _require_cache()
+    raw = c["raw"]
+
+    prices = [safe_float(p) for p in raw.get("btc_prices", []) if p and safe_float(p) > 0]
+    if prices:
+        price = prices[-1]
+        ath   = max(prices)
+        drawdown_percent = ((price - ath) / ath * 100) if ath > 0 else 0.0
+    else:
+        price = safe_float(c["btc_scores"].get("current_price", 0.0))
+        ath   = price
+        drawdown_percent = 0.0
+
+    btc_scores = c["btc_scores"]
+    fg_value   = safe_float(raw.get("fear_greed", {}).get("current", 50.0))
+
+    debug_payload = {
+        "price":            round(price, 2),
+        "ath":              round(ath, 2),
+        "drawdown_percent": round(drawdown_percent, 2),
+        "components": {
+            "ma_200w":       {
+                "score":  clamp(btc_scores.get("ma_200w", 50.0)),
+                "raw":    btc_scores.get("ma_200w_raw", 0.0),
+                "dev_pct": btc_scores.get("ma_200w_dev_pct", 0.0),
+            },
+            "drawdown":      {"score": clamp(btc_scores.get("drawdown",      50.0))},
+            "mvrv":          {"score": clamp(btc_scores.get("mvrv",          50.0))},
+            "fear_greed":    {"score": clamp(btc_scores.get("fear_greed",    50.0)), "raw": fg_value},
+            "pi_cycle":      {"score": clamp(btc_scores.get("pi_cycle",      50.0))},
+            "puell":         {"score": clamp(btc_scores.get("puell",         50.0))},
+            "rsi":           {"score": clamp(btc_scores.get("rsi",           50.0)), "raw": btc_scores.get("rsi_raw", 50.0)},
+            "funding":       {"score": clamp(btc_scores.get("funding",       50.0)), "raw": btc_scores.get("funding_raw", 0.0)},
+            "stable_supply": {"score": clamp(btc_scores.get("stable_supply", 50.0))},
+        },
+        "weights": {
+            "ma_200w":       0.25,
+            "drawdown":      0.20,
+            "mvrv":          0.15,
+            "fear_greed":    0.12,
+            "pi_cycle":      0.10,
+            "puell":         0.10,
+            "rsi":           0.05,
+            "funding":       0.02,
+            "stable_supply": 0.01,
+        },
+        "final_score": clamp(btc_scores.get("btc_score", 50.0)),
+    }
+    return api_response(debug_payload)
 
 
 @app.get("/api/liquidity-regime")
