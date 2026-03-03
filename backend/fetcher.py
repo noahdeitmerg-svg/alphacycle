@@ -91,14 +91,29 @@ async def fetch_binance_ticker(coin_id):
 
 async def fetch_funding_rates():
     try:
-        btc=await _get("https://fapi.binance.com/fapi/v1/fundingRate",params={"symbol":"BTCUSDT","limit":1})
-        eth=await _get("https://fapi.binance.com/fapi/v1/fundingRate",params={"symbol":"ETHUSDT","limit":1})
+        btc = await _get(
+            "https://api.bybit.com/v5/market/tickers",
+            params={"category": "linear", "symbol": "BTCUSDT"}
+        )
+        eth = await _get(
+            "https://api.bybit.com/v5/market/tickers",
+            params={"category": "linear", "symbol": "ETHUSDT"}
+        )
+        def parse_funding(data, sym):
+            if not data or data.get("retCode") != 0:
+                return 0.0
+            try:
+                item = data["result"]["list"][0]
+                return round(_sf(item.get("fundingRate", 0)) * 100, 4)
+            except Exception:
+                return 0.0
         return {
-            "btc_funding_rate": round(_sf(btc[0]["fundingRate"])*100,4) if btc else 0.0,
-            "eth_funding_rate": round(_sf(eth[0]["fundingRate"])*100,4) if eth else 0.0,
+            "btc_funding_rate": parse_funding(btc, "BTCUSDT"),
+            "eth_funding_rate": parse_funding(eth, "ETHUSDT"),
         }
     except Exception as e:
-        logger.warning(f"Funding rates: {e}"); return {"btc_funding_rate":0.0,"eth_funding_rate":0.0}
+        logger.warning(f"Bybit funding rates: {e}")
+        return {"btc_funding_rate": 0.0, "eth_funding_rate": 0.0}
 
 # ── COINGECKO ────────────────────────────────────────────────────────────────
 _CG="https://api.coingecko.com/api/v3"
@@ -326,7 +341,14 @@ async def fetch_all():
     stable =safe(results[8],[])
     walcl  =safe(results[9],_synthetic_walcl())
     us10y  =safe(results[10],[])
-    gdata  =safe(results[11],{"btc_dominance":50.0,"total_market_cap":0.0})
+    gdata_raw = safe(results[11], None)
+    if gdata_raw is None or gdata_raw.get("btc_dominance", 50.0) == 50.0:
+        await asyncio.sleep(3)
+        gdata = await fetch_global_data()
+    else:
+        gdata = gdata_raw
+    if not gdata or gdata.get("btc_dominance", 50.0) == 50.0:
+        gdata = {"btc_dominance": 50.0, "total_market_cap": 0.0}
     funding=safe(results[12],{"btc_funding_rate":0.0,"eth_funding_rate":0.0})
 
     kraken_btc = await fetch_kraken_prices("XBTUSD", 730)
