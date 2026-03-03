@@ -58,6 +58,30 @@ async def fetch_kraken_prices(pair: str, days: int = 730) -> list:
     logger.info(f"Kraken {pair}: {len(prices)}d")
     return prices
 
+async def fetch_bybit_ticker(coin_id: str) -> dict:
+    """Fetch 24h ticker from Bybit. No API key needed."""
+    symbols = {"bitcoin": "BTCUSDT", "ethereum": "ETHUSDT"}
+    sym = symbols.get(coin_id)
+    if not sym:
+        return {}
+    data = await _get(
+        "https://api.bybit.com/v5/market/tickers",
+        params={"category": "spot", "symbol": sym}
+    )
+    if not data or data.get("retCode") != 0:
+        logger.warning(f"Bybit ticker {sym}: {data.get('retMsg') if data else 'no response'}")
+        return {}
+    try:
+        item = data["result"]["list"][0]
+        return {
+            "price":      _sf(item.get("lastPrice")),
+            "change_24h": _sf(item.get("price24hPcnt", 0)) * 100,
+            "volume_24h": _sf(item.get("volume24h")),
+        }
+    except Exception as e:
+        logger.warning(f"Bybit ticker parse {sym}: {e}")
+        return {}
+
 async def fetch_binance_ticker(coin_id):
     sym=_SYM.get(coin_id)
     if not sym: return {}
@@ -276,8 +300,8 @@ async def fetch_all():
     results=await asyncio.gather(
         fetch_binance_prices("bitcoin",730),   # 0
         fetch_binance_prices("ethereum",730),  # 1
-        fetch_binance_ticker("bitcoin"),        # 2
-        fetch_binance_ticker("ethereum"),       # 3
+        fetch_bybit_ticker("bitcoin"),     # 2
+        fetch_bybit_ticker("ethereum"),    # 3
         fetch_market_data("bitcoin"),           # 4
         fetch_market_data("ethereum"),          # 5
         fetch_fear_greed(90),                   # 6
