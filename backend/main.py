@@ -494,6 +494,10 @@ async def get_debug():
         },
         "final_score": clamp(btc_scores.get("btc_score", 50.0)),
     }
+    debug_payload["fred_key_status"] = (
+        "SET" if (os.getenv("FRED_API_KEY","").strip()
+        not in ("","your_key_here")) else "MISSING"
+    )
     return api_response(debug_payload)
 
 
