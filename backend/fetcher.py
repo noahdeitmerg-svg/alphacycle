@@ -89,12 +89,17 @@ async def fetch_market_data(coin_id):
     }
 
 async def fetch_coin_prices_cg(coin_id,days=365):
-    data=await _get(
+    data = await _get(
         f"{_CG}/coins/{coin_id}/market_chart",
-        params={"vs_currency":"usd","days":days,"interval":"daily"},
+        params={"vs_currency": "usd", "days": days, "interval": "daily"},
         headers=_cg_headers(),
     )
-    if not data or "prices" not in data: return []
+    if not data:
+        logger.error(f"CoinGecko {coin_id}: no data returned")
+        return []
+    if "prices" not in data:
+        logger.error(f"CoinGecko {coin_id}: unexpected response keys={list(data.keys())}")
+        return []
     prices=[_sf(i[1]) for i in data["prices"] if _sf(i[1])>0]
     logger.info(f"CoinGecko {coin_id}: {len(prices)}d"); return prices
 
@@ -281,8 +286,18 @@ async def fetch_all():
     gdata  =safe(results[11],{"btc_dominance":50.0,"total_market_cap":0.0})
     funding=safe(results[12],{"btc_funding_rate":0.0,"eth_funding_rate":0.0})
 
-    cg_btc = await fetch_coin_prices_cg("bitcoin",730)
-    cg_eth = await fetch_coin_prices_cg("ethereum",730)
+    try:
+        cg_btc = await fetch_coin_prices_cg("bitcoin",730)
+        logger.info(f"CG BTC prices: {len(cg_btc)} pts, last={cg_btc[-1] if cg_btc else 'EMPTY'}")
+    except Exception as e:
+        logger.error(f"CG BTC fetch failed: {e}")
+        cg_btc = []
+    try:
+        cg_eth = await fetch_coin_prices_cg("ethereum",730)
+        logger.info(f"CG ETH prices: {len(cg_eth)} pts, last={cg_eth[-1] if cg_eth else 'EMPTY'}")
+    except Exception as e:
+        logger.error(f"CG ETH fetch failed: {e}")
+        cg_eth = []
     btc_prices=cg_btc if len(cg_btc)>10 else (btc_p if len(btc_p)>10 else [])
     eth_prices=cg_eth if len(cg_eth)>10 else (eth_p if len(eth_p)>10 else [])
     if not walcl: walcl=_synthetic_walcl()
