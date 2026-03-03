@@ -68,7 +68,7 @@ def compute_cycle_anchor(reference_date: Optional[date] = None) -> dict:
     days_since_bottom = (today - CURRENT_CYCLE_BOTTOM).days
     days_since_top: Optional[int] = None
 
-    expected_top_date = CURRENT_CYCLE_BOTTOM + timedelta(days=HISTORICAL_AVERAGE_BULL_DAYS)
+    expected_top_date = CYCLE_TOPS[-1]
     expected_bottom_date = expected_top_date + timedelta(days=HISTORICAL_AVERAGE_BEAR_DAYS)
 
     cycle_position_percent = (days_since_bottom / HISTORICAL_AVERAGE_CYCLE_DAYS) * 100.0
