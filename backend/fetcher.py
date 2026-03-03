@@ -287,9 +287,13 @@ async def fetch_all():
     eth_prices=cg_eth if len(cg_eth)>10 else (eth_p if len(eth_p)>10 else [])
     if not walcl: walcl=_synthetic_walcl()
 
-    def merge(tk,cg):
+    def merge(tk,cg,prices=None):
         return {
-            "price":         _sf(tk.get("price")      or cg.get("price",0)),
+            "price":         _sf(
+                tk.get("price")
+                or cg.get("price")
+                or (prices[-1] if prices else 0)
+            ),
             "change_24h":    _sf(tk.get("change_24h") or cg.get("change_24h",0)),
             "volume":        _sf(tk.get("volume_24h") or cg.get("volume",0)),
             "market_cap":    _sf(cg.get("market_cap",0)),
@@ -311,8 +315,8 @@ async def fetch_all():
     return {
         "btc_prices":   btc_prices,
         "eth_prices":   eth_prices,
-        "btc_market":   merge(btc_tk,btc_cg),
-        "eth_market":   merge(eth_tk,eth_cg),
+        "btc_market":   merge(btc_tk,btc_cg,btc_prices),
+        "eth_market":   merge(eth_tk,eth_cg,eth_prices),
         "fear_greed":   fg,
         "tvl_series":   tvl,
         "stable_series":stable,
