@@ -59,9 +59,12 @@ except ImportError:
     from backend.cycle_anchor import compute_cycle_anchor
 
 try:
-    from services.backtest_engine import run_backtest
+    from backtest_engine import run_backtest
 except ImportError:
-    from backend.services.backtest_engine import run_backtest
+    try:
+        from backend.backtest_engine import run_backtest
+    except ImportError:
+        run_backtest = None
 
 # ── LOGGING ──────────────────────────────────────────────────────────────────
 logging.basicConfig(level=logging.INFO,
@@ -437,6 +440,8 @@ async def get_backtest():
     Returns BTC price+score history as JSON. On failure returns 200 with results=[] and error message.
     """
     try:
+        if run_backtest is None:
+            return api_response({"results": [], "error": "Backtest module not available"})
         data = await run_backtest()
         return api_response(data)
     except Exception as e:
