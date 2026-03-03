@@ -257,8 +257,10 @@ async def get_prices():
             "change_24h":     safe_float(bm.get("change_24h", 0)),
             "market_cap":     safe_float(bm.get("market_cap", 0)),
             "volume_24h":     safe_float(bm.get("volume", 0)),
+            "volume":         safe_float(bm.get("volume", 0)),
             "ath":            safe_float(bm.get("ath", 0)),
             "ath_change_pct": safe_float(bm.get("ath_change_pct", 0)),
+            "athChgPct":      safe_float(bm.get("ath_change_pct", 0)),
             "history":        _prices_to_series(c["raw"]["btc_prices"], 90),
         },
         "eth": {
@@ -266,8 +268,10 @@ async def get_prices():
             "change_24h":     safe_float(em.get("change_24h", 0)),
             "market_cap":     safe_float(em.get("market_cap", 0)),
             "volume_24h":     safe_float(em.get("volume", 0)),
+            "volume":         safe_float(em.get("volume", 0)),
             "ath":            safe_float(em.get("ath", 0)),
             "ath_change_pct": safe_float(em.get("ath_change_pct", 0)),
+            "athChgPct":      safe_float(em.get("ath_change_pct", 0)),
             "history":        _prices_to_series(c["raw"]["eth_prices"], 90),
         },
         "eth_btc_ratio": _build_ratio_series(
