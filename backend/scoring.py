@@ -161,12 +161,22 @@ def compute_btc_score(prices_daily, fear_greed, walcl_values, stablecoin_supply,
     dom=safe_float(btc_dominance,50.0)
     s["btc_dom"]=btc_dominance_to_score(dom); s["btc_dom_raw"]=round(dom,1)
 
-    weights={
-        "ma_200w":0.18,"mvrv":0.15,"fear_greed":0.12,"drawdown":0.10,
-        "rsi":0.10,"puell":0.10,"pi_cycle":0.08,"macro_liq":0.08,
-        "stable_supply":0.05,"funding":0.02,"power_law":0.02,
-    }
-    s["btc_score"]=_weighted(s,weights)
+    # OFFICIAL BTC SCORE MODEL v1.0
+    # Components: 9 | Weights sum: 1.00
+    # DO NOT modify weights without architect approval
+    final = (
+        clamp(s["ma_200w"])       * 0.25 +
+        clamp(s["drawdown"])      * 0.20 +
+        clamp(s["mvrv"])          * 0.15 +
+        clamp(s["fear_greed"])    * 0.12 +
+        clamp(s["pi_cycle"])      * 0.10 +
+        clamp(s["puell"])         * 0.10 +
+        clamp(s["rsi"])           * 0.05 +
+        clamp(s["funding"])       * 0.02 +
+        clamp(s["stable_supply"]) * 0.01
+    )
+
+    s["btc_score"]=round(clamp(final),1)
     s["current_price"]=round(current,2)
     return s
 
