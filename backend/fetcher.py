@@ -138,14 +138,40 @@ async def fetch_stablecoin_supply():
 
 # ── FRED ─────────────────────────────────────────────────────────────────────
 async def fetch_walcl():
-    if not FRED_API_KEY or FRED_API_KEY in ("","your_key_here"):
+    if not FRED_API_KEY or FRED_API_KEY.strip() in ("","your_key_here"):
+        logger.warning("WALCL: FRED_API_KEY missing — using synthetic")
         return _synthetic_walcl()
-    data=await _get("https://api.stlouisfed.org/fred/series/observations",params={
-        "series_id":"WALCL","api_key":FRED_API_KEY,"file_type":"json","observation_start":"2018-01-01"})
-    if not data or "observations" not in data: return _synthetic_walcl()
-    result=[{"t":int(datetime.strptime(o["date"],"%Y-%m-%d").timestamp())*1000,"v":_sf(o["value"])}
-            for o in data["observations"] if o.get("value",".")!="."]
-    return result if result else _synthetic_walcl()
+    
+    url = "https://api.stlouisfed.org/fred/series/observations"
+    params = {
+        "series_id": "WALCL",
+        "api_key": FRED_API_KEY.strip(),
+        "file_type": "json",
+        "observation_start": "2018-01-01"
+    }
+    data = await _get(url, params=params)
+    
+    if not data:
+        logger.warning("WALCL: _get returned None — using synthetic")
+        return _synthetic_walcl()
+    
+    if "observations" not in data:
+        logger.warning(f"WALCL: no 'observations' key — got keys: {list(data.keys())}")
+        return _synthetic_walcl()
+    
+    result = [
+        {"t": int(datetime.strptime(o["date"], "%Y-%m-%d").timestamp()) * 1000,
+         "v": _sf(o["value"])}
+        for o in data["observations"]
+        if o.get("value", ".") != "."
+    ]
+    
+    if not result:
+        logger.warning("WALCL: empty result after parsing — using synthetic")
+        return _synthetic_walcl()
+    
+    logger.info(f"WALCL: loaded {len(result)} real datapoints ✅")
+    return result
 
 def _synthetic_walcl():
     import random; random.seed(42)
