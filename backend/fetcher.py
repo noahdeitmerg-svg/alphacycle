@@ -63,13 +63,18 @@ async def fetch_funding_rates():
 # ── COINGECKO ────────────────────────────────────────────────────────────────
 _CG="https://api.coingecko.com/api/v3"
 
-def _cgp(extra=None):
-    p=dict(extra or {})
-    if COINGECKO_API_KEY: p["x_cg_demo_api_key"]=COINGECKO_API_KEY
-    return p
+def _cg_headers():
+    h = {**HEADERS}
+    if COINGECKO_API_KEY:
+        h["x-cg-demo-api-key"] = COINGECKO_API_KEY
+    return h
 
 async def fetch_market_data(coin_id):
-    data=await _get(f"{_CG}/coins/{coin_id}",params=_cgp({"localization":"false","tickers":"false","community_data":"false","developer_data":"false"}))
+    data=await _get(
+        f"{_CG}/coins/{coin_id}",
+        params={"localization":"false","tickers":"false","community_data":"false","developer_data":"false"},
+        headers=_cg_headers(),
+    )
     d={"price":0.0,"change_24h":0.0,"market_cap":0.0,"volume":0.0,"ath":0.0,"ath_date":"","ath_change_pct":0.0}
     if not data or "market_data" not in data: return d
     md=data["market_data"]
@@ -84,14 +89,18 @@ async def fetch_market_data(coin_id):
     }
 
 async def fetch_coin_prices_cg(coin_id,days=365):
-    data=await _get(f"{_CG}/coins/{coin_id}/market_chart",params=_cgp({"vs_currency":"usd","days":days,"interval":"daily"}))
+    data=await _get(
+        f"{_CG}/coins/{coin_id}/market_chart",
+        params={"vs_currency":"usd","days":days,"interval":"daily"},
+        headers=_cg_headers(),
+    )
     if not data or "prices" not in data: return []
     prices=[_sf(i[1]) for i in data["prices"] if _sf(i[1])>0]
     logger.info(f"CoinGecko {coin_id}: {len(prices)}d"); return prices
 
 async def fetch_global_data():
     try:
-        data=await _get(f"{_CG}/global",params=_cgp())
+        data=await _get(f"{_CG}/global",headers=_cg_headers())
         if not data or "data" not in data: return {"btc_dominance":50.0,"total_market_cap":0.0}
         d=data["data"]
         return {
@@ -272,8 +281,10 @@ async def fetch_all():
     gdata  =safe(results[11],{"btc_dominance":50.0,"total_market_cap":0.0})
     funding=safe(results[12],{"btc_funding_rate":0.0,"eth_funding_rate":0.0})
 
-    btc_prices=btc_p if len(btc_p)>10 else await fetch_coin_prices_cg("bitcoin",365)
-    eth_prices=eth_p if len(eth_p)>10 else await fetch_coin_prices_cg("ethereum",365)
+    cg_btc = await fetch_coin_prices_cg("bitcoin",730)
+    cg_eth = await fetch_coin_prices_cg("ethereum",730)
+    btc_prices=cg_btc if len(cg_btc)>10 else (btc_p if len(btc_p)>10 else [])
+    eth_prices=cg_eth if len(cg_eth)>10 else (eth_p if len(eth_p)>10 else [])
     if not walcl: walcl=_synthetic_walcl()
 
     def merge(tk,cg):
