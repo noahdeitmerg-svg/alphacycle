@@ -295,63 +295,73 @@ async def get_prices():
 @app.get("/api/cycle/btc")
 async def get_btc_cycle():
     c = _require_cache()
-    s = c["btc_scores"]
-    return api_response({
-        "score":         s.get("btc_score", 50.0),
-        "current_price": s.get("current_price", 0.0),
+    d = {**c["raw"], "fetched_at": c.get("refreshed_at", 0)}
+    s = compute_btc_score(
+        d["btc_prices"], d["fear_greed"]["current"],
+        [x["v"] for x in d.get("walcl_series", [])],
+        [x["v"] for x in d.get("stable_series", [])],
+        indicators=d.get("indicators"),
+        funding_data=d.get("funding_data"),
+        btc_dominance=d.get("global_data", {}).get("btc_dominance", 50.0),
+    )
+    return {
+        "score": s["btc_score"],
+        "current_price": s["current_price"],
         "components": {
-            "ma_200w":       {"score": s.get("ma_200w", 50.0), "deviation_pct": s.get("ma_200w_dev_pct", 0.0), "value": s.get("ma_200w_raw", 0.0)},
-            "mvrv":          {"score": s.get("mvrv", 50.0)},
-            "fear_greed":    {"score": s.get("fear_greed", 50.0), "raw": c["raw"]["fear_greed"]["current"]},
-            "drawdown":      {"score": s.get("drawdown", 50.0)},
-            "rsi":           {"score": s.get("rsi", 50.0), "raw": s.get("rsi_raw", 50.0)},
-            "puell":         {"score": s.get("puell", 50.0)},
-            "pi_cycle":      {"score": s.get("pi_cycle", 50.0)},
-            "macro_liq":     {"score": s.get("macro_liq", 50.0)},
-            "stable_supply": {"score": s.get("stable_supply", 50.0)},
-            "funding":       {"score": s.get("funding", 50.0), "raw": s.get("funding_raw", 0.0)},
-            "power_law":     {"score": s.get("power_law", 50.0)},
+            "ma_200w":       {"score": round(s["ma_200w"], 1),
+                              "deviation_pct": s.get("ma_200w_dev_pct", 0),
+                              "value": s.get("ma_200w_raw", 0)},
+            "drawdown":      {"score": round(s["drawdown"], 1)},
+            "fear_greed":    {"score": round(s["fear_greed"], 1),
+                              "raw": d["fear_greed"]["current"]},
+            "liquidity":     {"score": round(s["liquidity"], 1),
+                              "macro_liq": round(s["macro_liq"], 1),
+                              "stable_supply": round(s["stable_supply"], 1)},
         },
         "weights": {
-            "ma_200w":       0.25,
-            "drawdown":      0.20,
-            "mvrv":          0.15,
-            "fear_greed":    0.12,
-            "pi_cycle":      0.10,
-            "puell":         0.10,
-            "rsi":           0.05,
-            "funding":       0.02,
-            "stable_supply": 0.01,
+            "ma_200w":    0.30,
+            "drawdown":   0.25,
+            "fear_greed": 0.20,
+            "liquidity":  0.25,
         },
-    })
+        "short_term": s.get("short_term", {}),
+        "_ts": d.get("fetched_at", 0),
+    }
 
 
 @app.get("/api/cycle/eth")
 async def get_eth_cycle():
     c = _require_cache()
-    s = c["eth_scores"]
-    return api_response({
-        "score":         s.get("eth_score", 50.0),
-        "current_price": s.get("current_price", 0.0),
+    d = {**c["raw"], "fetched_at": c.get("refreshed_at", 0)}
+    s = compute_eth_score(
+        d["eth_prices"], d["btc_prices"],
+        [x["v"] for x in d.get("tvl_series", [])],
+        [x["v"] for x in d.get("stable_series", [])],
+        d["fear_greed"]["current"],
+        funding_data=d.get("funding_data"),
+    )
+    return {
+        "score": s["eth_score"],
+        "current_price": s["current_price"],
         "components": {
-            "eth_btc_ratio":   {"score": s.get("eth_btc_ratio", 50.0), "raw": s.get("eth_btc_ratio_raw", 0.05)},
-            "tvl_trend":       {"score": s.get("tvl_trend", 50.0)},
-            "price_trend_30d": {"score": s.get("price_trend_30d", 50.0)},
-            "rsi":             {"score": s.get("rsi", 50.0)},
-            "ma_200w":         {"score": s.get("ma_200w", 50.0)},
-            "price_trend_90d": {"score": s.get("price_trend_90d", 50.0)},
-            "drawdown":        {"score": s.get("drawdown", 50.0)},
-            "stable_growth":   {"score": s.get("stable_growth", 50.0)},
-            "fear_greed":      {"score": s.get("fear_greed", 50.0)},
-            "eth_funding":     {"score": s.get("eth_funding", 50.0)},
+            "eth_btc_ratio": {"score": round(s["eth_btc_ratio"], 1),
+                               "raw": s.get("eth_btc_ratio_raw", 0)},
+            "drawdown":      {"score": round(s["drawdown"], 1)},
+            "fear_greed":    {"score": round(s["fear_greed"], 1),
+                              "raw": d["fear_greed"]["current"]},
+            "liquidity":     {"score": round(s["liquidity"], 1),
+                              "stable_growth": round(s.get("stable_growth", 50.0), 1),
+                              "tvl_trend": round(s.get("tvl_trend", 50.0), 1)},
         },
         "weights": {
-            "eth_btc_ratio": 0.20, "tvl_trend": 0.17, "price_trend_30d": 0.12,
-            "rsi": 0.12, "ma_200w": 0.10, "price_trend_90d": 0.09,
-            "drawdown": 0.07, "stable_growth": 0.06,
-            "fear_greed": 0.04, "eth_funding": 0.03,
+            "eth_btc_ratio": 0.25,
+            "drawdown":      0.25,
+            "fear_greed":    0.20,
+            "liquidity":     0.30,
         },
-    })
+        "short_term": s.get("short_term", {}),
+        "_ts": d.get("fetched_at", 0),
+    }
 
 
 @app.get("/api/cycle/macro")
