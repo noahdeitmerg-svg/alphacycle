@@ -289,9 +289,9 @@ async def fetch_all():
     gdata  =safe(results[11],{"btc_dominance":50.0,"total_market_cap":0.0})
     funding=safe(results[12],{"btc_funding_rate":0.0,"eth_funding_rate":0.0})
 
-    try:
     await asyncio.sleep(2)
-    cg_btc = await fetch_coin_prices_cg("bitcoin",730)
+    try:
+        cg_btc = await fetch_coin_prices_cg("bitcoin",730)
         logger.info(f"CG BTC prices: {len(cg_btc)} pts, last={cg_btc[-1] if cg_btc else 'EMPTY'}")
     except Exception as e:
         logger.error(f"CG BTC fetch failed: {e}")
