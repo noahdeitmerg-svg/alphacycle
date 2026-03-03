@@ -20,7 +20,7 @@ CYCLE_TOPS: list = [
     date(2013, 12, 4),
     date(2017, 12, 17),
     date(2021, 11, 10),
-    date(2025, 10, 25),  # estimated / reference
+    date(2026, 10, 25),  # estimated / reference
 ]
 
 BITCOIN_HALVINGS: list = [
@@ -71,7 +71,7 @@ def compute_cycle_anchor(reference_date: Optional[date] = None) -> dict:
     expected_top_date = CURRENT_CYCLE_BOTTOM + timedelta(days=HISTORICAL_AVERAGE_BULL_DAYS)
     expected_bottom_date = expected_top_date + timedelta(days=HISTORICAL_AVERAGE_BEAR_DAYS)
 
-    cycle_position_percent = (days_since_bottom / HISTORICAL_AVERAGE_BULL_DAYS) * 100.0
+    cycle_position_percent = (days_since_bottom / HISTORICAL_AVERAGE_CYCLE_DAYS) * 100.0
     cycle_position_percent = _clamp_pct(cycle_position_percent)
 
     days_to_next_top = (expected_top_date - today).days
