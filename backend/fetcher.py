@@ -1,348 +1,2510 @@
-"""
-fetcher.py — Alpha Cycle Intelligence v3.0
-Sources: Binance, CoinGecko, Alternative.me, DeFiLlama, FRED
-"""
-import os, math, asyncio, logging, time
-from datetime import datetime, timedelta
-import httpx
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5"/>
+<meta name="theme-color" content="#020510"/>
+<meta name="description" content="Alpha Cycle — Proprietary crypto market cycle intelligence. BTC, ETH, and Macro scoring."/>
+<meta property="og:title" content="Alpha Cycle — Crypto Market Intelligence"/>
+<meta property="og:description" content="Proprietary BTC, ETH & Macro cycle scoring. Institutional-grade market intelligence."/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<title>Alpha Cycle Intelligence</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%25' stop-color='%230ea5e9'/><stop offset='100%25' stop-color='%23a855f7'/></linearGradient></defs><rect width='32' height='32' rx='8' fill='%23020510'/><circle cx='16' cy='16' r='11' stroke='url(%23g)' stroke-width='2' fill='none' stroke-dasharray='55 14' stroke-linecap='round'/><text x='16' y='21' text-anchor='middle' font-family='Georgia,serif' font-size='13' font-weight='bold' fill='%230ea5e9'>%CE%B1</text></svg>"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+/* ════════════════════════════════════════════════════════════════
+   DESIGN SYSTEM — ultrasound-grade dark intelligence UI
+════════════════════════════════════════════════════════════════ */
+:root {
+  /* Palette */
+  --ink:      #020510;
+  --ink1:     #060c1a;
+  --ink2:     #0a1428;
+  --ink3:     #0f1e3a;
+  --ink4:     #162540;
+  --glass:    rgba(10,18,40,0.6);
+  --glass2:   rgba(15,28,58,0.4);
+  --card-bg:  rgba(10,18,40,0.6);
 
-logger = logging.getLogger(__name__)
-FRED_API_KEY      = os.getenv("FRED_API_KEY", "")
-COINGECKO_API_KEY = os.getenv("COINGECKO_API_KEY", "")
+  --border:   rgba(255,255,255,0.06);
+  --border2:  rgba(255,255,255,0.10);
+  --border3:  rgba(255,255,255,0.16);
 
-HEADERS = {"User-Agent":"AlphaCycle/3.0 (+https://alphacycledashboard.netlify.app)","Accept":"application/json"}
-TIMEOUT = httpx.Timeout(25.0, connect=10.0)
+  /* Alpha Cycle Brand — Electric Blue / Cyan / Purple */
+  --btc:      #0ea5e9;
+  --btc2:     #0284c7;
+  --btc-glow: rgba(14,165,233,0.28);
+  --btc-dim:  rgba(14,165,233,0.09);
 
-async def _get(url, params=None, headers=None, retries=2):
-    h={**HEADERS,**(headers or {})}
-    for attempt in range(retries+1):
-        try:
-            async with httpx.AsyncClient(timeout=TIMEOUT,follow_redirects=True) as c:
-                r=await c.get(url,params=params,headers=h)
-                r.raise_for_status(); return r.json()
-        except Exception as e:
-            if attempt<retries: await asyncio.sleep(3.0**attempt)
-            else: logger.warning(f"FAILED {url}: {e}")
-    return None
+  /* Alpha accent — soft purple glow */
+  --alpha-accent: #a855f7;
+  --alpha-glow:   rgba(168,85,247,0.18);
 
-def _sf(v,fb=0.0):
-    try:
-        f=float(v); return fb if (math.isnan(f) or math.isinf(f)) else f
-    except: return fb
+  --eth:      #8fa5ff;
+  --eth2:     #6b84f0;
+  --eth-glow: rgba(143,165,255,0.22);
+  --eth-dim:  rgba(143,165,255,0.07);
 
-# ── BINANCE ──────────────────────────────────────────────────────────────────
-_BN="https://api.binance.com/api/v3"
-_SYM={"bitcoin":"BTCUSDT","ethereum":"ETHUSDT"}
+  --mac:      #00e5aa;
+  --mac2:     #00c994;
+  --mac-glow: rgba(0,229,170,0.20);
+  --mac-dim:  rgba(0,229,170,0.07);
 
-async def fetch_binance_prices(coin_id,days=730):
-    sym=_SYM.get(coin_id)
-    if not sym: return []
-    data=await _get(f"{_BN}/klines",params={"symbol":sym,"interval":"1d","limit":min(days,1000)})
-    if not data: return []
-    prices=[_sf(c[4]) for c in data if _sf(c[4])>0]
-    logger.info(f"Binance {sym}: {len(prices)}d"); return prices
+  --green:    #00d97e;
+  --red:      #ff4466;
+  --yellow:   #ffcc00;
+  --blue:     #3b82f6;
 
-async def fetch_binance_ticker(coin_id):
-    sym=_SYM.get(coin_id)
-    if not sym: return {}
-    data=await _get(f"{_BN}/ticker/24hr",params={"symbol":sym})
-    if not data: return {}
-    return {"price":_sf(data.get("lastPrice")),"change_24h":_sf(data.get("priceChangePercent")),"volume_24h":_sf(data.get("quoteVolume"))}
+  /* Score zone colors */
+  --accumulation: #22c55e;
+  --bull:         #3b82f6;
+  --distribution: #f59e0b;
+  --bear:         #ef4444;
 
-async def fetch_funding_rates():
-    try:
-        btc=await _get("https://fapi.binance.com/fapi/v1/fundingRate",params={"symbol":"BTCUSDT","limit":1})
-        eth=await _get("https://fapi.binance.com/fapi/v1/fundingRate",params={"symbol":"ETHUSDT","limit":1})
-        return {
-            "btc_funding_rate": round(_sf(btc[0]["fundingRate"])*100,4) if btc else 0.0,
-            "eth_funding_rate": round(_sf(eth[0]["fundingRate"])*100,4) if eth else 0.0,
+  /* Text */
+  --tx:      #f0f4ff;
+  --tx-pri:   #f0f4ff;
+  --tx-sec:   #8b9dc3;
+  --tx-ter:   #3d5580;
+  --tx-dim:   #1f3360;
+
+  /* Typography */
+  --f-display: 'Outfit', sans-serif;
+  --f-mono:    'DM Mono', monospace;
+
+  /* Motion */
+  --ease-out:   cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in:    cubic-bezier(0.4, 0, 1, 1);
+  --spring:     cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ── Reset ── */
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+html { scroll-behavior:smooth; }
+body {
+  background: var(--ink);
+  color: var(--tx-pri);
+  font-family: var(--f-display);
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Noise texture overlay ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9998;
+  opacity: 0.5;
+}
+
+/* ── Ambient radial glows ── */
+.ambient-btc {
+  position: fixed;
+  width: 800px; height: 800px;
+  top: -300px; left: -200px;
+  background: radial-gradient(ellipse, rgba(14,165,233,0.05) 0%, transparent 65%);
+  pointer-events: none; z-index: 0;
+  animation: drift1 12s ease-in-out infinite alternate;
+}
+.ambient-eth {
+  position: fixed;
+  width: 700px; height: 700px;
+  bottom: -200px; right: -150px;
+  background: radial-gradient(ellipse, rgba(143,165,255,0.04) 0%, transparent 65%);
+  pointer-events: none; z-index: 0;
+  animation: drift2 14s ease-in-out infinite alternate;
+}
+@keyframes drift1 { from{transform:translate(0,0)} to{transform:translate(60px,80px)} }
+@keyframes drift2 { from{transform:translate(0,0)} to{transform:translate(-50px,-60px)} }
+
+/* ════════════════════════════════════════════════════════════════
+   TOPNAV
+════════════════════════════════════════════════════════════════ */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  background: rgba(2,5,16,0.88);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-bottom: 1px solid var(--border);
+}
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+.nav-logo-mark {
+  width: 32px; height: 32px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #0ea5e9 0%, #a855f7 100%);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 700; color: #fff;
+  font-family: Georgia, serif;
+  box-shadow: 0 0 20px rgba(14,165,233,0.30), inset 0 1px 0 rgba(255,255,255,0.2);
+  flex-shrink: 0;
+}
+.nav-logo-text {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: 17px;
+  letter-spacing: -0.02em;
+  color: var(--tx-pri);
+}
+.nav-logo-badge {
+  font-family: var(--f-mono);
+  font-size: 8px;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  color: var(--tx-ter);
+  text-transform: uppercase;
+  margin-top: -1px;
+}
+.nav-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.nav-pill {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: 20px;
+  font-family: var(--f-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  cursor: default;
+}
+.nav-pill.live {
+  background: rgba(0,217,126,0.10);
+  border: 1px solid rgba(0,217,126,0.25);
+  color: var(--green);
+}
+.live-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: livePulse 1.6s ease-in-out infinite;
+}
+@keyframes livePulse {
+  0%,100% { opacity:1; box-shadow:0 0 0 0 rgba(0,217,126,0.5); }
+  50% { opacity:0.5; box-shadow:0 0 0 4px rgba(0,217,126,0); }
+}
+.nav-time {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--tx-ter);
+  display: none;
+}
+@media(min-width:480px){ .nav-time { display:block; } }
+.refresh-btn {
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: var(--ink3);
+  border: 1px solid var(--border2);
+  color: var(--tx-sec);
+  font-family: var(--f-mono);
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  transition: all 0.15s;
+  letter-spacing: 0.05em;
+}
+.refresh-btn:hover { border-color:var(--btc); color:var(--btc); }
+.refresh-btn.loading .r-icon { animation: spin 0.6s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.r-icon { display:inline-block; }
+
+/* ════════════════════════════════════════════════════════════════
+   TICKER BAR
+════════════════════════════════════════════════════════════════ */
+.ticker-bar {
+  height: 36px;
+  overflow: hidden;
+  background: var(--ink1);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+.ticker-bar::before, .ticker-bar::after {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0; width: 60px; z-index: 2;
+  pointer-events: none;
+}
+.ticker-bar::before { left:0; background:linear-gradient(90deg,var(--ink1),transparent); }
+.ticker-bar::after  { right:0; background:linear-gradient(-90deg,var(--ink1),transparent); }
+.ticker-scroll {
+  display: flex;
+  gap: 36px;
+  padding: 0 20px;
+  animation: tickScroll 40s linear infinite;
+  white-space: nowrap;
+}
+.ticker-scroll:hover { animation-play-state: paused; }
+@keyframes tickScroll { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+.tick {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--f-mono);
+  font-size: 11px;
+}
+.tick-sym { color: var(--tx-ter); font-size: 10px; letter-spacing:0.06em; }
+.tick-val { color: var(--tx-pri); font-weight: 500; }
+.tick-chg.pos { color: var(--green); }
+.tick-chg.neg { color: var(--red); }
+.tick-sep { color: var(--tx-dim); }
+
+/* ════════════════════════════════════════════════════════════════
+   MAIN LAYOUT
+════════════════════════════════════════════════════════════════ */
+.container {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+@media(min-width:768px){ .container { padding: 32px 24px 64px; } }
+
+/* Section headers */
+.sec-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.sec-title {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--tx-ter);
+}
+.sec-line {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.sec-badge {
+  font-family: var(--f-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--tx-dim);
+  background: var(--ink2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 7px;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   GLASS CARDS
+════════════════════════════════════════════════════════════════ */
+.card {
+  background: var(--glass);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.card:hover { border-color: var(--border2); }
+.card-glow-btc { box-shadow: 0 0 40px var(--btc-dim), inset 0 1px 0 rgba(255,255,255,0.04); }
+.card-glow-eth { box-shadow: 0 0 40px var(--eth-dim), inset 0 1px 0 rgba(255,255,255,0.04); }
+.card-glow-mac { box-shadow: 0 0 40px var(--mac-dim), inset 0 1px 0 rgba(255,255,255,0.04); }
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255,255,255,0.02) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+/* Card top accent line */
+.card-accent {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  border-radius: 16px 16px 0 0;
+}
+.accent-btc { background: linear-gradient(90deg, transparent 5%, var(--btc) 40%, var(--btc) 60%, transparent 95%); opacity:0.6; }
+.accent-eth { background: linear-gradient(90deg, transparent 5%, var(--eth) 40%, var(--eth) 60%, transparent 95%); opacity:0.5; }
+.accent-mac { background: linear-gradient(90deg, transparent 5%, var(--mac) 40%, var(--mac) 60%, transparent 95%); opacity:0.5; }
+.accent-combined { background: linear-gradient(90deg, #0ea5e9 0%, var(--eth) 50%, var(--mac) 100%); opacity:0.4; }
+
+/* ════════════════════════════════════════════════════════════════
+   HERO SCORE GRID
+════════════════════════════════════════════════════════════════ */
+.scores-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+@media(min-width:600px){ .scores-grid { grid-template-columns: repeat(2,1fr); } }
+
+.score-card {
+  padding: 20px 18px 16px;
+}
+.score-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.score-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--f-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tx-sec);
+}
+.score-label-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+}
+.score-tag {
+  font-family: var(--f-mono);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  padding: 3px 8px;
+  border-radius: 20px;
+  border: 1px solid;
+}
+
+/* SVG Gauge */
+.gauge-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 180px;
+  margin: 0 auto 12px;
+}
+.gauge-wrap svg { width:100%; display:block; }
+.gauge-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-top: 8px;
+}
+.gauge-val {
+  font-family: var(--f-display);
+  font-weight: 800;
+  font-size: clamp(32px,6vw,40px);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  transition: color 0.4s var(--ease-out);
+}
+.gauge-denom {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  color: var(--tx-ter);
+  margin-top: 1px;
+}
+
+.score-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.score-phase {
+  font-family: var(--f-display);
+  font-weight: 600;
+  font-size: 14px;
+}
+.score-price {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--tx-sec);
+}
+
+/* Component bars */
+.components-grid {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.comp-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.comp-label {
+  font-family: var(--f-mono);
+  font-size: 9px;
+  color: var(--tx-ter);
+  width: 90px;
+  flex-shrink: 0;
+  letter-spacing: 0.04em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.comp-bar {
+  flex: 1;
+  height: 3px;
+  background: var(--ink3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.comp-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 1s var(--ease-out);
+}
+.comp-val {
+  font-family: var(--f-mono);
+  font-size: 9px;
+  color: var(--tx-sec);
+  width: 24px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   COMBINED / PHASE BANNER
+════════════════════════════════════════════════════════════════ */
+.phase-banner {
+  padding: 20px 22px;
+  border-radius: 16px;
+  margin-bottom: 14px;
+  border: 1px solid;
+  transition: all 0.4s var(--ease-out);
+  position: relative;
+  overflow: hidden;
+}
+.phase-banner::before {
+  content: '';
+  position: absolute;
+  right: -40px; top: -40px;
+  width: 160px; height: 160px;
+  border-radius: 50%;
+  opacity: 0.06;
+  background: currentColor;
+}
+.phase-inner {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  position: relative;
+  z-index: 1;
+}
+.phase-icon-wrap {
+  font-size: 36px;
+  flex-shrink: 0;
+  line-height: 1;
+  animation: phaseFloat 4s ease-in-out infinite;
+}
+@keyframes phaseFloat {
+  0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)}
+}
+.phase-meta { flex: 1; min-width: 0; }
+.phase-eyebrow {
+  font-family: var(--f-mono);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  opacity: 0.65;
+  margin-bottom: 4px;
+}
+.phase-name {
+  font-family: var(--f-display);
+  font-weight: 800;
+  font-size: clamp(20px,4vw,28px);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin-bottom: 5px;
+}
+.phase-desc {
+  font-size: 12px;
+  opacity: 0.75;
+  line-height: 1.55;
+}
+.phase-score-widget {
+  flex-shrink: 0;
+  text-align: center;
+  background: rgba(0,0,0,0.25);
+  border-radius: 12px;
+  padding: 12px 16px;
+  min-width: 72px;
+}
+.phase-score-num {
+  font-family: var(--f-display);
+  font-weight: 800;
+  font-size: 28px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.phase-score-lbl {
+  font-family: var(--f-mono);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  opacity: 0.6;
+  margin-top: 3px;
+  text-transform: uppercase;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   PRICE CARDS
+════════════════════════════════════════════════════════════════ */
+.prices-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+@media(min-width:600px){ .prices-grid { grid-template-columns: repeat(3,1fr); } }
+@media(min-width:900px){ .prices-grid { grid-template-columns: repeat(4,1fr); } }
+
+.price-card { padding: 16px; }
+.pc-sym {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--tx-sec);
+  margin-bottom: 8px;
+}
+.pc-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.pc-price {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: clamp(20px,3.5vw,26px);
+  letter-spacing: -0.03em;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.pc-change {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  font-weight: 500;
+  margin-bottom: 10px;
+}
+.pc-change.pos { color: var(--green); }
+.pc-change.neg { color: var(--red); }
+canvas.sparkline {
+  width: 100%;
+  height: 40px;
+  display: block;
+}
+.pc-stat {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+.pc-stat-lbl { font-family:var(--f-mono); font-size:9px; color:var(--tx-ter); }
+.pc-stat-val { font-family:var(--f-mono); font-size:9px; color:var(--tx-sec); }
+
+/* ════════════════════════════════════════════════════════════════
+   CHART CARDS
+════════════════════════════════════════════════════════════════ */
+.chart-card { padding: 18px 18px 12px; margin-bottom: 10px; }
+.chart-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  gap: 10px;
+}
+.chart-title {
+  font-family: var(--f-display);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--tx-pri);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.chart-title-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.chart-meta-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.chart-stat {
+  text-align: right;
+}
+.chart-stat-lbl { font-family:var(--f-mono); font-size:9px; color:var(--tx-ter); letter-spacing:0.06em; }
+.chart-stat-val { font-family:var(--f-mono); font-size:13px; font-weight:500; color:var(--tx-pri); }
+
+.charts-2col {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+@media(min-width:768px){ .charts-2col { grid-template-columns: 1fr 1fr; } }
+
+/* ════════════════════════════════════════════════════════════════
+   PHASE LEGEND
+════════════════════════════════════════════════════════════════ */
+.legend-grid {
+  display: grid;
+  grid-template-columns: repeat(2,1fr);
+  gap: 8px;
+  margin-bottom: 14px;
+}
+@media(min-width:480px){ .legend-grid { grid-template-columns: repeat(4,1fr); } }
+.legend-item {
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid;
+  cursor: default;
+  transition: transform 0.15s;
+}
+.legend-item:hover { transform: translateY(-2px); }
+.legend-range {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.legend-name {
+  font-family: var(--f-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   INDICATOR CHIPS
+════════════════════════════════════════════════════════════════ */
+.chips-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 13px;
+  background: var(--ink2);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  transition: border-color 0.15s;
+}
+.chip:hover { border-color: var(--border2); }
+.chip-lbl {
+  font-family: var(--f-mono);
+  font-size: 9px;
+  color: var(--tx-ter);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.chip-val {
+  font-family: var(--f-mono);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   STATUS ROW
+════════════════════════════════════════════════════════════════ */
+.status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+  align-items: center;
+}
+.status-src {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-family: var(--f-mono);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  border: 1px solid;
+}
+.status-src.ok   { border-color:rgba(0,217,126,0.3); color:rgba(0,217,126,0.85); background:rgba(0,217,126,0.05); }
+.status-src.warn { border-color:rgba(255,204,0,0.3);  color:rgba(255,204,0,0.8);  background:rgba(255,204,0,0.04); }
+.status-src.err  { border-color:rgba(255,68,102,0.3); color:rgba(255,68,102,0.8); background:rgba(255,68,102,0.04); }
+.status-dot { width:5px; height:5px; border-radius:50%; background:currentColor; }
+
+/* ════════════════════════════════════════════════════════════════
+   LOADING OVERLAY
+════════════════════════════════════════════════════════════════ */
+#loading {
+  position: fixed;
+  inset: 0;
+  background: var(--ink);
+  z-index: 9000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  transition: opacity 0.5s var(--ease-out);
+}
+#loading.done { opacity: 0; pointer-events: none; }
+.load-logo {
+  font-family: var(--f-display);
+  font-weight: 800;
+  font-size: 28px;
+  letter-spacing: -0.03em;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.load-logo-mark {
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(135deg,#0ea5e9,#a855f7);
+  display:flex; align-items:center; justify-content:center;
+  font-size: 20px; color: #fff; font-family: Georgia, serif; font-weight: bold;
+  box-shadow: 0 0 30px rgba(14,165,233,0.35);
+}
+.load-bar-wrap {
+  width: 220px;
+  height: 2px;
+  background: var(--ink3);
+  border-radius: 1px;
+  overflow: hidden;
+}
+.load-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #0ea5e9, var(--eth), var(--mac));
+  background-size: 200% 100%;
+  border-radius: 1px;
+  width: 0%;
+  transition: width 0.3s var(--ease-out);
+  animation: gradientShift 2s linear infinite;
+}
+@keyframes gradientShift { from{background-position:0%} to{background-position:200%} }
+.load-status {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--tx-ter);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   FOOTER
+════════════════════════════════════════════════════════════════ */
+.footer {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+}
+.footer-brand {
+  font-family: var(--f-display);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--tx-sec);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.footer-meta {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  color: var(--tx-ter);
+  letter-spacing: 0.05em;
+}
+.footer-disclaimer {
+  width: 100%;
+  font-family: var(--f-mono);
+  font-size: 9px;
+  color: var(--tx-dim);
+  line-height: 1.6;
+  margin-top: 6px;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   ANIMATIONS
+════════════════════════════════════════════════════════════════ */
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(14px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+.anim { opacity:0; animation:fadeUp 0.5s var(--ease-out) forwards; }
+.d1{animation-delay:0.05s} .d2{animation-delay:0.12s} .d3{animation-delay:0.20s}
+.d4{animation-delay:0.28s} .d5{animation-delay:0.36s} .d6{animation-delay:0.44s}
+
+/* Number transition */
+.num-transition { transition: all 0.4s var(--ease-out); }
+
+/* Hover glow on score cards */
+.score-card:hover { box-shadow: 0 8px 40px rgba(0,0,0,0.4); }
+</style>
+</head>
+<body>
+<div class="ambient-btc"></div>
+<div class="ambient-eth"></div>
+<div style="position:fixed;width:600px;height:600px;top:30%;right:-150px;background:radial-gradient(ellipse,rgba(168,85,247,0.04) 0%,transparent 65%);pointer-events:none;z-index:0;animation:drift1 16s ease-in-out infinite alternate"></div>
+
+<!-- LOADING -->
+<div id="loading">
+  <div class="load-logo">
+    <div class="load-logo-mark">α</div>
+    Alpha Cycle
+  </div>
+  <div class="load-bar-wrap"><div class="load-bar" id="load-bar"></div></div>
+  <div class="load-status" id="load-status">INITIALIZING…</div>
+</div>
+
+<!-- NAV -->
+<nav class="nav">
+  <a class="nav-logo" href="#">
+    <div class="nav-logo-mark">α</div>
+    <div>
+      <div class="nav-logo-text">Alpha Cycle</div>
+      <div class="nav-logo-badge">CRYPTO MARKET INTELLIGENCE</div>
+    </div>
+  </a>
+  <div class="nav-right">
+    <div class="nav-time" id="nav-clock"></div>
+    <div class="nav-pill live"><div class="live-dot"></div>LIVE</div>
+    <button class="refresh-btn" id="refresh-btn" onclick="manualRefresh()">
+      <span class="r-icon">⟳</span><span>REFRESH</span>
+    </button>
+  </div>
+</nav>
+
+<!-- TICKER -->
+<div class="ticker-bar">
+  <div class="ticker-scroll" id="ticker">
+    <span class="tick"><span class="tick-sym">BTC/USD</span><span class="tick-val" id="tk-btc">—</span><span class="tick-chg" id="tk-btc-c">—</span></span>
+    <span class="tick-sep">·</span>
+    <span class="tick"><span class="tick-sym">ETH/USD</span><span class="tick-val" id="tk-eth">—</span><span class="tick-chg" id="tk-eth-c">—</span></span>
+    <span class="tick-sep">·</span>
+    <span class="tick"><span class="tick-sym">ETH/BTC</span><span class="tick-val" id="tk-ratio">—</span></span>
+    <span class="tick-sep">·</span>
+    <span class="tick"><span class="tick-sym">FEAR &amp; GREED</span><span class="tick-val" id="tk-fg">—</span></span>
+    <span class="tick-sep">·</span>
+    <span class="tick"><span class="tick-sym">BTC CYCLE</span><span class="tick-val" id="tk-btc-score">—</span></span>
+    <span class="tick-sep">·</span>
+    <span class="tick"><span class="tick-sym">ETH CYCLE</span><span class="tick-val" id="tk-eth-score">—</span></span>
+    <span class="tick-sep">·</span>
+    <span class="tick"><span class="tick-sym">MACRO</span><span class="tick-val" id="tk-mac-score">—</span></span>
+    <span class="tick-sep">·</span>
+    <!-- Duplicate for seamless loop -->
+    <span class="tick"><span class="tick-sym">BTC/USD</span><span class="tick-val" id="tk-btc2">—</span></span>
+    <span class="tick-sep">·</span>
+    <span class="tick"><span class="tick-sym">ETH/USD</span><span class="tick-val" id="tk-eth2">—</span></span>
+    <span class="tick-sep">·</span>
+    <span class="tick"><span class="tick-sym">ETH/BTC</span><span class="tick-val" id="tk-ratio2">—</span></span>
+    <span class="tick-sep">·</span>
+    <span class="tick"><span class="tick-sym">FEAR &amp; GREED</span><span class="tick-val" id="tk-fg2">—</span></span>
+    <span class="tick-sep">·</span>
+    <span class="tick"><span class="tick-sym">BTC CYCLE</span><span class="tick-val" id="tk-btc-score2">—</span></span>
+    <span class="tick-sep">·</span>
+    <span class="tick"><span class="tick-sym">ETH CYCLE</span><span class="tick-val" id="tk-eth-score2">—</span></span>
+    <span class="tick-sep">·</span>
+    <span class="tick"><span class="tick-sym">MACRO</span><span class="tick-val" id="tk-mac-score2">—</span></span>
+  </div>
+</div>
+
+<!-- MAIN -->
+<main class="container">
+
+  <!-- ── SECTION: CYCLE SCORES ── -->
+  <div class="sec-header anim d1">
+    <div class="sec-title">Cycle Scores</div>
+    <div style="margin-top:0.4rem">
+      <span style="font-size:0.6rem;letter-spacing:0.1em;
+        padding:0.25rem 0.65rem;border-radius:20px;
+        background:rgba(14,165,233,0.12);color:var(--btc);
+        border:1px solid rgba(14,165,233,0.2);
+        font-weight:600">VALUATION-BASED POSITION</span>
+    </div>
+    <div class="sec-line"></div>
+    <div class="sec-badge" id="last-updated">LOADING…</div>
+  </div>
+
+  <div class="scores-grid anim d2">
+    <!-- BTC Score Card -->
+    <div class="card score-card card-glow-btc" id="btc-card">
+      <div class="card-accent accent-btc"></div>
+      <div class="score-card-header">
+        <div class="score-label">
+          <div class="score-label-dot" style="background:var(--btc)"></div>
+          Bitcoin Cycle
+        </div>
+        <div class="score-tag" id="btc-tag" style="color:var(--btc);border-color:rgba(14,165,233,0.3);background:var(--btc-dim)">—</div>
+      </div>
+      <div class="gauge-wrap">
+        <svg viewBox="0 0 200 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="btc-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%"   stop-color="#22c55e"/>
+              <stop offset="35%"  stop-color="#3b82f6"/>
+              <stop offset="70%"  stop-color="#f59e0b"/>
+              <stop offset="100%" stop-color="#ef4444"/>
+            </linearGradient>
+            <filter id="glow-btc">
+              <feGaussianBlur stdDeviation="2.5" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+          <!-- Track -->
+          <path d="M 20 120 A 80 80 0 0 1 180 120" stroke="rgba(255,255,255,0.05)" stroke-width="14" stroke-linecap="round"/>
+          <!-- Zone markers -->
+          <path d="M 20 120 A 80 80 0 0 1 180 120" stroke="url(#btc-grad)" stroke-width="14" stroke-linecap="round" opacity="0.12"/>
+          <!-- Active arc -->
+          <path id="btc-arc" d="M 20 120 A 80 80 0 0 1 180 120" stroke="url(#btc-grad)"
+                stroke-width="14" stroke-linecap="round"
+                stroke-dasharray="251.2" stroke-dashoffset="251.2"
+                filter="url(#glow-btc)"
+                style="transition:stroke-dashoffset 1.4s cubic-bezier(0.16,1,0.3,1)"/>
+          <!-- Needle dot -->
+          <circle id="btc-dot" cx="100" cy="40" r="5" fill="var(--btc)" opacity="0"
+                  style="transition:all 1.4s cubic-bezier(0.16,1,0.3,1)"/>
+        </svg>
+        <div class="gauge-center">
+          <div class="gauge-val" id="btc-score-val" style="color:var(--btc)">—</div>
+          <div class="gauge-denom">/100</div>
+        </div>
+      </div>
+      <div class="score-footer">
+        <div class="score-phase" id="btc-phase" style="color:var(--btc)">—</div>
+        <div class="score-price" id="btc-price-sm">—</div>
+      </div>
+      <div class="components-grid" id="btc-components"></div>
+    </div>
+
+    <!-- ETH Score Card -->
+    <div class="card score-card card-glow-eth" id="eth-card">
+      <div class="card-accent accent-eth"></div>
+      <div class="score-card-header">
+        <div class="score-label">
+          <div class="score-label-dot" style="background:var(--eth)"></div>
+          Ethereum Cycle
+        </div>
+        <div class="score-tag" id="eth-tag" style="color:var(--eth);border-color:rgba(143,165,255,0.3);background:var(--eth-dim)">—</div>
+      </div>
+      <div class="gauge-wrap">
+        <svg viewBox="0 0 200 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="eth-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%"   stop-color="#22c55e"/>
+              <stop offset="35%"  stop-color="#3b82f6"/>
+              <stop offset="70%"  stop-color="#f59e0b"/>
+              <stop offset="100%" stop-color="#ef4444"/>
+            </linearGradient>
+            <filter id="glow-eth">
+              <feGaussianBlur stdDeviation="2.5" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+          <path d="M 20 120 A 80 80 0 0 1 180 120" stroke="rgba(255,255,255,0.05)" stroke-width="14" stroke-linecap="round"/>
+          <path d="M 20 120 A 80 80 0 0 1 180 120" stroke="url(#eth-grad)" stroke-width="14" stroke-linecap="round" opacity="0.12"/>
+          <path id="eth-arc" d="M 20 120 A 80 80 0 0 1 180 120" stroke="url(#eth-grad)"
+                stroke-width="14" stroke-linecap="round"
+                stroke-dasharray="251.2" stroke-dashoffset="251.2"
+                filter="url(#glow-eth)"
+                style="transition:stroke-dashoffset 1.4s cubic-bezier(0.16,1,0.3,1)"/>
+        </svg>
+        <div class="gauge-center">
+          <div class="gauge-val" id="eth-score-val" style="color:var(--eth)">—</div>
+          <div class="gauge-denom">/100</div>
+        </div>
+      </div>
+      <div class="score-footer">
+        <div class="score-phase" id="eth-phase" style="color:var(--eth)">—</div>
+        <div class="score-price" id="eth-price-sm">—</div>
+      </div>
+      <div class="components-grid" id="eth-components"></div>
+    </div>
+  </div>
+
+  <div style="margin-top:1rem;margin-bottom:0.5rem">
+    <span style="font-size:0.6rem;letter-spacing:0.1em;
+      padding:0.25rem 0.65rem;border-radius:20px;
+      background:rgba(0,229,170,0.1);color:var(--mac);
+      border:1px solid rgba(0,229,170,0.2);
+      font-weight:600">MACRO LIQUIDITY CONTEXT</span>
+  </div>
+  <div style="margin-bottom:1rem">
+    <!-- Macro Score Card -->
+    <div class="card score-card card-glow-mac" id="mac-card">
+      <div class="card-accent accent-mac"></div>
+      <div class="score-card-header">
+        <div class="score-label">
+          <div class="score-label-dot" style="background:var(--mac)"></div>
+          Macro Liquidity
+        </div>
+        <div class="score-tag" id="mac-tag" style="color:var(--mac);border-color:rgba(0,229,170,0.3);background:var(--mac-dim)">—</div>
+      </div>
+      <div class="gauge-wrap">
+        <svg viewBox="0 0 200 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="mac-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%"   stop-color="#22c55e"/>
+              <stop offset="35%"  stop-color="#3b82f6"/>
+              <stop offset="70%"  stop-color="#f59e0b"/>
+              <stop offset="100%" stop-color="#ef4444"/>
+            </linearGradient>
+            <filter id="glow-mac">
+              <feGaussianBlur stdDeviation="2.5" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+          <path d="M 20 120 A 80 80 0 0 1 180 120" stroke="rgba(255,255,255,0.05)" stroke-width="14" stroke-linecap="round"/>
+          <path d="M 20 120 A 80 80 0 0 1 180 120" stroke="url(#mac-grad)" stroke-width="14" stroke-linecap="round" opacity="0.12"/>
+          <path id="mac-arc" d="M 20 120 A 80 80 0 0 1 180 120" stroke="url(#mac-grad)"
+                stroke-width="14" stroke-linecap="round"
+                stroke-dasharray="251.2" stroke-dashoffset="251.2"
+                filter="url(#glow-mac)"
+                style="transition:stroke-dashoffset 1.4s cubic-bezier(0.16,1,0.3,1)"/>
+        </svg>
+        <div class="gauge-center">
+          <div class="gauge-val" id="mac-score-val" style="color:var(--mac)">—</div>
+          <div class="gauge-denom">/100</div>
+        </div>
+      </div>
+      <div class="score-footer">
+        <div class="score-phase" id="mac-phase" style="color:var(--mac)">—</div>
+        <div class="score-price" id="mac-walcl">—</div>
+      </div>
+      <div class="components-grid" id="mac-components"></div>
+    </div>
+  </div>
+
+  <section id="hero-decision" class="hero-decision anim d1" 
+    style="display:none; margin-bottom:1.5rem; position:relative;
+    background:linear-gradient(135deg,rgba(15,23,42,0.95),rgba(20,30,55,0.95));
+    border:1px solid rgba(255,255,255,0.06); border-radius:20px;
+    overflow:hidden; padding:2rem 2rem 1.5rem;">
+    
+    <div class="card-accent accent-combined"></div>
+    
+    <!-- Top row: Signal + Phase + Score -->
+    <div style="display:flex; align-items:flex-start; 
+      justify-content:space-between; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
+      
+      <!-- Left: Signal -->
+      <div>
+        <div style="font-size:0.6rem;letter-spacing:0.15em;
+          color:var(--muted);margin-bottom:0.5rem">ALPHA SIGNAL</div>
+        <div id="ai-signal" style="font-size:2.5rem;font-weight:800;
+          letter-spacing:-0.02em;line-height:1">—</div>
+      </div>
+      
+      <!-- Center: Phase -->
+      <div style="text-align:center">
+        <div style="font-size:0.6rem;letter-spacing:0.15em;
+          color:var(--muted);margin-bottom:0.5rem">MARKET PHASE</div>
+        <div id="phase-name" style="font-size:1.4rem;font-weight:700">Loading…</div>
+        <div id="phase-desc" style="font-size:0.75rem;color:var(--muted);
+          margin-top:0.3rem;max-width:320px">Fetching real-time data…</div>
+      </div>
+      
+      <!-- Right: Combined Score -->
+      <div style="text-align:right">
+        <div style="font-size:0.6rem;letter-spacing:0.15em;
+          color:var(--muted);margin-bottom:0.5rem">COMBINED SCORE</div>
+        <div style="display:flex;align-items:baseline;gap:0.3rem;justify-content:flex-end">
+          <div id="phase-combined" style="font-size:2.5rem;font-weight:800;
+            font-family:var(--font-mono);letter-spacing:-0.02em">—</div>
+          <div style="font-size:1rem;color:var(--muted)">/100</div>
+        </div>
+        <div id="phase-icon" style="font-size:0.9rem;margin-top:0.2rem">⏳</div>
+      </div>
+    </div>
+    
+    <!-- Bottom row: 4 metrics -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+      gap:0.75rem;padding-top:1rem;
+      border-top:1px solid rgba(255,255,255,0.06)">
+      
+      <div style="background:rgba(255,255,255,0.03);border-radius:10px;padding:0.9rem">
+        <div style="font-size:0.58rem;color:var(--muted);
+          letter-spacing:0.1em;margin-bottom:0.35rem">CYCLE POSITION</div>
+        <div id="ai-position" style="font-size:1.2rem;font-weight:700;
+          font-family:var(--font-mono)">—</div>
+        <div id="ai-phase" style="font-size:0.7rem;color:var(--muted);margin-top:0.2rem">—</div>
+      </div>
+      
+      <div style="background:rgba(255,255,255,0.03);border-radius:10px;padding:0.9rem">
+        <div style="font-size:0.58rem;color:var(--muted);
+          letter-spacing:0.1em;margin-bottom:0.35rem">ALLOCATION</div>
+        <div id="ai-alloc" style="font-size:0.95rem;font-weight:600">—</div>
+      </div>
+      
+      <div style="background:rgba(255,255,255,0.03);border-radius:10px;padding:0.9rem">
+        <div style="font-size:0.58rem;color:var(--muted);
+          letter-spacing:0.1em;margin-bottom:0.35rem">EXP. RETURN 12M</div>
+        <div id="ai-return" style="font-size:1.2rem;font-weight:700;
+          font-family:var(--font-mono)">—</div>
+      </div>
+      
+      <div style="background:rgba(255,255,255,0.03);border-radius:10px;padding:0.9rem">
+        <div style="font-size:0.58rem;color:var(--muted);
+          letter-spacing:0.1em;margin-bottom:0.35rem">CONFIDENCE</div>
+        <div id="ai-confidence" style="font-size:1.2rem;font-weight:700;
+          font-family:var(--font-mono)">—</div>
+      </div>
+    </div>
+    
+    <!-- Strategy -->
+    <div style="margin-top:1rem;padding-top:0.75rem;
+      border-top:1px solid rgba(255,255,255,0.04)">
+      <span style="font-size:0.6rem;letter-spacing:0.1em;
+        color:var(--muted);margin-right:0.5rem">STRATEGY</span>
+      <span id="ai-strategy" style="font-size:0.8rem;color:var(--tx-sec)">—</span>
+    </div>
+  </section>
+
+  <div style="margin-top:1.5rem;margin-bottom:0.5rem">
+    <span style="font-size:0.6rem;letter-spacing:0.1em;
+      padding:0.25rem 0.65rem;border-radius:20px;
+      background:rgba(245,158,11,0.12);color:#f59e0b;
+      border:1px solid rgba(245,158,11,0.2);
+      font-weight:600">TIME-BASED CYCLE POSITION</span>
+  </div>
+
+  <section class="card" id="cycle-anchor-section" 
+    style="display:none; margin-bottom:1rem;">
+    <div class="card-accent" style="background:linear-gradient(90deg,#f59e0b,#ef4444);opacity:0.4"></div>
+    <div style="padding:1.2rem 1.5rem 1rem">
+      <div style="font-size:0.65rem;letter-spacing:0.12em;
+        color:var(--muted);margin-bottom:1rem">CYCLE ANCHOR</div>
+      <div style="margin-bottom:1rem">
+        <div style="display:flex;justify-content:space-between;
+          font-size:0.7rem;color:var(--muted);margin-bottom:0.4rem">
+          <span>CYCLE POSITION</span>
+          <span id="ca-position-pct">—</span>
+        </div>
+        <div style="height:6px;background:var(--surface2);border-radius:3px;overflow:hidden">
+          <div id="ca-progress-bar" style="height:100%;width:0%;
+            background:linear-gradient(90deg,#22c55e,#f59e0b,#ef4444);
+            border-radius:3px;transition:width 0.6s ease"></div>
+        </div>
+      </div>
+      <div style="display:grid;
+        grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:0.75rem">
+        <div style="background:var(--surface2);border-radius:10px;padding:0.9rem">
+          <div style="font-size:0.6rem;color:var(--muted);
+            letter-spacing:0.08em;margin-bottom:0.4rem">DAYS TO TOP</div>
+          <div id="ca-days-top" style="font-size:1.3rem;font-weight:700;
+            font-family:var(--font-mono)">—</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:10px;padding:0.9rem">
+          <div style="font-size:0.6rem;color:var(--muted);
+            letter-spacing:0.08em;margin-bottom:0.4rem">EXPECTED TOP</div>
+          <div id="ca-top-date" style="font-size:1rem;font-weight:700;
+            font-family:var(--font-mono)">—</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:10px;padding:0.9rem">
+          <div style="font-size:0.6rem;color:var(--muted);
+            letter-spacing:0.08em;margin-bottom:0.4rem">HALVING POSITION</div>
+          <div id="ca-halving-pct" style="font-size:1.3rem;font-weight:700;
+            font-family:var(--font-mono)">—</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:10px;padding:0.9rem">
+          <div style="font-size:0.6rem;color:var(--muted);
+            letter-spacing:0.08em;margin-bottom:0.4rem">CONFIDENCE</div>
+          <div id="ca-confidence" style="font-size:1.3rem;font-weight:700;
+            font-family:var(--font-mono)">—</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── KEY INDICATORS ── -->
+  <div class="sec-header anim d3">
+    <div class="sec-title">Key Indicators</div>
+    <div class="sec-line"></div>
+  </div>
+  <div class="chips-row anim d3" id="chips-row">
+    <div class="chip"><span class="chip-lbl">Fear &amp; Greed</span><span class="chip-val" id="chip-fg" style="color:var(--yellow)">—</span></div>
+    <div class="chip"><span class="chip-lbl">ETH/BTC</span><span class="chip-val" id="chip-ratio" style="color:var(--eth)">—</span></div>
+    <div class="chip"><span class="chip-lbl">ETH TVL</span><span class="chip-val" id="chip-tvl" style="color:var(--eth)">—</span></div>
+    <div class="chip"><span class="chip-lbl">Stable Cap</span><span class="chip-val" id="chip-stable" style="color:var(--mac)">—</span></div>
+    <div class="chip"><span class="chip-lbl">Fed Balance</span><span class="chip-val" id="chip-walcl" style="color:var(--mac)">—</span></div>
+    <div class="chip"><span class="chip-lbl">BTC ATH</span><span class="chip-val" id="chip-btc-ath" style="color:var(--tx-sec)">—</span></div>
+  </div>
+
+  <!-- ── PRICES ── -->
+  <div class="sec-header anim d3">
+    <div class="sec-title">Live Prices</div>
+    <div class="sec-line"></div>
+  </div>
+  <div class="prices-grid anim d4">
+    <div class="card price-card card-glow-btc">
+      <div class="card-accent accent-btc"></div>
+      <div class="pc-sym"><div class="pc-dot" style="background:var(--btc)"></div>BITCOIN</div>
+      <div class="pc-price" id="pc-btc-price" style="color:var(--btc)">—</div>
+      <div class="pc-change" id="pc-btc-chg">—</div>
+      <canvas class="sparkline" id="spark-btc" height="40"></canvas>
+      <div class="pc-stat">
+        <span class="pc-stat-lbl">24h Vol</span>
+        <span class="pc-stat-val" id="pc-btc-vol">—</span>
+      </div>
+    </div>
+    <div class="card price-card card-glow-eth">
+      <div class="card-accent accent-eth"></div>
+      <div class="pc-sym"><div class="pc-dot" style="background:var(--eth)"></div>ETHEREUM</div>
+      <div class="pc-price" id="pc-eth-price" style="color:var(--eth)">—</div>
+      <div class="pc-change" id="pc-eth-chg">—</div>
+      <canvas class="sparkline" id="spark-eth" height="40"></canvas>
+      <div class="pc-stat">
+        <span class="pc-stat-lbl">ETH/BTC</span>
+        <span class="pc-stat-val" id="pc-ratio">—</span>
+      </div>
+    </div>
+    <div class="card price-card">
+      <div class="pc-sym"><div class="pc-dot" style="background:var(--yellow)"></div>FEAR &amp; GREED</div>
+      <div class="pc-price" id="pc-fg-val" style="color:var(--yellow)">—</div>
+      <div class="pc-change" id="pc-fg-lbl" style="color:var(--tx-sec)">—</div>
+      <canvas class="sparkline" id="spark-fg" height="40"></canvas>
+      <div class="pc-stat">
+        <span class="pc-stat-lbl">Signal</span>
+        <span class="pc-stat-val" id="pc-fg-signal">—</span>
+      </div>
+    </div>
+    <div class="card price-card card-glow-mac">
+      <div class="card-accent accent-mac"></div>
+      <div class="pc-sym"><div class="pc-dot" style="background:var(--mac)"></div>STABLECOIN CAP</div>
+      <div class="pc-price" id="pc-stable-val" style="color:var(--mac)">—</div>
+      <div class="pc-change" id="pc-stable-chg">—</div>
+      <canvas class="sparkline" id="spark-stable" height="40"></canvas>
+      <div class="pc-stat">
+        <span class="pc-stat-lbl">Dry Powder</span>
+        <span class="pc-stat-val" id="pc-stable-lbl">Market Reserve</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CHARTS ── -->
+  <div class="sec-header anim d4">
+    <div class="sec-title">Price &amp; Cycle History</div>
+    <div class="sec-line"></div>
+  </div>
+
+  <div class="card chart-card anim d4" style="margin-bottom:10px">
+    <div class="card-accent accent-btc"></div>
+    <div class="chart-header">
+      <div class="chart-title"><div class="chart-title-dot" style="background:var(--btc)"></div>Bitcoin Price + 200W MA</div>
+      <div class="chart-meta-row">
+        <div class="chart-stat"><div class="chart-stat-lbl">200W MA</div><div class="chart-stat-val" id="cs-ma200">—</div></div>
+        <div class="chart-stat"><div class="chart-stat-lbl">vs MA</div><div class="chart-stat-val" id="cs-ma-dev">—</div></div>
+      </div>
+    </div>
+    <canvas id="chart-btc" style="width:100%;height:200px;display:block"></canvas>
+  </div>
+
+  <div class="charts-2col anim d5">
+    <div class="card chart-card">
+      <div class="card-accent accent-btc"></div>
+      <div class="chart-header">
+        <div class="chart-title"><div class="chart-title-dot" style="background:var(--yellow)"></div>Fear &amp; Greed (90d)</div>
+        <div class="chart-meta-row">
+          <div class="chart-stat"><div class="chart-stat-lbl">Current</div><div class="chart-stat-val" id="cs-fg">—</div></div>
+        </div>
+      </div>
+      <canvas id="chart-fg" style="width:100%;height:140px;display:block"></canvas>
+    </div>
+    <div class="card chart-card">
+      <div class="card-accent accent-eth"></div>
+      <div class="chart-header">
+        <div class="chart-title"><div class="chart-title-dot" style="background:var(--eth)"></div>ETH TVL (DeFiLlama)</div>
+        <div class="chart-meta-row">
+          <div class="chart-stat"><div class="chart-stat-lbl">Current</div><div class="chart-stat-val" id="cs-tvl">—</div></div>
+        </div>
+      </div>
+      <canvas id="chart-tvl" style="width:100%;height:140px;display:block"></canvas>
+    </div>
+  </div>
+
+  <div class="charts-2col anim d5">
+    <div class="card chart-card">
+      <div class="card-accent accent-eth"></div>
+      <div class="chart-header">
+        <div class="chart-title"><div class="chart-title-dot" style="background:var(--eth)"></div>ETH/BTC Ratio</div>
+        <div class="chart-meta-row">
+          <div class="chart-stat"><div class="chart-stat-lbl">Current</div><div class="chart-stat-val" id="cs-ratio">—</div></div>
+        </div>
+      </div>
+      <canvas id="chart-ratio" style="width:100%;height:140px;display:block"></canvas>
+    </div>
+    <div class="card chart-card">
+      <div class="card-accent accent-mac"></div>
+      <div class="chart-header">
+        <div class="chart-title"><div class="chart-title-dot" style="background:var(--mac)"></div>Fed Balance Sheet (WALCL)</div>
+        <div class="chart-meta-row">
+          <div class="chart-stat"><div class="chart-stat-lbl">Current</div><div class="chart-stat-val" id="cs-walcl">—</div></div>
+        </div>
+      </div>
+      <canvas id="chart-walcl" style="width:100%;height:140px;display:block"></canvas>
+    </div>
+  </div>
+
+  <!-- ── CYCLE LEGEND ── -->
+  <div class="sec-header anim d5">
+    <div class="sec-title">Cycle Phase Guide</div>
+    <div class="sec-line"></div>
+  </div>
+  <div class="legend-grid anim d5">
+    <div class="legend-item" style="border-color:rgba(34,197,94,0.25);background:rgba(34,197,94,0.04);color:#22c55e">
+      <div class="legend-range">0 – 30</div>
+      <div class="legend-name">Accumulation</div>
+    </div>
+    <div class="legend-item" style="border-color:rgba(59,130,246,0.25);background:rgba(59,130,246,0.04);color:#3b82f6">
+      <div class="legend-range">30 – 60</div>
+      <div class="legend-name">Bull Market</div>
+    </div>
+    <div class="legend-item" style="border-color:rgba(245,158,11,0.25);background:rgba(245,158,11,0.04);color:#f59e0b">
+      <div class="legend-range">60 – 75</div>
+      <div class="legend-name">Distribution</div>
+    </div>
+    <div class="legend-item" style="border-color:rgba(239,68,68,0.25);background:rgba(239,68,68,0.04);color:#ef4444">
+      <div class="legend-range">75 – 100</div>
+      <div class="legend-name">Bear Market</div>
+    </div>
+  </div>
+
+  <!-- ── DATA SOURCES ── -->
+  <div class="sec-header anim d6">
+    <div class="sec-title">Data Sources</div>
+    <div class="sec-line"></div>
+  </div>
+  <div id="backend-retry-banner" style="display:none; padding:14px 18px; margin-bottom:12px; background:rgba(245,158,11,0.12); border:1px solid rgba(245,158,11,0.35); border-radius:12px; font-size:13px;">
+  <strong>Backend (Render) wird gestartet oder nicht erreicht.</strong> Auf Netlify kommen die Daten nur über dein Backend. Bitte in 30–60 Sekunden auf <button type="button" onclick="document.getElementById('backend-retry-banner').style.display='none'; doRefresh();" style="margin-left:8px; padding:6px 14px; background:var(--ink3); border:1px solid var(--border2); border-radius:8px; color:var(--btc); cursor:pointer; font-weight:600;">Erneut versuchen</button> klicken.
+  </div>
+  <div class="status-row anim d6">
+    <div class="status-src" id="src-cg"><span class="status-dot"></span>CoinGecko</div>
+    <div class="status-src" id="src-fg"><span class="status-dot"></span>Alt.me Fear&amp;Greed</div>
+    <div class="status-src" id="src-dl"><span class="status-dot"></span>DeFiLlama TVL</div>
+    <div class="status-src" id="src-stable"><span class="status-dot"></span>DeFiLlama Stablecoins</div>
+    <div class="status-src" id="src-fred">
+      <span class="status-dot"></span>
+      <span id="fred-source-label">FRED (synthetic)</span>
+    </div>
+    <div class="status-src" id="src-ts"><span class="status-dot"></span><span id="src-ts-lbl">—</span></div>
+  </div>
+
+  <!-- ── FOOTER ── -->
+  <footer class="footer anim d6">
+    <div class="footer-brand">
+      <div style="width:20px;height:20px;border-radius:6px;background:linear-gradient(135deg,#0ea5e9,#a855f7);display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;font-family:Georgia,serif;font-weight:bold">α</div>
+      Alpha Cycle
+    </div>
+    <div class="footer-meta">Auto-refresh every 60s · <span id="countdown">60</span>s next sync</div>
+    <div class="footer-disclaimer">
+      For informational purposes only. Not financial advice. Data via CoinGecko · DeFiLlama · Alternative.me · FRED.<br>
+      Scores are algorithmic estimates — DYOR before making any investment decisions.
+    </div>
+  </footer>
+
+</main>
+</body>
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   ALPHA CYCLE INTELLIGENCE ENGINE v2.0
+   Zero NaN · Auto-refresh · Direct API calls + optional backend
+═══════════════════════════════════════════════════════════════════════════ */
+
+// ── CONFIG ────────────────────────────────────────────────────────────────
+// ⚡ STEP 1: After deploying backend to Render, paste your URL here:
+// Example: const BACKEND_URL = 'https://alphacycle-api.onrender.com';
+// Leave as '' to run standalone (direct browser API calls, no backend needed).
+// Für Netlify: Backend-URL eintragen, sonst sind auf Netlify die APIs oft blockiert (CORS).
+const BACKEND_URL = "https://alphacycle-production.up.railway.app";
+const REFRESH_INTERVAL = 60; // seconds
+
+// ── GLOBAL STATE ─────────────────────────────────────────────────────────
+const S = {
+  btcPrices:    [],
+  ethPrices:    [],
+  fgHistory:    [],
+  tvlHistory:   [],
+  stableHistory:[],
+  walclHistory: [],
+  ratioHistory: [],
+  btcMarket:    null,
+  ethMarket:    null,
+  btcScore:     50,
+  ethScore:     50,
+  macScore:     50,
+  combined:     50,
+  fgCurrent:    50,
+  fgLabel:      'Neutral',
+  tvlCurrent:   0,
+  stableCurrent:0,
+  walclCurrent: 0,
+};
+
+let countdown = REFRESH_INTERVAL;
+let cdTimer;
+let isRefreshing = false;
+
+// ── SAFE MATH ─────────────────────────────────────────────────────────────
+const safeNum  = (v, fb=0) => { const n=Number(v); return (!isFinite(n)||isNaN(n))?fb:n; };
+const clamp    = (v,lo=0,hi=100) => Math.min(hi,Math.max(lo,safeNum(v,50)));
+const safeMean = (arr, fb=50) => {
+  const c=arr.filter(v=>typeof v==='number'&&isFinite(v)&&!isNaN(v));
+  return c.length?c.reduce((a,b)=>a+b,0)/c.length:fb;
+};
+const pctChg   = (cur,prev) => prev===0?0:((cur-prev)/Math.abs(prev))*100;
+
+// ── DOM HELPERS ───────────────────────────────────────────────────────────
+const $   = id => document.getElementById(id);
+const fmt = (n,d=0) => safeNum(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const fmtUSD  = n => '$'+fmt(n);
+const fmtB    = n => '$'+safeNum(n/1e9).toFixed(1)+'B';
+const fmtT    = n => '$'+safeNum(n/1e12).toFixed(2)+'T';
+
+function scoreColor(s) {
+  s = clamp(s);
+  if (s < 30)  return '#22c55e';
+  if (s < 60)  return '#3b82f6';
+  if (s < 75)  return '#f59e0b';
+  return '#ef4444';
+}
+function phaseOf(s) {
+  if (s < 30)  return 'Accumulation';
+  if (s < 55)  return 'Bull Market';
+  if (s < 72)  return 'Distribution';
+  return 'Bear Market';
+}
+function phaseIcon(phase) {
+  const m={Accumulation:'🟢','Bull Market':'📈',Distribution:'⚠️','Bear Market':'🔴'};
+  return m[phase]||'📊';
+}
+function phaseDesc(phase) {
+  return {
+    Accumulation:'Market undervalued. Smart money accumulating. Fear elevated, prices near or below 200W MA.',
+    'Bull Market':'Uptrend confirmed. Liquidity expanding. Momentum building with healthy sentiment.',
+    Distribution:'Market overheating. FOMO elevated. Whale distribution likely in progress.',
+    'Bear Market':'Risk-off environment. Liquidity contracting. Downtrend confirmed — caution advised.',
+  }[phase]||'Analyzing market conditions…';
+}
+
+// ── CLOCK ──────────────────────────────────────────────────────────────────
+function updateClock() {
+  const n=new Date();
+  const pad=v=>String(v).padStart(2,'0');
+  $('nav-clock').textContent=`${pad(n.getUTCHours())}:${pad(n.getUTCMinutes())}:${pad(n.getUTCSeconds())} UTC`;
+}
+setInterval(updateClock,1000); updateClock();
+
+// ── SCORING ENGINE (client-side, mirrors backend) ─────────────────────────
+function computeRSI(prices, period=14) {
+  if(prices.length<period+2) return 50;
+  const d=prices.slice(-period-1).map((v,i,a)=>i>0?v-a[i-1]:null).slice(1);
+  const gains=d.map(v=>Math.max(0,v)), losses=d.map(v=>Math.max(0,-v));
+  const ag=safeMean(gains,0), al=safeMean(losses,0);
+  if(al===0) return ag>0?95:50;
+  const rs=ag/(al+1e-10);
+  return clamp(100-100/(1+rs));
+}
+function rsiToScore(rsi) {
+  rsi=clamp(rsi);
+  if(rsi<=20) return clamp(5+rsi*0.25);
+  if(rsi<=30) return clamp(10+(rsi-20)*0.5);
+  if(rsi<=50) return clamp(15+(rsi-30)*1.5);
+  if(rsi<=70) return clamp(45+(rsi-50)*1.25);
+  if(rsi<=80) return clamp(70+(rsi-70)*1.5);
+  return clamp(85+(rsi-80)*0.5);
+}
+function ma200Score(prices) {
+  if(prices.length<100) return 50;
+  const w=prices.filter((_,i)=>i%7===0);
+  const window=Math.min(200,w.length);
+  const ma=safeMean(w.slice(-window));
+  const cur=prices.at(-1);
+  const dev=pctChg(cur,ma);
+  if(dev<=-60) return 2;
+  if(dev<=0)   return clamp(2+(dev+60)*0.55);
+  if(dev<=100) return clamp(35+dev*0.30);
+  if(dev<=200) return clamp(65+(dev-100)*0.17);
+  return clamp(82+(dev-200)*0.043);
+}
+function drawdownScore(prices) {
+  if(!prices.length) return 50;
+  const ath=Math.max(...prices);
+  const cur=prices.at(-1);
+  const dd=(cur-ath)/ath*100;
+  if(dd>=0)    return 85;
+  if(dd>=-15)  return clamp(70+(dd+15));
+  if(dd>=-40)  return clamp(45+(dd+40));
+  if(dd>=-70)  return clamp(15+(dd+70));
+  return 5;
+}
+function trendScore(values, window=30) {
+  const c=values.filter(v=>v>0&&isFinite(v));
+  if(c.length<2) return 50;
+  const w=Math.min(window,c.length-1);
+  const pct=pctChg(c.at(-1),c.at(-w-1)||c[0]);
+  return clamp(50+clamp(pct,-50,50));
+}
+function powerLawScore(prices) {
+  if(prices.length<30) return 50;
+  try {
+    const n=prices.length;
+    const lp=prices.map(p=>Math.log(Math.max(p,1)));
+    const ld=Array.from({length:n},(_,i)=>Math.log(i+1));
+    const mlp=safeMean(lp), mld=safeMean(ld);
+    const num=lp.reduce((a,v,i)=>a+(ld[i]-mld)*(v-mlp),0);
+    const den=ld.reduce((a,v)=>a+(v-mld)**2,0);
+    const slope=den?num/den:1;
+    const intercept=mlp-slope*mld;
+    const fair=Math.exp(intercept+slope*ld.at(-1));
+    const dev=pctChg(prices.at(-1),fair);
+    if(dev<=-80) return 5;
+    if(dev<=0)   return clamp(5+(dev+80)*0.4375);
+    if(dev<=100) return clamp(40+dev*0.30);
+    if(dev<=300) return clamp(70+(dev-100)*0.125);
+    return 95;
+  } catch { return 50; }
+}
+
+function computeBTCScore() {
+  const p=S.btcPrices;
+  if(!p.length) return 50;
+  const weekly=p.filter((_,i)=>i%7===0);
+  const rsiS   = rsiToScore(computeRSI(weekly,14));
+  const maS    = ma200Score(p);
+  const ddS    = drawdownScore(p);
+  const fgS    = clamp(S.fgCurrent);
+  const walcl  = S.walclHistory.map(x=>x.v).filter(v=>v>0);
+  const stable = S.stableHistory.map(x=>x.v).filter(v=>v>0);
+  const macS   = walcl.length>2 ? clamp(100-trendScore(walcl,26)) : 50;
+  const stbS   = stable.length>2 ? clamp(100-trendScore(stable,90)) : 50;
+  const plS    = powerLawScore(p);
+  const w={rsi:.18,ma:.22,dd:.15,fg:.20,mac:.12,stb:.08,pl:.05};
+  return clamp(rsiS*w.rsi+maS*w.ma+ddS*w.dd+fgS*w.fg+macS*w.mac+stbS*w.stb+plS*w.pl);
+}
+function computeETHScore() {
+  const ep=S.ethPrices, bp=S.btcPrices;
+  if(!ep.length) return 50;
+  // ETH/BTC ratio trend
+  let ratioS=50;
+  if(ep.length&&bp.length) {
+    const ml=Math.min(ep.length,bp.length);
+    const ratios=Array.from({length:ml},(_,i)=>{
+      const b=bp[bp.length-ml+i]||1;
+      return b>0?ep[ep.length-ml+i]/b:0;
+    }).filter(r=>r>0&&r<1);
+    if(ratios.length>2) ratioS=trendScore(ratios,Math.min(60,ratios.length-1));
+  }
+  const tvl    = S.tvlHistory.map(x=>x.v).filter(v=>v>0);
+  const stable = S.stableHistory.map(x=>x.v).filter(v=>v>0);
+  const weekly = ep.filter((_,i)=>i%7===0);
+  const rsiS   = rsiToScore(computeRSI(weekly,14));
+  const maS    = ma200Score(ep);
+  const ddS    = drawdownScore(ep);
+  const tvlS   = tvl.length>2?trendScore(tvl,Math.min(90,tvl.length-1)):50;
+  const stbS   = stable.length>2?clamp(50+(trendScore(stable,90)-50)*0.5):50;
+  const t30S   = trendScore(ep,Math.min(30,ep.length-1));
+  const t90S   = trendScore(ep,Math.min(90,ep.length-1));
+  const fgS    = clamp(S.fgCurrent);
+  const w={ratio:.22,t30:.12,t90:.10,tvl:.18,stb:.08,rsi:.12,ma:.10,dd:.05,fg:.03};
+  return clamp(
+    ratioS*w.ratio+t30S*w.t30+t90S*w.t90+tvlS*w.tvl+stbS*w.stb+
+    rsiS*w.rsi+maS*w.ma+ddS*w.dd+fgS*w.fg
+  );
+}
+function computeMacroScore() {
+  const walcl  = S.walclHistory.map(x=>x.v).filter(v=>v>0);
+  const stable = S.stableHistory.map(x=>x.v).filter(v=>v>0);
+  const btc    = S.btcPrices.filter(v=>v>0);
+  const walclS  = walcl.length>2?clamp(100-trendScore(walcl,Math.min(26,walcl.length-1))):50;
+  const stableS = stable.length>2?clamp(100-trendScore(stable,Math.min(90,stable.length-1))):50;
+  const btcS    = btc.length>2?trendScore(btc,Math.min(60,btc.length-1)):50;
+  const w={walcl:.35,stable:.25,btc:.20,dxy:.10,yield:.10};
+  // DXY and yield data not available client-side — use neutral 50
+  return clamp(walclS*w.walcl+stableS*w.stable+btcS*w.btc+50*w.dxy+50*w.yield);
+}
+
+// ── DATA FETCHING ──────────────────────────────────────────────────────────
+async function apiFetch(url) {
+  const r=await fetch(url,{headers:{'Accept':'application/json'}});
+  if(!r.ok) throw new Error(r.status);
+  return r.json();
+}
+
+// Backend mit längerem Timeout (Render Cold Start ~30s)
+async function apiFetchBackend(url, timeoutMs=55000) {
+  const ctrl=new AbortController();
+  const t=setTimeout(()=>ctrl.abort(), timeoutMs);
+  try {
+    const r=await fetch(url,{headers:{'Accept':'application/json'}, signal:ctrl.signal});
+    clearTimeout(t);
+    if(!r.ok) throw new Error(r.status);
+    return r.json();
+  } catch(e) {
+    clearTimeout(t);
+    throw e;
+  }
+}
+
+async function fetchCoinGecko(coinId, days=365) {
+  const d=await apiFetch(
+    `https://api.coingecko.com/api/v3/coins/${coinId}/market_chart?vs_currency=usd&days=${days}&interval=daily`
+  );
+  return (d.prices||[]).map(([t,p])=>safeNum(p)).filter(v=>v>0);
+}
+
+async function fetchMarketData(coinId) {
+  const d=await apiFetch(`https://api.coingecko.com/api/v3/coins/${coinId}?localization=false&tickers=false&community_data=false&developer_data=false`);
+  const md=d.market_data||{};
+  return {
+    price:     safeNum(md.current_price?.usd,0),
+    change24h: safeNum(md.price_change_percentage_24h,0),
+    marketCap: safeNum(md.market_cap?.usd,0),
+    volume:    safeNum(md.total_volume?.usd,0),
+    ath:       safeNum(md.ath?.usd,0),
+    athChgPct: safeNum(md.ath_change_percentage?.usd,0),
+    priceHist: (d.market_chart?.prices||[]).map(([,p])=>safeNum(p)).filter(v=>v>0),
+  };
+}
+
+async function fetchFearGreed(limit=90) {
+  const d=await apiFetch(`https://api.alternative.me/fng/?limit=${limit}&format=json`);
+  const items=(d.data||[]).reverse().map(x=>({
+    t:parseInt(x.timestamp)*1000,
+    v:parseInt(x.value),
+    lbl:x.value_classification,
+  }));
+  return {history:items, current:items.at(-1)?.v??50, label:items.at(-1)?.lbl??'Neutral'};
+}
+
+async function fetchTVL() {
+  const d=await apiFetch('https://api.llama.fi/v2/historicalChainTvl/ethereum');
+  return (d||[]).map(x=>({t:x.date*1000,v:safeNum(x.tvl)})).filter(x=>x.v>0);
+}
+
+async function fetchStablecoins() {
+  const d=await apiFetch('https://stablecoins.llama.fi/stablecoincharts/all');
+  return (d||[]).map(x=>{
+    const total=Object.values(x.totalCirculatingUSD||{})
+      .reduce((a,v)=>a+safeNum(v),0);
+    return {t:x.date*1000,v:total};
+  }).filter(x=>x.v>0);
+}
+
+function syntheticWALCL() {
+  const weeks=260, now=Date.now(), msPerWeek=7*24*3600*1000;
+  return Array.from({length:weeks},(_,i)=>{
+    const t=now-(weeks-1-i)*msPerWeek;
+    const p=i/weeks;
+    let v;
+    if(p<.35)      v=4e6+p*5.7e6;
+    else if(p<.55) v=4.7e6+(p-.35)/.2*4.2e6;
+    else if(p<.75) v=8.9e6-(p-.55)/.2*9e5;
+    else           v=8e6-(p-.75)/.25*5e5;
+    return {t, v:Math.max(3e6,v+(Math.random()-.5)*1e5)};
+  });
+}
+
+async function loadAllData() {
+  const errors = {};
+  const run = async (key, fn) => {
+    try { return await fn(); }
+    catch(e) { errors[key]=e.message; return null; }
+  };
+
+  // If backend is configured, use it — much faster (single request)
+  if (BACKEND_URL) {
+    const isDeployedSite = window.location.protocol !== 'file:' &&
+      !['localhost','127.0.0.1'].includes(window.location.hostname);
+    const BACKEND_RETRIES = 3;
+    const BACKEND_TIMEOUT = 55000; // Render cold start ~30s
+
+    for (let attempt = 1; attempt <= BACKEND_RETRIES; attempt++) {
+      try {
+        const [prices, btcC, ethC, macC, hist, combinedC] = await Promise.all([
+          apiFetchBackend(`${BACKEND_URL}/api/prices`, BACKEND_TIMEOUT),
+          apiFetchBackend(`${BACKEND_URL}/api/cycle/btc`, BACKEND_TIMEOUT),
+          apiFetchBackend(`${BACKEND_URL}/api/cycle/eth`, BACKEND_TIMEOUT),
+          apiFetchBackend(`${BACKEND_URL}/api/cycle/macro`, BACKEND_TIMEOUT),
+          apiFetchBackend(`${BACKEND_URL}/api/history`, BACKEND_TIMEOUT),
+          apiFetchBackend(`${BACKEND_URL}/api/cycle/combined`, BACKEND_TIMEOUT),
+        ]);
+
+        if(prices) {
+          S.btcMarket  = prices.btc;
+          S.ethMarket  = prices.eth;
+          S.btcPrices  = (prices.btc?.history||[]).map(x=>x.v);
+          S.ethPrices  = (prices.eth?.history||[]).map(x=>x.v);
+          S.fgCurrent  = prices.fear_greed?.current??50;
+          S.fgLabel    = prices.fear_greed?.label??'Neutral';
+          S.fgHistory  = prices.fear_greed?.history||[];
+          S.ratioHistory = prices.eth_btc_ratio||[];
         }
-    except Exception as e:
-        logger.warning(f"Funding rates: {e}"); return {"btc_funding_rate":0.0,"eth_funding_rate":0.0}
-
-# ── COINGECKO ────────────────────────────────────────────────────────────────
-_CG="https://api.coingecko.com/api/v3"
-
-def _cg_headers():
-    h = {**HEADERS}
-    if COINGECKO_API_KEY:
-        h["x-cg-demo-api-key"] = COINGECKO_API_KEY
-    return h
-
-async def fetch_market_data(coin_id):
-    data=await _get(
-        f"{_CG}/coins/{coin_id}",
-        params={"localization":"false","tickers":"false","community_data":"false","developer_data":"false"},
-        headers=_cg_headers(),
-    )
-    d={"price":0.0,"change_24h":0.0,"market_cap":0.0,"volume":0.0,"ath":0.0,"ath_date":"","ath_change_pct":0.0}
-    if not data or "market_data" not in data: return d
-    md=data["market_data"]
-    return {
-        "price":          _sf(md.get("current_price",{}).get("usd",0)),
-        "change_24h":     _sf(md.get("price_change_percentage_24h",0)),
-        "market_cap":     _sf(md.get("market_cap",{}).get("usd",0)),
-        "volume":         _sf(md.get("total_volume",{}).get("usd",0)),
-        "ath":            _sf(md.get("ath",{}).get("usd",0)),
-        "ath_date":       str(md.get("ath_date",{}).get("usd","")),
-        "ath_change_pct": _sf(md.get("ath_change_percentage",{}).get("usd",0)),
-    }
-
-async def fetch_coin_prices_cg(coin_id,days=365):
-    await asyncio.sleep(1)
-    data = await _get(
-        f"{_CG}/coins/{coin_id}/market_chart",
-        params={"vs_currency": "usd", "days": days, "interval": "daily"},
-        headers=_cg_headers(),
-        retries=4,
-    )
-    if not data:
-        logger.error(f"CoinGecko {coin_id}: no data returned")
-        return []
-    if "prices" not in data:
-        logger.error(f"CoinGecko {coin_id}: unexpected response keys={list(data.keys())}")
-        return []
-    prices = [_sf(i[1]) for i in data["prices"] if _sf(i[1]) > 0]
-    logger.info(f"CoinGecko {coin_id}: {len(prices)}d")
-    return prices
-
-async def fetch_global_data():
-    try:
-        data=await _get(f"{_CG}/global",headers=_cg_headers())
-        if not data or "data" not in data: return {"btc_dominance":50.0,"total_market_cap":0.0}
-        d=data["data"]
-        return {
-            "btc_dominance":         _sf(d.get("market_cap_percentage",{}).get("btc",50)),
-            "total_market_cap":      _sf(d.get("total_market_cap",{}).get("usd",0)),
-            "total_volume_24h":      _sf(d.get("total_volume",{}).get("usd",0)),
-            "market_cap_change_24h": _sf(d.get("market_cap_change_percentage_24h_usd",0)),
+        if(hist) {
+          S.tvlHistory    = hist.tvl||[];
+          S.stableHistory = (hist.stable||hist.stablecoin||[]);
+          S.walclHistory  = hist.walcl||[];
+          const fredEl = document.getElementById('fred-source-label');
+          if (fredEl) {
+            const isReal = S.walclHistory && S.walclHistory.length > 10;
+            fredEl.textContent = isReal ? 'FRED (live ✓)' : 'FRED (synthetic)';
+            const srcFred = document.getElementById('src-fred');
+            if (srcFred) {
+              srcFred.classList.toggle('warn', !isReal);
+              srcFred.classList.toggle('ok', isReal);
+            }
+          }
+          S.fgHistory     = hist.fg||S.fgHistory;
+          if(hist.btc_full?.length) S.btcPrices = hist.btc_full.map(x=>x.v);
+          if(hist.eth_full?.length) S.ethPrices = hist.eth_full.map(x=>x.v);
         }
-    except Exception as e:
-        logger.warning(f"Global data: {e}"); return {"btc_dominance":50.0,"total_market_cap":0.0}
+        S.btcScore      = safeNum(btcC?.score, computeBTCScore());
+        S.btcComponents = btcC?.components || null;
+        S.ethScore      = safeNum(ethC?.score, computeETHScore());
+        S.ethComponents = ethC?.components || null;
+        S.macScore      = safeNum(macC?.score, computeMacroScore());
+        S.macComponents = macC?.components || null;
+        S.combined = safeNum(
+          combinedC?.combined_score,
+          clamp(S.btcScore*0.45+S.ethScore*0.30+S.macScore*0.25)
+        );
 
-# ── FEAR & GREED ─────────────────────────────────────────────────────────────
-async def fetch_fear_greed(limit=90):
-    default={"current":50,"label":"Neutral","history":[]}
-    data=await _get("https://api.alternative.me/fng/",params={"limit":limit,"format":"json"})
-    if not data or "data" not in data: return default
-    history=[]
-    for item in reversed(data["data"]):
-        try: history.append({"t":int(item["timestamp"])*1000,"v":int(item["value"]),"label":item["value_classification"]})
-        except: continue
-    cur=history[-1] if history else {"v":50,"label":"Neutral"}
-    return {"current":cur["v"],"label":cur.get("label","Neutral"),"history":history}
-
-# ── DEFILLAMA ────────────────────────────────────────────────────────────────
-async def fetch_eth_tvl():
-    for chain in ["Ethereum","ethereum"]:
-        data=await _get(f"https://api.llama.fi/v2/historicalChainTvl/{chain}")
-        if data:
-            result=[{"t":int(i["date"])*1000,"v":_sf(i.get("tvl",0))} for i in data if _sf(i.get("tvl",0))>0]
-            logger.info(f"DeFiLlama TVL: {len(result)} pts"); return result
-    return []
-
-async def fetch_stablecoin_supply():
-    data=await _get("https://stablecoins.llama.fi/stablecoincharts/all")
-    if not data: return []
-    result=[]
-    for item in data:
-        try:
-            circ=item.get("totalCirculatingUSD",{})
-            total=sum(_sf(v) for v in circ.values() if isinstance(v,(int,float)))
-            if total>0: result.append({"t":int(item["date"])*1000,"v":total})
-        except: continue
-    return result
-
-# ── FRED ─────────────────────────────────────────────────────────────────────
-async def fetch_walcl():
-    if not FRED_API_KEY or FRED_API_KEY.strip() in ("","your_key_here"):
-        logger.warning("WALCL: FRED_API_KEY missing — using synthetic")
-        return _synthetic_walcl()
-    
-    url = "https://api.stlouisfed.org/fred/series/observations"
-    params = {
-        "series_id": "WALCL",
-        "api_key": FRED_API_KEY.strip(),
-        "file_type": "json",
-        "observation_start": "2018-01-01"
-    }
-    data = await _get(url, params=params)
-    
-    if not data:
-        logger.warning("WALCL: _get returned None — using synthetic")
-        return _synthetic_walcl()
-    
-    if "observations" not in data:
-        logger.warning(f"WALCL: no 'observations' key — got keys: {list(data.keys())}")
-        return _synthetic_walcl()
-    
-    result = [
-        {"t": int(datetime.strptime(o["date"], "%Y-%m-%d").timestamp()) * 1000,
-         "v": _sf(o["value"])}
-        for o in data["observations"]
-        if o.get("value", ".") != "."
-    ]
-    
-    if not result:
-        logger.warning("WALCL: empty result after parsing — using synthetic")
-        return _synthetic_walcl()
-    
-    logger.info(f"WALCL: loaded {len(result)} real datapoints ✅")
-    return result
-
-def _synthetic_walcl():
-    import random; random.seed(42)
-    start=datetime(2018,1,1); weeks=int((datetime.utcnow()-start).days/7); result=[]
-    for i in range(weeks):
-        d=start+timedelta(weeks=i); p=i/max(weeks,1)
-        if p<0.35:   v=4_000_000+p*2_000_000
-        elif p<0.55: v=4_700_000+(p-0.35)/0.20*4_200_000
-        elif p<0.75: v=8_900_000-(p-0.55)/0.20*900_000
-        else:        v=8_000_000-(p-0.75)/0.25*500_000
-        result.append({"t":int(d.timestamp())*1000,"v":max(3_000_000,v+random.uniform(-50_000,50_000))})
-    return result
-
-async def fetch_fred_series(series_id,start="2020-01-01"):
-    if not FRED_API_KEY or FRED_API_KEY in ("","your_key_here"): return []
-    data=await _get("https://api.stlouisfed.org/fred/series/observations",params={
-        "series_id":series_id,"api_key":FRED_API_KEY,"file_type":"json","observation_start":start})
-    if not data or "observations" not in data: return []
-    return [{"t":int(datetime.strptime(o["date"],"%Y-%m-%d").timestamp())*1000,"v":_sf(o["value"])}
-            for o in data["observations"] if o.get("value",".")!="."]
-
-# ── ON-CHAIN PROXIES ─────────────────────────────────────────────────────────
-def _compute_mvrv_zscore(prices):
-    if len(prices)<30: return 50.0
-    try:
-        clean=[p for p in prices if p>0]; window=min(730,len(clean))
-        lt=clean[-window:]; mean=sum(lt)/len(lt)
-        std=math.sqrt(sum((p-mean)**2 for p in lt)/len(lt)) or mean*0.3
-        z=(clean[-1]-mean)/std
-        if z<=-2:  return max(5.0,15+z*5)
-        if z<=0:   return 15+(z+2)*15
-        if z<=2:   return 45+z*12.5
-        if z<=4:   return 70+(z-2)*10
-        return min(95.0,90+(z-4)*2.5)
-    except: return 50.0
-
-def _compute_pi_cycle(prices):
-    if len(prices)<350: return 50.0
-    try:
-        c=[p for p in prices if p>0]
-        if len(c)<350: return 50.0
-        ma111=sum(c[-111:])/111; ma350x2=(sum(c[-350:])/350)*2
-        r=ma111/ma350x2 if ma350x2>0 else 1.0
-        if r<=0.4:  return 5.0
-        if r<=0.7:  return 5+(r-0.4)/0.3*30
-        if r<=0.9:  return 35+(r-0.7)/0.2*25
-        if r<=1.0:  return 60+(r-0.9)/0.1*25
-        if r<=1.2:  return 85+(r-1.0)/0.2*10
-        return 95.0
-    except: return 50.0
-
-def _compute_puell_multiple(prices):
-    if len(prices)<365: return 50.0
-    try:
-        c=[p for p in prices if p>0]
-        if len(c)<365: return 50.0
-        puell=c[-1]/(sum(c[-365:])/365)
-        if puell<=0.3: return 5.0
-        if puell<=0.5: return 5+(puell-0.3)/0.2*15
-        if puell<=1.0: return 20+(puell-0.5)/0.5*25
-        if puell<=2.0: return 45+(puell-1.0)/1.0*25
-        if puell<=4.0: return 70+(puell-2.0)/2.0*20
-        return min(95.0,90+(puell-4.0)*2)
-    except: return 50.0
-
-# ── AGGREGATE ────────────────────────────────────────────────────────────────
-async def fetch_all():
-    logger.info("fetch_all v3: starting…")
-    results=await asyncio.gather(
-        fetch_binance_prices("bitcoin",730),   # 0
-        fetch_binance_prices("ethereum",730),  # 1
-        fetch_binance_ticker("bitcoin"),        # 2
-        fetch_binance_ticker("ethereum"),       # 3
-        fetch_market_data("bitcoin"),           # 4
-        fetch_market_data("ethereum"),          # 5
-        fetch_fear_greed(90),                   # 6
-        fetch_eth_tvl(),                        # 7
-        fetch_stablecoin_supply(),              # 8
-        fetch_walcl(),                          # 9
-        fetch_fred_series("DGS10"),             # 10
-        fetch_global_data(),                    # 11
-        fetch_funding_rates(),                  # 12
-        return_exceptions=True,
-    )
-    def safe(r,d): return d if (isinstance(r,Exception) or r is None) else r
-
-    btc_p  =safe(results[0],[])
-    eth_p  =safe(results[1],[])
-    btc_tk =safe(results[2],{})
-    eth_tk =safe(results[3],{})
-    btc_cg =safe(results[4],{"price":0,"change_24h":0,"market_cap":0,"volume":0,"ath":0,"ath_change_pct":0})
-    eth_cg =safe(results[5],{"price":0,"change_24h":0,"market_cap":0,"volume":0,"ath":0,"ath_change_pct":0})
-    fg     =safe(results[6],{"current":50,"label":"Neutral","history":[]})
-    tvl    =safe(results[7],[])
-    stable =safe(results[8],[])
-    walcl  =safe(results[9],_synthetic_walcl())
-    us10y  =safe(results[10],[])
-    gdata  =safe(results[11],{"btc_dominance":50.0,"total_market_cap":0.0})
-    funding=safe(results[12],{"btc_funding_rate":0.0,"eth_funding_rate":0.0})
-
-    await asyncio.sleep(2)
-    try:
-        cg_btc = await fetch_coin_prices_cg("bitcoin",730)
-        logger.info(f"CG BTC prices: {len(cg_btc)} pts, last={cg_btc[-1] if cg_btc else 'EMPTY'}")
-    except Exception as e:
-        logger.error(f"CG BTC fetch failed: {e}")
-        cg_btc = []
-    try:
-        cg_eth = await fetch_coin_prices_cg("ethereum",730)
-        logger.info(f"CG ETH prices: {len(cg_eth)} pts, last={cg_eth[-1] if cg_eth else 'EMPTY'}")
-    except Exception as e:
-        logger.error(f"CG ETH fetch failed: {e}")
-        cg_eth = []
-    btc_prices=cg_btc if len(cg_btc)>10 else (btc_p if len(btc_p)>10 else [])
-    eth_prices=cg_eth if len(cg_eth)>10 else (eth_p if len(eth_p)>10 else [])
-    if not walcl: walcl=_synthetic_walcl()
-
-    def merge(tk,cg,prices=None):
-        return {
-            "price":         _sf(
-                tk.get("price")
-                or cg.get("price")
-                or (prices[-1] if prices else 0)
-            ),
-            "change_24h":    _sf(tk.get("change_24h") or cg.get("change_24h",0)),
-            "volume":        _sf(tk.get("volume_24h") or cg.get("volume",0)),
-            "market_cap":    _sf(cg.get("market_cap",0)),
-            "ath":           _sf(cg.get("ath",0)),
-            "ath_date":      cg.get("ath_date",""),
-            "ath_change_pct":_sf(cg.get("ath_change_pct",0)),
+        if(macC?.data) {
+          S.walclCurrent  = safeNum(macC.data.walcl_current_T)*1e12;
+          S.stableCurrent = safeNum(macC.data.stable_current_B)*1e9;
         }
 
-    indicators={
-        "mvrv_score":  round(_compute_mvrv_zscore(btc_prices),1),
-        "pi_score":    round(_compute_pi_cycle(btc_prices),1),
-        "puell_score": round(_compute_puell_multiple(btc_prices),1),
-    }
+        // Optional: Alpha Intelligence (analyzer + decision)
+        let analyzer = null, decision = null, cycleAnchor = null;
+        try {
+          [analyzer, decision, cycleAnchor] = await Promise.all([
+            apiFetchBackend(`${BACKEND_URL}/api/analyzer`, 10000),
+            apiFetchBackend(`${BACKEND_URL}/api/decision`, 10000),
+            apiFetchBackend(`${BACKEND_URL}/api/cycle-anchor`, 10000),
+          ]);
+        } catch (_) { }
 
-    logger.info(f"fetch_all done — BTC:{len(btc_prices)}d F&G:{fg['current']} "
-                f"DOM:{gdata.get('btc_dominance',0):.1f}% "
-                f"MVRV:{indicators['mvrv_score']} Pi:{indicators['pi_score']} Puell:{indicators['puell_score']}")
+        function renderAlphaIntelligence(analyzer, decision) {
+          const el = document.getElementById('hero-decision');
+          if (!el) return;
 
-    return {
-        "btc_prices":   btc_prices,
-        "eth_prices":   eth_prices,
-        "btc_market":   merge(btc_tk,btc_cg,btc_prices),
-        "eth_market":   merge(eth_tk,eth_cg,eth_prices),
-        "fear_greed":   fg,
-        "tvl_series":   tvl,
-        "stable_series":stable,
-        "walcl_series": walcl,
-        "us10y_series": us10y,
-        "global_data":  gdata,
-        "funding_data": funding,
-        "indicators":   indicators,
-        "fetched_at":   int(time.time()*1000),
+          const signal = decision?.alpha_signal ?? '—';
+          const position = decision?.alpha_cycle_position ?? 50;
+          const phase = decision?.market_phase ?? '—';
+          const alloc = decision?.spot_allocation ?? {};
+          const expReturn = decision?.expected_return_12m ?? '—';
+          const confidence = decision?.confidence ?? 0;
+          const strategy = decision?.strategy_summary ?? '—';
+
+          const signalColors = {
+            'STRONG_ACCUMULATE': '#22c55e',
+            'ACCUMULATE': '#86efac',
+            'HOLD': '#f59e0b',
+            'REDUCE': '#f97316',
+            'EXIT': '#ef4444',
+          };
+          const signalEl = document.getElementById('ai-signal');
+          if (signalEl) {
+            signalEl.textContent = signal.replace('_', ' ');
+            signalEl.style.color = signalColors[signal] ?? 'var(--text)';
+          }
+
+          const posEl = document.getElementById('ai-position');
+          if (posEl) posEl.textContent = `${Math.round(position)}%`;
+          const phaseEl = document.getElementById('ai-phase');
+          if (phaseEl) phaseEl.textContent = phase;
+
+          const allocEl = document.getElementById('ai-alloc');
+          if (allocEl) allocEl.innerHTML =
+            `BTC ${alloc.btc ?? 0}% · ETH ${alloc.eth ?? 0}% · Cash ${alloc.cash ?? 0}%`;
+
+          const retEl = document.getElementById('ai-return');
+          if (retEl) retEl.textContent = expReturn;
+
+          const confEl = document.getElementById('ai-confidence');
+          if (confEl) {
+            confEl.textContent = `${Math.round(confidence)}%`;
+            confEl.style.color = scoreColor(confidence);
+          }
+
+          const stratEl = document.getElementById('ai-strategy');
+          if (stratEl) stratEl.textContent = strategy;
+
+          el.style.display = 'block';
+        }
+
+        function renderCycleAnchor(data) {
+          const el = document.getElementById('cycle-anchor-section');
+          if (!el) return;
+
+          const position = data?.cycle_position_percent ?? 0;
+          const daysToTop = data?.days_to_next_cycle_top ?? '—';
+          const topDate = data?.expected_cycle_top_date ?? '—';
+          const halvingPct = data?.halving_cycle_position_percent ?? 0;
+          const confidence = data?.cycle_time_confidence ?? 0;
+
+          const posEl = document.getElementById('ca-position-pct');
+          if (posEl) posEl.textContent = `${Math.round(position)}%`;
+
+          const bar = document.getElementById('ca-progress-bar');
+          if (bar) bar.style.width = `${Math.min(100, Math.round(position))}%`;
+
+          const daysEl = document.getElementById('ca-days-top');
+          if (daysEl) daysEl.textContent =
+            typeof daysToTop === 'number' ? `${daysToTop}d` : daysToTop;
+
+          const dateEl = document.getElementById('ca-top-date');
+          if (dateEl) dateEl.textContent = topDate.slice(0, 7);
+
+          const halvingEl = document.getElementById('ca-halving-pct');
+          if (halvingEl) halvingEl.textContent = `${Math.round(halvingPct)}%`;
+
+          const confEl = document.getElementById('ca-confidence');
+          if (confEl) {
+            confEl.textContent = `${Math.round(confidence)}%`;
+            confEl.style.color = scoreColor(confidence);
+          }
+
+          el.style.display = 'block';
+        }
+
+        if(analyzer && decision) renderAlphaIntelligence(analyzer, decision);
+        if(cycleAnchor) renderCycleAnchor(cycleAnchor);
+
+        markSources(errors);
+        return;
+      } catch(e) {
+        if (attempt < BACKEND_RETRIES) {
+          await new Promise(r=>setTimeout(r, 3000));
+          continue;
+        }
+        if (isDeployedSite) {
+          const banner = document.getElementById('backend-retry-banner');
+          if (banner) banner.style.display = 'block';
+          markSources({ backend: e.message || 'Timeout' });
+          return;
+        }
+        console.warn('Backend unavailable, falling back to direct APIs:', e.message);
+        break;
+      }
     }
+  }
+
+  // Direct API calls (no backend)
+  const [btcHist, ethHist, btcMkt, ethMkt, fg, tvl, stable] = await Promise.all([
+    run('btcPrices',  ()=>fetchCoinGecko('bitcoin',  730)),
+    run('ethPrices',  ()=>fetchCoinGecko('ethereum', 730)),
+    run('btcMarket',  ()=>fetchMarketData('bitcoin')),
+    run('ethMarket',  ()=>fetchMarketData('ethereum')),
+    run('fearGreed',  ()=>fetchFearGreed(90)),
+    run('tvl',        ()=>fetchTVL()),
+    run('stablecoins',()=>fetchStablecoins()),
+  ]);
+
+  S.btcPrices  = btcHist  || [];
+  S.ethPrices  = ethHist  || [];
+  S.btcMarket  = btcMkt   || {price:0,change24h:0,marketCap:0,volume:0,ath:0};
+  S.ethMarket  = ethMkt   || {price:0,change24h:0,marketCap:0,volume:0,ath:0};
+  S.fgCurrent  = fg?.current ?? 50;
+  S.fgLabel    = fg?.label   ?? 'Neutral';
+  S.fgHistory  = fg?.history || [];
+  S.tvlHistory = tvl    || [];
+  S.stableHistory = stable || [];
+  S.walclHistory  = syntheticWALCL();
+
+  // Compute TVL current
+  S.tvlCurrent    = S.tvlHistory.at(-1)?.v || 0;
+  S.stableCurrent = S.stableHistory.at(-1)?.v || 0;
+  S.walclCurrent  = S.walclHistory.at(-1)?.v * 1e6 || 0; // already millions
+
+  // Build ratio history
+  const ml=Math.min(S.btcPrices.length, S.ethPrices.length);
+  S.ratioHistory = Array.from({length:ml},(_,i)=>{
+    const b=S.btcPrices[S.btcPrices.length-ml+i]||1;
+    const e=S.ethPrices[S.ethPrices.length-ml+i]||0;
+    const now=Date.now(), offset=(ml-1-i)*86400000;
+    return {t:now-offset, v:b>0?e/b:0};
+  });
+
+  // Compute scores
+  S.btcScore = computeBTCScore();
+  S.ethScore = computeETHScore();
+  S.macScore = computeMacroScore();
+  S.combined = clamp(S.btcScore*0.45+S.ethScore*0.30+S.macScore*0.25);
+
+  markSources(errors);
+}
+
+function markSources(errors) {
+  const setStatus = (id, ok) => {
+    const el=$(id);
+    if(!el) return;
+    el.className='status-src '+(ok?'ok':'err');
+  };
+  setStatus('src-cg',     !errors.btcPrices&&!errors.btcMarket);
+  setStatus('src-fg',     !errors.fearGreed);
+  setStatus('src-dl',     !errors.tvl);
+  setStatus('src-stable', !errors.stablecoins);
+  const ts=new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+  $('src-ts').className='status-src ok';
+  $('src-ts-lbl').textContent=`Synced ${ts}`;
+}
+
+// ── GAUGE ANIMATION ─────────────────────────────────────────────────────────
+function animateGauge(arcId, score) {
+  const arc=$(arcId);
+  if(!arc) return;
+  const total=251.2;
+  arc.style.strokeDashoffset = total - (clamp(score)/100)*total;
+}
+
+// ── COMPONENT BARS ──────────────────────────────────────────────────────────
+function renderComponents(containerId, components) {
+  const el=$(containerId);
+  if(!el) return;
+  el.innerHTML = components.map(({label, score}) => {
+    const s=clamp(score);
+    const col=scoreColor(s);
+    return `<div class="comp-row">
+      <div class="comp-label">${label}</div>
+      <div class="comp-bar"><div class="comp-fill" style="width:${s}%;background:${col}"></div></div>
+      <div class="comp-val" style="color:${col}">${Math.round(s)}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── PHASE BANNER ────────────────────────────────────────────────────────────
+function updatePhaseBanner() {
+  const phase = phaseOf(S.combined);
+  const col   = scoreColor(S.combined);
+  const banner = document.getElementById('hero-decision');
+
+  const phaseStyles = {
+    Accumulation: {bg:'rgba(34,197,94,0.06)', border:'rgba(34,197,94,0.22)'},
+    'Bull Market':{bg:'rgba(59,130,246,0.06)', border:'rgba(59,130,246,0.22)'},
+    Distribution: {bg:'rgba(245,158,11,0.06)', border:'rgba(245,158,11,0.22)'},
+    'Bear Market':{bg:'rgba(239,68,68,0.06)',  border:'rgba(239,68,68,0.22)'},
+  };
+  const st=phaseStyles[phase]||phaseStyles['Bull Market'];
+  if (banner) {
+    banner.style.background   = st.bg;
+    banner.style.borderColor  = st.border;
+    banner.style.color        = col;
+    banner.style.display      = 'block';
+  }
+
+  $('phase-icon').textContent    = phaseIcon(phase);
+  $('phase-name').textContent    = phase;
+  $('phase-desc').textContent    = phaseDesc(phase);
+  $('phase-combined').textContent = Math.round(S.combined);
+  $('phase-combined').style.color = col;
+}
+
+// ── TICKER & SCORES UPDATE ──────────────────────────────────────────────────
+function updateUI() {
+  const btcP = S.btcMarket?.price || S.btcPrices.at(-1) || 0;
+  const ethP = S.ethMarket?.price || S.ethPrices.at(-1) || 0;
+  const ratio = btcP>0 ? ethP/btcP : 0;
+
+  // Score colors
+  const bCol=scoreColor(S.btcScore), eCol=scoreColor(S.ethScore), mCol=scoreColor(S.macScore);
+
+  // Gauges
+  animateGauge('btc-arc', S.btcScore);
+  animateGauge('eth-arc', S.ethScore);
+  animateGauge('mac-arc', S.macScore);
+
+  // Score numbers
+  setText('btc-score-val', Math.round(S.btcScore), bCol);
+  setText('eth-score-val', Math.round(S.ethScore), eCol);
+  setText('mac-score-val', Math.round(S.macScore), mCol);
+
+  // Tags
+  setText('btc-tag', phaseOf(S.btcScore));
+  setText('eth-tag', phaseOf(S.ethScore));
+  setText('mac-tag', phaseOf(S.macScore));
+
+  // Phases
+  setText('btc-phase', phaseOf(S.btcScore), bCol);
+  setText('eth-phase', phaseOf(S.ethScore), eCol);
+  setText('mac-phase', phaseOf(S.macScore), mCol);
+
+  // Prices
+  setText('btc-price-sm', btcP>0?`$${fmt(btcP)}`:'—');
+  setText('eth-price-sm', ethP>0?`$${fmt(ethP)}`:'—');
+  setText('mac-walcl',    S.walclCurrent>0?`$${(S.walclCurrent/1e12).toFixed(2)}T WALCL`:'Synthetic');
+
+  // Component bars
+  const btcWeekly = S.btcPrices.filter((_,i)=>i%7===0);
+  const ethWeekly = S.ethPrices.filter((_,i)=>i%7===0);
+  if (S.btcComponents) {
+    renderComponents('btc-components', [
+      {label:'200W MA Dev',   score: S.btcComponents.ma_200w?.score       ?? 50},
+      {label:'Drawdown',      score: S.btcComponents.drawdown?.score      ?? 50},
+      {label:'MVRV',          score: S.btcComponents.mvrv?.score          ?? 50},
+      {label:'Fear & Greed',  score: S.btcComponents.fear_greed?.score    ?? 50},
+      {label:'Pi Cycle',      score: S.btcComponents.pi_cycle?.score      ?? 50},
+      {label:'Puell',         score: S.btcComponents.puell?.score         ?? 50},
+      {label:'RSI',           score: S.btcComponents.rsi?.score           ?? 50},
+      {label:'Funding',       score: S.btcComponents.funding?.score       ?? 50},
+      {label:'Stable Supply', score: S.btcComponents.stable_supply?.score ?? 50},
+    ]);
+  } else {
+    renderComponents('btc-components', [
+      {label:'200W MA Dev',  score: ma200Score(S.btcPrices)},
+      {label:'Drawdown',     score: drawdownScore(S.btcPrices)},
+      {label:'Fear & Greed', score: clamp(S.fgCurrent)},
+      {label:'RSI',          score: rsiToScore(computeRSI(btcWeekly,14))},
+      {label:'Macro Liq',    score: S.walclHistory.length>2
+        ? clamp(100-trendScore(S.walclHistory.map(x=>x.v),26)) : 50},
+    ]);
+  }
+  if (S.ethComponents) {
+    renderComponents('eth-components', [
+      {label:'ETH/BTC Trend', score: S.ethComponents.eth_btc_ratio?.score      ?? 50},
+      {label:'TVL Trend',     score: S.ethComponents.tvl_trend?.score          ?? 50},
+      {label:'Price 30d',     score: S.ethComponents.price_trend_30d?.score    ?? 50},
+      {label:'RSI',           score: S.ethComponents.rsi?.score                ?? 50},
+      {label:'200W MA Dev',   score: S.ethComponents.ma_200w?.score            ?? 50},
+      {label:'Price 90d',     score: S.ethComponents.price_trend_90d?.score    ?? 50},
+      {label:'Drawdown',      score: S.ethComponents.drawdown?.score           ?? 50},
+      {label:'Stable Growth', score: S.ethComponents.stable_growth?.score      ?? 50},
+      {label:'Fear & Greed',  score: S.ethComponents.fear_greed?.score         ?? 50},
+      {label:'Funding',       score: S.ethComponents.eth_funding?.score        ?? 50},
+    ]);
+  } else {
+    renderComponents('eth-components', [
+      {label:'ETH/BTC Trend', score:S.ratioHistory.length>2?trendScore(S.ratioHistory.map(x=>x.v),60):50},
+      {label:'TVL Trend',     score:S.tvlHistory.length>2?trendScore(S.tvlHistory.map(x=>x.v),90):50},
+      {label:'RSI',           score:rsiToScore(computeRSI(ethWeekly,14))},
+      {label:'200W MA Dev',   score:ma200Score(S.ethPrices)},
+      {label:'Price 30d',     score:trendScore(S.ethPrices,30)},
+    ]);
+  }
+  if (S.macComponents) {
+    renderComponents('mac-components', [
+      {label:'WALCL Trend',   score: S.macComponents.walcl_trend?.score    ?? 50},
+      {label:'Stable Trend',  score: S.macComponents.stable_trend?.score   ?? 50},
+      {label:'BTC Risk-On',   score: S.macComponents.btc_risk_on?.score    ?? 50},
+      {label:'DXY Trend',     score: S.macComponents.dxy_trend?.score      ?? 50},
+      {label:'Yield Trend',   score: S.macComponents.yield_trend?.score    ?? 50},
+      {label:'BTC Dominance', score: S.macComponents.btc_dom_macro?.score  ?? 50},
+    ]);
+  } else {
+    renderComponents('mac-components', [
+      {label:'WALCL Trend',   score:S.walclHistory.length>2?clamp(100-trendScore(S.walclHistory.map(x=>x.v),26)):50},
+      {label:'Stable Supply', score:S.stableHistory.length>2?clamp(100-trendScore(S.stableHistory.map(x=>x.v),90)):50},
+      {label:'BTC Risk-On',   score:S.btcPrices.length>2?trendScore(S.btcPrices,60):50},
+    ]);
+  }
+
+  updatePhaseBanner();
+
+  // Price cards
+  updatePriceCard('pc-btc-price','pc-btc-chg','pc-btc-vol',
+    btcP, S.btcMarket?.change24h||0, S.btcMarket?.volume||0, 'var(--btc)');
+  updatePriceCard('pc-eth-price','pc-eth-chg','pc-ratio',
+    ethP, S.ethMarket?.change24h||0, ratio, 'var(--eth)', true);
+
+  // F&G card
+  if($('pc-fg-val')) {
+    $('pc-fg-val').textContent = S.fgCurrent;
+    $('pc-fg-val').style.color = scoreColor(S.fgCurrent);
+    $('pc-fg-lbl').textContent = S.fgLabel;
+    $('pc-fg-signal').textContent = S.fgCurrent<30?'BUY Zone':S.fgCurrent>75?'SELL Zone':'Neutral';
+  }
+
+  // Stable card
+  if(S.stableCurrent>0 && $('pc-stable-val')) {
+    $('pc-stable-val').textContent = fmtB(S.stableCurrent);
+    const prev = S.stableHistory.at(-31)?.v||S.stableCurrent;
+    const sc = pctChg(S.stableCurrent, prev);
+    setChangeEl('pc-stable-chg', sc);
+  }
+
+  // Indicator chips
+  if($('chip-fg')) {
+    $('chip-fg').textContent = `${S.fgCurrent} — ${S.fgLabel}`;
+    $('chip-fg').style.color = scoreColor(S.fgCurrent);
+  }
+  setText('chip-ratio', ratio>0?ratio.toFixed(5):'—');
+  setText('chip-tvl',   S.tvlCurrent>0?fmtB(S.tvlCurrent):'—');
+  setText('chip-stable',S.stableCurrent>0?fmtB(S.stableCurrent):'—');
+  setText('chip-walcl', S.walclCurrent>0?`$${(S.walclCurrent/1e12).toFixed(2)}T`:'—');
+  setText('chip-btc-ath',S.btcMarket?.athChgPct?`${Math.round(S.btcMarket.athChgPct)}% from ATH`:'—');
+
+  // Ticker
+  const tPairs = [['tk-btc','tk-btc2',`$${fmt(btcP)}`],['tk-eth','tk-eth2',`$${fmt(ethP)}`],
+    ['tk-ratio','tk-ratio2',ratio.toFixed(5)],['tk-fg','tk-fg2',`${S.fgCurrent} (${S.fgLabel})`],
+    ['tk-btc-score','tk-btc-score2',`BTC ${Math.round(S.btcScore)}/100`],
+    ['tk-eth-score','tk-eth-score2',`ETH ${Math.round(S.ethScore)}/100`],
+    ['tk-mac-score','tk-mac-score2',`MAC ${Math.round(S.macScore)}/100`],
+  ];
+  tPairs.forEach(([id1,id2,val])=>{
+    if($(id1))$(id1).textContent=val;
+    if($(id2))$(id2).textContent=val;
+  });
+
+  // Price change colors in ticker
+  updateTickerChange('tk-btc-c', S.btcMarket?.change24h||0);
+  updateTickerChange('tk-eth-c', S.ethMarket?.change24h||0);
+
+  // Chart stats
+  if(S.btcPrices.length>=100){
+    const w=S.btcPrices.filter((_,i)=>i%7===0);
+    const ma=safeMean(w.slice(-200));
+    const dev=pctChg(S.btcPrices.at(-1),ma);
+    setText('cs-ma200',`$${fmt(ma)}`);
+    setText('cs-ma-dev',`${dev>=0?'+':''}${dev.toFixed(1)}%`,$('cs-ma-dev'));
+    if($('cs-ma-dev')) $('cs-ma-dev').style.color=dev>=0?'var(--green)':'var(--red)';
+  }
+  setText('cs-fg',    `${S.fgCurrent} ${S.fgLabel}`);
+  setText('cs-tvl',   S.tvlCurrent>0?fmtB(S.tvlCurrent):'—');
+  setText('cs-ratio', ratio.toFixed(5));
+  setText('cs-walcl', S.walclCurrent>0?`$${(S.walclCurrent/1e12).toFixed(2)}T`:'Synthetic');
+
+  // Last updated
+  const ts=new Date();
+  $('last-updated').textContent=`Updated ${ts.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})} UTC`;
+
+  renderCharts();
+  renderSparklines();
+}
+
+function setText(id, val, color) {
+  const el=$(id); if(!el) return;
+  el.textContent=typeof val==='number'?String(val):val;
+  if(color) el.style.color=color;
+}
+function updatePriceCard(priceId,chgId,statId, price,chg,stat,col,isRatio=false) {
+  if($(priceId)){ $(priceId).textContent=price>0?`$${fmt(price)}`:'—'; }
+  setChangeEl(chgId, chg);
+  if($(statId)){
+    if(isRatio) $(statId).textContent=stat.toFixed(5);
+    else $(statId).textContent=stat>0?fmtB(stat):'—';
+  }
+}
+function setChangeEl(id, chg) {
+  const el=$(id); if(!el) return;
+  el.textContent=`${chg>=0?'▲':'▼'}${Math.abs(chg).toFixed(2)}%`;
+  el.className='pc-change '+(chg>=0?'pos':'neg');
+}
+function updateTickerChange(id, chg) {
+  const el=$(id); if(!el) return;
+  el.textContent=`${chg>=0?'+':''}${chg.toFixed(2)}%`;
+  el.className='tick-chg '+(chg>=0?'pos':'neg');
+}
+
+// ── CANVAS CHARTS ──────────────────────────────────────────────────────────
+function drawChart(canvasId, datasets, opts={}) {
+  const canvas=$(canvasId); if(!canvas) return;
+  const dpr=window.devicePixelRatio||1;
+  const rect=canvas.getBoundingClientRect();
+  const W=rect.width||canvas.parentElement.offsetWidth||400;
+  const H=opts.height||200;
+  canvas.width=W*dpr; canvas.height=H*dpr;
+  canvas.style.height=H+'px';
+  const ctx=canvas.getContext('2d');
+  ctx.scale(dpr,dpr);
+
+  const PAD={t:8,r:10,b:22,l:opts.lpad||54};
+  const cW=W-PAD.l-PAD.r, cH=H-PAD.t-PAD.b;
+
+  let allY=[]; datasets.forEach(ds=>ds.data.forEach(d=>allY.push(d.y)));
+  const yMin=Math.min(...allY), yMax=Math.max(...allY);
+  const yR=yMax-yMin||1;
+  let allX=[]; datasets.forEach(ds=>ds.data.forEach(d=>allX.push(d.x)));
+  const xMin=Math.min(...allX), xMax=Math.max(...allX);
+  const xR=xMax-xMin||1;
+
+  const px=x=>PAD.l+((x-xMin)/xR)*cW;
+  const py=y=>PAD.t+(1-(y-yMin)/yR)*cH;
+
+  // Grid
+  for(let i=0;i<=4;i++){
+    const yV=yMin+(yR/4)*i;
+    const yP=py(yV);
+    ctx.strokeStyle='rgba(255,255,255,0.05)';
+    ctx.lineWidth=1;
+    ctx.setLineDash([4,4]);
+    ctx.beginPath(); ctx.moveTo(PAD.l,yP); ctx.lineTo(W-PAD.r,yP); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='rgba(139,157,195,0.5)';
+    ctx.font=`${9/dpr*dpr}px DM Mono,monospace`;
+    ctx.textAlign='right';
+    const lbl=opts.yFmt?opts.yFmt(yV):yV>=1000?`$${(yV/1000).toFixed(0)}K`:`${yV.toFixed(2)}`;
+    ctx.fillText(lbl,PAD.l-4,yP+3);
+  }
+
+  // X labels
+  const ds0=datasets[0]?.data||[];
+  if(ds0.length>1){
+    [[0,ds0[0]],[Math.floor(ds0.length/2),ds0[Math.floor(ds0.length/2)]],[ds0.length-1,ds0.at(-1)]]
+      .forEach(([,pt])=>{
+        const d=new Date(pt.x);
+        const lbl=`${d.toLocaleString('en',{month:'short'})} ${d.getFullYear().toString().slice(2)}`;
+        ctx.fillStyle='rgba(61,85,128,0.8)';
+        ctx.font='9px DM Mono,monospace';
+        ctx.textAlign='center';
+        ctx.fillText(lbl,px(pt.x),H-5);
+      });
+  }
+
+  // Datasets
+  datasets.forEach(ds=>{
+    const data=ds.data; if(!data.length) return;
+    ctx.beginPath();
+    ctx.moveTo(px(data[0].x),py(data[0].y));
+    data.slice(1).forEach(d=>ctx.lineTo(px(d.x),py(d.y)));
+    ctx.strokeStyle=ds.color||'#0ea5e9';
+    ctx.lineWidth=ds.width||1.5;
+    if(ds.dash) ctx.setLineDash(ds.dash);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    if(ds.fill){
+      ctx.lineTo(px(data.at(-1).x),PAD.t+cH);
+      ctx.lineTo(px(data[0].x),PAD.t+cH);
+      ctx.closePath();
+      const grad=ctx.createLinearGradient(0,PAD.t,0,PAD.t+cH);
+      const hex=ds.color||'#0ea5e9';
+      grad.addColorStop(0,hex+'40');
+      grad.addColorStop(1,hex+'00');
+      ctx.fillStyle=grad;
+      ctx.fill();
+    }
+  });
+}
+
+function drawBarChart(canvasId, data, opts={}) {
+  const canvas=$(canvasId); if(!canvas) return;
+  const dpr=window.devicePixelRatio||1;
+  const W=canvas.getBoundingClientRect().width||canvas.parentElement.offsetWidth||300;
+  const H=opts.height||140;
+  canvas.width=W*dpr; canvas.height=H*dpr;
+  canvas.style.height=H+'px';
+  const ctx=canvas.getContext('2d');
+  ctx.scale(dpr,dpr);
+  const PAD={t:8,r:8,b:20,l:28};
+  const cW=W-PAD.l-PAD.r, cH=H-PAD.t-PAD.b;
+
+  [0,25,50,75,100].forEach(v=>{
+    const y=PAD.t+(1-v/100)*cH;
+    ctx.strokeStyle='rgba(255,255,255,0.04)'; ctx.lineWidth=1; ctx.setLineDash([3,3]);
+    ctx.beginPath(); ctx.moveTo(PAD.l,y); ctx.lineTo(W-PAD.r,y); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='rgba(61,85,128,0.6)'; ctx.font='8px DM Mono,monospace'; ctx.textAlign='right';
+    ctx.fillText(v,PAD.l-2,y+3);
+  });
+
+  const bW=cW/data.length, gap=bW*.15;
+  data.forEach((d,i)=>{
+    const v=clamp(d.v);
+    const col=v<25?'#22c55e':v<50?'#84cc16':v<75?'#f59e0b':'#ef4444';
+    const bH=(v/100)*cH;
+    const x=PAD.l+i*bW+gap/2, y=PAD.t+cH-bH;
+    const grad=ctx.createLinearGradient(0,y,0,y+bH);
+    grad.addColorStop(0,col+'cc'); grad.addColorStop(1,col+'33');
+    ctx.fillStyle=grad;
+    ctx.beginPath();
+    if(ctx.roundRect) ctx.roundRect(x,y,bW-gap,bH,[2,2,0,0]);
+    else ctx.rect(x,y,bW-gap,bH);
+    ctx.fill();
+  });
+}
+
+function drawSparkline(canvasId, vals, color) {
+  const canvas=$(canvasId); if(!canvas||!vals?.length) return;
+  const dpr=window.devicePixelRatio||1;
+  const W=canvas.getBoundingClientRect().width||canvas.parentElement.offsetWidth||120;
+  const H=40;
+  canvas.width=W*dpr; canvas.height=H*dpr;
+  canvas.style.height=H+'px';
+  const ctx=canvas.getContext('2d');
+  ctx.scale(dpr,dpr);
+  const mn=Math.min(...vals), mx=Math.max(...vals), rng=mx-mn||1;
+  const px=i=>(i/(vals.length-1))*W;
+  const py=v=>H-((v-mn)/rng)*(H-4)-2;
+  ctx.beginPath();
+  ctx.moveTo(px(0),py(vals[0]));
+  vals.slice(1).forEach((v,i)=>ctx.lineTo(px(i+1),py(v)));
+  ctx.strokeStyle=color; ctx.lineWidth=1.5; ctx.stroke();
+  ctx.lineTo(W,H); ctx.lineTo(0,H); ctx.closePath();
+  const grad=ctx.createLinearGradient(0,0,0,H);
+  grad.addColorStop(0,color+'55'); grad.addColorStop(1,color+'00');
+  ctx.fillStyle=grad; ctx.fill();
+}
+
+function renderCharts() {
+  const ms2xy = arr => arr.map(x=>({x:x.t, y:safeNum(x.v)})).filter(p=>p.y>0);
+
+  // BTC price + 200W MA
+  if(S.btcPrices.length) {
+    const now=Date.now(), step=86400000;
+    const btcData=S.btcPrices.slice(-365).map((p,i,a)=>({
+      x:now-(a.length-1-i)*step, y:p
+    }));
+    // 200W MA
+    const weekly=S.btcPrices.filter((_,i)=>i%7===0);
+    const ma200pts=[]; const now2=Date.now();
+    for(let i=199;i<weekly.length;i++){
+      const ma=safeMean(weekly.slice(i-199,i+1));
+      const offset=(weekly.length-1-i)*7*86400000;
+      ma200pts.push({x:now2-offset, y:ma});
+    }
+    const ma200recent=ma200pts.slice(-53);
+    drawChart('chart-btc', [
+      {data:btcData,    color:'#0ea5e9',width:1.8,fill:true},
+      {data:ma200recent,color:'#60a5fa',width:1.2,dash:[5,4]},
+    ], {height:200, yFmt:v=>`$${v>=1000?(v/1000).toFixed(0)+'K':v.toFixed(0)}`});
+  }
+
+  // F&G bar chart
+  if(S.fgHistory.length) {
+    drawBarChart('chart-fg', S.fgHistory.slice(-60).map(x=>({v:x.v})), {height:140});
+  }
+
+  // TVL
+  if(S.tvlHistory.length) {
+    drawChart('chart-tvl', [{
+      data:ms2xy(S.tvlHistory.slice(-180)).map(d=>({...d,y:d.y/1e9})),
+      color:'#8fa5ff',width:1.5,fill:true
+    }], {height:140, yFmt:v=>`$${v.toFixed(0)}B`, lpad:46});
+  }
+
+  // ETH/BTC ratio
+  if(S.ratioHistory.length) {
+    drawChart('chart-ratio', [{
+      data:ms2xy(S.ratioHistory.slice(-365)),
+      color:'#8fa5ff',width:1.5,fill:true
+    }], {height:140, yFmt:v=>v.toFixed(4), lpad:46});
+  }
+
+  // WALCL
+  if(S.walclHistory.length) {
+    drawChart('chart-walcl', [{
+      data:ms2xy(S.walclHistory.slice(-260)),
+      color:'#00e5aa',width:1.5,fill:true
+    }], {height:140, yFmt:v=>`$${v.toFixed(1)}T`, lpad:46});
+  }
+}
+
+function renderSparklines() {
+  drawSparkline('spark-btc', S.btcPrices.slice(-30), '#0ea5e9');
+  drawSparkline('spark-eth', S.ethPrices.slice(-30), '#8fa5ff');
+  drawSparkline('spark-fg',  S.fgHistory.slice(-30).map(x=>x.v), '#ffcc00');
+  drawSparkline('spark-stable', S.stableHistory.slice(-30).map(x=>x.v/1e9), '#00e5aa');
+}
+
+// ── REFRESH ORCHESTRATION ─────────────────────────────────────────────────
+async function doRefresh() {
+  if(isRefreshing) return;
+  isRefreshing=true;
+  const btn=$('refresh-btn');
+  if(btn) btn.classList.add('loading');
+
+  try {
+    await loadAllData();
+    updateUI();
+  } catch(e) {
+    console.error('Refresh error:', e);
+  } finally {
+    isRefreshing=false;
+    if(btn) btn.classList.remove('loading');
+    resetCountdown();
+  }
+}
+
+function resetCountdown() {
+  clearInterval(cdTimer);
+  countdown=REFRESH_INTERVAL;
+  cdTimer=setInterval(()=>{
+    countdown--;
+    const el=$('countdown'); if(el) el.textContent=countdown;
+    if(countdown<=0) doRefresh();
+  },1000);
+}
+
+function manualRefresh() { countdown=0; }
+
+// ── BOOT ──────────────────────────────────────────────────────────────────
+const BOOT_STEPS=[
+  {msg:'CONNECTING TO COINGECKO…', pct:20},
+  {msg:'LOADING MARKET DATA…',     pct:38},
+  {msg:'FEAR & GREED INDEX…',      pct:52},
+  {msg:'DEFI LIQUIDITY DATA…',     pct:68},
+  {msg:'COMPUTING CYCLE SCORES…',  pct:83},
+  {msg:'RENDERING DASHBOARD…',     pct:95},
+];
+
+async function boot() {
+  let step=0;
+  const stepTimer=setInterval(()=>{
+    if(step<BOOT_STEPS.length){
+      const s=BOOT_STEPS[step++];
+      const bar=$('load-bar'), stat=$('load-status');
+      if(bar) bar.style.width=s.pct+'%';
+      if(stat) stat.textContent=s.msg;
+    }
+  },350);
+
+  try {
+    await loadAllData();
+    updateUI();
+  } catch(e) {
+    console.error('Boot error:', e);
+  } finally {
+    clearInterval(stepTimer);
+    const bar=$('load-bar'), stat=$('load-status');
+    if(bar) bar.style.width='100%';
+    if(stat) stat.textContent='READY.';
+    await new Promise(r=>setTimeout(r,350));
+    const overlay=$('loading');
+    if(overlay){ overlay.classList.add('done'); setTimeout(()=>overlay.remove(),600); }
+    resetCountdown();
+  }
+}
+
+window.addEventListener('resize',()=>{
+  clearTimeout(window._resizeT);
+  window._resizeT=setTimeout(renderCharts,200);
+});
+
+boot();
+</script>
+</html>
