@@ -21,7 +21,7 @@ async def _get(url, params=None, headers=None, retries=2):
                 r=await c.get(url,params=params,headers=h)
                 r.raise_for_status(); return r.json()
         except Exception as e:
-            if attempt<retries: await asyncio.sleep(1.5**attempt)
+            if attempt<retries: await asyncio.sleep(3.0**attempt)
             else: logger.warning(f"FAILED {url}: {e}")
     return None
 
@@ -89,10 +89,12 @@ async def fetch_market_data(coin_id):
     }
 
 async def fetch_coin_prices_cg(coin_id,days=365):
+    await asyncio.sleep(1)
     data = await _get(
         f"{_CG}/coins/{coin_id}/market_chart",
         params={"vs_currency": "usd", "days": days, "interval": "daily"},
         headers=_cg_headers(),
+        retries=4,
     )
     if not data:
         logger.error(f"CoinGecko {coin_id}: no data returned")
@@ -100,8 +102,9 @@ async def fetch_coin_prices_cg(coin_id,days=365):
     if "prices" not in data:
         logger.error(f"CoinGecko {coin_id}: unexpected response keys={list(data.keys())}")
         return []
-    prices=[_sf(i[1]) for i in data["prices"] if _sf(i[1])>0]
-    logger.info(f"CoinGecko {coin_id}: {len(prices)}d"); return prices
+    prices = [_sf(i[1]) for i in data["prices"] if _sf(i[1]) > 0]
+    logger.info(f"CoinGecko {coin_id}: {len(prices)}d")
+    return prices
 
 async def fetch_global_data():
     try:
@@ -287,7 +290,8 @@ async def fetch_all():
     funding=safe(results[12],{"btc_funding_rate":0.0,"eth_funding_rate":0.0})
 
     try:
-        cg_btc = await fetch_coin_prices_cg("bitcoin",730)
+    await asyncio.sleep(2)
+    cg_btc = await fetch_coin_prices_cg("bitcoin",730)
         logger.info(f"CG BTC prices: {len(cg_btc)} pts, last={cg_btc[-1] if cg_btc else 'EMPTY'}")
     except Exception as e:
         logger.error(f"CG BTC fetch failed: {e}")
