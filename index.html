@@ -1683,11 +1683,13 @@ async function loadAllData() {
         if(hist.eth_full?.length) S.ethPrices = hist.eth_full.map(x=>x.v);
       }
       // Use backend scores directly
-      S.btcScore = safeNum(btcC?.score, computeBTCScore());
+      S.btcScore = (btcC?.score != null && btcC.score > 0)
+        ? safeNum(btcC.score)
+        : safeNum(btcC?.score, computeBTCScore());
       S.btcComponents = btcC?.components || null;
-      S.btcShortTerm = btcC?.short_term || null;
+      S.btcShortTerm  = btcC?.short_term  || null;
+      S.ethComponents = ethC?.components  || null;
       S.ethScore = safeNum(ethC?.score, computeETHScore());
-      S.ethComponents = ethC?.components || null;
       S.macScore = safeNum(macC?.score, computeMacroScore());
       S.combined = clamp(S.btcScore*0.45+S.ethScore*0.30+S.macScore*0.25);
 
@@ -1939,34 +1941,20 @@ function updateUI() {
     if (!S.cycleAnchor) return;
     const ca = S.cycleAnchor;
 
-    // Days since bottom — try multiple key names
-    const days = ca.days_since_bottom
-      ?? ca.days_since_last_bottom
-      ?? ca.days_from_bottom
-      ?? null;
+    const days = ca.days_since_cycle_bottom ?? ca.days_since_bottom ?? null;
     if (days != null) setText('ca-days-since', days + 'd');
 
-    // Halving position
-    const halvPos = ca.halving_cycle_position_percent
-      ?? ca.halving_position_pct
-      ?? ca.halving_position
-      ?? null;
+    const halvPos = ca.halving_cycle_position_percent ?? null;
     if (halvPos != null) setText('ca-halving-pos', Math.round(halvPos) + '%');
 
-    // Days to top / cycle window
-    const daysToTop = ca.days_to_next_cycle_top
-      ?? ca.days_to_top
-      ?? null;
+    const daysToTop = ca.days_to_next_cycle_top ?? null;
     if (daysToTop != null) {
       setText('ca-window', daysToTop < 0
         ? Math.abs(Math.round(daysToTop)) + 'd past est.'
         : Math.round(daysToTop) + 'd remaining');
     }
 
-    // Confidence
-    const conf = ca.cycle_time_confidence
-      ?? ca.confidence
-      ?? null;
+    const conf = ca.cycle_time_confidence ?? null;
     if (conf != null) {
       const confPct = conf <= 1 ? Math.round(conf * 100) : Math.round(conf);
       setText('ca-confidence', confPct + '%');
