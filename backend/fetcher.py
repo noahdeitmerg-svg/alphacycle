@@ -30,39 +30,6 @@ def _sf(v,fb=0.0):
         f=float(v); return fb if (math.isnan(f) or math.isinf(f)) else f
     except: return fb
 
-async def fetch_kraken_prices(pair="XBTUSD", days=730):
-    """Fetch OHLC from Kraken - reliable from Railway."""
-    interval = 1440  # daily candles
-    since = int(time.time()) - (days * 86400)
-    data = await _get(
-        "https://api.kraken.com/0/public/OHLC",
-        params={"pair": pair, "interval": interval, "since": since}
-    )
-    if not data or data.get("error") or "result" not in data:
-        return []
-    result_key = [k for k in data["result"] if k != "last"]
-    if not result_key:
-        return []
-    candles = data["result"][result_key[0]]
-    prices = [_sf(c[4]) for c in candles if _sf(c[4]) > 0]
-    logger.info(f"Kraken {pair}: {len(prices)}d")
-    return prices
-
-async def fetch_kraken_ticker(pair="XBTUSD"):
-    """Fetch current price from Kraken."""
-    data = await _get(
-        "https://api.kraken.com/0/public/Ticker",
-        params={"pair": pair}
-    )
-    if not data or data.get("error") or "result" not in data:
-        return {}
-    result_key = list(data["result"].keys())
-    if not result_key:
-        return {}
-    t = data["result"][result_key[0]]
-    price = _sf(t.get("c", [0])[0])
-    return {"price": price, "change_24h": 0.0, "volume_24h": _sf(t.get("v", [0, 0])[1])}
-
 # -- BINANCE ------------------------------------------------------------------
 _BN="https://api.binance.com/api/v3"
 _SYM={"bitcoin":"BTCUSDT","ethereum":"ETHUSDT"}
@@ -92,6 +59,40 @@ async def fetch_funding_rates():
         }
     except Exception as e:
         logger.warning(f"Funding rates: {e}"); return {"btc_funding_rate":0.0,"eth_funding_rate":0.0}
+
+async def fetch_kraken_prices(pair="XBTUSD", days=730):
+    """Kraken OHLC daily - reliable from Railway US-West."""
+    since = int(time.time()) - (days * 86400)
+    data = await _get(
+        "https://api.kraken.com/0/public/OHLC",
+        params={"pair": pair, "interval": 1440, "since": since}
+    )
+    if not data or data.get("error") or "result" not in data:
+        return []
+    keys = [k for k in data["result"] if k != "last"]
+    if not keys:
+        return []
+    prices = [_sf(c[4]) for c in data["result"][keys[0]] if _sf(c[4]) > 0]
+    logger.info(f"Kraken {pair}: {len(prices)}d")
+    return prices
+
+async def fetch_kraken_ticker(pair="XBTUSD"):
+    """Kraken spot ticker."""
+    data = await _get(
+        "https://api.kraken.com/0/public/Ticker",
+        params={"pair": pair}
+    )
+    if not data or data.get("error") or "result" not in data:
+        return {}
+    keys = list(data["result"].keys())
+    if not keys:
+        return {}
+    t = data["result"][keys[0]]
+    return {
+        "price":      _sf(t.get("c", [0])[0]),
+        "change_24h": 0.0,
+        "volume_24h": _sf(t.get("v", [0, 0])[1]),
+    }
 
 # -- COINGECKO -----------------------------------------------------------------
 _CG="https://api.coingecko.com/api/v3"
