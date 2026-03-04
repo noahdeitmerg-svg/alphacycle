@@ -330,6 +330,67 @@ async def get_macro_cycle():
     })
 
 
+@app.get("/api/arc-summary")
+async def get_arc_summary():
+    """ARC Index summary — single endpoint for dashboard."""
+    c = _require_cache()
+    raw = c["raw"]
+    btc = compute_btc_score(
+        raw["btc_prices"], raw["fear_greed"]["current"],
+        [x["v"] for x in raw.get("walcl_series", [])],
+        [x["v"] for x in raw.get("stable_series", [])],
+        indicators=raw.get("indicators"),
+        funding_data=raw.get("funding_data"),
+        btc_dominance=raw.get("global_data", {}).get("btc_dominance", 50.0),
+    )
+    eth = compute_eth_score(
+        raw["eth_prices"], raw["btc_prices"],
+        [x["v"] for x in raw.get("tvl_series", [])],
+        [x["v"] for x in raw.get("stable_series", [])],
+        raw["fear_greed"]["current"],
+        funding_data=raw.get("funding_data"),
+    )
+    arc = btc["btc_score"]
+    fg  = raw["fear_greed"]["current"]
+
+    if arc < 30:
+        regime = "Low Risk"
+        decision = "Accumulate"
+        confidence = "High"
+    elif arc < 61:
+        regime = "Moderate Risk"
+        decision = "Hold"
+        confidence = "Moderate"
+    elif arc < 81:
+        regime = "Elevated Risk"
+        decision = "Reduce"
+        confidence = "Low-Moderate"
+    else:
+        regime = "Extreme Risk"
+        decision = "Defensive"
+        confidence = "Low"
+
+    return api_response({
+        "arc_index":     round(arc, 1),
+        "regime":        regime,
+        "decision":      decision,
+        "confidence":    confidence,
+        "btc_score":     round(arc, 1),
+        "eth_score":     round(eth["eth_score"], 1),
+        "fear_greed":    fg,
+        "liquidity":     round(btc.get("liquidity", 50.0), 1),
+        "components": {
+            "ma_200w":    round(btc.get("ma_200w", 50.0), 1),
+            "drawdown":   round(btc.get("drawdown", 50.0), 1),
+            "fear_greed": round(btc.get("fear_greed", 50.0), 1),
+            "liquidity":  round(btc.get("liquidity", 50.0), 1),
+        },
+        "short_term":    btc.get("short_term", {}),
+        "cycle_anchor":  compute_cycle_anchor(),
+        "_ts":           c.get("refreshed_at", 0),
+    })
+
+
 @app.get("/api/cycle/combined")
 async def get_combined():
     c = _require_cache()
