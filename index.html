@@ -1653,7 +1653,7 @@ async function loadAllData() {
   // If backend is configured, use it — much faster (single request)
   if (BACKEND_URL) {
     try {
-      const [prices, btcC, ethC, macC, hist, analyzer, anchor] = await Promise.all([
+      const results = await Promise.allSettled([
         apiFetch(`${BACKEND_URL}/api/prices`),
         apiFetch(`${BACKEND_URL}/api/cycle/btc`),
         apiFetch(`${BACKEND_URL}/api/cycle/eth`),
@@ -1662,6 +1662,8 @@ async function loadAllData() {
         apiFetch(`${BACKEND_URL}/api/analyzer`),
         apiFetch(`${BACKEND_URL}/api/cycle-anchor`),
       ]);
+      const [prices, btcC, ethC, macC, hist, analyzer, anchor] =
+        results.map(r => r.status === 'fulfilled' ? r.value : null);
 
       if(prices) {
         S.btcMarket  = prices.btc;
