@@ -364,23 +364,63 @@ body::before {
 @media(min-width:600px){ .scores-grid { grid-template-columns: repeat(2,1fr); } }
 
 #btc-card.hero-card {
-  max-width: 640px;
-  margin: 0 auto 2rem auto;
-  padding: 2rem 2.5rem;
+  max-width: 700px;
+  margin: 1.5rem auto 2.5rem auto;
+  padding: 2.5rem 3rem 2rem 3rem;
+  background: linear-gradient(135deg,
+    rgba(14,165,233,0.06) 0%, rgba(0,0,0,0) 60%),
+    var(--card-bg, rgba(255,255,255,0.03));
+  border: 1px solid rgba(14,165,233,0.25);
+  box-shadow: 0 0 60px rgba(14,165,233,0.08),
+              0 8px 40px rgba(0,0,0,0.4);
+  position: relative;
+  overflow: hidden;
+}
+#btc-card.hero-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg,
+    transparent, rgba(14,165,233,0.8), transparent);
 }
 #btc-card.hero-card .gauge-wrap svg {
-  width: 260px;
-  height: 170px;
+  width: 300px;
+  height: 196px;
 }
 #btc-card.hero-card .gauge-val {
-  font-size: clamp(3rem, 6vw, 4.5rem);
+  font-size: clamp(3.5rem, 7vw, 5rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+#btc-card.hero-card .score-footer {
+  margin-top: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+#btc-card.hero-card .score-phase {
+  font-size: 1.1rem;
+  font-weight: 700;
 }
 .hero-subtitle {
-  font-size: 0.7rem;
-  letter-spacing: 0.12em;
-  color: var(--tx-sec);
+  font-size: 0.65rem;
+  letter-spacing: 0.16em;
+  color: rgba(14,165,233,0.5);
   text-transform: uppercase;
-  margin-top: 2px;
+  margin-top: 3px;
+  font-weight: 500;
+}
+.hero-risk-label {
+  display: inline-block;
+  margin-top: 0.5rem;
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 3px;
+  border: 1px solid rgba(14,165,233,0.3);
+  color: rgba(14,165,233,0.7);
+  background: rgba(14,165,233,0.06);
 }
 
 .decision-card { padding: 1.5rem 2rem; }
@@ -1018,6 +1058,7 @@ canvas.sparkline {
         <div class="score-label-dot" style="background:var(--btc)"></div>
         AlphaCycle Index
         <div class="hero-subtitle">Proprietary Cycle Risk Index (0–100)</div>
+        <div class="hero-risk-label" id="hero-risk-label">—</div>
       </div>
       <div class="score-tag" id="btc-tag" style="color:var(--btc);border-color:rgba(14,165,233,0.3);background:var(--btc-dim)">—</div>
     </div>
@@ -1307,20 +1348,20 @@ canvas.sparkline {
   </div>
   <div class="legend-grid anim d5">
     <div class="legend-item" style="border-color:rgba(34,197,94,0.25);background:rgba(34,197,94,0.04);color:#22c55e">
-      <div class="legend-range">0 – 30</div>
-      <div class="legend-name">Accumulation</div>
+      <div class="legend-range">0-30</div>
+      <div class="legend-name">Low Risk</div>
     </div>
     <div class="legend-item" style="border-color:rgba(59,130,246,0.25);background:rgba(59,130,246,0.04);color:#3b82f6">
-      <div class="legend-range">30 – 60</div>
-      <div class="legend-name">Bull Market</div>
+      <div class="legend-range">30-60</div>
+      <div class="legend-name">Moderate Risk</div>
     </div>
     <div class="legend-item" style="border-color:rgba(245,158,11,0.25);background:rgba(245,158,11,0.04);color:#f59e0b">
-      <div class="legend-range">60 – 75</div>
-      <div class="legend-name">Distribution</div>
+      <div class="legend-range">60-75</div>
+      <div class="legend-name">Elevated Risk</div>
     </div>
     <div class="legend-item" style="border-color:rgba(239,68,68,0.25);background:rgba(239,68,68,0.04);color:#ef4444">
-      <div class="legend-range">75 – 100</div>
-      <div class="legend-name">Bear Market</div>
+      <div class="legend-range">75-100</div>
+      <div class="legend-name">Extreme Risk</div>
     </div>
   </div>
 
@@ -1422,22 +1463,27 @@ function scoreColor(s) {
   return '#ef4444';
 }
 function phaseOf(s) {
-  if (s < 30)  return 'Accumulation';
-  if (s < 55)  return 'Bull Market';
-  if (s < 72)  return 'Distribution';
-  return 'Bear Market';
+  if (s < 30) return 'Low Risk';
+  if (s < 61) return 'Moderate Risk';
+  if (s < 81) return 'Elevated Risk';
+  return 'Extreme Risk';
 }
 function phaseIcon(phase) {
-  const m={Accumulation:'🟢','Bull Market':'📈',Distribution:'⚠️','Bear Market':'🔴'};
-  return m[phase]||'📊';
+  const m = {
+    'Low Risk':      '🟢',
+    'Moderate Risk': '📈',
+    'Elevated Risk': '⚠️',
+    'Extreme Risk':  '🔴',
+  };
+  return m[phase] || '📊';
 }
 function phaseDesc(phase) {
   return {
-    Accumulation:'Market undervalued. Smart money accumulating. Fear elevated, prices near or below 200W MA.',
-    'Bull Market':'Uptrend confirmed. Liquidity expanding. Momentum building with healthy sentiment.',
-    Distribution:'Market overheating. FOMO elevated. Whale distribution likely in progress.',
-    'Bear Market':'Risk-off environment. Liquidity contracting. Downtrend confirmed — caution advised.',
-  }[phase]||'Analyzing market conditions…';
+    'Low Risk':'Market undervalued. Smart money accumulating. Fear elevated, prices near or below 200W MA.',
+    'Moderate Risk':'Uptrend confirmed. Liquidity expanding. Momentum building with healthy sentiment.',
+    'Elevated Risk':'Market overheating. FOMO elevated. Whale distribution likely in progress.',
+    'Extreme Risk':'Risk-off environment. Liquidity contracting. Downtrend confirmed - caution advised.',
+  }[phase]||'Analyzing market conditions...';
 }
 
 // ── CLOCK ──────────────────────────────────────────────────────────────────
@@ -1812,12 +1858,12 @@ function updatePhaseBanner() {
   const banner = $('phase-banner');
 
   const phaseStyles = {
-    Accumulation: {bg:'rgba(34,197,94,0.06)', border:'rgba(34,197,94,0.22)'},
-    'Bull Market':{bg:'rgba(59,130,246,0.06)', border:'rgba(59,130,246,0.22)'},
-    Distribution: {bg:'rgba(245,158,11,0.06)', border:'rgba(245,158,11,0.22)'},
-    'Bear Market':{bg:'rgba(239,68,68,0.06)',  border:'rgba(239,68,68,0.22)'},
+    'Low Risk':      {bg:'rgba(34,197,94,0.06)',   border:'rgba(34,197,94,0.22)'},
+    'Moderate Risk': {bg:'rgba(59,130,246,0.06)',  border:'rgba(59,130,246,0.22)'},
+    'Elevated Risk': {bg:'rgba(245,158,11,0.06)',  border:'rgba(245,158,11,0.22)'},
+    'Extreme Risk':  {bg:'rgba(239,68,68,0.06)',   border:'rgba(239,68,68,0.22)'},
   };
-  const st=phaseStyles[phase]||phaseStyles['Bull Market'];
+  const st=phaseStyles[phase]||phaseStyles['Moderate Risk'];
   banner.style.background   = st.bg;
   banner.style.borderColor  = st.border;
   banner.style.color        = col;
@@ -1849,6 +1895,22 @@ function updateUI() {
 
   // Score numbers
   setText('btc-score-val', Math.round(S.btcScore), bCol);
+  (function updateHeroRisk() {
+    const el = document.getElementById('hero-risk-label');
+    if (!el) return;
+    const s = S.btcScore;
+    const zones = [
+      [30,  'LOW RISK ZONE',  '34,197,94'],
+      [61,  'MODERATE RISK',  '59,130,246'],
+      [81,  'ELEVATED RISK',  '245,158,11'],
+      [101, 'EXTREME RISK',   '239,68,68'],
+    ];
+    const [,label,rgb] = zones.find(([max]) => s < max);
+    el.textContent = label;
+    el.style.borderColor = `rgba(${rgb},0.4)`;
+    el.style.color = `rgba(${rgb},0.9)`;
+    el.style.background = `rgba(${rgb},0.07)`;
+  })();
   setText('eth-score-val', Math.round(S.ethScore), eCol);
   setText('mac-score-val', Math.round(S.macScore), mCol);
 
