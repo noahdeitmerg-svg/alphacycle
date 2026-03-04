@@ -21,7 +21,7 @@ async def _get(url, params=None, headers=None, retries=2):
                 r=await c.get(url,params=params,headers=h)
                 r.raise_for_status(); return r.json()
         except Exception as e:
-            if attempt<retries: await asyncio.sleep(3.0**attempt)
+            if attempt<retries: await asyncio.sleep(1.5**attempt)
             else: logger.warning(f"FAILED {url}: {e}")
     return None
 
@@ -30,7 +30,7 @@ def _sf(v,fb=0.0):
         f=float(v); return fb if (math.isnan(f) or math.isinf(f)) else f
     except: return fb
 
-# ── BINANCE ──────────────────────────────────────────────────────────────────
+# -- BINANCE ------------------------------------------------------------------
 _BN="https://api.binance.com/api/v3"
 _SYM={"bitcoin":"BTCUSDT","ethereum":"ETHUSDT"}
 
@@ -42,46 +42,6 @@ async def fetch_binance_prices(coin_id,days=730):
     prices=[_sf(c[4]) for c in data if _sf(c[4])>0]
     logger.info(f"Binance {sym}: {len(prices)}d"); return prices
 
-async def fetch_kraken_prices(pair: str, days: int = 730) -> list:
-    url = "https://api.kraken.com/0/public/OHLC"
-    params = {"pair": pair, "interval": 1440}
-    data = await _get(url, params=params)
-    if not data or data.get("error"):
-        logger.warning(f"Kraken {pair}: {data.get('error') if data else 'no response'}")
-        return []
-    result_key = [k for k in data.get("result", {}) if k != "last"]
-    if not result_key:
-        return []
-    ohlc = data["result"][result_key[0]]
-    prices = [_sf(c[4]) for c in ohlc if _sf(c[4]) > 0]
-    prices = prices[-days:]
-    logger.info(f"Kraken {pair}: {len(prices)}d")
-    return prices
-
-async def fetch_bybit_ticker(coin_id: str) -> dict:
-    """Fetch 24h ticker from Bybit. No API key needed."""
-    symbols = {"bitcoin": "BTCUSDT", "ethereum": "ETHUSDT"}
-    sym = symbols.get(coin_id)
-    if not sym:
-        return {}
-    data = await _get(
-        "https://api.bybit.com/v5/market/tickers",
-        params={"category": "spot", "symbol": sym}
-    )
-    if not data or data.get("retCode") != 0:
-        logger.warning(f"Bybit ticker {sym}: {data.get('retMsg') if data else 'no response'}")
-        return {}
-    try:
-        item = data["result"]["list"][0]
-        return {
-            "price":      _sf(item.get("lastPrice")),
-            "change_24h": _sf(item.get("price24hPcnt", 0)) * 100,
-            "volume_24h": _sf(item.get("volume24h")),
-        }
-    except Exception as e:
-        logger.warning(f"Bybit ticker parse {sym}: {e}")
-        return {}
-
 async def fetch_binance_ticker(coin_id):
     sym=_SYM.get(coin_id)
     if not sym: return {}
@@ -91,43 +51,25 @@ async def fetch_binance_ticker(coin_id):
 
 async def fetch_funding_rates():
     try:
-        async def get_funding(symbol):
-            data = await _get(
-                "https://api.bybit.com/v5/market/tickers",
-                params={"category": "linear", "symbol": symbol}
-            )
-            if not data or data.get("retCode") != 0:
-                return 0.0
-            try:
-                item = data["result"]["list"][0]
-                rate = _sf(item.get("fundingRate", 0))
-                logger.info(f"Bybit funding {symbol}: {rate}")
-                return round(rate * 100, 4)
-            except Exception as e:
-                logger.warning(f"Bybit funding parse {symbol}: {e}")
-                return 0.0
-        btc_rate = await get_funding("BTCUSDT")
-        eth_rate = await get_funding("ETHUSDT")
-        return {"btc_funding_rate": btc_rate, "eth_funding_rate": eth_rate}
+        btc=await _get("https://fapi.binance.com/fapi/v1/fundingRate",params={"symbol":"BTCUSDT","limit":1})
+        eth=await _get("https://fapi.binance.com/fapi/v1/fundingRate",params={"symbol":"ETHUSDT","limit":1})
+        return {
+            "btc_funding_rate": round(_sf(btc[0]["fundingRate"])*100,4) if btc else 0.0,
+            "eth_funding_rate": round(_sf(eth[0]["fundingRate"])*100,4) if eth else 0.0,
+        }
     except Exception as e:
-        logger.warning(f"Bybit funding rates: {e}")
-        return {"btc_funding_rate": 0.0, "eth_funding_rate": 0.0}
+        logger.warning(f"Funding rates: {e}"); return {"btc_funding_rate":0.0,"eth_funding_rate":0.0}
 
-# ── COINGECKO ────────────────────────────────────────────────────────────────
+# -- COINGECKO -----------------------------------------------------------------
 _CG="https://api.coingecko.com/api/v3"
 
-def _cg_headers():
-    h = {**HEADERS}
-    if COINGECKO_API_KEY:
-        h["x-cg-demo-api-key"] = COINGECKO_API_KEY
-    return h
+def _cgp(extra=None):
+    p=dict(extra or {})
+    if COINGECKO_API_KEY: p["x_cg_demo_api_key"]=COINGECKO_API_KEY
+    return p
 
 async def fetch_market_data(coin_id):
-    data=await _get(
-        f"{_CG}/coins/{coin_id}",
-        params={"localization":"false","tickers":"false","community_data":"false","developer_data":"false"},
-        headers=_cg_headers(),
-    )
+    data=await _get(f"{_CG}/coins/{coin_id}",params=_cgp({"localization":"false","tickers":"false","community_data":"false","developer_data":"false"}))
     d={"price":0.0,"change_24h":0.0,"market_cap":0.0,"volume":0.0,"ath":0.0,"ath_date":"","ath_change_pct":0.0}
     if not data or "market_data" not in data: return d
     md=data["market_data"]
@@ -142,59 +84,26 @@ async def fetch_market_data(coin_id):
     }
 
 async def fetch_coin_prices_cg(coin_id,days=365):
-    await asyncio.sleep(1)
-    data = await _get(
-        f"{_CG}/coins/{coin_id}/market_chart",
-        params={"vs_currency": "usd", "days": days, "interval": "daily"},
-        headers=_cg_headers(),
-        retries=4,
-    )
-    if not data:
-        logger.error(f"CoinGecko {coin_id}: no data returned")
-        return []
-    if "prices" not in data:
-        logger.error(f"CoinGecko {coin_id}: unexpected response keys={list(data.keys())}")
-        return []
-    prices = [_sf(i[1]) for i in data["prices"] if _sf(i[1]) > 0]
-    logger.info(f"CoinGecko {coin_id}: {len(prices)}d")
-    return prices
+    data=await _get(f"{_CG}/coins/{coin_id}/market_chart",params=_cgp({"vs_currency":"usd","days":days,"interval":"daily"}))
+    if not data or "prices" not in data: return []
+    prices=[_sf(i[1]) for i in data["prices"] if _sf(i[1])>0]
+    logger.info(f"CoinGecko {coin_id}: {len(prices)}d"); return prices
 
 async def fetch_global_data():
     try:
-        data = await _get(f"{_CG}/global", headers=_cg_headers())
-        if not data or "data" not in data:
-            raise ValueError("No CoinGecko global data")
-        d = data["data"]
-        result = {
-            "btc_dominance":         _sf(d.get("market_cap_percentage", {}).get("btc", 0)),
-            "total_market_cap":      _sf(d.get("total_market_cap", {}).get("usd", 0)),
-            "total_volume_24h":      _sf(d.get("total_volume", {}).get("usd", 0)),
-            "market_cap_change_24h": _sf(d.get("market_cap_change_percentage_24h_usd", 0)),
+        data=await _get(f"{_CG}/global",params=_cgp())
+        if not data or "data" not in data: return {"btc_dominance":50.0,"total_market_cap":0.0}
+        d=data["data"]
+        return {
+            "btc_dominance":         _sf(d.get("market_cap_percentage",{}).get("btc",50)),
+            "total_market_cap":      _sf(d.get("total_market_cap",{}).get("usd",0)),
+            "total_volume_24h":      _sf(d.get("total_volume",{}).get("usd",0)),
+            "market_cap_change_24h": _sf(d.get("market_cap_change_percentage_24h_usd",0)),
         }
-        if result["btc_dominance"] > 0:
-            return result
-        raise ValueError("btc_dominance is 0")
     except Exception as e:
-        logger.warning(f"CoinGecko global failed: {e} — trying Bybit dominance proxy")
+        logger.warning(f"Global data: {e}"); return {"btc_dominance":50.0,"total_market_cap":0.0}
 
-    # Bybit fallback: estimate BTC dominance from BTC vs total spot volume
-    try:
-        btc_data = await _get(
-            "https://api.bybit.com/v5/market/tickers",
-            params={"category": "spot", "symbol": "BTCUSDT"}
-        )
-        btc_vol = 0.0
-        if btc_data and btc_data.get("retCode") == 0:
-            btc_vol = _sf(btc_data["result"]["list"][0].get("volume24h", 0))
-        # Use last known reasonable dominance as static fallback
-        dom = 54.5  # BTC dominance approximate as of early 2026
-        logger.info(f"Using static BTC dominance fallback: {dom}%")
-        return {"btc_dominance": dom, "total_market_cap": 0.0}
-    except Exception as e:
-        logger.warning(f"Global data fallback failed: {e}")
-        return {"btc_dominance": 54.5, "total_market_cap": 0.0}
-
-# ── FEAR & GREED ─────────────────────────────────────────────────────────────
+# -- FEAR & GREED -----------------------------------------------------------------
 async def fetch_fear_greed(limit=90):
     default={"current":50,"label":"Neutral","history":[]}
     data=await _get("https://api.alternative.me/fng/",params={"limit":limit,"format":"json"})
@@ -206,7 +115,7 @@ async def fetch_fear_greed(limit=90):
     cur=history[-1] if history else {"v":50,"label":"Neutral"}
     return {"current":cur["v"],"label":cur.get("label","Neutral"),"history":history}
 
-# ── DEFILLAMA ────────────────────────────────────────────────────────────────
+# -- DEFILLAMA --------------------------------------------------------------------
 async def fetch_eth_tvl():
     for chain in ["Ethereum","ethereum"]:
         data=await _get(f"https://api.llama.fi/v2/historicalChainTvl/{chain}")
@@ -227,42 +136,16 @@ async def fetch_stablecoin_supply():
         except: continue
     return result
 
-# ── FRED ─────────────────────────────────────────────────────────────────────
+# -- FRED -------------------------------------------------------------------------
 async def fetch_walcl():
-    if not FRED_API_KEY or FRED_API_KEY.strip() in ("","your_key_here"):
-        logger.warning("WALCL: FRED_API_KEY missing — using synthetic")
+    if not FRED_API_KEY or FRED_API_KEY in ("","your_key_here"):
         return _synthetic_walcl()
-    
-    url = "https://api.stlouisfed.org/fred/series/observations"
-    params = {
-        "series_id": "WALCL",
-        "api_key": FRED_API_KEY.strip(),
-        "file_type": "json",
-        "observation_start": "2018-01-01"
-    }
-    data = await _get(url, params=params)
-    
-    if not data:
-        logger.warning("WALCL: _get returned None — using synthetic")
-        return _synthetic_walcl()
-    
-    if "observations" not in data:
-        logger.warning(f"WALCL: no 'observations' key — got keys: {list(data.keys())}")
-        return _synthetic_walcl()
-    
-    result = [
-        {"t": int(datetime.strptime(o["date"], "%Y-%m-%d").timestamp()) * 1000,
-         "v": _sf(o["value"])}
-        for o in data["observations"]
-        if o.get("value", ".") != "."
-    ]
-    
-    if not result:
-        logger.warning("WALCL: empty result after parsing — using synthetic")
-        return _synthetic_walcl()
-    
-    logger.info(f"WALCL: loaded {len(result)} real datapoints ✅")
-    return result
+    data=await _get("https://api.stlouisfed.org/fred/series/observations",params={
+        "series_id":"WALCL","api_key":FRED_API_KEY,"file_type":"json","observation_start":"2018-01-01"})
+    if not data or "observations" not in data: return _synthetic_walcl()
+    result=[{"t":int(datetime.strptime(o["date"],"%Y-%m-%d").timestamp())*1000,"v":_sf(o["value"])}
+            for o in data["observations"] if o.get("value",".")!="."]
+    return result if result else _synthetic_walcl()
 
 def _synthetic_walcl():
     import random; random.seed(42)
@@ -284,7 +167,7 @@ async def fetch_fred_series(series_id,start="2020-01-01"):
     return [{"t":int(datetime.strptime(o["date"],"%Y-%m-%d").timestamp())*1000,"v":_sf(o["value"])}
             for o in data["observations"] if o.get("value",".")!="."]
 
-# ── ON-CHAIN PROXIES ─────────────────────────────────────────────────────────
+# -- ON-CHAIN PROXIES -------------------------------------------------------------
 def _compute_mvrv_zscore(prices):
     if len(prices)<30: return 50.0
     try:
@@ -328,14 +211,14 @@ def _compute_puell_multiple(prices):
         return min(95.0,90+(puell-4.0)*2)
     except: return 50.0
 
-# ── AGGREGATE ────────────────────────────────────────────────────────────────
+# -- AGGREGATE --------------------------------------------------------------------
 async def fetch_all():
     logger.info("fetch_all v3: starting…")
     results=await asyncio.gather(
         fetch_binance_prices("bitcoin",730),   # 0
         fetch_binance_prices("ethereum",730),  # 1
-        fetch_bybit_ticker("bitcoin"),     # 2
-        fetch_bybit_ticker("ethereum"),    # 3
+        fetch_binance_ticker("bitcoin"),        # 2
+        fetch_binance_ticker("ethereum"),       # 3
         fetch_market_data("bitcoin"),           # 4
         fetch_market_data("ethereum"),          # 5
         fetch_fear_greed(90),                   # 6
@@ -360,50 +243,16 @@ async def fetch_all():
     stable =safe(results[8],[])
     walcl  =safe(results[9],_synthetic_walcl())
     us10y  =safe(results[10],[])
-    gdata_raw = safe(results[11], None)
-    if gdata_raw is None or gdata_raw.get("btc_dominance", 50.0) == 50.0:
-        await asyncio.sleep(3)
-        gdata = await fetch_global_data()
-    else:
-        gdata = gdata_raw
-    if not gdata or gdata.get("btc_dominance", 50.0) == 50.0:
-        gdata = {"btc_dominance": 50.0, "total_market_cap": 0.0}
+    gdata  =safe(results[11],{"btc_dominance":50.0,"total_market_cap":0.0})
     funding=safe(results[12],{"btc_funding_rate":0.0,"eth_funding_rate":0.0})
 
-    kraken_btc = await fetch_kraken_prices("XBTUSD", 730)
-    kraken_eth = await fetch_kraken_prices("ETHUSD", 730)
-
-    await asyncio.sleep(2)
-    try:
-        cg_btc = await fetch_coin_prices_cg("bitcoin", 730)
-        logger.info(f"CG BTC prices: {len(cg_btc)} pts, last={cg_btc[-1] if cg_btc else 'EMPTY'}")
-    except Exception as e:
-        logger.error(f"CG BTC fetch failed: {e}")
-        cg_btc = []
-    try:
-        cg_eth = await fetch_coin_prices_cg("ethereum", 730)
-        logger.info(f"CG ETH prices: {len(cg_eth)} pts, last={cg_eth[-1] if cg_eth else 'EMPTY'}")
-    except Exception as e:
-        logger.error(f"CG ETH fetch failed: {e}")
-        cg_eth = []
-
-    btc_prices = (cg_btc if len(cg_btc) > 10
-                  else kraken_btc if len(kraken_btc) > 10
-                  else btc_p if len(btc_p) > 10
-                  else [])
-    eth_prices = (cg_eth if len(cg_eth) > 10
-                  else kraken_eth if len(kraken_eth) > 10
-                  else eth_p if len(eth_p) > 10
-                  else [])
+    btc_prices=btc_p if len(btc_p)>10 else await fetch_coin_prices_cg("bitcoin",365)
+    eth_prices=eth_p if len(eth_p)>10 else await fetch_coin_prices_cg("ethereum",365)
     if not walcl: walcl=_synthetic_walcl()
 
-    def merge(tk,cg,prices=None):
+    def merge(tk,cg):
         return {
-            "price":         _sf(
-                tk.get("price")
-                or cg.get("price")
-                or (prices[-1] if prices else 0)
-            ),
+            "price":         _sf(tk.get("price")      or cg.get("price",0)),
             "change_24h":    _sf(tk.get("change_24h") or cg.get("change_24h",0)),
             "volume":        _sf(tk.get("volume_24h") or cg.get("volume",0)),
             "market_cap":    _sf(cg.get("market_cap",0)),
@@ -425,8 +274,8 @@ async def fetch_all():
     return {
         "btc_prices":   btc_prices,
         "eth_prices":   eth_prices,
-        "btc_market":   merge(btc_tk,btc_cg,btc_prices),
-        "eth_market":   merge(eth_tk,eth_cg,eth_prices),
+        "btc_market":   merge(btc_tk,btc_cg),
+        "eth_market":   merge(eth_tk,eth_cg),
         "fear_greed":   fg,
         "tvl_series":   tvl,
         "stable_series":stable,
