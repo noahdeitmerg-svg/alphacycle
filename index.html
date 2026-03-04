@@ -1938,18 +1938,39 @@ function updateUI() {
   (function renderCycleAnchor() {
     if (!S.cycleAnchor) return;
     const ca = S.cycleAnchor;
-    const days = ca.days_since_bottom ?? ca.days_since_last_bottom;
+
+    // Days since bottom — try multiple key names
+    const days = ca.days_since_bottom
+      ?? ca.days_since_last_bottom
+      ?? ca.days_from_bottom
+      ?? null;
     if (days != null) setText('ca-days-since', days + 'd');
-    const halvPos = ca.halving_cycle_position_percent;
+
+    // Halving position
+    const halvPos = ca.halving_cycle_position_percent
+      ?? ca.halving_position_pct
+      ?? ca.halving_position
+      ?? null;
     if (halvPos != null) setText('ca-halving-pos', Math.round(halvPos) + '%');
-    const daysToTop = ca.days_to_next_cycle_top;
+
+    // Days to top / cycle window
+    const daysToTop = ca.days_to_next_cycle_top
+      ?? ca.days_to_top
+      ?? null;
     if (daysToTop != null) {
       setText('ca-window', daysToTop < 0
-        ? Math.abs(daysToTop) + 'd past est.'
-        : daysToTop + 'd remaining');
+        ? Math.abs(Math.round(daysToTop)) + 'd past est.'
+        : Math.round(daysToTop) + 'd remaining');
     }
-    const conf = ca.cycle_time_confidence;
-    if (conf != null) setText('ca-confidence', Math.round(conf * 100) + '%');
+
+    // Confidence
+    const conf = ca.cycle_time_confidence
+      ?? ca.confidence
+      ?? null;
+    if (conf != null) {
+      const confPct = conf <= 1 ? Math.round(conf * 100) : Math.round(conf);
+      setText('ca-confidence', confPct + '%');
+    }
   })();
 
   // Price cards
