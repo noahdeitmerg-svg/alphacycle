@@ -6,9 +6,9 @@ Deterministic, datetime-only. No randomness.
 from datetime import date, timedelta
 from typing import Optional
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # HARD-CODED HISTORICAL BITCOIN CYCLE DATA
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
 CYCLE_BOTTOMS: list = [
     date(2015, 1, 14),
@@ -20,6 +20,7 @@ CYCLE_TOPS: list = [
     date(2013, 12, 4),
     date(2017, 12, 17),
     date(2021, 11, 10),
+    date(2025, 10, 25),  # estimated / reference
 ]
 
 BITCOIN_HALVINGS: list = [
@@ -33,11 +34,11 @@ BITCOIN_HALVINGS: list = [
 CURRENT_CYCLE_BOTTOM = date(2022, 11, 21)
 LAST_HALVING = date(2024, 4, 20)
 
-# Historical bottom → top durations (bull phase), in days
+# Historical bottom -> top durations (bull phase), in days
 BULL_PHASE_DAYS_1 = (date(2017, 12, 17) - date(2015, 1, 14)).days
 BULL_PHASE_DAYS_2 = (date(2021, 11, 10) - date(2018, 12, 15)).days
 
-# Historical top → next bottom (bear phase), in days
+# Historical top -> next bottom (bear phase), in days
 BEAR_PHASE_DAYS_1 = (date(2018, 12, 15) - date(2017, 12, 17)).days
 BEAR_PHASE_DAYS_2 = (date(2022, 11, 21) - date(2021, 11, 10)).days
 
@@ -64,43 +65,34 @@ def compute_cycle_anchor(reference_date: Optional[date] = None) -> dict:
     """
     today = reference_date or date.today()
 
-    # Compute expected top from BOTH methods
-    top_from_bottom = CURRENT_CYCLE_BOTTOM + timedelta(days=HISTORICAL_AVERAGE_BULL_DAYS)
-    top_from_halving = LAST_HALVING + timedelta(days=AVERAGE_POST_HALVING_TO_TOP_DAYS)
+    days_since_bottom = (today - CURRENT_CYCLE_BOTTOM).days
+    days_since_top: Optional[int] = None
 
-    # Use average of both methods as best estimate
-    avg_top_ts = (top_from_bottom.toordinal() + top_from_halving.toordinal()) // 2
-    expected_top_date = date.fromordinal(avg_top_ts)
-
+    expected_top_date = CURRENT_CYCLE_BOTTOM + timedelta(days=HISTORICAL_AVERAGE_BULL_DAYS)
     expected_bottom_date = expected_top_date + timedelta(days=HISTORICAL_AVERAGE_BEAR_DAYS)
 
-    days_since_bottom = (today - CURRENT_CYCLE_BOTTOM).days
+    cycle_position_percent = (days_since_bottom / HISTORICAL_AVERAGE_BULL_DAYS) * 100.0
+    cycle_position_percent = _clamp_pct(cycle_position_percent)
+
     days_to_next_top = (expected_top_date - today).days
     days_to_next_bottom = (expected_bottom_date - today).days
 
-    cycle_position_percent = _clamp_pct(
-        (days_since_bottom / HISTORICAL_AVERAGE_CYCLE_DAYS) * 100.0
-    )
-
     days_since_halving = (today - LAST_HALVING).days
-    halving_cycle_position_percent = _clamp_pct(
-        (days_since_halving / AVERAGE_POST_HALVING_TO_TOP_DAYS) * 100.0
-    )
+    halving_cycle_position_percent = (days_since_halving / AVERAGE_POST_HALVING_TO_TOP_DAYS) * 100.0
+    halving_cycle_position_percent = _clamp_pct(halving_cycle_position_percent)
 
-    # Confidence: lower when we are past expected top
-    if days_to_next_top >= 0:
-        cycle_time_confidence = _clamp_pct(
-            75.0 - (days_since_bottom / HISTORICAL_AVERAGE_BULL_DAYS) * 20.0
-        )
+    if days_since_bottom <= HISTORICAL_AVERAGE_BULL_DAYS:
+        progress_ratio = days_since_bottom / HISTORICAL_AVERAGE_BULL_DAYS
+        cycle_time_confidence = 100.0 - (progress_ratio * 15)
     else:
-        # Past expected top — confidence drops significantly
-        days_past_top = abs(days_to_next_top)
-        cycle_time_confidence = _clamp_pct(55.0 - days_past_top * 0.15)
+        overshoot = days_since_bottom - HISTORICAL_AVERAGE_BULL_DAYS
+        cycle_time_confidence = 85.0 - min(85.0, overshoot / 10.0)
+    cycle_time_confidence = _clamp_pct(cycle_time_confidence)
 
     return {
         "cycle_position_percent": round(cycle_position_percent, 2),
         "days_since_cycle_bottom": days_since_bottom,
-        "days_since_cycle_top": None,
+        "days_since_cycle_top": days_since_top,
         "days_to_next_cycle_top": days_to_next_top,
         "days_to_next_cycle_bottom": days_to_next_bottom,
         "expected_cycle_top_date": expected_top_date.isoformat(),
@@ -114,6 +106,4 @@ def compute_cycle_anchor(reference_date: Optional[date] = None) -> dict:
         "historical_average_cycle_length_days": HISTORICAL_AVERAGE_CYCLE_DAYS,
         "historical_average_bull_length_days": HISTORICAL_AVERAGE_BULL_DAYS,
         "historical_average_bear_length_days": HISTORICAL_AVERAGE_BEAR_DAYS,
-        "top_estimate_from_bottom": top_from_bottom.isoformat(),
-        "top_estimate_from_halving": top_from_halving.isoformat(),
     }
