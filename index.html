@@ -1017,6 +1017,8 @@ canvas.sparkline {
     text-transform: uppercase;
     cursor: pointer;
     transition: all 0.2s ease;
+    position: relative;
+    z-index: 10;
   }
   #export-arc-btn:hover {
     border-color: rgba(14,165,233,0.5);
@@ -1032,6 +1034,7 @@ canvas.sparkline {
   position: relative;
   height: 420px;
   width: 100%;
+  padding-bottom: 40px;
 }
 #arc-history-chart {
   position: absolute;
@@ -1092,7 +1095,7 @@ canvas.sparkline {
   <a class="nav-logo" href="#">
     <img src="/static/logo.jpeg"
          alt="α"
-         style="width:32px;height:32px;border-radius:6px;object-fit:contain;display:block;"/>
+         style="width:32px;height:32px;border-radius:6px;object-fit:cover;display:block;image-rendering:auto;"/>
     <div>
       <div class="nav-logo-text">Alpha Cycle</div>
       <div class="nav-logo-badge">CRYPTO MARKET INTELLIGENCE</div>
