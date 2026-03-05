@@ -360,9 +360,9 @@ body::before {
 }
 
 #btc-card.hero-card {
-  max-width: 780px;
-  margin: 1.5rem auto 2rem auto;
-  padding: 2rem 2.5rem;
+  max-width: 100% !important;
+  margin: 0.5rem 0 0.75rem 0 !important;
+  padding: 0.85rem 2rem !important;
   background: linear-gradient(160deg,
     rgba(14,165,233,0.08) 0%,
     rgba(14,165,233,0.02) 40%,
@@ -373,32 +373,48 @@ body::before {
   position: relative;
   overflow: hidden;
   display: grid;
-  grid-template-areas: "header header" "gauge info" "comps comps";
-  grid-template-columns: auto 1fr;
-  grid-template-rows: auto auto auto;
-  text-align: left;
+  grid-template-areas:
+    "header header header header"
+    "gauge info comps comps"
+    "zones zones zones zones" !important;
+  grid-template-columns: auto auto 1fr !important;
+  grid-template-rows: auto auto auto !important;
+  align-items: center !important;
+  column-gap: 2rem !important;
+  row-gap: 0 !important;
 }
-@media(max-width:580px){
+@media(max-width:700px){
   #btc-card.hero-card {
-    grid-template-areas: "header" "gauge" "info" "comps";
-    grid-template-columns: 1fr;
-    text-align: center;
+    grid-template-areas:
+      "header"
+      "gauge"
+      "info"
+      "comps"
+      "zones" !important;
+    grid-template-columns: 1fr !important;
+    text-align: center !important;
+  }
+  #btc-card.hero-card .components-grid {
+    border-left: none !important;
+    border-top: 1px solid rgba(255,255,255,0.05) !important;
+    padding-left: 0 !important;
+    padding-top: 0.75rem !important;
   }
 }
 
 #btc-card.hero-card .score-card-header {
   grid-area: header;
   border-bottom: 1px solid rgba(255,255,255,0.05);
-  padding-bottom: 1.25rem;
-  margin-bottom: 1.5rem;
+  padding-bottom: 0.6rem !important;
+  margin-bottom: 0.6rem !important;
   justify-content: space-between;
 }
 #btc-card.hero-card .gauge-wrap {
   grid-area: gauge;
-  max-width: 200px;
-  min-width: 140px;
-  padding-right: 1.5rem;
-  align-self: center;
+  max-width: 120px !important;
+  min-width: 100px !important;
+  padding-right: 0 !important;
+  align-self: center !important;
 }
 #btc-card.hero-card .gauge-wrap svg {
   height: auto;
@@ -417,46 +433,53 @@ body::before {
   flex-direction: column;
   justify-content: center;
   align-items: flex-start;
-  gap: 10px;
+  gap: 4px !important;
   border-top: none;
   margin-top: 0;
   padding-top: 0;
+  align-self: center !important;
 }
-@media(max-width:580px){
+@media(max-width:700px){
   #btc-card.hero-card .score-footer {
     align-items: center;
-    padding-top: 0.5rem;
   }
 }
 #btc-card.hero-card .gauge-val {
-  font-size: clamp(56px, 9vw, 72px);
+  font-size: clamp(36px, 5vw, 46px) !important;
   font-weight: 800;
   letter-spacing: -0.05em;
   line-height: 1;
 }
 #btc-card.hero-card .score-phase {
-  font-size: clamp(24px, 4vw, 32px);
+  font-size: clamp(16px, 2.5vw, 20px) !important;
   font-weight: 700;
   line-height: 1;
 }
 #btc-card.hero-card .score-price {
-  font-size: 16px;
+  font-size: 12px !important;
   font-family: var(--f-mono);
   color: var(--tx-sec);
 }
 
 #btc-card.hero-card .components-grid {
-  grid-area: comps;
+  grid-area: comps !important;
   display: grid !important;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, 1fr) !important;
   gap: 8px;
-  padding-top: 1.5rem;
-  margin-top: 1.5rem;
-  border-top: 1px solid rgba(255,255,255,0.05);
+  border-top: none !important;
+  border-left: 1px solid rgba(255,255,255,0.05) !important;
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+  padding-left: 1.5rem !important;
+  align-self: center !important;
 }
-@media(max-width:580px){
+@media(max-width:700px){
   #btc-card.hero-card .components-grid {
     grid-template-columns: repeat(2, 1fr);
+    border-left: none !important;
+    border-top: 1px solid rgba(255,255,255,0.05) !important;
+    padding-left: 0 !important;
+    padding-top: 0.75rem !important;
   }
 }
 #btc-card.hero-card .comp-row {
@@ -484,24 +507,6 @@ body::before {
   font-weight: 700 !important;
   color: var(--tx-pri) !important;
   width: auto !important;
-}
-
-/* Hero kompakter */
-#btc-card.hero-card {
-  padding: 1.5rem 2rem;
-}
-#btc-card.hero-card .gauge-wrap {
-  max-width: 160px;
-  min-width: 120px;
-}
-#btc-card.hero-card .gauge-val {
-  font-size: clamp(44px, 7vw, 58px);
-}
-#btc-card.hero-card .score-phase {
-  font-size: clamp(20px, 3vw, 26px);
-}
-#btc-card.hero-card .comp-val {
-  font-size: 16px !important;
 }
 
 /* Zonen Row */
@@ -549,38 +554,23 @@ body::before {
   padding-bottom: 5px !important;
   font-size: 10px !important;
 }
-#btc-card.hero-card {
-  padding: 1rem 2rem 1rem !important;
-  margin-top: 0.75rem !important;
-  margin-bottom: 0.75rem !important;
-  row-gap: 0 !important;
+.hero-zones {
+  grid-area: zones !important;
+  grid-column: 1 / -1 !important;
+  margin-top: 0.6rem !important;
+  padding-top: 0.6rem !important;
 }
-#btc-card.hero-card .gauge-wrap {
-  max-width: 150px !important;
-  min-width: 110px !important;
-  align-self: center !important;
-  padding-bottom: 0 !important;
+.hero-zone {
+  padding: 0.35rem 0.75rem !important;
 }
-#btc-card.hero-card .score-footer {
-  align-self: center !important;
-  padding-top: 0 !important;
+.hz-range {
+  font-size: 0.8rem !important;
 }
-#btc-card.hero-card .gauge-val {
-  font-size: clamp(40px, 6vw, 52px) !important;
-}
-#btc-card.hero-card .score-phase {
-  font-size: clamp(18px, 3vw, 22px) !important;
-}
-#btc-card.hero-card .score-price {
-  font-size: 13px !important;
+.hz-label {
+  font-size: 8px !important;
 }
 #btc-card.hero-card .hs-val {
   font-size: 11px !important;
-}
-#btc-card.hero-card .components-grid {
-  margin-top: 0.75rem !important;
-  padding-top: 0.75rem !important;
-  gap: 6px !important;
 }
 #btc-card.hero-card .comp-row {
   padding: 8px 10px !important;
@@ -588,20 +578,6 @@ body::before {
 }
 #btc-card.hero-card .comp-val {
   font-size: 15px !important;
-}
-.hero-zones {
-  margin-top: 0.75rem !important;
-  padding-top: 0.75rem !important;
-}
-.hero-zone {
-  padding: 0.5rem 0.75rem !important;
-}
-.hz-range {
-  font-size: 0.85rem !important;
-}
-#btc-card.hero-card .score-card-header {
-  margin-bottom: 1rem !important;
-  padding-bottom: 0.75rem !important;
 }
 .sec-header {
   margin-top: 1rem !important;
