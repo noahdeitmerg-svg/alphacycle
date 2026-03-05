@@ -1,4 +1,21 @@
 # AlphaCycle — Deploy State
+**Zuletzt aktualisiert:** 2026-03-04
+**Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
+
+## Letzter Session-Status (2026-03-04)
+- ✅ FIX 1: /api/arc-summary Endpoint ergänzt
+- ✅ FIX 2: /api/prices mit ATH + Dominanz (Kraken-basiert)
+- ✅ FIX 3: backtest_engine.py auf Kraken OHLC umgestellt
+- ✅ FIX 4: index.html ATH/Dominanz aus /api/prices (kein CoinGecko mehr)
+- ✅ FIX 5: index.html backtest + liquidity-regime in Promise.allSettled
+- 🔄 Deploy steht aus → git push ausstehend
+
+## Nächste Schritte
+- [ ] Git push + Railway deploy der heutigen Fixes
+- [ ] Testen: /api/arc-summary, /api/prices (ATH-Felder), Backtest-Karte, Liquidity-Regime-Karte
+- [ ] permanent-fixed.mdc mit heutigen Fixes updaten
+
+
 
 ## Architecture Lock (NEVER change without architect approval)
 ARC Formula: ma_200w*0.30 + drawdown*0.25 + fear_greed*0.20 + liquidity*0.25
@@ -16,6 +33,15 @@ DO NOT modify weights. DO NOT add scoring components.
 9. index.html: S.btcShortTerm = btcC?.short_term || null (after btcComponents)
 10. index.html: S.ethComponents = ethC?.components || null (after btcShortTerm)
 11. index.html: S.btcScore guard: only use API value if btcC.score > 0
+12. main.py: short_term exposed in /api/cycle/btc response
+13. main.py: /api/arc-summary endpoint active
+14. main.py: BTC/ETH ATH computed from Kraken price history (max of btc_prices)
+15. backtest_engine.py: Uses Kraken OHLC (not CoinGecko)
+16. index.html: CoinGecko direct calls removed — all data via Railway backend
+17. index.html: updatePhaseBanner() uses phaseOf() only — analyzerPhase override removed
+18. index.html: hero card has single risk label (btc-tag removed, hero-risk-label kept)
+19. index.html: change_24h computed from last 2 history points (Kraken has no 24h change)
+20. index.html: /api/backtest and /api/liquidity-regime fetched in Promise.allSettled
 
 ## Active Endpoints (Railway)
 /health /api/prices /api/cycle/btc /api/cycle/eth /api/cycle/macro
