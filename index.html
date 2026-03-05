@@ -1752,7 +1752,7 @@ canvas.sparkline {
       <div class="cycle-timeline-side" id="cycle-anchor-card">
         <div class="ca-grid">
           <div class="ca-item">
-            <div class="ca-label">Days Since Cycle Low</div>
+            <div class="ca-label">Days Since Bottom</div>
             <div class="ca-value" id="ca-days-since">—</div>
           </div>
           <div class="ca-item">
@@ -1760,7 +1760,7 @@ canvas.sparkline {
             <div class="ca-value" id="ca-halving-pos">Oct 2025</div>
           </div>
           <div class="ca-item">
-            <div class="ca-label">Cycle Reset Window</div>
+            <div class="ca-label">Est. Cycle Bottom</div>
             <div class="ca-value" id="ca-window">Oct 2026</div>
           </div>
           <div class="ca-item">
@@ -2606,7 +2606,7 @@ function updateUI() {
     // Cycle Top hardcoded Oct 2025
     setText('ca-halving-pos', 'Oct 2025');
 
-    // Cycle Reset Window (Oct 2026)
+    // Est. Cycle Bottom (Oct 2026)
     const nextBottom = new Date('2026-10-01');
     const today = new Date();
     const dtb = Math.round((nextBottom - today) / 86400000);

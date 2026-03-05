@@ -1,10 +1,20 @@
 """
-cycle_anchor.py — Cycle Anchor Engine
+cycle_anchor.py - Cycle Anchor Engine
 Anchors the system to REAL historical Bitcoin cycle structure.
 Deterministic, datetime-only. No randomness.
 """
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 from typing import Optional
+
+# Last confirmed BTC cycle bottom (price ca. $15,742)
+CYCLE_BOTTOM_DATE = datetime(2022, 11, 21, tzinfo=timezone.utc)
+
+
+def compute_days_since_bottom() -> int:
+    now = datetime.now(timezone.utc)
+    delta = now - CYCLE_BOTTOM_DATE
+    return max(0, delta.days)
+
 
 # -----------------------------------------------------------------------------
 # HARD-CODED HISTORICAL BITCOIN CYCLE DATA
@@ -64,8 +74,10 @@ def compute_cycle_anchor(reference_date: Optional[date] = None) -> dict:
     reference_date: defaults to today (UTC date); inject for tests.
     """
     today = reference_date or date.today()
-
-    days_since_bottom = (today - CURRENT_CYCLE_BOTTOM).days
+    if reference_date is None:
+        days_since_bottom = compute_days_since_bottom()
+    else:
+        days_since_bottom = max(0, (today - CURRENT_CYCLE_BOTTOM).days)
     days_since_top: Optional[int] = None
 
     expected_top_date = CURRENT_CYCLE_BOTTOM + timedelta(days=HISTORICAL_AVERAGE_BULL_DAYS)
@@ -95,6 +107,7 @@ def compute_cycle_anchor(reference_date: Optional[date] = None) -> dict:
 
     return {
         "cycle_position_percent": round(cycle_position_percent, 2),
+        "days_since_bottom": days_since_bottom,
         "days_since_cycle_bottom": days_since_bottom,
         "days_since_cycle_top": days_since_top,
         "days_to_next_cycle_top": days_to_next_top,
