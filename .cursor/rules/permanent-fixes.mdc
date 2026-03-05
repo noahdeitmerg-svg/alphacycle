@@ -19,7 +19,7 @@ Beim Bearbeiten von backend/fetcher.py, backend/main.py, backend/scoring.py oder
   - `fetch_kraken_ticker("XBTUSD")`       (# 2)
   - `fetch_kraken_ticker("XETHUSD")`      (# 3)
 - Die Funktionen `fetch_kraken_prices` und `fetch_kraken_ticker` müssen existieren (nach fetch_funding_rates, vor CoinGecko-Sektion).
-- **ALWAYS OKX für Funding Rates** (fetch_funding_rates nutzt www.okx.com/api/v5/public/funding-rate, instId BTC-USDT-SWAP / ETH-USDT-SWAP) — **NEVER Binance Futures oder Bybit** (beide 403 auf Railway). CoinGecko-Fallback-Logik unverändert lassen.
+- **ALWAYS OKX für Funding** — Binance UND Bybit auf Railway blockiert (403). fetch_funding_rates nutzt www.okx.com/api/v5/public/funding-rate (instId BTC-USDT-SWAP / ETH-USDT-SWAP). CoinGecko-Fallback-Logik unverändert lassen.
 
 ## backend/main.py
 - Keine Unicode-Zeichen in Kommentaren oder String-Literalen (═ ─ — → ™ … etc.).
@@ -53,8 +53,8 @@ Beim Bearbeiten von backend/fetcher.py, backend/main.py, backend/scoring.py oder
 - Data Inspector Liquidity Regime / ARC Summary Fallback: **liq.liquidity_regime** und **liq.liquidity_score** (NICHT liq.regime / liq.score) — liquidity_engine liefert diese Keys.
 
 ## backend/Dockerfile
-- **NUR eine** Dockerfile im Ordner `backend/` (keine zweite Datei mit Leerzeichen im Namen wie " Dockerfile").
-- **CMD** muss `$PORT` verwenden: `--bind 0.0.0.0:$PORT` (Railway setzt PORT) — **NICHT** hardcoded `8000`.
+- **Nur 1 Datei** im Ordner `backend/` (keine zweite Datei mit Leerzeichen im Namen wie " Dockerfile").
+- **CMD** mit `$PORT`: `--bind 0.0.0.0:$PORT`, **workers=1** (Railway setzt PORT) — **NICHT** hardcoded 8000.
 
 ## backend/liquidity_engine.py
 - **bond_score** aus absolutem Yield-Niveau (us10y_vals[-1]) berechnen — **NICHT** aus trend_score (sonst us10y_trend=0 → 150 → clamp 100 Bug). Stufen: <2% → 20, <3% → 20–50, <4% → 50–70, <5% → 70–85, else → 85–100.

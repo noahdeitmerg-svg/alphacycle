@@ -9,8 +9,8 @@
 - ✅ FIX 4: index.html ATH/Dominanz aus /api/prices (kein CoinGecko mehr)
 - ✅ FIX 5: index.html backtest + liquidity-regime in Promise.allSettled + liquidity-components
 - ✅ FIX 6: scoring.py short_term dict in compute_btc_score()
-- ✅ FIX 37: backend/Dockerfile — eine Datei, CMD mit $PORT; Duplikat " Dockerfile" entfernt
-- ✅ FIX 38: fetcher.py Funding Rates auf OKX umgestellt (Bybit/Binance 403 auf Railway)
+- ✅ FIX 37: backend/Dockerfile — eine Datei, CMD mit $PORT, workers=1; Duplikat entfernt
+- ✅ FIX 38: fetcher.py Funding Rates OKX (Bybit/Binance 403 auf Railway); fetch_funding_rates mit if-blocks
 - ✅ Deployed auf Railway, getestet — Dashboard live bei Score 30/100
 
 ## Nächste Schritte
