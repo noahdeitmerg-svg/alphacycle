@@ -8,7 +8,7 @@ Return: [{"date": "YYYY-MM-DD", "price": float, "score": float}, ...]
 
 import asyncio
 import math
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import List, Dict, Any
 
 import httpx
@@ -20,60 +20,52 @@ except ImportError:  # pragma: no cover
 
 
 HTTP_TIMEOUT = httpx.Timeout(30.0, connect=10.0)
-WINDOW_200W = 1400  # ~200 weeks daily
+WINDOW_200W = 200  # ~28 weeks min window for early data points
 
 
-async def fetch_kraken_ohlc_full(pair: str = "XBTUSD", years: int = 10) -> List[list]:
-    """Paginated Kraken OHLC for up to 10 years (max 720 candles per request)."""
-    since = int((datetime.utcnow() - timedelta(days=365 * years)).timestamp())
+async def _fetch_btc_history() -> List[Dict[str, Any]]:
+    """Paginated Kraken OHLC for 10 years."""
+    import time as _time
+    since = int(_time.time()) - (3650 * 86400)  # 10 years
     all_candles: List[list] = []
 
     async with httpx.AsyncClient(timeout=HTTP_TIMEOUT, follow_redirects=True) as client:
         while True:
-            r = await client.get(
+            resp = await client.get(
                 "https://api.kraken.com/0/public/OHLC",
-                params={"pair": pair, "interval": 1440, "since": since},
+                params={"pair": "XBTUSD", "interval": 1440, "since": since},
             )
-            data = r.json()
+            data = resp.json()
             if data.get("error") or "result" not in data:
                 break
-            result = data["result"]
-            keys = [k for k in result if k != "last"]
+            keys = [k for k in data["result"] if k != "last"]
             if not keys:
                 break
-            key = keys[0]
-            candles = result[key]
+            candles = data["result"][keys[0]]
             if not candles:
                 break
             all_candles.extend(candles)
-            last = result.get("last", 0)
+            last = data["result"].get("last", 0)
             if last <= since or len(candles) < 700:
                 break
             since = last
-            await asyncio.sleep(1)
+            await asyncio.sleep(1.2)
 
-    return all_candles
-
-
-def _candles_to_history(candles: List[list]) -> List[Dict[str, Any]]:
-    """Convert raw Kraken candles to list of {date, price} sorted by date."""
-    seen = set()
     out = []
-    for c in candles:
+    seen = set()
+    for c in all_candles:
         try:
             ts = int(c[0])
             if ts in seen:
                 continue
             seen.add(ts)
             price = float(c[4])
-            if price <= 0:
-                continue
-            dt = datetime.utcfromtimestamp(ts).date().isoformat()
-            out.append({"date": dt, "price": price})
+            if price > 0:
+                dt = datetime.utcfromtimestamp(ts).date().isoformat()
+                out.append({"date": dt, "price": price})
         except (IndexError, TypeError, ValueError):
             continue
-    out.sort(key=lambda x: x["date"])
-    return out
+    return sorted(out, key=lambda x: x["date"])
 
 
 async def run_backtest() -> Dict[str, Any]:
@@ -81,11 +73,9 @@ async def run_backtest() -> Dict[str, Any]:
     Run historical backtest. Returns {"results": [{"date", "price", "score"}, ...], "error": "..."} on failure.
     """
     try:
-        candles = await fetch_kraken_ohlc_full("XBTUSD", years=10)
+        history = await _fetch_btc_history()
     except Exception as e:
         return {"results": [], "error": f"Fetch failed: {e!s}"}
-
-    history = _candles_to_history(candles)
     if not history:
         return {"results": [], "error": "No price history from API"}
 

@@ -66,6 +66,7 @@ DO NOT modify weights. DO NOT add scoring components.
 40. index.html: FRED-Label dynamisch — src-fred je nach S.walclCurrent: FRED oder FRED (synthetic fallback) + class status-src / warn
 41. fetcher.py: btc_dominance hardcoded 55.0, total_market_cap 0 — alle externen APIs (CoinGecko 429, CoinCap/Bybit/Binance) auf Railway US-West blockiert. index.html: Data Inspector ohne diRow BTC Dominance / Total Market Cap / BTC Dominance %
 42. backtest_engine.py: Paginated Kraken OHLC (max 720/request), ARC = ma_200w*0.35 + drawdown*0.35 + fg(50)*0.15 + liq(50)*0.15. Return {date, price, score}. index.html: ARC History Chart (arc-history-chart) mit Chart.js, S.backtest, Risk-Zonen als fill, Placeholder "Lade historische Daten...".
+43. backtest_engine.py: Pagination fix (_fetch_btc_history paginiert seit 10y), WINDOW_200W=200 (~28 Wochen) damit Ergebnisse frueh beginnen.
 
 ## Active Endpoints (Railway)
 /health /api/prices /api/cycle/btc /api/cycle/eth /api/cycle/macro
