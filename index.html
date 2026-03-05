@@ -130,10 +130,10 @@ body::before {
   position: sticky;
   top: 0;
   z-index: 1000;
-  height: 56px;
+  height: 48px;
   display: flex;
   align-items: center;
-  padding: 0 20px;
+  padding: 8px 20px;
   background: rgba(2,5,16,0.88);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
@@ -224,13 +224,15 @@ body::before {
    TICKER BAR
 ════════════════════════════════════════════════════════════════ */
 .ticker-bar {
-  height: 36px;
+  height: 28px;
+  padding: 6px 0;
   overflow: hidden;
   background: var(--ink1);
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
   position: relative;
+  font-size: 11px;
 }
 .ticker-bar::before, .ticker-bar::after {
   content: '';
@@ -1574,24 +1576,6 @@ canvas.sparkline {
     <div class="decision-note">ARC INDEX <span id="dec-index-val" style="color:var(--btc);font-weight:600">—</span> / 100</div>
   </div>
 
-  <!-- TWO-COL ROW: Short Term + Cycle Timeline -->
-  <div class="two-col-row anim d2">
-
-    <div class="two-col-panel">
-      <div class="sec-header">
-        <div class="sec-title">Short Term Signals <span class="sec-tag">30-90D</span></div>
-        <div class="sec-line"></div>
-      </div>
-      <div class="card short-term-card" id="short-term-card">
-        <div class="short-term-warning">
-          &#9889; Tactical layer only — does not override AlphaCycle Index
-        </div>
-        <div class="components-grid" id="short-term-components"></div>
-      </div>
-    </div>
-
-  </div>
-
   <!-- Hidden: ETH + Macro IDs for JS (cards removed from UI) -->
   <div style="display:none">
     <canvas id="eth-arc"></canvas>
@@ -1701,6 +1685,18 @@ canvas.sparkline {
         <span class="pc-stat-val" id="pc-fg-signal">—</span>
       </div>
     </div>
+  </div>
+
+  <!-- Short Term Signals (below Live Prices) -->
+  <div class="sec-header anim d4">
+    <div class="sec-title">Short Term Signals <span class="sec-tag">30-90D</span></div>
+    <div class="sec-line"></div>
+  </div>
+  <div class="card short-term-card anim d4" id="short-term-card">
+    <div class="short-term-warning">
+      &#9889; Tactical layer only — does not override AlphaCycle Index
+    </div>
+    <div class="components-grid" id="short-term-components"></div>
   </div>
 
   <!-- ── ARC HISTORY CHART (10Y) ── -->
