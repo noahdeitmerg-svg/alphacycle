@@ -22,7 +22,7 @@ except ImportError:  # pragma: no cover
 
 
 HTTP_TIMEOUT = httpx.Timeout(60.0, connect=10.0)
-WINDOW_200W = 1400  # 200-week MA (~9y ARC from ~4700 days Kraken)
+WINDOW_200W = 1400  # 200 Wochen = 1400 Tage (echter 200W MA)
 CACHE_FILE = Path("/tmp/backtest_cache.json")
 
 
