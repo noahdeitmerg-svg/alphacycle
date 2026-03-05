@@ -151,6 +151,113 @@ def detect_cycle_signal(
 
 
 # -----------------------------------------------------------------------------
+# SHORT TERM CONTEXT (30-90d tactical)
+# -----------------------------------------------------------------------------
+
+def get_short_term_context(
+    arc_score: float,
+    days_since_bottom: int,
+    rsi_score: float,
+    funding_score: float,
+    power_law_score: float,
+    mvrv_score: float,
+    btc_price: float,
+    ath_price: float,
+    ma_200w: float,
+) -> dict:
+    """
+    Berechnet taktischen Kontext fuer 30-90 Tage.
+    Gibt Cycle Phase Label, Upside/Downside Szenario
+    und aggregierten Short Term Score zurueck.
+    """
+    arc = max(0.0, min(100.0, float(arc_score or 50)))
+    days = max(0, int(days_since_bottom or 0))
+    rsi = max(0.0, min(100.0, float(rsi_score or 50)))
+    funding = max(0.0, min(100.0, float(funding_score or 50)))
+    pl = max(0.0, min(100.0, float(power_law_score or 50)))
+    mvrv = max(0.0, min(100.0, float(mvrv_score or 50)))
+    price = max(0.0, float(btc_price or 0))
+    ath = max(0.0, float(ath_price or price or 1))
+    ma200w = max(0.0, float(ma_200w or 0))
+
+    st_score = round((rsi + funding + pl + mvrv) / 4)
+    st_score = max(0, min(100, st_score))
+
+    if arc < 30 and days < 400:
+        phase_label = "Early Bull"
+        phase_desc = "Akkumulationsphase. Strukturelles Risiko tief. Historisch beste Einstiegszone."
+    elif arc < 35 and days > 1200:
+        phase_label = "Late Bear"
+        phase_desc = "Spaeter Abschwung. Cycle Reset naehert sich. Fruehe Akkumulation moeglich."
+    elif arc < 50 and days < 700:
+        phase_label = "Mid Bull"
+        phase_desc = "Expansion laeuft. Momentum aufbauend. Risiko moderat aber kontrollierbar."
+    elif arc < 65 and days < 1000:
+        phase_label = "Late Bull"
+        phase_desc = "Spaetphase. Relief Rallyes moeglich aber strukturelles Risiko steigt."
+    elif arc < 75 and days >= 1000:
+        phase_label = "Distribution"
+        phase_desc = "Verteilungsphase. Hohe Volatilitaet. Positionen schrittweise reduzieren."
+    elif arc >= 75:
+        phase_label = "Bear / Risk Off"
+        phase_desc = "Extremes Risiko. Kapitalerhalt Prioritaet. Warten auf Reset."
+    else:
+        phase_label = "Transition"
+        phase_desc = "Uebergangsphase. Kein klares Signal. Abwarten empfohlen."
+
+    phase_scenarios = {
+        "Early Bull":       {"upside": (25, 60),  "downside": (8, 20)},
+        "Mid Bull":         {"upside": (15, 40),  "downside": (10, 25)},
+        "Late Bull":        {"upside": (10, 25),  "downside": (15, 35)},
+        "Distribution":     {"upside": (5, 15),   "downside": (20, 45)},
+        "Bear / Risk Off":  {"upside": (5, 20),   "downside": (25, 55)},
+        "Late Bear":        {"upside": (10, 30),  "downside": (15, 30)},
+        "Transition":       {"upside": (8, 20),   "downside": (10, 25)},
+    }
+    scenario = phase_scenarios.get(phase_label, phase_scenarios["Transition"])
+
+    score_factor = (st_score - 50) / 100.0
+    up_low, up_high = scenario["upside"]
+    dn_low, dn_high = scenario["downside"]
+    upside_pct = round(up_high - (up_high - up_low) * (score_factor + 0.5))
+    downside_pct = round(dn_low + (dn_high - dn_low) * (score_factor + 0.5))
+    upside_pct = max(3, min(100, upside_pct))
+    downside_pct = max(3, min(80, downside_pct))
+
+    upside_target = round(price * (1 + upside_pct / 100)) if price > 0 else None
+    downside_target = round(price * (1 - downside_pct / 100)) if price > 0 else None
+
+    if st_score < 30:
+        tactical = "OVERSOLD"
+        tactical_color = "green"
+    elif st_score < 45:
+        tactical = "CAUTIOUS LONG"
+        tactical_color = "green"
+    elif st_score < 55:
+        tactical = "NEUTRAL"
+        tactical_color = "blue"
+    elif st_score < 70:
+        tactical = "CAUTION"
+        tactical_color = "orange"
+    else:
+        tactical = "OVERBOUGHT"
+        tactical_color = "red"
+
+    return {
+        "st_score": st_score,
+        "phase_label": phase_label,
+        "phase_desc": phase_desc,
+        "upside_pct": upside_pct,
+        "downside_pct": downside_pct,
+        "upside_target": upside_target,
+        "downside_target": downside_target,
+        "tactical_signal": tactical,
+        "tactical_color": tactical_color,
+        "days_since_bottom": days,
+    }
+
+
+# -----------------------------------------------------------------------------
 # SAFE MATH
 # -----------------------------------------------------------------------------
 

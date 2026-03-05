@@ -718,10 +718,104 @@ body::before {
   line-height: 1.1;
 }
 
-.short-term-card { padding: 1.25rem 1.5rem; background: rgba(255,255,255,0.015); }
+.short-term-card { padding: 0; background: rgba(255,255,255,0.015); overflow: hidden; }
+.st-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.5rem 1.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+.st-phase-eyebrow,
+.st-score-eyebrow {
+  font-family: var(--f-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tx-ter);
+  margin-bottom: 4px;
+}
+.st-phase-label {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--tx-pri);
+  line-height: 1.1;
+}
+.st-phase-desc {
+  font-size: 0.7rem;
+  color: var(--tx-sec);
+  margin-top: 4px;
+  max-width: 420px;
+  line-height: 1.4;
+}
+.st-score-block {
+  text-align: right;
+  flex-shrink: 0;
+}
+.st-score-val {
+  font-size: 2rem;
+  font-weight: 800;
+  font-family: var(--f-mono);
+  color: var(--tx-pri);
+  line-height: 1;
+}
+.st-score-signal {
+  font-family: var(--f-mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+.st-scenario {
+  display: flex;
+  align-items: stretch;
+  padding: 1rem 1.75rem;
+  border-bottom: 1px solid var(--border);
+  gap: 0;
+}
+.st-scenario-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.st-scenario-divider {
+  width: 1px;
+  background: var(--border);
+  margin: 0 1.5rem;
+}
+.st-scenario-label {
+  font-family: var(--f-mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tx-ter);
+}
+.st-scenario-pct {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.st-upside   .st-scenario-pct { color: #22c55e; }
+.st-downside .st-scenario-pct { color: #ef4444; }
+.st-scenario-price {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--tx-sec);
+}
+#short-term-components {
+  padding: 1rem 1.75rem 1.25rem;
+}
+@media(max-width:600px){
+  .st-header { flex-direction: column; }
+  .st-score-block { text-align: left; }
+  .st-scenario { flex-direction: column; gap: 1rem; }
+  .st-scenario-divider { display: none; }
+}
 .short-term-warning {
   font-size: 0.65rem; letter-spacing: 0.08em; color: var(--yellow);
-  text-transform: uppercase; margin-bottom: 1rem;
+  text-transform: uppercase; margin: 0 1.75rem 1rem;
   padding: 0.4rem 0.75rem;
   background: rgba(245,158,11,0.06);
   border: 1px solid rgba(245,158,11,0.2);
@@ -1693,10 +1787,36 @@ canvas.sparkline {
     <div class="sec-line"></div>
   </div>
   <div class="card short-term-card anim d4" id="short-term-card">
-    <div class="short-term-warning">
-      &#9889; Tactical layer only — does not override AlphaCycle Index
+    <div class="card-accent accent-btc"></div>
+    <div class="st-header">
+      <div class="st-phase-block">
+        <div class="st-phase-eyebrow">Cycle Phase</div>
+        <div class="st-phase-label" id="st-phase-label">—</div>
+        <div class="st-phase-desc" id="st-phase-desc">Loading…</div>
+      </div>
+      <div class="st-score-block">
+        <div class="st-score-eyebrow">ST Score</div>
+        <div class="st-score-val" id="st-score-val">—</div>
+        <div class="st-score-signal" id="st-tactical">—</div>
+      </div>
     </div>
-    <div class="components-grid" id="short-term-components"></div>
+    <div class="st-scenario">
+      <div class="st-scenario-item st-upside">
+        <div class="st-scenario-label">30–90d Upside</div>
+        <div class="st-scenario-pct" id="st-upside-pct">—</div>
+        <div class="st-scenario-price" id="st-upside-price">—</div>
+      </div>
+      <div class="st-scenario-divider"></div>
+      <div class="st-scenario-item st-downside">
+        <div class="st-scenario-label">30–90d Downside</div>
+        <div class="st-scenario-pct" id="st-downside-pct">—</div>
+        <div class="st-scenario-price" id="st-downside-price">—</div>
+      </div>
+    </div>
+    <div class="short-term-warning">
+      &#9889; TACTICAL LAYER ONLY — DOES NOT OVERRIDE ALPHACYCLE INDEX
+    </div>
+    <div id="short-term-components"></div>
   </div>
 
   <!-- ── ARC HISTORY CHART (10Y) ── -->
@@ -2125,12 +2245,14 @@ async function loadAllData() {
         S.analyzerSignal      = analyzer.signal || analyzer.position || null;
         S.cycleSignal         = analyzer.cycle_signal || null;
         S.decisionOverride   = analyzer.decision_override || null;
+        S.shortTermContext   = analyzer.short_term_context || null;
       } else {
         S.alphaCyclePosition = null;
         S.analyzerPhase       = null;
         S.analyzerSignal      = null;
         S.cycleSignal         = null;
         S.decisionOverride   = null;
+        S.shortTermContext   = null;
       }
 
       S.cycleAnchor = anchor || null;
@@ -2535,9 +2657,37 @@ function updateUI() {
   const ts=new Date();
   $('last-updated').textContent=`Updated ${ts.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})} UTC`;
 
+  updateShortTermContext();
   renderCharts();
   renderSparklines();
   if ($('di-body')) renderDataInspector();
+}
+
+function updateShortTermContext() {
+  const ctx = S.shortTermContext;
+  if (!ctx) return;
+
+  setText('st-phase-label', ctx.phase_label || '—');
+  setText('st-phase-desc', ctx.phase_desc || '—');
+
+  const stScore = ctx.st_score ?? 50;
+  const stCol = scoreColor(stScore);
+  setText('st-score-val', stScore);
+  const stValEl = document.getElementById('st-score-val');
+  if (stValEl) stValEl.style.color = stCol;
+
+  const tactEl = document.getElementById('st-tactical');
+  if (tactEl) {
+    tactEl.textContent = ctx.tactical_signal || '—';
+    const colMap = { green: '#22c55e', blue: '#3b82f6', orange: '#f59e0b', red: '#ef4444' };
+    tactEl.style.color = colMap[ctx.tactical_color] || '#94a3b8';
+  }
+
+  setText('st-upside-pct', ctx.upside_pct != null ? '+' + ctx.upside_pct + '%' : '—');
+  setText('st-upside-price', ctx.upside_target ? '~$' + ctx.upside_target.toLocaleString() : '');
+
+  setText('st-downside-pct', ctx.downside_pct != null ? '-' + ctx.downside_pct + '%' : '—');
+  setText('st-downside-price', ctx.downside_target ? '~$' + ctx.downside_target.toLocaleString() : '');
 }
 
 function diValClass(v) {

@@ -41,9 +41,9 @@ except ImportError:
     )
 
 try:
-    from analyzer import analyzer as cycle_analyzer
+    from analyzer import analyzer as cycle_analyzer, get_short_term_context
 except ImportError:
-    from backend.analyzer import analyzer as cycle_analyzer
+    from backend.analyzer import analyzer as cycle_analyzer, get_short_term_context
 
 try:
     from decision_engine import decision_engine
@@ -624,6 +624,36 @@ async def get_analyzer():
             ma_200w           = ma_200w,
             ath_price         = safe_float(raw.get("btc_market", {}).get("ath", ath_price)),
         )
+        try:
+            anchor_data = compute_cycle_anchor()
+            days_since = anchor_data.get("days_since_cycle_bottom", 0)
+            st = c["btc_scores"].get("short_term", {})
+            st_ctx = get_short_term_context(
+                arc_score=result.get("alpha_cycle_position", 50.0),
+                days_since_bottom=days_since or 0,
+                rsi_score=st.get("rsi", 50.0),
+                funding_score=st.get("funding", 50.0),
+                power_law_score=st.get("power_law", 50.0),
+                mvrv_score=st.get("mvrv", 50.0),
+                btc_price=btc_price,
+                ath_price=ath_price,
+                ma_200w=ma_200w,
+            )
+            result["short_term_context"] = st_ctx
+        except Exception as e:
+            logger.warning("short_term_context failed: %s", e)
+            result["short_term_context"] = {
+                "st_score": 50,
+                "phase_label": "Transition",
+                "phase_desc": "Data loading...",
+                "upside_pct": 10,
+                "downside_pct": 15,
+                "upside_target": None,
+                "downside_target": None,
+                "tactical_signal": "NEUTRAL",
+                "tactical_color": "blue",
+                "days_since_bottom": 0,
+            }
         return api_response(result)
     except Exception as e:
         logger.exception("Analyzer endpoint failed")
