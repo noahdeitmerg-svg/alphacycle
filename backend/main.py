@@ -56,9 +56,9 @@ except ImportError:
     from backend.liquidity_engine import compute_liquidity_regime
 
 try:
-    from cycle_anchor import compute_cycle_anchor
+    from cycle_anchor import compute_cycle_anchor, compute_days_since_bottom
 except ImportError:
-    from backend.cycle_anchor import compute_cycle_anchor
+    from backend.cycle_anchor import compute_cycle_anchor, compute_days_since_bottom
 
 try:
     from analyzer import CycleAnalyzer
@@ -499,8 +499,19 @@ async def get_fear_greed():
 @app.get("/api/cycle-anchor")
 async def get_cycle_anchor():
     """Cycle Anchor Engine: objective cycle timing from historical Bitcoin structure."""
-    data = compute_cycle_anchor()
-    return api_response(data)
+    try:
+        result = compute_cycle_anchor()
+        fresh_days = compute_days_since_bottom()
+        result["days_since_bottom"] = fresh_days
+        result["days_since_cycle_bottom"] = fresh_days
+        return api_response(result)
+    except Exception as e:
+        logger.warning("cycle_anchor error: %s", e)
+        return api_response({
+            "days_since_bottom": compute_days_since_bottom(),
+            "days_since_cycle_bottom": compute_days_since_bottom(),
+            "error": str(e),
+        })
 
 
 @app.get("/api/arc-summary")
