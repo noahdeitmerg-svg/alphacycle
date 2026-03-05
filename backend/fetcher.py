@@ -255,19 +255,17 @@ def _compute_puell_multiple(prices):
 async def fetch_all():
     logger.info("fetch_all v3: starting...")
     results=await asyncio.gather(
-        fetch_kraken_prices("XBTUSD", 730),    # 0 BTC prices
-        fetch_kraken_prices("XETHZUSD", 730),   # 1 ETH prices
-        fetch_kraken_ticker("XBTUSD"),          # 2 BTC ticker
-        fetch_kraken_ticker("XETHZUSD"),         # 3 ETH ticker
-        fetch_market_data("bitcoin"),           # 4
-        fetch_market_data("ethereum"),          # 5
-        fetch_fear_greed(90),                   # 6
-        fetch_eth_tvl(),                        # 7
-        fetch_stablecoin_supply(),              # 8
-        fetch_walcl(),                          # 9
-        fetch_fred_series("DGS10"),             # 10
-        fetch_global_data(),                   # 11
-        fetch_funding_rates(),                  # 12
+        fetch_kraken_prices("XBTUSD", 730),     # 0
+        fetch_kraken_prices("XETHZUSD", 730),   # 1
+        fetch_kraken_ticker("XBTUSD"),          # 2
+        fetch_kraken_ticker("XETHZUSD"),        # 3
+        fetch_fear_greed(90),                   # 4
+        fetch_eth_tvl(),                        # 5
+        fetch_stablecoin_supply(),              # 6
+        fetch_walcl(),                          # 7
+        fetch_fred_series("DGS10"),             # 8
+        fetch_global_data(),                   # 9
+        fetch_funding_rates(),                 # 10
         return_exceptions=True,
     )
     def safe(r,d): return d if (isinstance(r,Exception) or r is None) else r
@@ -276,15 +274,15 @@ async def fetch_all():
     eth_p  =safe(results[1],[])
     btc_tk =safe(results[2],{})
     eth_tk =safe(results[3],{})
-    btc_cg =safe(results[4],{"price":0,"change_24h":0,"market_cap":0,"volume":0,"ath":0,"ath_change_pct":0})
-    eth_cg =safe(results[5],{"price":0,"change_24h":0,"market_cap":0,"volume":0,"ath":0,"ath_change_pct":0})
-    fg     =safe(results[6],{"current":50,"label":"Neutral","history":[]})
-    tvl    =safe(results[7],[])
-    stable =safe(results[8],[])
-    walcl  =safe(results[9],_synthetic_walcl())
-    us10y  =safe(results[10],[])
-    gdata  =safe(results[11],{"btc_dominance":50.0,"total_market_cap":0.0})
-    funding=safe(results[12],{"btc_funding_rate":0.0,"eth_funding_rate":0.0})
+    btc_cg ={"price":0,"change_24h":0,"market_cap":0,"volume":0,"ath":0,"ath_change_pct":0}
+    eth_cg ={"price":0,"change_24h":0,"market_cap":0,"volume":0,"ath":0,"ath_change_pct":0}
+    fg     =safe(results[4],{"current":50,"label":"Neutral","history":[]})
+    tvl    =safe(results[5],[])
+    stable =safe(results[6],[])
+    walcl  =safe(results[7],_synthetic_walcl())
+    us10y  =safe(results[8],[])
+    gdata  =safe(results[9],{"btc_dominance":50.0,"total_market_cap":0.0})
+    funding=safe(results[10],{"btc_funding_rate":0.0,"eth_funding_rate":0.0})
 
     btc_prices=btc_p if len(btc_p)>10 else await fetch_coin_prices_cg("bitcoin",365)
     eth_prices=eth_p if len(eth_p)>10 else await fetch_coin_prices_cg("ethereum",365)
