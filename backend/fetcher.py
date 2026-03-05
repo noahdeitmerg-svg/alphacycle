@@ -251,9 +251,9 @@ async def fetch_all():
     logger.info("fetch_all v3: starting...")
     results=await asyncio.gather(
         fetch_kraken_prices("XBTUSD", 730),    # 0 BTC prices
-        fetch_kraken_prices("XETHUSD", 730),   # 1 ETH prices
+        fetch_kraken_prices("XETHZUSD", 730),   # 1 ETH prices
         fetch_kraken_ticker("XBTUSD"),          # 2 BTC ticker
-        fetch_kraken_ticker("XETHUSD"),         # 3 ETH ticker
+        fetch_kraken_ticker("XETHZUSD"),         # 3 ETH ticker
         fetch_market_data("bitcoin"),           # 4
         fetch_market_data("ethereum"),          # 5
         fetch_fear_greed(90),                   # 6
