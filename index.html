@@ -1018,6 +1018,34 @@ canvas.sparkline {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
+
+@media (max-width: 768px) {
+  .dashboard-grid, .cards-grid,
+  .scores-grid, .metrics-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .hero-section {
+    padding: 12px !important;
+  }
+  #arc-history-chart {
+    height: 250px !important;
+  }
+  .data-inspector {
+    font-size: 11px !important;
+  }
+  .ticker-bar {
+    display: none !important;
+  }
+  body {
+    overflow-x: hidden !important;
+  }
+  .nav-bar {
+    padding: 8px 12px !important;
+  }
+  .score-card {
+    min-width: unset !important;
+  }
+}
 </style>
 </head>
 <body>
@@ -2535,6 +2563,7 @@ function renderCharts() {
           data: { labels, datasets },
           options: {
             responsive: true,
+            maintainAspectRatio: false,
             interaction: { mode: 'index', intersect: false },
             plugins: {
               legend: { display: true, labels: { color: '#94a3b8' }, filter: (item, ch) => item.datasetIndex >= 5 },
@@ -2687,7 +2716,7 @@ function manualRefresh() { countdown=0; }
 
 // ── BOOT ──────────────────────────────────────────────────────────────────
 const BOOT_STEPS=[
-  {msg:'CONNECTING TO COINGECKO…', pct:20},
+  {msg:'CONNECTING TO KRAKEN…',   pct:20},
   {msg:'LOADING MARKET DATA…',     pct:38},
   {msg:'FEAR & GREED INDEX…',      pct:52},
   {msg:'DEFI LIQUIDITY DATA…',     pct:68},
