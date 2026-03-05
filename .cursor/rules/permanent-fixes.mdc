@@ -52,6 +52,7 @@ Beim Bearbeiten von backend/fetcher.py, backend/main.py, backend/scoring.py oder
 - Data Inspector: Alle Score-Werte auf 1 Dezimalstelle runden (roundScore / Math.round(x*10)/10) — keine Floating-Point-Anzeige.
 - Data Inspector Funding Rate: Bei 0 oder null "N/A" anzeigen (fmtFunding); ARC Score = Math.round((S.combined ?? 50) * 10) / 10.
 - Data Inspector Liquidity Regime / ARC Summary Fallback: **liq.liquidity_regime** und **liq.liquidity_score** (NICHT liq.regime / liq.score) — liquidity_engine liefert diese Keys.
+- ARC History Chart (Chart.js): yPrice (rechte Achse) min/max dynamisch (0.9 * min, 1.1 * max); Tooltip nur "ARC Index" und "BTC Price".
 - **FRED-Label dynamisch:** src-fred (id="src-fred") nach S.walclCurrent setzen: bei S.walclCurrent > 0 class "status-src", Text "FRED"; sonst class "status-src warn", Text "FRED (synthetic fallback)". In updateUI() direkt nach Setzen von S.walclCurrent (Backend-Pfad und Fallback-Pfad).
 
 ## backend/Dockerfile
@@ -59,7 +60,7 @@ Beim Bearbeiten von backend/fetcher.py, backend/main.py, backend/scoring.py oder
 - **CMD** mit `$PORT`: `--bind 0.0.0.0:$PORT`, **workers=1** (Railway setzt PORT) — **NICHT** hardcoded 8000.
 
 ## backend/services/backtest_engine.py
-- Backtest nutzt /tmp/backtest_cache.json: einmal komplett laden (10y paginiert), taeglich 1 Datenpunkt ergaenzen. WINDOW_200W=200. ARC = ma_200w*0.35 + drawdown*0.35 + fear_greed(50)*0.15 + macro_liq(50)*0.15. Return: [{"date": "YYYY-MM-DD", "price": float, "score": float}, ...].
+- Backtest nutzt /tmp/backtest_cache.json: Cache min 1000 Eintraege, sonst unlink + refetch. Einmal komplett laden (10y paginiert), taeglich 1 Datenpunkt ergaenzen. WINDOW_200W=200. ARC = ma_200w*0.35 + drawdown*0.35 + fear_greed(50)*0.15 + macro_liq(50)*0.15. Return: [{"date": "YYYY-MM-DD", "price": float, "score": float}, ...].
 
 ## backend/liquidity_engine.py
 - **bond_score** aus absolutem Yield-Niveau (us10y_vals[-1]) berechnen — **NICHT** aus trend_score (sonst us10y_trend=0 → 150 → clamp 100 Bug). Stufen: <2% → 20, <3% → 20–50, <4% → 50–70, <5% → 70–85, else → 85–100.

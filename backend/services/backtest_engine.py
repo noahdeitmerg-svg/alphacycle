@@ -59,6 +59,12 @@ async def _load_or_build_cache() -> List[Dict[str, Any]]:
         try:
             cached = json.loads(CACHE_FILE.read_text())
             if cached and isinstance(cached, list):
+                if len(cached) < 1000:
+                    try:
+                        CACHE_FILE.unlink()
+                    except Exception:
+                        pass
+                    raise Exception("cache too short, refetch")
                 last_date = cached[-1]["date"]
                 if last_date >= today:
                     return cached
