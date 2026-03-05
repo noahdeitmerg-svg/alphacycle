@@ -1,16 +1,10 @@
-PS C:\Users\noahd\Documents\Cursor AlphaCycle\alphacycle-main> git add .
->> git commit -m "fix: Dockerfile PORT und Pfad"
->> git push
-On branch main
-Your branch is up to date with 'origin/main'.
+FROM python:3.12-slim
 
-nothing to commit, working tree clean
-To https://github.com/noahdeitmerg-svg/alphacycle.git
- ! [rejected]        main -> main (fetch first)
-error: failed to push some refs to 'https://github.com/noahdeitmerg-svg/alphacycle.git'
-hint: Updates were rejected because the remote contains work that you do not
-hint: have locally. This is usually caused by another repository pushing to
-hint: the same ref. If you want to integrate the remote changes, use
-hint: 'git pull' before pushing again.
-hint: See the 'Note about fast-forwards' in 'git push --help' for details.
-PS C:\Users\noahd\Documents\Cursor AlphaCycle\alphacycle-main> 
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+CMD gunicorn main:app --workers 1 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT --timeout 120 --access-logfile -
