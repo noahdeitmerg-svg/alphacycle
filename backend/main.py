@@ -14,11 +14,12 @@ Endpoints:
   GET /api/analyzer
   GET /api/decision
 """
-import os, time, math, logging, asyncio
+import os, time, math, logging, asyncio, json
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from pathlib import Path
 
 try:
     from fetcher import fetch_all, _synthetic_walcl
@@ -78,6 +79,7 @@ logger = logging.getLogger(__name__)
 CACHE: dict = {}
 CACHE_TTL   = int(os.getenv("CACHE_TTL_SECONDS", "60"))
 _cache_lock = asyncio.Lock()
+SNAPSHOT_FILE = Path("/tmp/arc_snapshots.json")
 _last_refresh = 0.0
 
 
@@ -157,6 +159,8 @@ async def refresh_cache(force: bool = False):
                 f"ETH:{eth_scores['eth_score']:.1f} "
                 f"MACRO:{macro_scores['macro_score']:.1f}"
             )
+            # Save daily ARC snapshot after successful refresh
+            _save_today_snapshot()
         except Exception as e:
             logger.error(f"Cache refresh failed: {e}", exc_info=True)
 
@@ -202,6 +206,54 @@ def _require_cache():
     if not CACHE:
         raise HTTPException(503, "Data not yet available. Retry in 10s.")
     return CACHE
+
+
+def _save_today_snapshot() -> dict:
+    """Build and persist today's ARC snapshot based on current CACHE."""
+    from datetime import date
+
+    if not CACHE or "raw" not in CACHE:
+        return {"error": "no data"}
+
+    try:
+        c = CACHE
+        raw = c.get("raw", {})
+        btc_scores = c.get("btc_scores", {})
+        macro_scores = c.get("macro_scores", {})
+        combined = c.get("combined", {})
+
+        btc_market = raw.get("btc_market", {})
+        fg_value = (raw.get("fear_greed") or {}).get("current", 50.0)
+        liquidity_trend = macro_scores.get("walcl_trend", 50.0)
+
+        snapshot = {
+            "date":       date.today().isoformat(),
+            "arc":        round(combined.get("combined_score", 50.0), 1),
+            "btc_price":  round(safe_float(btc_market.get("price", 0.0)), 0),
+            "regime":     macro_scores.get("regime", "NEUTRAL"),
+            "liquidity":  round(liquidity_trend, 1),
+            "fear_greed": fg_value,
+            "decision":   combined.get("signal", "HOLD"),
+            "confidence": round(combined.get("confidence", 0.0), 1),
+        }
+
+        snapshots = []
+        if SNAPSHOT_FILE.exists():
+            try:
+                snapshots = json.loads(SNAPSHOT_FILE.read_text())
+            except Exception:
+                snapshots = []
+
+        # Deduplicate by date and append latest
+        snapshots = [s for s in snapshots if s.get("date") != snapshot["date"]]
+        snapshots.append(snapshot)
+        snapshots = sorted(snapshots, key=lambda x: x.get("date", ""))
+
+        SNAPSHOT_FILE.write_text(json.dumps(snapshots, indent=2))
+        return snapshot
+    except Exception as e:
+        logger.warning("Snapshot save failed: %s", e)
+        return {"error": "snapshot_failed"}
 
 def _clean(obj):
     if isinstance(obj, dict):  return {k: _clean(v) for k, v in obj.items()}
@@ -476,6 +528,25 @@ async def get_arc_summary():
         },
         "short_term": btc.get("short_term", {}),
     })
+
+
+@app.get("/api/snapshot/today")
+async def get_today_snapshot():
+    """Save and return today's ARC snapshot."""
+    snap = _save_today_snapshot()
+    return api_response(snap)
+
+
+@app.get("/api/snapshots")
+async def get_snapshots():
+    """Return all saved daily snapshots."""
+    if not SNAPSHOT_FILE.exists():
+        return api_response({"snapshots": []})
+    try:
+        data = json.loads(SNAPSHOT_FILE.read_text())
+    except Exception:
+        data = []
+    return api_response({"snapshots": data})
 
 
 @app.get("/api/backtest")
