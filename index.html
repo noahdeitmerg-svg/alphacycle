@@ -2653,11 +2653,12 @@ function renderCharts() {
                 ctx.fillStyle = color;
                 ctx.globalAlpha = 1.0;
                 ctx.fill();
-                ctx.strokeStyle = '#ffffff';
+                ctx.strokeStyle = '#fff';
                 ctx.lineWidth = 1;
                 ctx.stroke();
                 ctx.font = 'bold 10px monospace';
                 ctx.fillStyle = color;
+                ctx.globalAlpha = 1.0;
                 ctx.textAlign = 'center';
                 ctx.fillText(
                   marker.label, x,
