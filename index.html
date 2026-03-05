@@ -1504,65 +1504,20 @@ canvas.sparkline {
 
   </div>
 
-  <!-- SECTION: Sub-Analysis -->
-  <div class="sec-header anim d2">
-    <div class="sec-title">Sub-Analysis</div>
-    <div class="sec-line"></div>
-    <div class="sec-badge" id="last-updated">LOADING…</div>
-  </div>
-
-  <div class="scores-grid anim d2">
-    <div style="display:none">
-      <canvas id="eth-arc"></canvas>
-      <span id="eth-score-val"></span>
-      <span id="eth-phase"></span>
-      <span id="eth-price-sm"></span>
-      <div id="eth-components"></div>
-    </div>
-
-    <!-- Macro Score Card -->
-    <div class="card score-card card-glow-mac" id="mac-card">
-      <div class="card-accent accent-mac"></div>
-      <div class="score-card-header">
-        <div class="score-label">
-          <div class="score-label-dot" style="background:var(--mac)"></div>
-          Liquidity Regime
-        </div>
-        <div class="score-tag" id="mac-tag" style="color:var(--mac);border-color:rgba(0,229,170,0.3);background:var(--mac-dim)">—</div>
-      </div>
-      <div class="gauge-wrap">
-        <svg viewBox="0 0 200 130" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="mac-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%"   stop-color="#22c55e"/>
-              <stop offset="35%"  stop-color="#3b82f6"/>
-              <stop offset="70%"  stop-color="#f59e0b"/>
-              <stop offset="100%" stop-color="#ef4444"/>
-            </linearGradient>
-            <filter id="glow-mac">
-              <feGaussianBlur stdDeviation="2.5" result="blur"/>
-              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-            </filter>
-          </defs>
-          <path d="M 20 120 A 80 80 0 0 1 180 120" stroke="rgba(255,255,255,0.05)" stroke-width="14" stroke-linecap="round"/>
-          <path d="M 20 120 A 80 80 0 0 1 180 120" stroke="url(#mac-grad)" stroke-width="14" stroke-linecap="round" opacity="0.12"/>
-          <path id="mac-arc" d="M 20 120 A 80 80 0 0 1 180 120" stroke="url(#mac-grad)"
-                stroke-width="14" stroke-linecap="round"
-                stroke-dasharray="251.2" stroke-dashoffset="251.2"
-                filter="url(#glow-mac)"
-                style="transition:stroke-dashoffset 1.4s cubic-bezier(0.16,1,0.3,1)"/>
-        </svg>
-        <div class="gauge-center">
-          <div class="gauge-val" id="mac-score-val" style="color:var(--mac)">—</div>
-          <div class="gauge-denom">/100</div>
-        </div>
-      </div>
-      <div class="score-footer">
-        <div class="score-phase" id="mac-phase" style="color:var(--mac)">—</div>
-        <div class="score-price" id="mac-walcl">—</div>
-      </div>
-      <div class="components-grid" id="liquidity-components"></div>
-    </div>
+  <!-- Hidden: ETH + Macro IDs for JS (cards removed from UI) -->
+  <div style="display:none">
+    <canvas id="eth-arc"></canvas>
+    <span id="eth-score-val"></span>
+    <span id="eth-phase"></span>
+    <span id="eth-price-sm"></span>
+    <div id="eth-components"></div>
+    <svg><path id="mac-arc"/></svg>
+    <span id="mac-score-val"></span>
+    <span id="mac-phase"></span>
+    <span id="mac-walcl"></span>
+    <div id="mac-components"></div>
+    <div id="liquidity-components"></div>
+    <span id="last-updated"></span>
   </div>
 
   <!-- CYCLE OVERVIEW (Phase + Timeline merged) -->
