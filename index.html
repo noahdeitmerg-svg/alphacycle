@@ -375,7 +375,7 @@ body::before {
   display: grid;
   grid-template-areas: "header header" "gauge info" "comps comps";
   grid-template-columns: auto 1fr;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto auto auto;
   text-align: left;
 }
 @media(max-width:580px){
@@ -553,10 +553,17 @@ body::before {
   padding: 1rem 2rem 1rem !important;
   margin-top: 0.75rem !important;
   margin-bottom: 0.75rem !important;
+  row-gap: 0 !important;
 }
 #btc-card.hero-card .gauge-wrap {
   max-width: 150px !important;
   min-width: 110px !important;
+  align-self: center !important;
+  padding-bottom: 0 !important;
+}
+#btc-card.hero-card .score-footer {
+  align-self: center !important;
+  padding-top: 0 !important;
 }
 #btc-card.hero-card .gauge-val {
   font-size: clamp(40px, 6vw, 52px) !important;
@@ -593,8 +600,8 @@ body::before {
   font-size: 0.85rem !important;
 }
 #btc-card.hero-card .score-card-header {
+  margin-bottom: 1rem !important;
   padding-bottom: 0.75rem !important;
-  margin-bottom: 0.75rem !important;
 }
 .sec-header {
   margin-top: 1rem !important;
