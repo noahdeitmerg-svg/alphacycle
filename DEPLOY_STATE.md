@@ -44,6 +44,7 @@ DO NOT modify weights. DO NOT add scoring components.
 20. index.html: /api/backtest and /api/liquidity-regime fetched in Promise.allSettled
 21. scoring.py: short_term dict in compute_btc_score() return (rsi, funding, mvrv, power_law, pi_cycle, puell)
 22. main.py: arc-summary components.liquidity nutzt macro_liq (nicht liquidity)
+23. scoring.py: macro_liq uses 52w window + pct*2.5 amplification (not plain trend_score for WALCL)
 
 ## Active Endpoints (Railway)
 /health /api/prices /api/cycle/btc /api/cycle/eth /api/cycle/macro
