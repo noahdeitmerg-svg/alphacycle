@@ -69,6 +69,7 @@ DO NOT modify weights. DO NOT add scoring components.
 43. backtest_engine.py: File cache /tmp/backtest_cache.json; einmal 10y laden, taeglich 1-2 fehlende Tage nachladen.
 44. backtest_engine.py: WINDOW_200W=1400, HTTP_TIMEOUT=60, Cache min 2000, Fetch 5200d, Abbruch len(candles)<10. index.html Chart UX: yPrice dynamisch skaliert (validPrices 0.88/1.08), Tooltip nur ARC Index + BTC Price.
 45. fetcher.py: CoinGecko fetch_market_data aus fetch_all() entfernt (429 auf Railway). asyncio.gather nur noch 11 Aufrufe (0: Kraken BTC/ETH prices+ticker, 4: F&G, 5: TVL, 6: stable, 7: WALCL, 8: DGS10, 9: global_data, 10: funding). btc_cg/eth_cg = leere Fallback-Dicts. Spart ~3s pro Refresh.
+46. backtest_engine.py: _fetch_btc_history() since=1381363200 (2013-10-10, Kraken BTC live); bei Kraken OHLC error/kein result Logging; _load_or_build_cache() Exception loggen statt pass.
 
 ## Active Endpoints (Railway)
 /health /api/prices /api/cycle/btc /api/cycle/eth /api/cycle/macro

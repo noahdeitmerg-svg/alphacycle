@@ -58,8 +58,8 @@ Beim Bearbeiten von backend/fetcher.py, backend/main.py, backend/scoring.py oder
 
 ## backend/services/backtest_engine.py
 - WINDOW_200W=1400 (echter 200W MA). HTTP_TIMEOUT=60. Cache min 2000 Eintraege, sonst unlink + refetch.
-- Fetch 5200 Tage (14 Jahre); ARC-Chart zeigt ~10 Jahre ab ca. 2016 (5200 - 1400 Window).
-- _fetch_btc_history: Abbruchbedingung **len(candles) < 10** (nicht < 700; < 700 bricht nach erstem Request ab).
+- _fetch_btc_history: **since=1381363200** (2013-10-10, Kraken BTC live) — nicht now-5200 Tage (Kraken hat Daten erst ab Okt 2013). Bei data.get("error") oder "result" not in data: logger.warning mit error + since. Abbruchbedingung len(candles) < 10.
+- _load_or_build_cache: Bei Exception logger.warning("backtest cache load failed: %s", e), nicht pass.
 - Backtest nutzt /tmp/backtest_cache.json. ARC = ma_200w*0.35 + drawdown*0.35 + fear_greed(50)*0.15 + macro_liq(50)*0.15. Return: [{"date", "price", "score"}, ...].
 
 ## backend/liquidity_engine.py
