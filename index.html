@@ -398,6 +398,17 @@ body::before {
   padding-right: 1.5rem;
   align-self: center;
 }
+#btc-card.hero-card .gauge-wrap svg {
+  height: auto;
+  overflow: visible;
+}
+#btc-card.hero-card .gauge-center {
+  position: relative;
+  margin-top: -20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 #btc-card.hero-card .score-footer {
   grid-area: info;
   display: flex;
@@ -540,14 +551,13 @@ body::before {
 }
 
 .two-col-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  display: block;
   margin-bottom: 14px;
 }
-@media(max-width:700px){ .two-col-row { grid-template-columns: 1fr; } }
-.two-col-panel .sec-header { margin-top: 0; margin-bottom: 10px; }
-.two-col-panel .card { height: 100%; }
+.two-col-panel .sec-header {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
 
 .cycle-overview-card {
   padding: 0;
@@ -884,12 +894,13 @@ body::before {
 ════════════════════════════════════════════════════════════════ */
 .prices-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
   margin-bottom: 14px;
 }
-@media(min-width:600px){ .prices-grid { grid-template-columns: repeat(3,1fr); } }
-@media(min-width:900px){ .prices-grid { grid-template-columns: repeat(4,1fr); } }
+@media(max-width:700px){
+  .prices-grid { grid-template-columns: 1fr; }
+}
 
 .price-card { padding: 16px; }
 .pc-sym {
@@ -1628,17 +1639,6 @@ canvas.sparkline {
         <span class="pc-stat-val" id="pc-fg-signal">—</span>
       </div>
     </div>
-    <div class="card price-card card-glow-mac">
-      <div class="card-accent accent-mac"></div>
-      <div class="pc-sym"><div class="pc-dot" style="background:var(--mac)"></div>STABLECOIN CAP</div>
-      <div class="pc-price" id="pc-stable-val" style="color:var(--mac)">—</div>
-      <div class="pc-change" id="pc-stable-chg">—</div>
-      <canvas class="sparkline" id="spark-stable" height="40"></canvas>
-      <div class="pc-stat">
-        <span class="pc-stat-lbl">Dry Powder</span>
-        <span class="pc-stat-val" id="pc-stable-lbl">Market Reserve</span>
-      </div>
-    </div>
   </div>
 
   <!-- ── ARC HISTORY CHART (10Y) ── -->
@@ -1663,7 +1663,7 @@ canvas.sparkline {
 
   <!-- ── CYCLE LEGEND ── -->
   <div class="sec-header anim d5">
-    <div class="sec-title">Cycle Phase Guide</div>
+    <div class="sec-title">ARC Score Zones</div>
     <div class="sec-line"></div>
   </div>
   <div class="legend-grid anim d5">
