@@ -45,7 +45,7 @@ Beim Bearbeiten von backend/fetcher.py, backend/main.py, backend/scoring.py oder
 - Nach `S.btcComponents = btcC?.components || null` müssen stehen: `S.btcShortTerm = btcC?.short_term || null` und `S.ethComponents = ethC?.components || null`.
 - `S.btcScore`: Nur API-Wert nutzen wenn `btcC?.score != null && btcC.score > 0`, sonst Fallback computeBTCScore().
 - **ALWAYS** Data Inspector Panel am Ende der Seite (vor Footer) vorhanden — Titel "DATA INSPECTOR", Toggle "SHOW / HIDE", Standard eingeklappt; Inhalt aus S.*.
-- Data Inspector ARC Summary: Liquidity **niemals** [object Object] — immer Zahl (S.arcSummary?.components?.liquidity oder .score wenn Objekt); Regime/Decision/Confidence aus S.arcSummary (nach Fetch /api/arc-summary).
+- Data Inspector ARC Summary: Liquidity **niemals** [object Object] — immer Zahl (S.arcSummary?.components?.liquidity oder .score wenn Objekt); Regime/Decision/Confidence aus S.arcSummary (nach Fetch /api/arc-summary). Nach WALCL-Zeile (Macro): diRow Net Liquidity (components?.net_liq, $XB), TGA (components?.tga, $XB), Macro Liq Score (components?.liquidity, roundScore).
 - Data Inspector: Alle Score-Werte auf 1 Dezimalstelle runden (roundScore / Math.round(x*10)/10) — keine Floating-Point-Anzeige.
 - Data Inspector Funding Rate: Bei 0 oder null "N/A" anzeigen (fmtFunding); ARC Score = Math.round((S.combined ?? 50) * 10) / 10.
 - Data Inspector Liquidity Regime / ARC Summary Fallback: **liq.liquidity_regime** und **liq.liquidity_score** (NICHT liq.regime / liq.score) — liquidity_engine liefert diese Keys.
