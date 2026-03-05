@@ -1633,7 +1633,7 @@ canvas.sparkline {
       <div class="cycle-timeline-side" id="cycle-anchor-card">
         <div class="ca-grid">
           <div class="ca-item">
-            <div class="ca-label">Days Since Bottom</div>
+            <div class="ca-label">Days Since Cycle Low</div>
             <div class="ca-value" id="ca-days-since">—</div>
           </div>
           <div class="ca-item">
@@ -1641,7 +1641,7 @@ canvas.sparkline {
             <div class="ca-value" id="ca-halving-pos">Oct 2025</div>
           </div>
           <div class="ca-item">
-            <div class="ca-label">Est. Next Bottom</div>
+            <div class="ca-label">Cycle Reset Window</div>
             <div class="ca-value" id="ca-window">Oct 2026</div>
           </div>
           <div class="ca-item">
@@ -2447,7 +2447,7 @@ function updateUI() {
     // Cycle Top hardcoded Oct 2025
     setText('ca-halving-pos', 'Oct 2025');
 
-    // Days to Next Bottom (Oct 2026)
+    // Cycle Reset Window (Oct 2026)
     const nextBottom = new Date('2026-10-01');
     const today = new Date();
     const dtb = Math.round((nextBottom - today) / 86400000);
@@ -2842,6 +2842,13 @@ const CYCLE_MARKERS = [
   { date: '2022-11-21', type: 'bottom', label: 'Cycle Bottom' },
 ];
 
+const HALVING_MARKERS = [
+  { date: '2012-11-28', label: 'Halving' },
+  { date: '2016-07-09', label: 'Halving' },
+  { date: '2020-05-11', label: 'Halving' },
+  { date: '2024-04-20', label: 'Halving' },
+];
+
 function getCurrentMarker() {
   const cs = S.cycleSignal;
   if (!cs || cs.signal_type === 'NONE') return null;
@@ -2952,6 +2959,35 @@ function renderCharts() {
                 );
                 ctx.restore();
               });
+              // Halving vertical lines
+              const labels = chart.data.labels || [];
+              HALVING_MARKERS.forEach(hm => {
+                const target = new Date(hm.date).getTime();
+                let bestIdx = -1, bestDiff = Infinity;
+                labels.forEach((lbl, i) => {
+                  const d = new Date(lbl).getTime();
+                  const diff = Math.abs(d - target);
+                  if (diff < bestDiff) { bestDiff = diff; bestIdx = i; }
+                });
+                if (bestIdx === -1 || bestDiff > 60 * 86400000) return;
+                const x = chart.scales.x.getPixelForValue(bestIdx);
+                const yTop = chart.chartArea.top;
+                const yBot = chart.chartArea.bottom;
+                ctx.save();
+                ctx.setLineDash([3, 4]);
+                ctx.strokeStyle = 'rgba(168,85,247,0.35)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(x, yTop);
+                ctx.lineTo(x, yBot);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.fillStyle = 'rgba(168,85,247,0.7)';
+                ctx.font = '500 9px DM Mono, monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText('\u25C9 ' + hm.label, x, yTop + 12);
+                ctx.restore();
+              });
             }
           }],
           options: {
@@ -2973,6 +3009,28 @@ function renderCharts() {
                     if (context.dataset.label === 'BTC Price') {
                       return 'BTC Price: $' + Math.round(context.parsed.y).toLocaleString();
                     }
+                  },
+                  afterBody: function(tooltipItems) {
+                    if (!tooltipItems.length) return [];
+                    const ctx = tooltipItems[0];
+                    const label = ctx.label;
+                    const idx = ctx.dataIndex;
+                    const dynamicMarker = getCurrentMarker();
+                    const allMarkers = dynamicMarker ? [...CYCLE_MARKERS, dynamicMarker] : CYCLE_MARKERS;
+                    const markerInfo = allMarkers.find(m => {
+                      const mDate = new Date(m.date).getTime();
+                      const lDate = new Date(label).getTime();
+                      return Math.abs(mDate - lDate) < 14 * 86400000;
+                    });
+                    if (!markerInfo) return [];
+                    const arcDs = ctx.chart.data.datasets.find(d => d.label === 'ARC Index');
+                    const priceDs = ctx.chart.data.datasets.find(d => d.label === 'BTC Price');
+                    const arcVal = arcDs && arcDs.data[idx] != null ? Number(arcDs.data[idx]) : '';
+                    const btcVal = priceDs && priceDs.data[idx] != null ? Number(priceDs.data[idx]) : '';
+                    const lines = ['Signal: ' + markerInfo.label];
+                    if (arcVal !== '') lines.push('ARC: ' + arcVal);
+                    if (btcVal !== '') lines.push('BTC: $' + Math.round(btcVal).toLocaleString());
+                    return lines;
                   }
                 }
               }
@@ -3003,23 +3061,35 @@ function exportArcChart() {
   const canvas = $('arc-history-chart');
   if (!canvas || !window._arcHistoryChart) return;
 
-  const exportCanvas = document.createElement('canvas');
-  exportCanvas.width = 1200;
-  exportCanvas.height = 675;
-  const ctx = exportCanvas.getContext('2d');
+  const TARGET_W = 1200;
+  const TARGET_H = 675;
+  const offscreen = document.createElement('canvas');
+  offscreen.width = TARGET_W;
+  offscreen.height = TARGET_H;
+  const octx = offscreen.getContext('2d');
 
-  // Hintergrund
-  ctx.fillStyle = '#0D1117';
-  ctx.fillRect(0, 0, 1200, 675);
+  octx.fillStyle = '#020510';
+  octx.fillRect(0, 0, TARGET_W, TARGET_H);
 
-  // Chart auf volle Höhe zeichnen
-  ctx.drawImage(canvas, 0, 0, 1200, 675);
+  const scaleX = TARGET_W / canvas.width;
+  const scaleY = TARGET_H / canvas.height;
+  const scale = Math.min(scaleX, scaleY);
+  const offX = (TARGET_W - canvas.width * scale) / 2;
+  const offY = (TARGET_H - canvas.height * scale) / 2;
 
-  // Download
-  const today = new Date().toISOString().split('T')[0];
+  octx.drawImage(canvas,
+    0, 0, canvas.width, canvas.height,
+    offX, offY, canvas.width * scale, canvas.height * scale
+  );
+
+  octx.fillStyle = 'rgba(14,165,233,0.6)';
+  octx.font = '500 13px DM Mono, monospace';
+  octx.textAlign = 'right';
+  octx.fillText('alphacycle.app', TARGET_W - 16, TARGET_H - 12);
+
   const link = document.createElement('a');
-  link.download = `alphacycle-arc-${today}.png`;
-  link.href = exportCanvas.toDataURL('image/png');
+  link.download = 'alphacycle-arc-' + new Date().toISOString().split('T')[0] + '.png';
+  link.href = offscreen.toDataURL('image/png');
   link.click();
 }
 
