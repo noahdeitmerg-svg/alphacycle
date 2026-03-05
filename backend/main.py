@@ -20,6 +20,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pathlib import Path
+from fastapi.staticfiles import StaticFiles
 
 try:
     from fetcher import fetch_all, _synthetic_walcl
@@ -190,6 +191,11 @@ app = FastAPI(
     description="Institutional crypto cycle intelligence. Zero NaN.",
     lifespan=lifespan,
 )
+
+import pathlib
+_static_dir = pathlib.Path(__file__).parent / "static"
+if _static_dir.exists():
+    app.mount("/static", StaticFiles(directory=str(_static_dir)), name="static")
 
 app.add_middleware(
     CORSMiddleware,
