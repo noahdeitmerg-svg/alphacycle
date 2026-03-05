@@ -1393,6 +1393,9 @@ canvas.sparkline {
     <div id="arc-chart-placeholder" class="arc-chart-placeholder">Historische Daten werden geladen (kann bis zu 15 Sek. dauern)...</div>
     <div id="arc-chart-wrap" style="display:none; position:relative; min-height:280px;">
       <canvas id="arc-history-chart" class="arc-chart-canvas"></canvas>
+      <button id="export-arc-btn" onclick="exportArcChart()" class="btn-secondary" style="margin-top:12px;">
+        Export Chart (PNG)
+      </button>
     </div>
   </div>
 
@@ -2570,6 +2573,46 @@ function renderCharts() {
       wrap.style.display = 'none';
     }
   }
+}
+
+function exportArcChart() {
+  const canvas = $('arc-history-chart');
+  if (!canvas || !window._arcHistoryChart) return;
+
+  const exportCanvas = document.createElement('canvas');
+  exportCanvas.width = 1200;
+  exportCanvas.height = 675;
+  const ctx = exportCanvas.getContext('2d');
+
+  // Hintergrund
+  ctx.fillStyle = '#0D1117';
+  ctx.fillRect(0, 0, 1200, 675);
+
+  // Chart draufzeichnen (Skalierung vom aktuellen Canvas auf Exportgröße)
+  ctx.drawImage(canvas, 0, 0, 1200, 620);
+
+  // Branding Footer
+  ctx.fillStyle = '#1e293b';
+  ctx.fillRect(0, 620, 1200, 55);
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '14px monospace';
+  ctx.fillText('AlphaCycle — Crypto Cycle Intelligence', 20, 648);
+  ctx.fillStyle = '#0ea5e9';
+  ctx.font = 'bold 14px monospace';
+  ctx.fillText('alphacycle-production.up.railway.app', 820, 648);
+
+  // ARC Score + Datum
+  const today = new Date().toISOString().split('T')[0];
+  const arcScore = Math.round(S.combined ?? 34);
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 13px monospace';
+  ctx.fillText(`ARC Index: ${arcScore} | ${today}`, 20, 668);
+
+  // Download
+  const link = document.createElement('a');
+  link.download = `alphacycle-arc-${today}.png`;
+  link.href = exportCanvas.toDataURL('image/png');
+  link.click();
 }
 
 function showSkeletons() {
