@@ -278,21 +278,23 @@ body::before {
 .sec-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 14px;
+  gap: 12px;
+  margin: 2rem 0 12px;
 }
+.sec-header:first-child { margin-top: 0; }
 .sec-title {
   font-family: var(--f-mono);
   font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.18em;
+  font-weight: 600;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--tx-ter);
+  white-space: nowrap;
 }
 .sec-line {
   flex: 1;
   height: 1px;
-  background: var(--border);
+  background: linear-gradient(90deg, var(--border2), transparent);
 }
 .sec-badge {
   font-family: var(--f-mono);
@@ -354,18 +356,29 @@ body::before {
 @media(min-width:600px){ .scores-grid { grid-template-columns: repeat(2,1fr); } }
 
 #btc-card.hero-card {
-  max-width: 700px;
-  margin: 1.5rem auto 2.5rem auto;
-  padding: 2.5rem 3rem 2rem 3rem;
-  background: linear-gradient(135deg,
-    rgba(14,165,233,0.06) 0%, rgba(0,0,0,0) 60%),
-    var(--card-bg, rgba(255,255,255,0.03));
-  border: 1px solid rgba(14,165,233,0.25);
-  box-shadow: 0 0 60px rgba(14,165,233,0.08),
-              0 8px 40px rgba(0,0,0,0.4);
-  position: relative;
-  overflow: hidden;
-text-align: center;
+  max-width: 760px;
+  margin: 1.5rem auto 2rem auto;
+  padding: 2.5rem 2.5rem 2rem;
+  background: linear-gradient(160deg,
+    rgba(14,165,233,0.08) 0%,
+    rgba(14,165,233,0.02) 40%,
+    rgba(0,0,0,0) 100%),
+    var(--glass);
+  border: 1px solid rgba(14,165,233,0.3);
+  box-shadow:
+    0 0 80px rgba(14,165,233,0.1),
+    0 0 0 1px rgba(14,165,233,0.05) inset,
+    0 24px 48px rgba(0,0,0,0.4);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto auto;
+  gap: 0;
+  align-items: center;
+}
+@media(max-width:600px){
+  #btc-card.hero-card {
+    grid-template-columns: 1fr;
+  }
 }
 #btc-card.hero-card::before {
   content: '';
@@ -373,62 +386,196 @@ text-align: center;
   top: 0; left: 0; right: 0;
   height: 2px;
   background: linear-gradient(90deg,
-    transparent, rgba(14,165,233,0.8), transparent);
+    transparent 0%,
+    rgba(14,165,233,0.9) 30%,
+    rgba(14,165,233,0.9) 70%,
+    transparent 100%);
 }
-#btc-card.hero-card .gauge-wrap svg {
-  width: 100%;
-  height: auto;
+#btc-card.hero-card .score-card-header {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  margin-bottom: 1.5rem;
 }
+#btc-card.hero-card .gauge-wrap {
+  max-width: 220px;
+  margin: 0 auto;
+}
+#btc-card.hero-card .gauge-wrap svg { width: 100%; }
 #btc-card.hero-card .gauge-val {
-  font-size: clamp(44px, 8vw, 56px);
+  font-size: clamp(52px, 9vw, 72px);
   font-weight: 800;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.05em;
+  line-height: 1;
+}
+#btc-card.hero-card .gauge-denom {
+  font-size: 18px;
+  color: var(--tx-ter);
+  margin-bottom: 10px;
 }
 #btc-card.hero-card .score-footer {
-justify-content: center;
-gap: 32px;
-  margin-top: 4px;
-  padding-top: 1rem;
-  border-top: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  padding-left: 2rem;
+  gap: 8px;
+  border-top: none;
+  margin-top: 0;
 }
 #btc-card.hero-card .score-phase {
-  font-size: 18px;
+  font-size: 28px;
   font-weight: 700;
+  line-height: 1;
+}
+#btc-card.hero-card .score-price {
+  font-size: 18px;
+  color: var(--tx-sec);
+  font-family: var(--f-mono);
+}
+#btc-card.hero-card .components-grid {
+  grid-column: 1 / -1;
+  padding-top: 1.5rem;
+  margin-top: 1.5rem;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+@media(max-width:600px){
+  #btc-card.hero-card .components-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  #btc-card.hero-card .score-footer {
+    padding-left: 0;
+    align-items: center;
+    padding-top: 1rem;
+  }
+}
+#btc-card.hero-card .comp-row {
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.02);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+#btc-card.hero-card .comp-label {
+  width: 100%;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+#btc-card.hero-card .comp-bar {
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+}
+#btc-card.hero-card .comp-val {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--tx-pri);
 }
 .hero-subtitle {
   font-size: 0.65rem;
   letter-spacing: 0.16em;
   color: rgba(14,165,233,0.5);
   text-transform: uppercase;
-  margin-top: 3px;
+  margin-top: 4px;
   font-weight: 500;
 }
 .hero-risk-label {
   display: inline-block;
-  margin-top: 3px;
   font-family: var(--f-mono);
   font-size: 11px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  padding: 3px 10px;
-  border-radius: 3px;
+  padding: 4px 12px;
+  border-radius: 4px;
   border: 1px solid rgba(14,165,233,0.3);
   color: var(--tx-sec);
   background: rgba(14,165,233,0.06);
 }
 
-.decision-card { padding: 1.5rem 2rem; }
+.decision-card {
+  padding: 0;
+  overflow: hidden;
+}
 .decision-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1.25rem;
-  margin-bottom: 1rem;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
 }
-@media(min-width:600px) { .decision-grid { grid-template-columns: repeat(4,1fr); } }
-.decision-item { display: flex; flex-direction: column; gap: 0.35rem; }
-.decision-label { font-size: 0.65rem; letter-spacing: 0.1em; color: var(--tx-sec); text-transform: uppercase; }
-.decision-value { font-size: 1.3rem; font-weight: 700; color: var(--tx-pri); }
-.decision-note { font-size: 0.7rem; color: var(--tx-sec); border-top: 1px solid var(--border); padding-top: 0.75rem; }
+@media(max-width:700px){
+  .decision-grid { grid-template-columns: repeat(2, 1fr); }
+}
+.decision-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 1.5rem 1.75rem;
+  border-right: 1px solid var(--border);
+  transition: background 0.2s;
+}
+.decision-item:last-child { border-right: none; }
+.decision-item:hover { background: rgba(255,255,255,0.02); }
+.decision-label {
+  font-family: var(--f-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tx-ter);
+}
+.decision-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-family: var(--f-display);
+  color: var(--tx-pri);
+  line-height: 1.1;
+}
+.decision-note {
+  padding: 0.75rem 1.75rem;
+  border-top: 1px solid var(--border);
+  font-family: var(--f-mono);
+  font-size: 10px;
+  color: var(--tx-ter);
+  letter-spacing: 0.06em;
+}
+
+.two-col-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+@media(max-width:700px){ .two-col-row { grid-template-columns: 1fr; } }
+.two-col-panel .sec-header { margin-top: 0; margin-bottom: 10px; }
+.two-col-panel .card { height: 100%; }
+
+.ca-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0;
+}
+.ca-item {
+  padding: 1.25rem 1.25rem;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.ca-item:nth-child(2n) { border-right: none; }
+.ca-item:nth-child(3), .ca-item:nth-child(4) { border-bottom: none; }
+.ca-label {
+  font-family: var(--f-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tx-ter);
+  margin-bottom: 6px;
+}
+.ca-value { font-size: 1.3rem; }
 
 .short-term-card { padding: 1.25rem 1.5rem; background: rgba(255,255,255,0.015); }
 .short-term-warning {
@@ -1190,7 +1337,10 @@ canvas.sparkline {
         <circle id="btc-dot" cx="100" cy="40" r="5" fill="var(--btc)" opacity="0"
                 style="transition:all 1.4s cubic-bezier(0.16,1,0.3,1)"/>
       </svg>
-      <div class="gauge-center"><div style="display:flex;align-items:baseline;gap:3px;"><div class="gauge-val" id="btc-score-val" style="color:var(--btc)">—</div><div class="gauge-denom">/100</div></div></div>
+      <div class="gauge-center">
+        <div class="gauge-val" id="btc-score-val" style="color:var(--btc)">—</div>
+        <div class="gauge-denom">/100</div>
+      </div>
     </div>
     <div class="score-footer">
       <div class="score-phase" id="btc-phase" style="color:var(--btc)">—</div>
@@ -1201,7 +1351,7 @@ canvas.sparkline {
 
   <!-- DECISION ENGINE -->
   <div class="sec-header anim d2">
-    <div class="sec-title">Signal & Allocation</div>
+    <div class="sec-title">Decision Engine</div>
     <div class="sec-line"></div>
   </div>
   <div class="card decision-card anim d2" id="decision-card">
@@ -1227,47 +1377,54 @@ canvas.sparkline {
     <div class="decision-note">Based on AlphaCycle Index: <span id="dec-index-val">—</span></div>
   </div>
 
-  <!-- SHORT TERM ENGINE -->
-  <div class="sec-header anim d2">
-    <div class="sec-title">Short Term Signals <span class="sec-tag">30-90D</span></div>
-    <div class="sec-line"></div>
-  </div>
-  <div class="card short-term-card anim d2" id="short-term-card">
-    <div class="short-term-warning">
-      &#9889; Tactical layer only — does not override AlphaCycle Index
-    </div>
-    <div class="components-grid" id="short-term-components"></div>
-  </div>
+  <!-- TWO-COL ROW: Short Term + Cycle Timeline -->
+  <div class="two-col-row anim d2">
 
-  <!-- CYCLE ANCHOR -->
-  <div class="sec-header anim d2">
-    <div class="sec-title">Cycle Timeline</div>
-    <div class="sec-line"></div>
-  </div>
-  <div class="card cycle-anchor-card anim d2" id="cycle-anchor-card">
-    <div class="decision-grid">
-      <div class="decision-item">
-        <div class="decision-label">Days Since Bottom</div>
-        <div class="decision-value" id="ca-days-since">—</div>
+    <div class="two-col-panel">
+      <div class="sec-header">
+        <div class="sec-title">Short Term Signals <span class="sec-tag">30-90D</span></div>
+        <div class="sec-line"></div>
       </div>
-      <div class="decision-item">
-        <div class="decision-label">Cycle Top</div>
-        <div class="decision-value" id="ca-halving-pos">Oct 2025</div>
-      </div>
-      <div class="decision-item">
-        <div class="decision-label">Est. Next Bottom</div>
-        <div class="decision-value" id="ca-window">Oct 2026</div>
-      </div>
-      <div class="decision-item">
-        <div class="decision-label">Time Confidence</div>
-        <div class="decision-value" id="ca-confidence">—</div>
+      <div class="card short-term-card" id="short-term-card">
+        <div class="short-term-warning">
+          &#9889; Tactical layer only — does not override AlphaCycle Index
+        </div>
+        <div class="components-grid" id="short-term-components"></div>
       </div>
     </div>
+
+    <div class="two-col-panel">
+      <div class="sec-header">
+        <div class="sec-title">Cycle Timeline</div>
+        <div class="sec-line"></div>
+      </div>
+      <div class="card cycle-anchor-card" id="cycle-anchor-card">
+        <div class="ca-grid">
+          <div class="ca-item">
+            <div class="ca-label">Days Since Bottom</div>
+            <div class="ca-value decision-value" id="ca-days-since">—</div>
+          </div>
+          <div class="ca-item">
+            <div class="ca-label">Cycle Top</div>
+            <div class="ca-value decision-value" id="ca-halving-pos">Oct 2025</div>
+          </div>
+          <div class="ca-item">
+            <div class="ca-label">Est. Next Bottom</div>
+            <div class="ca-value decision-value" id="ca-window">Oct 2026</div>
+          </div>
+          <div class="ca-item">
+            <div class="ca-label">Time Confidence</div>
+            <div class="ca-value decision-value" id="ca-confidence">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <!-- SECTION: Sub-Analysis -->
   <div class="sec-header anim d2">
-    <div class="sec-title">ETH & Liquidity</div>
+    <div class="sec-title">Sub-Analysis</div>
     <div class="sec-line"></div>
     <div class="sec-badge" id="last-updated">LOADING…</div>
   </div>
@@ -1304,7 +1461,10 @@ canvas.sparkline {
                 filter="url(#glow-eth)"
                 style="transition:stroke-dashoffset 1.4s cubic-bezier(0.16,1,0.3,1)"/>
         </svg>
-        <div class="gauge-center"><div style="display:flex;align-items:baseline;gap:3px;"><div class="gauge-val" id="eth-score-val" style="color:var(--eth)">—</div><div class="gauge-denom">/100</div></div></div>
+        <div class="gauge-center">
+          <div class="gauge-val" id="eth-score-val" style="color:var(--eth)">—</div>
+          <div class="gauge-denom">/100</div>
+        </div>
       </div>
       <div class="score-footer">
         <div class="score-phase" id="eth-phase" style="color:var(--eth)">—</div>
@@ -1345,7 +1505,10 @@ canvas.sparkline {
                 filter="url(#glow-mac)"
                 style="transition:stroke-dashoffset 1.4s cubic-bezier(0.16,1,0.3,1)"/>
         </svg>
-        <div class="gauge-center"><div style="display:flex;align-items:baseline;gap:3px;"><div class="gauge-val" id="mac-score-val" style="color:var(--mac)">—</div><div class="gauge-denom">/100</div></div></div>
+        <div class="gauge-center">
+          <div class="gauge-val" id="mac-score-val" style="color:var(--mac)">—</div>
+          <div class="gauge-denom">/100</div>
+        </div>
       </div>
       <div class="score-footer">
         <div class="score-phase" id="mac-phase" style="color:var(--mac)">—</div>
@@ -1373,7 +1536,7 @@ canvas.sparkline {
 
   <!-- ── KEY INDICATORS ── -->
   <div class="sec-header anim d3">
-    <div class="sec-title">Market Snapshot</div>
+    <div class="sec-title">Key Indicators</div>
     <div class="sec-line"></div>
   </div>
   <div class="chips-row anim d3" id="chips-row">
@@ -1458,7 +1621,7 @@ canvas.sparkline {
 
   <!-- ── CYCLE LEGEND ── -->
   <div class="sec-header anim d5">
-    <div class="sec-title">ARC Score Zones</div>
+    <div class="sec-title">Cycle Phase Guide</div>
     <div class="sec-line"></div>
   </div>
   <div class="legend-grid anim d5">
