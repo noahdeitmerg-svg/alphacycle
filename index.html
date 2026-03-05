@@ -1390,8 +1390,10 @@ canvas.sparkline {
     <div class="chart-header">
       <div class="chart-title">BTC Price + ARC Score</div>
     </div>
-    <div id="arc-chart-placeholder" class="arc-chart-placeholder">Loading...</div>
-    <canvas id="arc-chart" class="arc-chart-canvas" width="800" height="320" style="display:none;"></canvas>
+    <div id="arc-chart-placeholder" class="arc-chart-placeholder">Lade historische Daten...</div>
+    <div id="arc-chart-wrap" style="display:none; position:relative; min-height:280px;">
+      <canvas id="arc-history-chart" class="arc-chart-canvas"></canvas>
+    </div>
   </div>
 
   <!-- ── CYCLE LEGEND ── -->
@@ -1457,6 +1459,7 @@ canvas.sparkline {
   </footer>
 
 </main>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </body>
 <script>
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -2488,116 +2491,59 @@ function drawSparkline(canvasId, vals, color) {
   ctx.fillStyle=grad; ctx.fill();
 }
 
-const ARC_ZONES = [
-  { lo: 0,  hi: 30,  fill: 'rgba(34,197,94,0.12)' },
-  { lo: 30, hi: 50,  fill: 'rgba(234,179,8,0.12)' },
-  { lo: 50, hi: 70,  fill: 'rgba(249,115,22,0.12)' },
-  { lo: 70, hi: 85,  fill: 'rgba(239,68,68,0.12)' },
-  { lo: 85, hi: 100, fill: 'rgba(127,29,29,0.12)' },
-];
-
-function drawArcChart(canvasId) {
-  const canvas = $(canvasId); if (!canvas) return;
-  const data = S.backtestHistory || S.backtest || [];
-  if (!data.length) return;
-  const dpr = window.devicePixelRatio || 1;
-  const W = canvas.parentElement ? Math.min(canvas.parentElement.offsetWidth, 800) : 800;
-  const H = 320;
-  canvas.width = W * dpr; canvas.height = H * dpr;
-  canvas.style.width = '100%'; canvas.style.height = H + 'px';
-  canvas.style.maxWidth = '800px';
-  const ctx = canvas.getContext('2d');
-  ctx.scale(dpr, dpr);
-  const PAD = { t: 12, r: 52, b: 28, l: 44 };
-  const cW = W - PAD.l - PAD.r, cH = H - PAD.t - PAD.b;
-  const parseDate = (d) => new Date(d + 'Z').getTime();
-  const arr = data.map((item) => ({
-    t: parseDate(item.date),
-    arc: Number(item.arc ?? item.score ?? 50),
-    price: Math.max(100, Number(item.btc_price ?? item.price ?? 0)),
-  })).filter((x) => x.t && x.price > 0);
-  if (!arr.length) return;
-  const tMin = Math.min(...arr.map((x) => x.t)), tMax = Math.max(...arr.map((x) => x.t));
-  const tR = tMax - tMin || 1;
-  const priceMin = Math.min(...arr.map((x) => x.price)), priceMax = Math.max(...arr.map((x) => x.price));
-  const logMin = Math.log10(priceMin), logMax = Math.log10(priceMax);
-  const logR = logMax - logMin || 0.1;
-  const px = (t) => PAD.l + ((t - tMin) / tR) * cW;
-  const pyArc = (arc) => PAD.t + (1 - arc / 100) * cH;
-  const pyPrice = (price) => PAD.t + (1 - (Math.log10(price) - logMin) / logR) * cH;
-  for (let i = 0; i < ARC_ZONES.length; i++) {
-    const z = ARC_ZONES[i];
-    ctx.fillStyle = z.fill;
-    ctx.beginPath();
-    ctx.moveTo(PAD.l, pyArc(z.hi));
-    ctx.lineTo(PAD.l + cW, pyArc(z.hi));
-    ctx.lineTo(PAD.l + cW, pyArc(z.lo));
-    ctx.lineTo(PAD.l, pyArc(z.lo));
-    ctx.closePath();
-    ctx.fill();
-  }
-  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-  ctx.lineWidth = 1;
-  for (let a = 0; a <= 100; a += 25) {
-    const y = pyArc(a);
-    ctx.beginPath();
-    ctx.moveTo(PAD.l, y);
-    ctx.lineTo(PAD.l + cW, y);
-    ctx.stroke();
-  }
-  ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(px(arr[0].t), pyArc(arr[0].arc));
-  arr.slice(1).forEach((p) => ctx.lineTo(px(p.t), pyArc(p.arc)));
-  ctx.stroke();
-  ctx.strokeStyle = 'rgba(251,191,36,0.95)';
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.moveTo(px(arr[0].t), pyPrice(arr[0].price));
-  arr.slice(1).forEach((p) => ctx.lineTo(px(p.t), pyPrice(p.price)));
-  ctx.stroke();
-  const lastT = arr[arr.length - 1].t;
-  ctx.strokeStyle = 'rgba(255,255,255,0.4)';
-  ctx.lineWidth = 1;
-  ctx.setLineDash([4, 4]);
-  ctx.beginPath();
-  ctx.moveTo(px(lastT), PAD.t);
-  ctx.lineTo(px(lastT), PAD.t + cH);
-  ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.fillStyle = 'rgba(139,157,195,0.7)';
-  ctx.font = '9px DM Mono, monospace';
-  ctx.textAlign = 'left';
-  ctx.fillText('ARC (0-100)', PAD.l, PAD.t - 2);
-  ctx.textAlign = 'right';
-  [priceMin, priceMax].forEach((p, i) => {
-    const y = i === 0 ? PAD.t + cH : PAD.t;
-    const lbl = p >= 1000 ? '$' + (p / 1000).toFixed(0) + 'K' : '$' + p.toFixed(0);
-    ctx.fillText(lbl, W - PAD.r + 4, y + (i === 0 ? 4 : -2));
-  });
-  const fmtDate = (ts) => {
-    const d = new Date(ts);
-    return d.toLocaleDateString('en', { month: 'short', year: '2-digit' });
-  };
-  ctx.textAlign = 'center';
-  ctx.fillText(fmtDate(tMin), PAD.l, H - 6);
-  ctx.fillText(fmtDate(tMax), PAD.l + cW, H - 6);
-}
-
 function renderCharts() {
   const ph = $('arc-chart-placeholder');
-  const cv = $('arc-chart');
-  const hasData = (S.backtestHistory && S.backtestHistory.length) || (S.backtest && S.backtest.length);
-  if (ph && cv) {
+  const wrap = $('arc-chart-wrap');
+  const canvas = $('arc-history-chart');
+  const data = S.backtest || [];
+  const hasData = data.length > 0;
+
+  if (ph && wrap && canvas) {
     if (hasData) {
       ph.style.display = 'none';
-      cv.style.display = 'block';
-      drawArcChart('arc-chart');
+      wrap.style.display = 'block';
+      if (window._arcHistoryChart) {
+        window._arcHistoryChart.destroy();
+        window._arcHistoryChart = null;
+      }
+      if (typeof Chart !== 'undefined') {
+        const labels = data.map(d => d.date);
+        const arcData = data.map(d => Number(d.score));
+        const priceData = data.map(d => Math.max(100, Number(d.price)));
+        const n = labels.length;
+        const zone = (val) => Array(n).fill(val);
+        const datasets = [
+          { label: '0-30', data: zone(30), borderColor: 'transparent', backgroundColor: 'rgba(34,197,94,0.10)', fill: true, yAxisID: 'yArc', pointRadius: 0, order: 1 },
+          { label: '30-50', data: zone(50), borderColor: 'transparent', backgroundColor: 'rgba(234,179,8,0.10)', fill: '-1', yAxisID: 'yArc', pointRadius: 0, order: 1 },
+          { label: '50-70', data: zone(70), borderColor: 'transparent', backgroundColor: 'rgba(249,115,22,0.10)', fill: '-1', yAxisID: 'yArc', pointRadius: 0, order: 1 },
+          { label: '70-85', data: zone(85), borderColor: 'transparent', backgroundColor: 'rgba(239,68,68,0.10)', fill: '-1', yAxisID: 'yArc', pointRadius: 0, order: 1 },
+          { label: '85-100', data: zone(100), borderColor: 'transparent', backgroundColor: 'rgba(127,29,29,0.10)', fill: '-1', yAxisID: 'yArc', pointRadius: 0, order: 1 },
+          { label: 'ARC Index', data: arcData, borderColor: 'rgba(255,255,255,0.9)', borderWidth: 2, pointRadius: 0, yAxisID: 'yArc', tension: 0.3, order: 2 },
+          { label: 'BTC Price', data: priceData, borderColor: 'rgba(251,146,60,0.8)', borderWidth: 1.5, pointRadius: 0, yAxisID: 'yPrice', tension: 0.2, order: 3 }
+        ];
+        window._arcHistoryChart = new Chart(canvas, {
+          type: 'line',
+          data: { labels, datasets },
+          options: {
+            responsive: true,
+            interaction: { mode: 'index', intersect: false },
+            plugins: { legend: { display: true, labels: { color: '#94a3b8' }, filter: (item, ch) => item.datasetIndex >= 5 } },
+            scales: {
+              x: { ticks: { color: '#64748b', maxTicksLimit: 12 }, grid: { color: 'rgba(255,255,255,0.05)' } },
+              yArc: { type: 'linear', position: 'left', min: 0, max: 100, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+              yPrice: { type: 'logarithmic', position: 'right', ticks: { color: 'rgba(251,146,60,0.7)', callback: v => '$' + (typeof v === 'number' ? v.toLocaleString() : v) }, grid: { display: false } }
+            }
+          }
+        });
+      }
     } else {
+      if (window._arcHistoryChart) {
+        window._arcHistoryChart.destroy();
+        window._arcHistoryChart = null;
+      }
       ph.style.display = 'flex';
-      ph.textContent = 'Loading...';
-      cv.style.display = 'none';
+      ph.textContent = 'Lade historische Daten...';
+      wrap.style.display = 'none';
     }
   }
 }
