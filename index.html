@@ -2421,7 +2421,7 @@ function updateUI() {
 
   renderCharts();
   renderSparklines();
-  renderDataInspector();
+  if ($('di-body')) renderDataInspector();
 }
 
 function diValClass(v) {
@@ -3009,20 +3009,23 @@ window.addEventListener('resize',()=>{
   window._resizeT=setTimeout(renderCharts,200);
 });
 
-$('di-toggle')?.addEventListener('click', function() {
-  const body = $('di-body');
-  const btn = $('di-toggle');
-  if (!body || !btn) return;
-  if (body.classList.contains('hidden')) {
-    body.classList.remove('hidden');
-    btn.textContent = 'HIDE';
-    btn.setAttribute('aria-expanded', 'true');
-  } else {
-    body.classList.add('hidden');
-    btn.textContent = 'SHOW';
-    btn.setAttribute('aria-expanded', 'false');
-  }
-});
+const _diToggle = $('di-toggle');
+if (_diToggle) {
+  _diToggle.addEventListener('click', function() {
+    const body = $('di-body');
+    const btn = $('di-toggle');
+    if (!body || !btn) return;
+    if (body.classList.contains('hidden')) {
+      body.classList.remove('hidden');
+      btn.textContent = 'HIDE';
+      btn.setAttribute('aria-expanded', 'true');
+    } else {
+      body.classList.add('hidden');
+      btn.textContent = 'SHOW';
+      btn.setAttribute('aria-expanded', 'false');
+    }
+  });
+}
 
 boot();
 </script>
