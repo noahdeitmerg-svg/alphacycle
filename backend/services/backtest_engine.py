@@ -2,7 +2,8 @@
 backtest_engine.py - Alpha Cycle Intelligence v3.0
 
 Historical backtest: file cache /tmp/backtest_cache.json.
-Once loaded, only missing days (1-2) fetched. ARC = ma_200w*0.35 + drawdown*0.35 + fg(50)*0.15 + liq(50)*0.15.
+Once loaded, only missing days (1-2) fetched. ARC = ma_200w*0.35 + drawdown*0.35 + fg(50)*0.15 + macro_liq*0.15.
+macro_liq from FRED Net Liquidity (WALCL - TGA - RRP) when available.
 Return: [{"date": "YYYY-MM-DD", "price": float, "score": float}, ...]
 """
 
@@ -10,6 +11,7 @@ import asyncio
 import json
 import logging
 import math
+import os
 from datetime import datetime
 from pathlib import Path
 from typing import List, Dict, Any
@@ -146,6 +148,50 @@ async def _fetch_btc_history() -> List[Dict[str, Any]]:
     return sorted(out, key=lambda x: x["date"])
 
 
+async def _fetch_fred(series_id: str) -> list:
+    """Fetch FRED series observations from 2013-01-01. Returns [{"t": ms, "v": float}, ...]."""
+    FRED_KEY = os.getenv("FRED_API_KEY", "")
+    if not FRED_KEY:
+        return []
+    try:
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            r = await client.get(
+                "https://api.stlouisfed.org/fred/series/observations",
+                params={
+                    "series_id": series_id,
+                    "api_key": FRED_KEY,
+                    "file_type": "json",
+                    "observation_start": "2013-01-01",
+                },
+            )
+            data = r.json()
+        return [
+            {
+                "t": int(datetime.strptime(o["date"], "%Y-%m-%d").timestamp()) * 1000,
+                "v": float(o["value"]),
+            }
+            for o in data.get("observations", [])
+            if o.get("value", ".") != "."
+        ]
+    except Exception:
+        return []
+
+
+def _get_net_liq_score(date_str: str, net_liq_by_date: Dict[str, float], history_so_far: List[float]) -> float:
+    """Net Liq 52w trend score for date_str. Returns 0-100; 50 if not enough data."""
+    available = [(d, v) for d, v in net_liq_by_date.items() if d <= date_str]
+    if len(available) < 2:
+        return 50.0
+    available.sort()
+    cur = available[-1][1]
+    prev_idx = max(0, len(available) - 53)
+    prev = available[prev_idx][1]
+    if prev == 0:
+        return 50.0
+    pct = (cur - prev) / abs(prev) * 100
+    return max(0.0, min(100.0, 50 - pct * 2.0))
+
+
 async def run_backtest() -> Dict[str, Any]:
     """
     Run historical backtest. Returns {"results": [{"date", "price", "score"}, ...], "error": "..."} on failure.
@@ -157,10 +203,36 @@ async def run_backtest() -> Dict[str, Any]:
     if not history:
         return {"results": [], "error": "No price history from API"}
 
+    walcl_raw, tga_raw, rrp_raw = await asyncio.gather(
+        _fetch_fred("WALCL"),
+        _fetch_fred("WTREGEN"),
+        _fetch_fred("RRPONTSYD"),
+    )
+    tga_dict = {item["t"]: item["v"] for item in tga_raw}
+    rrp_dict = {item["t"]: item["v"] for item in rrp_raw}
+    net_liq_by_date: Dict[str, float] = {}
+    for item in walcl_raw:
+        t = item["t"]
+        w = float(item.get("v", 0))
+        if w <= 0:
+            continue
+        tga_val = 0.0
+        rrp_val = 0.0
+        for delta in [0, 86400000, -86400000, 172800000, -172800000, 604800000, -604800000]:
+            if t + delta in tga_dict:
+                tga_val = tga_dict[t + delta]
+                break
+        for delta in [0, 86400000, -86400000, 172800000, -172800000, 604800000, -604800000]:
+            if t + delta in rrp_dict:
+                rrp_val = rrp_dict[t + delta]
+                break
+        net = w - tga_val - rrp_val
+        date_str = datetime.utcfromtimestamp(t // 1000).date().isoformat()
+        net_liq_by_date[date_str] = net
+
     prices: List[float] = [safe_float(item["price"], 0.0) for item in history]
     results: List[Dict[str, Any]] = []
     fear_greed = 50.0
-    macro_liq = 50.0
 
     try:
         for idx, item in enumerate(history):
@@ -178,6 +250,7 @@ async def run_backtest() -> Dict[str, Any]:
             ma_200w_score = ma_deviation_score(price, ma_200w)
             prices_so_far = prices[: idx + 1]
             dd_score = drawdown_score(prices_so_far)
+            macro_liq = _get_net_liq_score(item["date"], net_liq_by_date, prices_so_far)
             arc = (
                 ma_200w_score * 0.35
                 + dd_score * 0.35
