@@ -349,11 +349,13 @@ body::before {
 ════════════════════════════════════════════════════════════════ */
 .scores-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: 1fr;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
   gap: 12px;
   margin-bottom: 14px;
 }
-@media(min-width:600px){ .scores-grid { grid-template-columns: repeat(2,1fr); } }
 
 #btc-card.hero-card {
   max-width: 780px;
@@ -546,13 +548,63 @@ body::before {
 .two-col-panel .sec-header { margin-top: 0; margin-bottom: 10px; }
 .two-col-panel .card { height: 100%; }
 
+.cycle-overview-card {
+  padding: 0;
+  overflow: hidden;
+}
+.cycle-overview-inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  min-height: 140px;
+}
+@media(max-width:640px){
+  .cycle-overview-inner { grid-template-columns: 1fr; }
+}
+.cycle-phase-side {
+  padding: 1.75rem 2rem;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+}
+.phase-eyebrow-label {
+  font-family: var(--f-mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--tx-ter);
+}
+.phase-score-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 4px;
+}
+.phase-score-num {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+}
+.phase-score-lbl {
+  font-family: var(--f-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--tx-ter);
+  text-transform: uppercase;
+}
+.cycle-timeline-side {
+  padding: 1.75rem 2rem;
+}
 .ca-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 0;
+  height: 100%;
 }
 .ca-item {
-  padding: 1.25rem 1.25rem;
+  padding: 0.75rem 0.5rem;
   border-right: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
 }
@@ -561,12 +613,17 @@ body::before {
 .ca-label {
   font-family: var(--f-mono);
   font-size: 9px;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--tx-ter);
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
-.ca-value { font-size: 1.3rem; }
+.ca-value {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--tx-pri);
+  line-height: 1.1;
+}
 
 .short-term-card { padding: 1.25rem 1.5rem; background: rgba(255,255,255,0.015); }
 .short-term-warning {
@@ -1384,33 +1441,6 @@ canvas.sparkline {
       </div>
     </div>
 
-    <div class="two-col-panel">
-      <div class="sec-header">
-        <div class="sec-title">Cycle Timeline</div>
-        <div class="sec-line"></div>
-      </div>
-      <div class="card cycle-anchor-card" id="cycle-anchor-card">
-        <div class="ca-grid">
-          <div class="ca-item">
-            <div class="ca-label">Days Since Bottom</div>
-            <div class="ca-value decision-value" id="ca-days-since">—</div>
-          </div>
-          <div class="ca-item">
-            <div class="ca-label">Cycle Top</div>
-            <div class="ca-value decision-value" id="ca-halving-pos">Oct 2025</div>
-          </div>
-          <div class="ca-item">
-            <div class="ca-label">Est. Next Bottom</div>
-            <div class="ca-value decision-value" id="ca-window">Oct 2026</div>
-          </div>
-          <div class="ca-item">
-            <div class="ca-label">Time Confidence</div>
-            <div class="ca-value decision-value" id="ca-confidence">—</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
   </div>
 
   <!-- SECTION: Sub-Analysis -->
@@ -1421,47 +1451,12 @@ canvas.sparkline {
   </div>
 
   <div class="scores-grid anim d2">
-    <div class="card score-card card-glow-eth" id="eth-card">
-      <div class="card-accent accent-eth"></div>
-      <div class="score-card-header">
-        <div class="score-label">
-          <div class="score-label-dot" style="background:var(--eth)"></div>
-          ETH Relative Strength
-        </div>
-        <div class="score-tag" id="eth-tag" style="color:var(--eth);border-color:rgba(143,165,255,0.3);background:var(--eth-dim)">—</div>
-      </div>
-      <div class="gauge-wrap">
-        <svg viewBox="0 0 200 130" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="eth-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%"   stop-color="#22c55e"/>
-              <stop offset="35%"  stop-color="#3b82f6"/>
-              <stop offset="70%"  stop-color="#f59e0b"/>
-              <stop offset="100%" stop-color="#ef4444"/>
-            </linearGradient>
-            <filter id="glow-eth">
-              <feGaussianBlur stdDeviation="2.5" result="blur"/>
-              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-            </filter>
-          </defs>
-          <path d="M 20 120 A 80 80 0 0 1 180 120" stroke="rgba(255,255,255,0.05)" stroke-width="14" stroke-linecap="round"/>
-          <path d="M 20 120 A 80 80 0 0 1 180 120" stroke="url(#eth-grad)" stroke-width="14" stroke-linecap="round" opacity="0.12"/>
-          <path id="eth-arc" d="M 20 120 A 80 80 0 0 1 180 120" stroke="url(#eth-grad)"
-                stroke-width="14" stroke-linecap="round"
-                stroke-dasharray="251.2" stroke-dashoffset="251.2"
-                filter="url(#glow-eth)"
-                style="transition:stroke-dashoffset 1.4s cubic-bezier(0.16,1,0.3,1)"/>
-        </svg>
-        <div class="gauge-center">
-          <div class="gauge-val" id="eth-score-val" style="color:var(--eth)">—</div>
-          <div class="gauge-denom">/100</div>
-        </div>
-      </div>
-      <div class="score-footer">
-        <div class="score-phase" id="eth-phase" style="color:var(--eth)">—</div>
-        <div class="score-price" id="eth-price-sm">—</div>
-      </div>
-      <div class="components-grid" id="eth-components"></div>
+    <div style="display:none">
+      <canvas id="eth-arc"></canvas>
+      <span id="eth-score-val"></span>
+      <span id="eth-phase"></span>
+      <span id="eth-price-sm"></span>
+      <div id="eth-components"></div>
     </div>
 
     <!-- Macro Score Card -->
@@ -1509,19 +1504,49 @@ canvas.sparkline {
     </div>
   </div>
 
-  <div id="phase-banner" class="phase-banner anim d3">
+  <!-- CYCLE OVERVIEW (Phase + Timeline merged) -->
+  <div class="sec-header anim d2">
+    <div class="sec-title">Cycle Overview</div>
+    <div class="sec-line"></div>
+  </div>
+  <div class="card cycle-overview-card anim d2" id="phase-banner">
     <div class="card-accent accent-combined"></div>
-    <div class="phase-inner">
-      <div class="phase-icon-wrap" id="phase-icon">⏳</div>
-      <div class="phase-meta">
-        <div class="phase-eyebrow" id="phase-eyebrow">Market Cycle Phase</div>
+    <div class="cycle-overview-inner">
+
+      <!-- Links: Phase -->
+      <div class="cycle-phase-side">
+        <span id="phase-icon" style="display:none"></span>
+        <div class="phase-eyebrow-label" id="phase-eyebrow">Market Cycle Phase</div>
         <div class="phase-name" id="phase-name">Loading…</div>
-        <div class="phase-desc" id="phase-desc">Fetching real-time data from 4 sources…</div>
+        <div class="phase-desc" id="phase-desc">Fetching data…</div>
+        <div class="phase-score-row">
+          <span class="phase-score-num" id="phase-combined">—</span>
+          <span class="phase-score-lbl" id="phase-score-lbl">AlphaCycle Index</span>
+        </div>
       </div>
-      <div class="phase-score-widget">
-        <div class="phase-score-num" id="phase-combined">—</div>
-        <div class="phase-score-lbl" id="phase-score-lbl">AlphaCycle Index</div>
+
+      <!-- Rechts: Timeline -->
+      <div class="cycle-timeline-side" id="cycle-anchor-card">
+        <div class="ca-grid">
+          <div class="ca-item">
+            <div class="ca-label">Days Since Bottom</div>
+            <div class="ca-value" id="ca-days-since">—</div>
+          </div>
+          <div class="ca-item">
+            <div class="ca-label">Cycle Top</div>
+            <div class="ca-value" id="ca-halving-pos">Oct 2025</div>
+          </div>
+          <div class="ca-item">
+            <div class="ca-label">Est. Next Bottom</div>
+            <div class="ca-value" id="ca-window">Oct 2026</div>
+          </div>
+          <div class="ca-item">
+            <div class="ca-label">Time Confidence</div>
+            <div class="ca-value" id="ca-confidence">—</div>
+          </div>
+        </div>
       </div>
+
     </div>
   </div>
 
