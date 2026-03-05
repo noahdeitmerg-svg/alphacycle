@@ -1,5 +1,5 @@
 """
-fetcher.py — Alpha Cycle Intelligence v3.0
+fetcher.py - Alpha Cycle Intelligence v3.0
 Sources: Binance, CoinGecko, Alternative.me, DeFiLlama, FRED
 """
 import os, math, asyncio, logging, time
@@ -59,6 +59,7 @@ async def fetch_funding_rates():
         }
     except Exception as e:
         logger.warning(f"Funding rates: {e}"); return {"btc_funding_rate":0.0,"eth_funding_rate":0.0}
+
 
 async def fetch_kraken_prices(pair="XBTUSD", days=730):
     """Kraken OHLC daily - reliable from Railway US-West."""
@@ -247,10 +248,10 @@ def _compute_puell_multiple(prices):
 
 # -- AGGREGATE --------------------------------------------------------------------
 async def fetch_all():
-    logger.info("fetch_all v3: starting…")
+    logger.info("fetch_all v3: starting...")
     results=await asyncio.gather(
-        fetch_kraken_prices("XBTUSD", 730),     # 0 BTC prices
-        fetch_kraken_prices("XETHUSD", 730),    # 1 ETH prices
+        fetch_kraken_prices("XBTUSD", 730),    # 0 BTC prices
+        fetch_kraken_prices("XETHUSD", 730),   # 1 ETH prices
         fetch_kraken_ticker("XBTUSD"),          # 2 BTC ticker
         fetch_kraken_ticker("XETHUSD"),         # 3 ETH ticker
         fetch_market_data("bitcoin"),           # 4
@@ -301,7 +302,7 @@ async def fetch_all():
         "puell_score": round(_compute_puell_multiple(btc_prices),1),
     }
 
-    logger.info(f"fetch_all done — BTC:{len(btc_prices)}d F&G:{fg['current']} "
+    logger.info(f"fetch_all done - BTC:{len(btc_prices)}d F&G:{fg['current']} "
                 f"DOM:{gdata.get('btc_dominance',0):.1f}% "
                 f"MVRV:{indicators['mvrv_score']} Pi:{indicators['pi_score']} Puell:{indicators['puell_score']}")
 
