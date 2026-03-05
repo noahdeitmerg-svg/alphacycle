@@ -2,18 +2,18 @@
 **Zuletzt aktualisiert:** 2026-03-04
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
-## Letzter Session-Status (2026-03-04)
+## Letzter Session-Status (2026-03-04) — VOLLSTÄNDIG DEPLOYED
 - ✅ FIX 1: /api/arc-summary Endpoint ergänzt
 - ✅ FIX 2: /api/prices mit ATH + Dominanz (Kraken-basiert)
-- ✅ FIX 3: backtest_engine.py auf Kraken OHLC umgestellt
+- ✅ FIX 3: backtest_engine.py auf Kraken OHLC umgestellt (CoinGecko-Reste entfernt)
 - ✅ FIX 4: index.html ATH/Dominanz aus /api/prices (kein CoinGecko mehr)
-- ✅ FIX 5: index.html backtest + liquidity-regime in Promise.allSettled
-- 🔄 Deploy steht aus → git push ausstehend
+- ✅ FIX 5: index.html backtest + liquidity-regime in Promise.allSettled + liquidity-components
+- ✅ FIX 6: scoring.py short_term dict in compute_btc_score()
+- ✅ Deployed auf Railway, getestet — Dashboard live bei Score 30/100
 
 ## Nächste Schritte
-- [ ] Git push + Railway deploy der heutigen Fixes
-- [ ] Testen: /api/arc-summary, /api/prices (ATH-Felder), Backtest-Karte, Liquidity-Regime-Karte
-- [ ] permanent-fixed.mdc mit heutigen Fixes updaten
+- [ ] X Content für AlphaCycle erstellen
+- [ ] Paid SaaS Funnel planen
 
 
 
@@ -42,6 +42,8 @@ DO NOT modify weights. DO NOT add scoring components.
 18. index.html: hero card has single risk label (btc-tag removed, hero-risk-label kept)
 19. index.html: change_24h computed from last 2 history points (Kraken has no 24h change)
 20. index.html: /api/backtest and /api/liquidity-regime fetched in Promise.allSettled
+21. scoring.py: short_term dict in compute_btc_score() return (rsi, funding, mvrv, power_law, pi_cycle, puell)
+22. main.py: arc-summary components.liquidity nutzt macro_liq (nicht liquidity)
 
 ## Active Endpoints (Railway)
 /health /api/prices /api/cycle/btc /api/cycle/eth /api/cycle/macro
