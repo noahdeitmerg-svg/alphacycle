@@ -1447,6 +1447,8 @@ canvas.sparkline {
     <div id="arc-chart-placeholder" class="arc-chart-placeholder">Historische Daten werden geladen (kann bis zu 15 Sek. dauern)...</div>
     <div id="arc-chart-wrap" style="display:none;">
       <canvas id="arc-history-chart" class="arc-chart-canvas"></canvas>
+    </div>
+    <div id="export-arc-wrap" style="display:none;justify-content:flex-end;margin-top:8px;">
       <button id="export-arc-btn" onclick="exportArcChart()">
         ↓ EXPORT PNG
       </button>
@@ -2579,6 +2581,8 @@ function renderCharts() {
     if (hasData) {
       ph.style.display = 'none';
       wrap.style.display = 'block';
+      const exportWrap = $('export-arc-wrap');
+      if (exportWrap) exportWrap.style.display = 'flex';
       if (window._arcHistoryChart) {
         window._arcHistoryChart.destroy();
         window._arcHistoryChart = null;
@@ -2695,6 +2699,8 @@ function renderCharts() {
       ph.style.display = 'flex';
       ph.textContent = 'Historische Daten werden geladen (kann bis zu 15 Sek. dauern)...';
       wrap.style.display = 'none';
+      const exportWrap = $('export-arc-wrap');
+      if (exportWrap) exportWrap.style.display = 'none';
     }
   }
 }
