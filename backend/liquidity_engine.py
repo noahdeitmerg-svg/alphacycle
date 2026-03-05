@@ -140,9 +140,18 @@ def compute_liquidity_regime(
 
     # Bond yields: rising yields = tightening → bearish liquidity
     if us10y_vals:
-        us10y_trend = _trend_score(us10y_vals, months=6)
-        # Map high yields / rising yields toward low liquidity score
-        bond_score = _clamp(100.0 - (us10y_trend - 50.0) * 1.0)
+        current_yield = us10y_vals[-1]
+        # 10Y yield: <3% = loose (low score), >5% = tight (high score)
+        if current_yield < 2.0:
+            bond_score = 20.0
+        elif current_yield < 3.0:
+            bond_score = _clamp(20.0 + (current_yield - 2.0) * 30.0)
+        elif current_yield < 4.0:
+            bond_score = _clamp(50.0 + (current_yield - 3.0) * 20.0)
+        elif current_yield < 5.0:
+            bond_score = _clamp(70.0 + (current_yield - 4.0) * 15.0)
+        else:
+            bond_score = _clamp(85.0 + (current_yield - 5.0) * 5.0)
     else:
         bond_score = 50.0
 
