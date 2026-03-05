@@ -1247,11 +1247,11 @@ canvas.sparkline {
         <div class="decision-value" id="ca-days-since">—</div>
       </div>
       <div class="decision-item">
-        <div class="decision-label">Est. Next Top</div>
-        <div class="decision-value" id="ca-next-top">—</div>
+        <div class="decision-label">Cycle Top</div>
+        <div class="decision-value" id="ca-next-top">Oct 2025</div>
       </div>
       <div class="decision-item">
-        <div class="decision-label">Days To Top</div>
+        <div class="decision-label">Est. Next Bottom</div>
         <div class="decision-value" id="ca-days-to-top">—</div>
       </div>
       <div class="decision-item">
@@ -2182,12 +2182,13 @@ function updateUI() {
     const days = ca.days_since_cycle_bottom ?? ca.days_since_bottom ?? null;
     if (days != null) setText('ca-days-since', days + 'd');
 
-    setText('ca-next-top', ca.next_top_estimate ?? '—');
-    const dtt = ca.days_to_next_top;
+    setText('ca-next-top',
+      ca.cycle_top_date ?? 'Oct 2025');
+    const dtb = ca.days_to_next_bottom;
     setText('ca-days-to-top',
-      dtt != null
-        ? (dtt >= 0 ? dtt + 'd' : Math.abs(dtt) + 'd past')
-        : '—');
+      dtb != null
+        ? 'in ' + dtb + 'd'
+        : '~Oct 2026');
 
     const conf = ca.cycle_time_confidence ?? null;
     if (conf != null) {

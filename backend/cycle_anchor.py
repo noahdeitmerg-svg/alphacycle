@@ -89,8 +89,9 @@ def compute_cycle_anchor(reference_date: Optional[date] = None) -> dict:
         cycle_time_confidence = 85.0 - min(85.0, overshoot / 10.0)
     cycle_time_confidence = _clamp_pct(cycle_time_confidence)
 
-    next_top = date(2025, 8, 1)
-    days_to_top = (next_top - today).days
+    # Explicit next bottom anchor (Oct 2026) for UI
+    _next_bottom = date(2026, 10, 1)
+    _days_to_bottom = (_next_bottom - today).days
 
     return {
         "cycle_position_percent": round(cycle_position_percent, 2),
@@ -102,8 +103,9 @@ def compute_cycle_anchor(reference_date: Optional[date] = None) -> dict:
         "expected_cycle_bottom_date": expected_bottom_date.isoformat(),
         "halving_cycle_position_percent": round(halving_cycle_position_percent, 2),
         "cycle_time_confidence": round(cycle_time_confidence, 2),
-        "next_top_estimate": "Aug 2025",
-        "days_to_next_top": days_to_top,
+        "cycle_top_date": "Oct 2025",
+        "next_bottom_estimate": "Oct 2026",
+        "days_to_next_bottom": _days_to_bottom,
         "current_cycle_anchor": {
             "bottom_date": CURRENT_CYCLE_BOTTOM.isoformat(),
             "last_halving": LAST_HALVING.isoformat(),
