@@ -1478,6 +1478,7 @@ const S = {
   ethComponents:       null,
   backtest:            [],
   liquidityRegime:     null,
+  arcSummary:          null,
   btcAth:              0,
   btcAthChange:        0,
   ethAth:              0,
@@ -1745,8 +1746,9 @@ async function loadAllData() {
         apiFetch(`${BACKEND_URL}/api/cycle-anchor`),
         apiFetch(`${BACKEND_URL}/api/backtest`),
         apiFetch(`${BACKEND_URL}/api/liquidity-regime`),
+        apiFetch(`${BACKEND_URL}/api/arc-summary`),
       ]);
-      const [prices, btcC, ethC, macC, hist, analyzer, anchor, backtest, liquidity] =
+      const [prices, btcC, ethC, macC, hist, analyzer, anchor, backtest, liquidity, arcSummary] =
         results.map(r => r.status === 'fulfilled' ? r.value : null);
 
       if(prices) {
@@ -1777,6 +1779,7 @@ async function loadAllData() {
       }
       S.backtest = backtest?.results ?? [];
       S.liquidityRegime = liquidity ?? null;
+      S.arcSummary = arcSummary ?? null;
       if(hist) {
         S.tvlHistory    = hist.tvl||[];
         S.stableHistory = (hist.stablecoin||[]);
@@ -2174,9 +2177,12 @@ function diRow(lbl, val, fmt) {
 function renderDataInspector() {
   const el = $('di-body');
   if (!el) return;
+  const roundScore = v => (v != null && v !== '') ? Math.round(Number(v) * 10) / 10 : v;
   const btcChg = S.btcChange24h != null ? S.btcChange24h : (S.btcMarket?.change_24h ?? S.btcMarket?.change24h);
   const ethChg = S.ethChange24h != null ? S.ethChange24h : (S.ethMarket?.change_24h ?? S.ethMarket?.change24h);
   const sections = [];
+
+  const fmtFunding = v => (v === 0 || v == null) ? 'N/A' : Number(v).toFixed(4) + '%';
 
   // 1. PRICES
   sections.push({
@@ -2195,38 +2201,38 @@ function renderDataInspector() {
       diRow('BTC Dominance', S.btcDominance, v => v != null ? Number(v).toFixed(1) + '%' : '—'),
       diRow('Total Market Cap', S.totalMarketCap, v => v > 0 ? fmtB(v) : '—'),
       diRow('Stablecoin Cap (B)', S.stableCurrent, v => v > 0 ? fmtB(v) : '—'),
-      diRow('Funding BTC Rate', S.funding?.btc_funding_rate, v => v != null ? Number(v).toFixed(4) + '%' : '—'),
-      diRow('Funding ETH Rate', S.funding?.eth_funding_rate, v => v != null ? Number(v).toFixed(4) + '%' : '—'),
+      diRow('Funding BTC Rate', S.funding?.btc_funding_rate, fmtFunding),
+      diRow('Funding ETH Rate', S.funding?.eth_funding_rate, fmtFunding),
     ],
   });
 
   // 2. BTC CYCLE
   const btcComp = S.btcComponents || {};
-  const btcRows = [diRow('Score', S.btcScore)];
+  const btcRows = [diRow('Score', roundScore(S.btcScore))];
   ['ma_200w','drawdown','fear_greed','rsi','puell','pi_cycle','macro_liq','funding','power_law'].forEach(k => {
     const v = btcComp[k]?.score ?? btcComp[k];
-    if (v !== undefined) btcRows.push(diRow(k.replace('_',' '), v));
+    if (v !== undefined) btcRows.push(diRow(k.replace('_',' '), roundScore(v)));
   });
   const st = S.btcShortTerm || {};
   ['rsi','funding','mvrv','power_law','pi_cycle','puell'].forEach(k => {
-    btcRows.push(diRow('ST ' + k, st[k]));
+    btcRows.push(diRow('ST ' + k, roundScore(st[k])));
   });
   sections.push({ title: 'BTC CYCLE (/api/cycle/btc)', rows: btcRows });
 
   // 3. ETH CYCLE
   const ethComp = S.ethComponents || {};
-  const ethRows = [diRow('Score', S.ethScore)];
+  const ethRows = [diRow('Score', roundScore(S.ethScore))];
   Object.keys(ethComp).forEach(k => {
     const v = ethComp[k]?.score ?? ethComp[k];
-    ethRows.push(diRow(k.replace(/_/g,' '), v));
+    ethRows.push(diRow(k.replace(/_/g,' '), roundScore(v)));
   });
-  sections.push({ title: 'ETH CYCLE (/api/cycle/eth)', rows: ethRows.length > 1 ? ethRows : [diRow('Score', S.ethScore)] });
+  sections.push({ title: 'ETH CYCLE (/api/cycle/eth)', rows: ethRows.length > 1 ? ethRows : [diRow('Score', roundScore(S.ethScore))] });
 
   // 4. MACRO
   sections.push({
     title: 'MACRO (/api/cycle/macro)',
     rows: [
-      diRow('Score', S.macScore),
+      diRow('Score', roundScore(S.macScore)),
       diRow('WALCL Current (T)', S.walclCurrent, v => v > 0 ? fmtT(v) : '—'),
       diRow('Stable Current (B)', S.stableCurrent, v => v > 0 ? fmtB(v) : '—'),
       diRow('BTC Dominance %', S.btcDominance, v => v != null ? Number(v).toFixed(1) + '%' : '—'),
@@ -2240,40 +2246,43 @@ function renderDataInspector() {
     title: 'LIQUIDITY REGIME (/api/liquidity-regime)',
     rows: [
       diRow('Regime', liq.regime),
-      diRow('Score', liq.score),
-      diRow('Confidence', liq.confidence),
+      diRow('Score', roundScore(liq.score)),
+      diRow('Confidence', roundScore(liq.confidence)),
       diRow('Trend Direction', liq.trend_direction),
-      diRow('WALCL Trend', liqComp.walcl_trend_score),
-      diRow('Stablecoin', liqComp.stablecoin_score),
-      diRow('Bond', liqComp.bond_score),
-      diRow('BTC Confirmation', liqComp.btc_confirmation_score),
+      diRow('WALCL Trend', roundScore(liqComp.walcl_trend_score)),
+      diRow('Stablecoin', roundScore(liqComp.stablecoin_score)),
+      diRow('Bond', roundScore(liqComp.bond_score)),
+      diRow('BTC Confirmation', roundScore(liqComp.btc_confirmation_score)),
     ],
   });
 
   // 6. ARC SUMMARY
   const arcRows = [
-    diRow('ARC Score', S.combined),
-    diRow('BTC Score', S.btcScore),
-    diRow('ETH Score', S.ethScore),
-    diRow('Macro Score', S.macScore),
-    diRow('Regime', liq.regime),
-    diRow('Decision', liq.decision),
-    diRow('Confidence', liq.confidence),
-    diRow('Fear & Greed', S.fgCurrent),
-    diRow('MA200W', btcComp.ma_200w?.score ?? btcComp.ma_200w),
-    diRow('Drawdown', btcComp.drawdown?.score ?? btcComp.drawdown),
-    diRow('F&G', btcComp.fear_greed?.score ?? btcComp.fear_greed),
-    diRow('Liquidity', btcComp.macro_liq ?? btcComp.liquidity?.score),
+    diRow('ARC Score', Math.round((S.combined ?? 50) * 10) / 10),
+    diRow('BTC Score', roundScore(S.btcScore)),
+    diRow('ETH Score', roundScore(S.ethScore)),
+    diRow('Macro Score', roundScore(S.macScore)),
+    diRow('Regime', S.arcSummary?.regime ?? liq.regime),
+    diRow('Decision', S.arcSummary?.decision ?? liq.decision),
+    diRow('Confidence', roundScore(S.arcSummary?.confidence ?? liq.confidence)),
+    diRow('Fear & Greed', roundScore(S.fgCurrent)),
+    diRow('MA200W', roundScore(btcComp.ma_200w?.score ?? btcComp.ma_200w)),
+    diRow('Drawdown', roundScore(btcComp.drawdown?.score ?? btcComp.drawdown)),
+    diRow('F&G', roundScore(btcComp.fear_greed?.score ?? btcComp.fear_greed)),
+    diRow('Liquidity', roundScore((function(){
+      const raw = S.arcSummary?.components?.liquidity ?? S.arcSummary?.liquidity ?? btcComp.macro_liq ?? btcComp.liquidity?.score ?? btcComp.liquidity;
+      return (typeof raw === 'object' && raw != null) ? (raw.score ?? 50) : (Number(raw) || 50);
+    })())),
   ];
   ['rsi','funding','mvrv','power_law','pi_cycle','puell'].forEach(k => {
-    arcRows.push(diRow('ST ' + k, st[k]));
+    arcRows.push(diRow('ST ' + k, roundScore(st[k])));
   });
   sections.push({ title: 'ARC SUMMARY (/api/arc-summary)', rows: arcRows });
 
   // 7. FEAR & GREED
   sections.push({
     title: 'FEAR & GREED',
-    rows: [diRow('Current', S.fgCurrent), diRow('Label', S.fgLabel)],
+    rows: [diRow('Current', roundScore(S.fgCurrent)), diRow('Label', S.fgLabel)],
   });
 
   el.innerHTML = sections.map(sec =>
