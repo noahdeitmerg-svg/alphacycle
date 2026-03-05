@@ -1,16 +1,12 @@
 """
-backtest_engine.py — Alpha Cycle Intelligence v3.0
+backtest_engine.py - Alpha Cycle Intelligence v3.0
 
 Historical backtesting engine for BTC using existing AlphaCycle score logic.
-
-Rules:
-- Uses real BTC daily prices from CoinGecko.
-- Uses existing compute_btc_score from scoring.py (no rewrites).
-- No database. Single-run per request.
+Uses Kraken OHLC (max 720 days per request). ARC from ma_200w + drawdown + fear_greed(50) + macro_liq(50).
 """
 
 import math
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Dict, Any
 
 import httpx
@@ -21,18 +17,12 @@ except ImportError:  # pragma: no cover
     from backend.scoring import compute_btc_score, safe_float
 
 
-COINGECKO_URL = (
-    "https://api.coingecko.com/api/v3/coins/bitcoin/market_chart"
-    "?vs_currency=usd&days=max"
-)
-
 HTTP_TIMEOUT = httpx.Timeout(25.0, connect=10.0)
 
 
 async def _fetch_btc_history() -> List[Dict[str, Any]]:
-    """Fetch BTC price history from Kraken OHLC — Railway-compatible."""
-    import time as _time
-    since = int(_time.time()) - (1500 * 86400)
+    """Fetch BTC price history from Kraken OHLC. 10y since; Kraken returns max 720 days."""
+    since = int((datetime.utcnow() - timedelta(days=3650)).timestamp())
     async with httpx.AsyncClient(timeout=HTTP_TIMEOUT, follow_redirects=True) as client:
         resp = await client.get(
             "https://api.kraken.com/0/public/OHLC",
@@ -109,8 +99,8 @@ async def run_backtest() -> Dict[str, Any]:
             results.append(
                 {
                     "date": item["date"],
-                    "price": round(price, 2),
-                    "score": round(score, 2),
+                    "btc_price": round(price, 2),
+                    "arc": round(score, 2),
                 }
             )
     except Exception as e:

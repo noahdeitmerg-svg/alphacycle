@@ -58,6 +58,9 @@ Beim Bearbeiten von backend/fetcher.py, backend/main.py, backend/scoring.py oder
 - **Nur 1 Datei** im Ordner `backend/` (keine zweite Datei mit Leerzeichen im Namen wie " Dockerfile").
 - **CMD** mit `$PORT`: `--bind 0.0.0.0:$PORT`, **workers=1** (Railway setzt PORT) — **NICHT** hardcoded 8000.
 
+## backend/services/backtest_engine.py
+- Kraken OHLC (since 10y / 3650 days). ARC pro Tag aus compute_btc_score: ma_200w, drawdown, fear_greed=50, macro_liq=50. Return: Liste {"date": "YYYY-MM-DD", "btc_price": float, "arc": float}.
+
 ## backend/liquidity_engine.py
 - **bond_score** aus absolutem Yield-Niveau (us10y_vals[-1]) berechnen — **NICHT** aus trend_score (sonst us10y_trend=0 → 150 → clamp 100 Bug). Stufen: <2% → 20, <3% → 20–50, <4% → 50–70, <5% → 70–85, else → 85–100.
 
