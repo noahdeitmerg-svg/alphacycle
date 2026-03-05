@@ -31,7 +31,7 @@ DO NOT modify weights. DO NOT add scoring components.
 5. scoring.py: drawdown_score() returns 50.0 if len(prices) < 10
 6. index.html: BACKEND_URL = https://alphacycle-production.up.railway.app
 7. index.html: Promise.allSettled (NOT Promise.all)
-8. index.html: phaseOf() boundaries: <30 Low Risk, <61 Moderate Risk, <81 Elevated Risk
+8. index.html: phaseOf() boundaries: <30 Low Risk, <60 Moderate Risk, <75 Elevated Risk
 9. index.html: S.btcShortTerm = btcC?.short_term || null (after btcComponents)
 10. index.html: S.ethComponents = ethC?.components || null (after btcShortTerm)
 11. index.html: S.btcScore guard: only use API value if btcC.score > 0

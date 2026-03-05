@@ -561,6 +561,29 @@ body::before {
   color: var(--tx-sec);
   background: rgba(14,165,233,0.06);
 }
+.hero-subscores {
+  display: flex;
+  gap: 16px;
+  margin-top: 4px;
+}
+.hero-subscore {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.hs-label {
+  font-family: var(--f-mono);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  color: var(--tx-ter);
+  text-transform: uppercase;
+}
+.hs-val {
+  font-family: var(--f-mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--tx-sec);
+}
 
 .decision-card {
   padding: 0;
@@ -1487,6 +1510,20 @@ canvas.sparkline {
     <div class="score-footer">
       <div class="score-phase" id="btc-phase" style="color:var(--btc)">—</div>
       <div class="score-price" id="btc-price-sm">—</div>
+      <div class="hero-subscores">
+        <div class="hero-subscore">
+          <span class="hs-label">BTC</span>
+          <span class="hs-val" id="hs-btc">—</span>
+        </div>
+        <div class="hero-subscore">
+          <span class="hs-label">ETH</span>
+          <span class="hs-val" id="hs-eth">—</span>
+        </div>
+        <div class="hero-subscore">
+          <span class="hs-label">MACRO</span>
+          <span class="hs-val" id="hs-mac">—</span>
+        </div>
+      </div>
     </div>
     <div class="components-grid" id="btc-components"></div>
     <div class="hero-zones">
@@ -1806,8 +1843,8 @@ function scoreColor(s) {
 }
 function phaseOf(s) {
   if (s < 30) return 'Low Risk';
-  if (s < 61) return 'Moderate Risk';
-  if (s < 81) return 'Elevated Risk';
+  if (s < 60) return 'Moderate Risk';
+  if (s < 75) return 'Elevated Risk';
   return 'Extreme Risk';
 }
 function phaseIcon(phase) {
@@ -2245,7 +2282,7 @@ function updateUI() {
   const ratio = btcP>0 ? ethP/btcP : 0;
 
   // Score colors
-  const combinedScore = S.combined ?? S.arcSummary?.arc_score ?? S.btcScore;
+  const combinedScore = S.arcSummary?.arc_score ?? S.combined ?? S.btcScore;
   const bCol=scoreColor(combinedScore), eCol=scoreColor(S.ethScore), mCol=scoreColor(S.macScore);
 
   // Gauges
@@ -2260,10 +2297,10 @@ function updateUI() {
     if (!el) return;
     const s = S.btcScore;
     const zones = [
-      [30,  'LOW RISK ZONE',  '34,197,94'],
-      [61,  'MODERATE RISK',  '59,130,246'],
-      [81,  'ELEVATED RISK',  '245,158,11'],
-      [101, 'EXTREME RISK',   '239,68,68'],
+      [30,  'LOW RISK',      '34,197,94'],
+      [60,  'MODERATE RISK', '59,130,246'],
+      [75,  'ELEVATED RISK', '245,158,11'],
+      [101, 'EXTREME RISK',  '239,68,68'],
     ];
     const [,label,rgb] = zones.find(([max]) => s < max);
     el.textContent = label;
@@ -2271,6 +2308,15 @@ function updateUI() {
     el.style.color = `rgba(${rgb},0.9)`;
     el.style.background = `rgba(${rgb},0.07)`;
   })();
+  setText('hs-btc', S.btcScore != null ? String(Math.round(S.btcScore)) : '—');
+  setText('hs-eth', S.ethScore != null ? String(Math.round(S.ethScore)) : '—');
+  setText('hs-mac', S.macScore != null ? String(Math.round(S.macScore)) : '—');
+  const hsBtc = document.getElementById('hs-btc');
+  const hsEth = document.getElementById('hs-eth');
+  const hsMac = document.getElementById('hs-mac');
+  if (hsBtc) hsBtc.style.color = scoreColor(S.btcScore);
+  if (hsEth) hsEth.style.color = scoreColor(S.ethScore);
+  if (hsMac) hsMac.style.color = scoreColor(S.macScore);
   setText('eth-score-val', Math.round(S.ethScore), eCol);
   setText('mac-score-val', Math.round(S.macScore), mCol);
 
