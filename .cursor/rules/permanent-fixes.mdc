@@ -13,11 +13,8 @@ Beim Bearbeiten von backend/fetcher.py, backend/main.py, backend/scoring.py oder
 
 ## backend/fetcher.py
 - **Kraken ist primäre Preisquelle** (nicht Binance für Preise; Binance ist auf Railway US-West blockiert).
-- In `fetch_all()`: Die ersten 4 Einträge im `asyncio.gather` müssen sein:
-  - `fetch_kraken_prices("XBTUSD", 730)`  (# 0)
-  - `fetch_kraken_prices("XETHUSD", 730)` (# 1)
-  - `fetch_kraken_ticker("XBTUSD")`       (# 2)
-  - `fetch_kraken_ticker("XETHUSD")`      (# 3)
+- In `fetch_all()`: **Kein** `fetch_market_data("bitcoin")` / `fetch_market_data("ethereum")` (CoinGecko 429 auf Railway). asyncio.gather genau 11 Aufrufe: 0 Kraken BTC prices, 1 Kraken ETH prices, 2/3 Kraken ticker, 4 fear_greed(90), 5 eth_tvl, 6 stablecoin_supply, 7 walcl, 8 fred DGS10, 9 global_data, 10 funding_rates. btc_cg/eth_cg = leere Fallback-Dicts (price/change_24h/market_cap/volume/ath/ath_change_pct = 0).
+- Die ersten 4 Einträge im gather: `fetch_kraken_prices("XBTUSD", 730)`, `fetch_kraken_prices("XETHZUSD", 730)`, `fetch_kraken_ticker("XBTUSD")`, `fetch_kraken_ticker("XETHZUSD")`.
 - Die Funktionen `fetch_kraken_prices` und `fetch_kraken_ticker` müssen existieren (nach fetch_funding_rates, vor CoinGecko-Sektion).
 - **ALWAYS OKX für Funding** — Binance UND Bybit auf Railway blockiert (403). fetch_funding_rates nutzt www.okx.com/api/v5/public/funding-rate (instId BTC-USDT-SWAP / ETH-USDT-SWAP). CoinGecko-Fallback-Logik unverändert lassen.
 - **fetch_global_data() returns hardcoded 55.0** — NEVER add external API calls here. All blocked on Railway US-West (CoinGecko 429, CoinCap/Bybit/Binance DNS blocked).

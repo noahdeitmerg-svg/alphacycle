@@ -67,7 +67,8 @@ DO NOT modify weights. DO NOT add scoring components.
 41. fetcher.py: btc_dominance hardcoded 55.0, total_market_cap 0 — alle externen APIs (CoinGecko 429, CoinCap/Bybit/Binance) auf Railway US-West blockiert. index.html: Data Inspector ohne diRow BTC Dominance / Total Market Cap / BTC Dominance %
 42. backtest_engine.py: Paginated Kraken OHLC (max 720/request), ARC = ma_200w*0.35 + drawdown*0.35 + fg(50)*0.15 + liq(50)*0.15. Return {date, price, score}. index.html: ARC History Chart (arc-history-chart) mit Chart.js, S.backtest, Risk-Zonen als fill, Placeholder "Lade historische Daten...".
 43. backtest_engine.py: File cache /tmp/backtest_cache.json; einmal 10y laden, taeglich 1-2 fehlende Tage nachladen.
-44. backtest_engine.py: WINDOW_200W=1400 (echter 200W MA), HTTP_TIMEOUT=60, Cache min 2000. Fetch 5200 Tage (14 Jahre), ARC-Chart ab ~2016. _fetch_btc_history: Abbruch nur wenn len(candles) < 10 (nicht < 700). index.html: Chart yPrice dynamisch, Tooltip nur ARC + BTC Price.
+44. backtest_engine.py: WINDOW_200W=1400, HTTP_TIMEOUT=60, Cache min 2000, Fetch 5200d, Abbruch len(candles)<10. index.html Chart UX: yPrice dynamisch skaliert (validPrices 0.88/1.08), Tooltip nur ARC Index + BTC Price.
+45. fetcher.py: CoinGecko fetch_market_data aus fetch_all() entfernt (429 auf Railway). asyncio.gather nur noch 11 Aufrufe (0: Kraken BTC/ETH prices+ticker, 4: F&G, 5: TVL, 6: stable, 7: WALCL, 8: DGS10, 9: global_data, 10: funding). btc_cg/eth_cg = leere Fallback-Dicts. Spart ~3s pro Refresh.
 
 ## Active Endpoints (Railway)
 /health /api/prices /api/cycle/btc /api/cycle/eth /api/cycle/macro
@@ -84,7 +85,7 @@ DO NOT modify weights. DO NOT add scoring components.
 7. Data Inspector (collapsed by default, SHOW/HIDE toggle)
 
 ## Data Sources
-Prices: Kraken (primary), CoinGecko (fallback)
+Prices: Kraken (primary). CoinGecko fetch_market_data entfernt (429 auf Railway); btc_cg/eth_cg = leere Fallbacks.
 Global/dominance: hardcoded 55% (APIs blockiert auf Railway)
 Funding: OKX (Binance Futures + Bybit 403 auf Railway)
 F&G: Alternative.me
