@@ -1060,7 +1060,6 @@ canvas.sparkline {
         <div class="hero-subtitle">Proprietary Cycle Risk Index (0–100)</div>
         <div class="hero-risk-label" id="hero-risk-label">—</div>
       </div>
-      <div class="score-tag" id="btc-tag" style="color:var(--btc);border-color:rgba(14,165,233,0.3);background:var(--btc-dim)">—</div>
     </div>
     <div class="gauge-wrap">
       <svg viewBox="0 0 200 130" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1256,7 +1255,7 @@ canvas.sparkline {
         <div class="score-phase" id="mac-phase" style="color:var(--mac)">—</div>
         <div class="score-price" id="mac-walcl">—</div>
       </div>
-      <div class="components-grid" id="mac-components"></div>
+      <div class="components-grid" id="liquidity-components"></div>
     </div>
   </div>
 
@@ -1371,7 +1370,7 @@ canvas.sparkline {
     <div class="sec-line"></div>
   </div>
   <div class="status-row anim d6">
-    <div class="status-src" id="src-cg"><span class="status-dot"></span>CoinGecko</div>
+    <div class="status-src" id="src-cg"><span class="status-dot"></span>Kraken</div>
     <div class="status-src" id="src-fg"><span class="status-dot"></span>Alt.me Fear&amp;Greed</div>
     <div class="status-src" id="src-dl"><span class="status-dot"></span>DeFiLlama TVL</div>
     <div class="status-src" id="src-stable"><span class="status-dot"></span>DeFiLlama Stablecoins</div>
@@ -1387,7 +1386,7 @@ canvas.sparkline {
     </div>
     <div class="footer-meta">Auto-refresh every 60s · <span id="countdown">60</span>s next sync</div>
     <div class="footer-disclaimer">
-      For informational purposes only. Not financial advice. Data via CoinGecko · DeFiLlama · Alternative.me · FRED.<br>
+      For informational purposes only. Not financial advice. Data via Kraken · DeFiLlama · Alternative.me · FRED.<br>
       Scores are algorithmic estimates — DYOR before making any investment decisions.
     </div>
   </footer>
@@ -1428,6 +1427,13 @@ const S = {
   btcShortTerm:        null,
   cycleAnchor:         null,
   ethComponents:       null,
+  backtest:            [],
+  liquidityRegime:     null,
+  btcAth:              0,
+  btcAthChange:        0,
+  ethAth:              0,
+  btcDominance:        50,
+  totalMarketCap:      0,
   fgCurrent:    50,
   fgLabel:      'Neutral',
   tvlCurrent:   0,
@@ -1630,27 +1636,6 @@ async function apiFetch(url) {
   return r.json();
 }
 
-async function fetchCoinGecko(coinId, days=365) {
-  const d=await apiFetch(
-    `https://api.coingecko.com/api/v3/coins/${coinId}/market_chart?vs_currency=usd&days=${days}&interval=daily`
-  );
-  return (d.prices||[]).map(([t,p])=>safeNum(p)).filter(v=>v>0);
-}
-
-async function fetchMarketData(coinId) {
-  const d=await apiFetch(`https://api.coingecko.com/api/v3/coins/${coinId}?localization=false&tickers=false&community_data=false&developer_data=false`);
-  const md=d.market_data||{};
-  return {
-    price:     safeNum(md.current_price?.usd,0),
-    change24h: safeNum(md.price_change_percentage_24h,0),
-    marketCap: safeNum(md.market_cap?.usd,0),
-    volume:    safeNum(md.total_volume?.usd,0),
-    ath:       safeNum(md.ath?.usd,0),
-    athChgPct: safeNum(md.ath_change_percentage?.usd,0),
-    priceHist: (d.market_chart?.prices||[]).map(([,p])=>safeNum(p)).filter(v=>v>0),
-  };
-}
-
 async function fetchFearGreed(limit=90) {
   const d=await apiFetch(`https://api.alternative.me/fng/?limit=${limit}&format=json`);
   const items=(d.data||[]).reverse().map(x=>({
@@ -1707,8 +1692,10 @@ async function loadAllData() {
         apiFetch(`${BACKEND_URL}/api/history`),
         apiFetch(`${BACKEND_URL}/api/analyzer`),
         apiFetch(`${BACKEND_URL}/api/cycle-anchor`),
+        apiFetch(`${BACKEND_URL}/api/backtest`),
+        apiFetch(`${BACKEND_URL}/api/liquidity-regime`),
       ]);
-      const [prices, btcC, ethC, macC, hist, analyzer, anchor] =
+      const [prices, btcC, ethC, macC, hist, analyzer, anchor, backtest, liquidity] =
         results.map(r => r.status === 'fulfilled' ? r.value : null);
 
       if(prices) {
@@ -1720,7 +1707,23 @@ async function loadAllData() {
         S.fgLabel    = prices.fear_greed?.label??'Neutral';
         S.fgHistory  = prices.fear_greed?.history||[];
         S.ratioHistory = prices.eth_btc_ratio||[];
+        S.btcAth       = prices?.btc?.ath ?? 0;
+        S.btcAthChange = prices?.btc?.ath_change_pct ?? 0;
+        S.ethAth       = prices?.eth?.ath ?? 0;
+        S.btcDominance = prices?.global?.btc_dominance ?? 50;
+        S.totalMarketCap = prices?.global?.total_market_cap ?? 0;
+        // change_24h from last 2 history points (Kraken ticker has no 24h change)
+        const btcHist = prices?.btc?.history ?? [];
+        const ethHist = prices?.eth?.history ?? [];
+        S.btcChange24h = btcHist.length >= 2
+          ? ((btcHist[btcHist.length-1].v - btcHist[btcHist.length-2].v) / btcHist[btcHist.length-2].v * 100)
+          : 0;
+        S.ethChange24h = ethHist.length >= 2
+          ? ((ethHist[ethHist.length-1].v - ethHist[ethHist.length-2].v) / ethHist[ethHist.length-2].v * 100)
+          : 0;
       }
+      S.backtest = backtest?.results ?? [];
+      S.liquidityRegime = liquidity ?? null;
       if(hist) {
         S.tvlHistory    = hist.tvl||[];
         S.stableHistory = (hist.stablecoin||[]);
@@ -1766,21 +1769,17 @@ async function loadAllData() {
     }
   }
 
-  // Direct API calls (no backend)
-  const [btcHist, ethHist, btcMkt, ethMkt, fg, tvl, stable] = await Promise.all([
-    run('btcPrices',  ()=>fetchCoinGecko('bitcoin',  730)),
-    run('ethPrices',  ()=>fetchCoinGecko('ethereum', 730)),
-    run('btcMarket',  ()=>fetchMarketData('bitcoin')),
-    run('ethMarket',  ()=>fetchMarketData('ethereum')),
+  // Direct API calls (no backend) — no CoinGecko; prices come from backend only
+  const [fg, tvl, stable] = await Promise.all([
     run('fearGreed',  ()=>fetchFearGreed(90)),
     run('tvl',        ()=>fetchTVL()),
     run('stablecoins',()=>fetchStablecoins()),
   ]);
 
-  S.btcPrices  = btcHist  || [];
-  S.ethPrices  = ethHist  || [];
-  S.btcMarket  = btcMkt   || {price:0,change24h:0,marketCap:0,volume:0,ath:0};
-  S.ethMarket  = ethMkt   || {price:0,change24h:0,marketCap:0,volume:0,ath:0};
+  S.btcPrices  = [];
+  S.ethPrices  = [];
+  S.btcMarket  = {price:0,change24h:0,marketCap:0,volume:0,ath:0};
+  S.ethMarket  = {price:0,change24h:0,marketCap:0,volume:0,ath:0};
   S.fgCurrent  = fg?.current ?? 50;
   S.fgLabel    = fg?.label   ?? 'Neutral';
   S.fgHistory  = fg?.history || [];
@@ -1817,7 +1816,7 @@ function markSources(errors) {
     if(!el) return;
     el.className='status-src '+(ok?'ok':'err');
   };
-  setStatus('src-cg',     !errors.btcPrices&&!errors.btcMarket);
+  setStatus('src-cg',     !!(S.btcPrices?.length));
   setStatus('src-fg',     !errors.fearGreed);
   setStatus('src-dl',     !errors.tvl);
   setStatus('src-stable', !errors.stablecoins);
@@ -1851,10 +1850,9 @@ function renderComponents(containerId, components) {
 
 // ── PHASE BANNER ────────────────────────────────────────────────────────────
 function updatePhaseBanner() {
-  // Use Alpha Cycle Position from backend when available (corrected score); else combined
-  const positionScore = S.alphaCyclePosition != null ? S.alphaCyclePosition : S.combined;
-  const phase = S.analyzerPhase || phaseOf(positionScore);
-  const col   = scoreColor(positionScore);
+  const score = S.btcScore ?? S.combined ?? 50;
+  const phase = phaseOf(score);
+  const col   = scoreColor(score);
   const banner = $('phase-banner');
 
   const phaseStyles = {
@@ -1871,7 +1869,7 @@ function updatePhaseBanner() {
   $('phase-icon').textContent    = phaseIcon(phase);
   $('phase-name').textContent    = phase;
   $('phase-desc').textContent    = S.analyzerSignal ? `${S.analyzerSignal} — ${phaseDesc(phase)}` : phaseDesc(phase);
-  $('phase-combined').textContent = Math.round(S.btcScore);
+  $('phase-combined').textContent = Math.round(score);
   $('phase-combined').style.color = col;
   const eyebrow = $('phase-eyebrow');
   if(eyebrow) eyebrow.textContent = 'Market Cycle Phase';
@@ -1915,7 +1913,6 @@ function updateUI() {
   setText('mac-score-val', Math.round(S.macScore), mCol);
 
   // Tags
-  setText('btc-tag', phaseOf(S.btcScore));
   setText('eth-tag', phaseOf(S.ethScore));
   setText('mac-tag', phaseOf(S.macScore));
 
@@ -1953,10 +1950,12 @@ function updateUI() {
     {label:'Fear & Greed',  score: S.ethComponents?.fear_greed?.score    ?? 50},
     {label:'Liquidity',     score: S.ethComponents?.liquidity?.score     ?? 50},
   ]);
-  renderComponents('mac-components', [
-    {label:'WALCL Trend',  score:S.walclHistory.length>2?clamp(100-trendScore(S.walclHistory.map(x=>x.v),26)):50},
-    {label:'Stable Supply',score:S.stableHistory.length>2?clamp(100-trendScore(S.stableHistory.map(x=>x.v),90)):50},
-    {label:'BTC Risk-On',  score:S.btcPrices.length>2?trendScore(S.btcPrices,60):50},
+  const liq = S.liquidityRegime;
+  const mac = null;
+  renderComponents('liquidity-components', [
+    {label:'WALCL Trend',   score: liq?.components?.walcl_trend_score   ?? mac?.components?.walcl    ?? 50},
+    {label:'Stable Supply', score: liq?.components?.stablecoin_score    ?? mac?.components?.stable   ?? 50},
+    {label:'BTC Risk-On',  score: liq?.components?.btc_confirmation_score ?? mac?.components?.btc_risk ?? 30},
   ]);
 
   updatePhaseBanner();
@@ -1995,7 +1994,7 @@ function updateUI() {
     renderComponents('short-term-components', [
       {label:'RSI',       score: st.rsi       ?? 50},
       {label:'Funding',   score: st.funding   ?? 50},
-      {label:'Power Law', score: st.power_law ?? 50},
+      {label:'Power Law', score: st.power_law ?? st.power_law_score ?? 50},
       {label:'MVRV',      score: st.mvrv      ?? 50},
     ]);
   })();
@@ -2025,11 +2024,13 @@ function updateUI() {
     }
   })();
 
-  // Price cards
+  // Price cards (change_24h from history when from backend/Kraken)
+  const btcChg = S.btcChange24h != null ? S.btcChange24h : (S.btcMarket?.change_24h ?? S.btcMarket?.change24h ?? 0);
+  const ethChg = S.ethChange24h != null ? S.ethChange24h : (S.ethMarket?.change_24h ?? S.ethMarket?.change24h ?? 0);
   updatePriceCard('pc-btc-price','pc-btc-chg','pc-btc-vol',
-    btcP, S.btcMarket?.change24h||0, S.btcMarket?.volume||0, 'var(--btc)');
+    btcP, btcChg, S.btcMarket?.volume_24h||S.btcMarket?.volume||0, 'var(--btc)');
   updatePriceCard('pc-eth-price','pc-eth-chg','pc-ratio',
-    ethP, S.ethMarket?.change24h||0, ratio, 'var(--eth)', true);
+    ethP, ethChg, ratio, 'var(--eth)', true);
 
   // F&G card
   if($('pc-fg-val')) {
@@ -2056,7 +2057,17 @@ function updateUI() {
   setText('chip-tvl',   S.tvlCurrent>0?fmtB(S.tvlCurrent):'—');
   setText('chip-stable',S.stableCurrent>0?fmtB(S.stableCurrent):'—');
   setText('chip-walcl', S.walclCurrent>0?`$${(S.walclCurrent/1e12).toFixed(2)}T`:'—');
-  setText('chip-btc-ath',S.btcMarket?.athChgPct?`${Math.round(S.btcMarket.athChgPct)}% from ATH`:'—');
+  // BTC ATH from /api/prices response (computed from Kraken history)
+  const btcAth = S.btcAth ?? 0;
+  const btcAthPct = S.btcAthChange ?? 0;
+  const chipAth = document.getElementById('chip-btc-ath');
+  if (chipAth) {
+    if (btcAth > 0) {
+      chipAth.textContent = '$' + Math.round(btcAth).toLocaleString() + ' (' + btcAthPct.toFixed(1) + '%)';
+    } else {
+      chipAth.textContent = '—';
+    }
+  }
 
   // Ticker
   const tPairs = [['tk-btc','tk-btc2',`$${fmt(btcP)}`],['tk-eth','tk-eth2',`$${fmt(ethP)}`],
