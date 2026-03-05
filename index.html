@@ -530,12 +530,13 @@ body::before {
   line-height: 1.1;
 }
 .decision-note {
-  font-size: 0.7rem;
-  color: var(--tx-ter);
+  font-size: 0.65rem;
+  color: var(--tx-dim);
   border-top: 1px solid var(--border);
-  padding: 0.75rem 1.75rem;
+  padding: 0.6rem 1.75rem;
   font-family: var(--f-mono);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .two-col-row {
@@ -723,6 +724,31 @@ body::before {
   font-family: var(--f-mono);
   font-size: 11px;
   color: var(--tx-sec);
+}
+
+#eth-card .gauge-center,
+#mac-card .gauge-center {
+  justify-content: flex-end;
+  padding-bottom: 14px;
+}
+#eth-card .gauge-val,
+#mac-card .gauge-val {
+  font-size: clamp(36px, 6vw, 48px);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+#eth-card .gauge-denom,
+#mac-card .gauge-denom {
+  font-size: 13px;
+  color: var(--tx-ter);
+  margin-bottom: 8px;
+}
+#eth-card .score-footer,
+#mac-card .score-footer {
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+  margin-top: 0.5rem;
 }
 
 /* Component bars */
@@ -1422,7 +1448,7 @@ canvas.sparkline {
         <div class="decision-value" id="dec-confidence">—</div>
       </div>
     </div>
-    <div class="decision-note">Based on AlphaCycle Index: <span id="dec-index-val">—</span></div>
+    <div class="decision-note">ARC INDEX <span id="dec-index-val" style="color:var(--btc);font-weight:600">—</span> / 100</div>
   </div>
 
   <!-- TWO-COL ROW: Short Term + Cycle Timeline -->
@@ -1515,7 +1541,7 @@ canvas.sparkline {
 
       <!-- Links: Phase -->
       <div class="cycle-phase-side">
-        <span id="phase-icon" style="display:none"></span>
+        <div class="phase-icon-wrap" id="phase-icon" style="display:none"></div>
         <div class="phase-eyebrow-label" id="phase-eyebrow">Market Cycle Phase</div>
         <div class="phase-name" id="phase-name">Loading…</div>
         <div class="phase-desc" id="phase-desc">Fetching data…</div>
