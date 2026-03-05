@@ -673,6 +673,51 @@ body::before {
   text-transform: uppercase;
 }
 
+.content-export-card {
+  padding: 1.25rem 1.5rem;
+}
+.ce-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+.ce-btn {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.03);
+  color: var(--tx-sec);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.ce-btn:hover {
+  border-color: rgba(14,165,233,0.4);
+  color: var(--tx-pri);
+  background: rgba(14,165,233,0.06);
+}
+.ce-btn.copied {
+  border-color: #22c55e;
+  color: #22c55e;
+}
+.ce-preview {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--tx-sec);
+  white-space: pre-wrap;
+  padding: 1rem;
+  background: rgba(0,0,0,0.2);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  max-height: 200px;
+  overflow-y: auto;
+}
+
 .two-col-row {
   display: block;
   margin-bottom: 14px;
@@ -1894,6 +1939,20 @@ canvas.sparkline {
     <div class="status-src" id="src-ts"><span class="status-dot"></span><span id="src-ts-lbl">—</span></div>
   </div>
 
+  <!-- ── CONTENT EXPORT ── -->
+  <div class="sec-header anim d6">
+    <div class="sec-title">Content Export</div>
+    <div class="sec-line"></div>
+  </div>
+  <div class="card content-export-card anim">
+    <div class="ce-row">
+      <button class="ce-btn" id="ce-copy-daily" type="button" onclick="copyTemplate('daily_update')">Copy Daily Update</button>
+      <button class="ce-btn" id="ce-copy-compact" type="button" onclick="copyTemplate('compact')">Copy Compact Post</button>
+      <button class="ce-btn" id="ce-copy-edu" type="button" onclick="copyTemplate('educational')">Copy Educational</button>
+    </div>
+    <div class="ce-preview" id="ce-preview">Post wird geladen…</div>
+  </div>
+
   <!-- ── FOOTER ── -->
   <footer class="footer anim d6">
     <div class="footer-brand">
@@ -1957,6 +2016,7 @@ const S = {
   backtestHistory:     [],
   liquidityRegime:     null,
   arcSummary:          null,
+  snapshot:            null,
   btcAth:              0,
   btcAthChange:        0,
   ethAth:              0,
@@ -3351,6 +3411,75 @@ function resetCountdown() {
 
 function manualRefresh() { countdown=0; }
 
+// ── SNAPSHOT (Content Generation, every 5 min) ─────────────────────────────
+let _snapshotInterval = null;
+
+async function fetchSnapshot() {
+  if (!BACKEND_URL) return;
+  try {
+    const snap = await apiFetch(BACKEND_URL + '/api/snapshot');
+    if (snap) {
+      S.snapshot = snap;
+      if (snap.post_templates) {
+        console.log('=== ALPHACYCLE SNAPSHOT ===');
+        console.log('Daily Update:\n', snap.post_templates.daily_update);
+        console.log('Compact:\n', snap.post_templates.compact);
+      }
+      updateContentPreview();
+    }
+  } catch (e) {
+    console.warn('snapshot fetch failed:', e);
+  }
+}
+
+function updateContentPreview() {
+  const preview = document.getElementById('ce-preview');
+  if (!preview) return;
+  const snap = S.snapshot;
+  if (snap && snap.post_templates && snap.post_templates.daily_update) {
+    preview.textContent = snap.post_templates.daily_update;
+  } else {
+    preview.textContent = 'Post wird geladen…';
+  }
+}
+
+function copyTemplate(type) {
+  const snap = S.snapshot;
+  if (!snap || !snap.post_templates) {
+    alert('Snapshot not loaded yet. Wait a moment.');
+    return;
+  }
+  const text = snap.post_templates[type];
+  if (!text) return;
+  const preview = document.getElementById('ce-preview');
+  if (preview) preview.textContent = text;
+  const btnId = type === 'daily_update' ? 'ce-copy-daily' : type === 'compact' ? 'ce-copy-compact' : 'ce-copy-edu';
+  const btn = document.getElementById(btnId);
+  const labels = { daily_update: 'Copy Daily Update', compact: 'Copy Compact Post', educational: 'Copy Educational' };
+  navigator.clipboard.writeText(text).then(function() {
+    if (btn) {
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(function() {
+        btn.textContent = labels[type] || btn.textContent;
+        btn.classList.remove('copied');
+      }, 2000);
+    }
+  }).catch(function() {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    if (btn) {
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(function() { btn.textContent = labels[type]; btn.classList.remove('copied'); }, 2000);
+    }
+  });
+}
+
 // ── BOOT ──────────────────────────────────────────────────────────────────
 const BOOT_STEPS=[
   {msg:'CONNECTING TO KRAKEN…',   pct:20},
@@ -3395,6 +3524,8 @@ async function boot() {
     if(stat) stat.textContent='READY.';
     if(loadingEl) loadingEl.style.display = 'none';
     resetCountdown();
+    fetchSnapshot();
+    if (!_snapshotInterval) _snapshotInterval = setInterval(fetchSnapshot, 5 * 60 * 1000);
   }
 }
 

@@ -71,6 +71,11 @@ try:
 except ImportError:
     from backend.services.backtest_engine import run_backtest
 
+try:
+    from snapshot import build_snapshot
+except ImportError:
+    from backend.snapshot import build_snapshot
+
 # -- LOGGING --------------------------------------------------------------------
 logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
@@ -669,6 +674,159 @@ async def get_analyzer():
     except Exception as e:
         logger.exception("Analyzer endpoint failed")
         return api_response({"error": str(e), "alpha_cycle_position": 50.0})
+
+
+def _phase_label(arc: float) -> str:
+    """Match frontend phaseOf(): Low / Moderate / Elevated / Extreme Risk."""
+    a = max(0.0, min(100.0, float(arc)))
+    if a < 30:
+        return "Low Risk"
+    if a < 60:
+        return "Moderate Risk"
+    if a < 75:
+        return "Elevated Risk"
+    return "Extreme Risk"
+
+
+@app.get("/api/snapshot")
+async def get_snapshot():
+    """
+    Aggregates all relevant data and returns ready-to-use post templates.
+    """
+    try:
+        c = _require_cache()
+        raw = c["raw"]
+        btc_prices = raw.get("btc_prices", [])
+        btc_price = float(btc_prices[-1]) if btc_prices else 0.0
+        ath_price = max(btc_prices) if btc_prices else btc_price
+        btc_drawdown = ((btc_price - ath_price) / ath_price * 100) if ath_price > 0 else -30.0
+        score_history = c.get("score_history", {}).get("combined", [])
+        walcl = [x["v"] for x in raw.get("walcl_series", [])]
+        liquidity_trend = c["macro_scores"].get("walcl_trend", 50.0)
+        ma_200w = safe_float(c["btc_scores"].get("ma_200w_raw", 0.0))
+
+        result = _analyzer.analyze(
+            combined_score=c["combined"].get("combined_score", 50.0),
+            btc_score=c["btc_scores"].get("btc_score", 50.0),
+            eth_score=c["eth_scores"].get("eth_score", 50.0),
+            macro_score=c["macro_scores"].get("macro_score", 50.0),
+            fear_greed=raw["fear_greed"]["current"],
+            btc_price=btc_price,
+            btc_drawdown_pct=btc_drawdown,
+            liquidity_trend=liquidity_trend,
+            score_history=score_history,
+            btc_price_history=btc_prices,
+            ma_200w=ma_200w,
+            ath_price=safe_float(raw.get("btc_market", {}).get("ath", ath_price)),
+        )
+        try:
+            anchor_data = compute_cycle_anchor()
+            days_since = anchor_data.get("days_since_cycle_bottom", 0)
+            st = c["btc_scores"].get("short_term", {})
+            st_ctx = get_short_term_context(
+                arc_score=result.get("alpha_cycle_position", 50.0),
+                days_since_bottom=days_since or 0,
+                rsi_score=st.get("rsi", 50.0),
+                funding_score=st.get("funding", 50.0),
+                power_law_score=st.get("power_law", 50.0),
+                mvrv_score=st.get("mvrv", 50.0),
+                btc_price=btc_price,
+                ath_price=ath_price,
+                ma_200w=ma_200w,
+            )
+            result["short_term_context"] = st_ctx
+        except Exception as e:
+            logger.warning("short_term_context failed: %s", e)
+            st_ctx = {
+                "st_score": 50,
+                "phase_label": "Transition",
+                "upside_pct": 10,
+                "downside_pct": 15,
+            }
+
+        from datetime import datetime as _dt
+        analysis = cycle_analyzer.analyze(
+            combined_score=c["combined"].get("combined_score", 50.0),
+            btc_score=c["btc_scores"].get("btc_score", 50.0),
+            eth_score=c["eth_scores"].get("eth_score", 50.0),
+            macro_score=c["macro_scores"].get("macro_score", 50.0),
+            fear_greed=raw.get("fear_greed", {}).get("current", 50.0),
+            btc_price=btc_price,
+            btc_drawdown_pct=btc_drawdown,
+            liquidity_trend=c["macro_scores"].get("walcl_trend", 50.0),
+            score_history=score_history,
+            btc_price_history=raw.get("btc_prices", []),
+            ma_200w=ma_200w,
+            ath_price=safe_float(raw.get("btc_market", {}).get("ath", 0.0)),
+            now=_dt.utcnow(),
+        )
+        dec = decision_engine.decide(
+            phase=analysis.get("phase", "Accumulation"),
+            cycle_position=analysis.get("alpha_cycle_position", analysis.get("cycle_position_percent", 50.0)),
+            combined_score=c["combined"].get("combined_score", 50.0),
+            btc_score=c["btc_scores"].get("btc_score", 50.0),
+            eth_score=c["eth_scores"].get("eth_score", 50.0),
+            macro_score=c["macro_scores"].get("macro_score", 50.0),
+            seasonality_score=analysis.get("seasonality_score", 50.0),
+            seasonality_bias=analysis.get("seasonality_bias", "NEUTRAL"),
+            bottom_probability=analysis.get("bottom_probability", 50.0),
+            top_probability=analysis.get("top_probability", 10.0),
+            confidence=analysis.get("confidence", 50.0),
+            years_since_halving=analysis.get("seasonality_detail", {}).get("years_since_halving", 1.0),
+            btc_price=btc_price,
+            eth_price=safe_float(raw.get("eth_market", {}).get("price", 0)),
+            btc_drawdown_pct=btc_drawdown,
+            fear_greed=raw.get("fear_greed", {}).get("current", 50.0),
+            walcl_series=raw.get("walcl_series", []),
+            stable_series=raw.get("stable_series", []),
+            score_history=score_history,
+        )
+        position = result.get("position") or dec.get("position", "HOLD")
+        override = result.get("decision_override")
+        if override:
+            position = override
+        spot = dec.get("spot_allocation", {})
+        allocation = "BTC %s%% / ETH %s%% / Cash %s%%" % (
+            spot.get("btc", 40), spot.get("eth", 20), spot.get("cash", 40),
+        )
+
+        arc_score = result.get("alpha_cycle_position", c["combined"].get("combined_score", 50.0))
+        st_ctx = result.get("short_term_context") or st_ctx
+        cy_sig = result.get("cycle_signal") or {}
+        eth_price = safe_float(raw.get("eth_market", {}).get("price", 0))
+
+        snapshot = build_snapshot(
+            arc_score=arc_score,
+            btc_price=btc_price,
+            eth_price=eth_price,
+            fear_greed=raw["fear_greed"]["current"],
+            phase_label=_phase_label(arc_score),
+            position=position,
+            allocation=allocation,
+            upside_pct=st_ctx.get("upside_pct", 0),
+            downside_pct=st_ctx.get("downside_pct", 0),
+            st_score=st_ctx.get("st_score", 50),
+            cycle_phase_label=st_ctx.get("phase_label", "Transition"),
+            signal_type=cy_sig.get("signal_type", "NONE"),
+            days_since_bottom=compute_days_since_bottom(),
+            btc_score=c["btc_scores"].get("btc_score", 50.0),
+            eth_score=c["eth_scores"].get("eth_score", 50.0),
+            mac_score=c["macro_scores"].get("macro_score", 50.0),
+            ma_200w_dev=c["btc_scores"].get("ma_200w_dev_pct"),
+            drawdown_pct=abs(btc_drawdown) / 100.0 if btc_drawdown else None,
+            expected_range=None,
+            confidence=dec.get("confidence"),
+        )
+        return api_response(snapshot)
+    except Exception as e:
+        logger.error("snapshot error: %s", e)
+        return api_response({
+            "error": str(e),
+            "post_templates": {
+                "daily_update": "Data loading...",
+                "compact": "Data loading...",
+            },
+        })
 
 
 @app.get("/api/decision")
