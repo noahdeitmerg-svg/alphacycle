@@ -449,9 +449,14 @@ async def get_cycle_anchor():
 async def get_arc_summary():
     """ARC Index consolidated summary."""
     c = _require_cache()
+    raw = c["raw"]
     btc = c["btc_scores"]
     mac = c["macro_scores"]
     com = c["combined"]
+    net_liq_series = raw.get("net_liq_series", [])
+    tga_series = raw.get("tga_series", [])
+    net_liq_current = float(net_liq_series[-1]["v"]) if net_liq_series else None
+    tga_current = float(tga_series[-1]["v"]) if tga_series else None
     return api_response({
         "arc_score":   round(com.get("combined_score", 50.0), 1),
         "btc_score":   round(btc.get("btc_score", 50.0), 1),
@@ -460,12 +465,14 @@ async def get_arc_summary():
         "regime":      mac.get("regime", "NEUTRAL") or "NEUTRAL",
         "decision":    com.get("signal", "HOLD") or "HOLD",
         "confidence":  round(com.get("confidence", 50.0), 1),
-        "fear_greed":  c["raw"]["fear_greed"]["current"],
+        "fear_greed":  raw["fear_greed"]["current"],
         "components": {
             "ma_200w":    round(btc.get("ma_200w", 50.0), 1),
             "drawdown":   round(btc.get("drawdown", 50.0), 1),
             "fear_greed": round(btc.get("fear_greed", 50.0), 1),
             "liquidity":  round(btc.get("macro_liq", 50.0), 1),
+            "net_liq":    net_liq_current,
+            "tga":        tga_current,
         },
         "short_term": btc.get("short_term", {}),
     })

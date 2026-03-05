@@ -204,8 +204,10 @@ async def fetch_fred_series(series_id,start="2020-01-01"):
     data=await _get("https://api.stlouisfed.org/fred/series/observations",params={
         "series_id":series_id,"api_key":FRED_API_KEY,"file_type":"json","observation_start":start})
     if not data or "observations" not in data: return []
-    return [{"t":int(datetime.strptime(o["date"],"%Y-%m-%d").timestamp())*1000,"v":_sf(o["value"])}
+    result=[{"t":int(datetime.strptime(o["date"],"%Y-%m-%d").timestamp())*1000,"v":_sf(o["value"])}
             for o in data["observations"] if o.get("value",".")!="."]
+    logger.info("FRED %s: %s pts", series_id, len(result))
+    return result
 
 
 def _compute_net_liquidity(walcl, tga, rrp):
@@ -302,8 +304,8 @@ async def fetch_all():
         fetch_fred_series("DGS10"),             # 8
         fetch_global_data(),                   # 9
         fetch_funding_rates(),                 # 10
-        fetch_fred_series("WTREGEN"),          # 11 Treasury General Account
-        fetch_fred_series("RRPONTSYD"),        # 12 Reverse Repo
+        fetch_fred_series("WTREGEN", start="2015-01-01"),   # 11 Treasury General Account
+        fetch_fred_series("RRPONTSYD", start="2015-01-01"), # 12 Reverse Repo
         return_exceptions=True,
     )
     def safe(r,d): return d if (isinstance(r,Exception) or r is None) else r
