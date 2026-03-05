@@ -2218,8 +2218,6 @@ function renderDataInspector() {
       diRow('ETH Change 24h', ethChg, v => v != null ? (Number(v).toFixed(2) + '%') : '—'),
       diRow('ETH ATH', S.ethAth, v => v > 0 ? '$' + fmt(v) : '—'),
       diRow('ETH ATH Change %', S.ethAthChange, v => v != null ? Number(v).toFixed(1) + '%' : '—'),
-      diRow('BTC Dominance', S.btcDominance, v => v != null ? Number(v).toFixed(1) + '%' : '—'),
-      diRow('Total Market Cap', S.totalMarketCap, v => v > 0 ? fmtB(v) : '—'),
       diRow('Stablecoin Cap (B)', S.stableCurrent, v => v > 0 ? fmtB(v) : '—'),
       diRow('Funding BTC Rate', S.funding?.btc_funding_rate, fmtFunding),
       diRow('Funding ETH Rate', S.funding?.eth_funding_rate, fmtFunding),
@@ -2255,7 +2253,6 @@ function renderDataInspector() {
       diRow('Score', roundScore(S.macScore)),
       diRow('WALCL Current (T)', S.walclCurrent, v => v > 0 ? fmtT(v) : '—'),
       diRow('Stable Current (B)', S.stableCurrent, v => v > 0 ? fmtB(v) : '—'),
-      diRow('BTC Dominance %', S.btcDominance, v => v != null ? Number(v).toFixed(1) + '%' : '—'),
     ],
   });
 

@@ -136,25 +136,12 @@ async def fetch_coin_prices_cg(coin_id,days=365):
     logger.info(f"CoinGecko {coin_id}: {len(prices)}d"); return prices
 
 async def fetch_global_data():
-    """CoinCap global endpoint - no API key, Railway-compatible."""
-    try:
-        data = await _get("https://api.coincap.io/v2/global")
-        if data and data.get("data"):
-            d = data["data"]
-            btc_dom = _sf(d.get("bitcoinDominancePercent", 0))
-            total_mc = _sf(d.get("totalMarketCapUsd", 0))
-            if btc_dom <= 0:
-                btc_dom = 55.0
-            return {
-                "btc_dominance": round(btc_dom, 1),
-                "total_market_cap": total_mc,
-                "total_volume_24h": _sf(d.get("totalVolumeUsd", 0)),
-                "market_cap_change_24h": 0.0,
-            }
-    except Exception as e:
-        logger.warning(f"Global data (CoinCap): {e}")
-    return {"btc_dominance": 50.0, "total_market_cap": 0.0,
-            "total_volume_24h": 0.0, "market_cap_change_24h": 0.0}
+    return {
+        "btc_dominance": 55.0,
+        "total_market_cap": 0.0,
+        "total_volume_24h": 0.0,
+        "market_cap_change_24h": 0.0,
+    }
 
 # -- FEAR & GREED -----------------------------------------------------------------
 async def fetch_fear_greed(limit=90):

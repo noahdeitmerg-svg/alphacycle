@@ -14,6 +14,7 @@
 - ✅ Deployed auf Railway, getestet — Dashboard live bei Score 30/100
 
 ## Nächste Schritte
+- [ ] **FIX #42 (Priorität):** Backtest 10 Jahre + ARC Chart Visualisierung
 - [ ] X Content für AlphaCycle erstellen
 - [ ] Paid SaaS Funnel planen
 
@@ -64,7 +65,7 @@ DO NOT modify weights. DO NOT add scoring components.
 38. fetcher.py: Funding Rates von OKX (Binance Futures und Bybit 403 auf Railway) — fetch_funding_rates() nutzt okx.com/api/v5/public/funding-rate
 39. fetcher.py: Global data (btc_dominance, total_market_cap) via CoinCap — CoinGecko /global gibt 429
 40. index.html: FRED-Label dynamisch — src-fred je nach S.walclCurrent: FRED oder FRED (synthetic fallback) + class status-src / warn
-41. fetcher.py: CoinCap /v2/global fuer global data (bitcoinDominancePercent, totalMarketCapUsd) — nicht /v2/assets/bitcoin
+41. fetcher.py: btc_dominance hardcoded 55.0, total_market_cap 0 — alle externen APIs (CoinGecko 429, CoinCap/Bybit/Binance) auf Railway US-West blockiert. index.html: Data Inspector ohne diRow BTC Dominance / Total Market Cap / BTC Dominance %
 
 ## Active Endpoints (Railway)
 /health /api/prices /api/cycle/btc /api/cycle/eth /api/cycle/macro
@@ -82,7 +83,7 @@ DO NOT modify weights. DO NOT add scoring components.
 
 ## Data Sources
 Prices: Kraken (primary), CoinGecko (fallback)
-Global/dominance: CoinCap (CoinGecko /global 429)
+Global/dominance: hardcoded 55% (APIs blockiert auf Railway)
 Funding: OKX (Binance Futures + Bybit 403 auf Railway)
 F&G: Alternative.me
 TVL+Stablecoins: DeFiLlama
