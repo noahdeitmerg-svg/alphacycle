@@ -1566,18 +1566,13 @@ canvas.sparkline {
     </div>
   </div>
 
-  <!-- ── KEY INDICATORS ── -->
-  <div class="sec-header anim d3">
-    <div class="sec-title">Key Indicators</div>
-    <div class="sec-line"></div>
-  </div>
-  <div class="chips-row anim d3" id="chips-row">
-    <div class="chip"><span class="chip-lbl">Fear &amp; Greed</span><span class="chip-val" id="chip-fg" style="color:var(--yellow)">—</span></div>
-    <div class="chip"><span class="chip-lbl">ETH/BTC</span><span class="chip-val" id="chip-ratio" style="color:var(--eth)">—</span></div>
-    <div class="chip"><span class="chip-lbl">ETH TVL</span><span class="chip-val" id="chip-tvl" style="color:var(--eth)">—</span></div>
-    <div class="chip"><span class="chip-lbl">Stable Cap</span><span class="chip-val" id="chip-stable" style="color:var(--mac)">—</span></div>
-    <div class="chip"><span class="chip-lbl">Fed Balance</span><span class="chip-val" id="chip-walcl" style="color:var(--mac)">—</span></div>
-    <div class="chip"><span class="chip-lbl">BTC ATH</span><span class="chip-val" id="chip-btc-ath" style="color:var(--tx-sec)">—</span></div>
+  <div style="display:none">
+    <span id="chip-fg"></span>
+    <span id="chip-ratio"></span>
+    <span id="chip-tvl"></span>
+    <span id="chip-stable"></span>
+    <span id="chip-walcl"></span>
+    <span id="chip-btc-ath"></span>
   </div>
 
   <!-- ── PRICES ── -->
@@ -1652,17 +1647,6 @@ canvas.sparkline {
     <div class="status-src" id="src-stable"><span class="status-dot"></span>DeFiLlama Stablecoins</div>
     <div class="status-src" id="src-fred"><span class="status-dot"></span>FRED</div>
     <div class="status-src" id="src-ts"><span class="status-dot"></span><span id="src-ts-lbl">—</span></div>
-  </div>
-
-  <!-- ── DATA INSPECTOR ── -->
-  <div class="sec-header anim d6">
-    <div class="sec-title">DATA INSPECTOR</div>
-    <div class="sec-line"></div>
-    <button type="button" class="di-toggle" id="di-toggle" aria-expanded="false">SHOW</button>
-  </div>
-  <div class="card di-card" id="di-card">
-    <div class="card-accent accent-btc"></div>
-    <div class="di-body hidden" id="di-body"></div>
   </div>
 
   <!-- ── FOOTER ── -->
