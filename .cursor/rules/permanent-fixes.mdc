@@ -57,8 +57,8 @@ Beim Bearbeiten von backend/fetcher.py, backend/main.py, backend/scoring.py oder
 - **CMD** mit `$PORT`: `--bind 0.0.0.0:$PORT`, **workers=1** (Railway setzt PORT) — **NICHT** hardcoded 8000.
 
 ## backend/services/backtest_engine.py
-- WINDOW_200W=1400 (echter 200W MA). HTTP_TIMEOUT=60. Cache min 2000 Eintraege, sonst unlink + refetch.
-- _fetch_btc_history: **since=1381363200** (2013-10-10, Kraken BTC live) — nicht now-5200 Tage (Kraken hat Daten erst ab Okt 2013). Bei data.get("error") oder "result" not in data: logger.warning mit error + since. Abbruchbedingung len(candles) < 10.
+- Kraken OHLC **weekly** (interval=10080) — Daily max 720 Tage API-Grenze; 720 Wochen = ~13.8 Jahre. WINDOW_200W=**200** (200 wöchentliche Datenpunkte = 200-Wochen MA). since=**1381363200** (2013-10-10). Cache min 400 Eintraege. _fetch_since ebenfalls interval 10080.
+- _fetch_btc_history: Bei data.get("error") oder "result" not in data: logger.warning. Abbruchbedingung len(candles) < 10.
 - _load_or_build_cache: Bei Exception logger.warning("backtest cache load failed: %s", e), nicht pass.
 - Backtest nutzt /tmp/backtest_cache.json. ARC = ma_200w*0.35 + drawdown*0.35 + fear_greed(50)*0.15 + macro_liq*0.15. macro_liq dynamisch aus FRED Net Liquidity: _fetch_fred(WALCL/WTREGEN/RRPONTSYD), net_liq_by_date, _get_net_liq_score(date_str) (52w, 50 - pct*2.0); sonst 50.0. Return: [{"date", "price", "score"}, ...].
 
