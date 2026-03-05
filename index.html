@@ -1905,6 +1905,21 @@ canvas.sparkline {
     <div id="short-term-components"></div>
   </div>
 
+  <!-- ── 1Y ARC CHART ── -->
+  <div class="sec-header anim d5">
+    <div class="sec-title">ARC Index — 1 Year</div>
+    <div class="sec-line"></div>
+  </div>
+  <div class="card anim d5" style="padding:1.5rem">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+      <div style="font-size:13px;font-weight:600;color:var(--tx-pri)">BTC Price + ARC Score (365d)</div>
+      <button class="ce-btn" type="button" onclick="exportArcChart1Y()">Export PNG</button>
+    </div>
+    <div id="arc-chart-1y-wrap" style="height:320px;position:relative">
+      <canvas id="arc-chart-1y" style="width:100%;height:100%"></canvas>
+    </div>
+  </div>
+
   <!-- ── ARC HISTORY CHART (10Y) ── -->
   <div class="sec-header anim d5">
     <div class="sec-title">ARC History (10Y)</div>
@@ -3291,10 +3306,15 @@ function renderCharts() {
           }
         });
       }
+      renderArcChart1Y();
     } else {
       if (window._arcHistoryChart) {
         window._arcHistoryChart.destroy();
         window._arcHistoryChart = null;
+      }
+      if (_arcChart1Y) {
+        _arcChart1Y.destroy();
+        _arcChart1Y = null;
       }
       ph.style.display = 'flex';
       ph.textContent = 'Historische Daten werden geladen (kann bis zu 15 Sek. dauern)...';
@@ -3338,6 +3358,189 @@ function exportArcChart() {
   const link = document.createElement('a');
   link.download = 'alphacycle-arc-' + new Date().toISOString().split('T')[0] + '.png';
   link.href = offscreen.toDataURL('image/png');
+  link.click();
+}
+
+// ── 1Y ARC Chart ─────────────────────────────────────────────────────────
+var _arcChart1Y = null;
+
+function renderArcChart1Y() {
+  var oneYearAgo = new Date();
+  oneYearAgo.setDate(oneYearAgo.getDate() - 365);
+  var fullData = S.backtest || [];
+  var data = fullData.filter(function(d) { return new Date(d.date) >= oneYearAgo; });
+  if (!data.length) return;
+
+  var labels = data.map(function(d) { return d.date; });
+  var arcData = data.map(function(d) { return d.score != null ? Number(d.score) : null; });
+  var btcData = data.map(function(d) { return d.price != null ? Math.max(100, Number(d.price)) : null; });
+  var validPrices = btcData.filter(function(v) { return v != null && v > 100; });
+  var priceMin = validPrices.length ? Math.floor(Math.min.apply(null, validPrices) * 0.88) : 1000;
+  var priceMax = validPrices.length ? Math.ceil(Math.max.apply(null, validPrices) * 1.08) : 150000;
+
+  var canvas = document.getElementById('arc-chart-1y');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  if (_arcChart1Y) {
+    _arcChart1Y.destroy();
+    _arcChart1Y = null;
+  }
+
+  var riskZonePlugin1Y = {
+    id: 'riskZones1Y',
+    beforeDraw: function(chart) {
+      var c = chart.ctx, chartArea = chart.chartArea, scales = chart.scales;
+      if (!chartArea || !scales.y) return;
+      var left = chartArea.left, right = chartArea.right;
+      var yScale = scales.y;
+      var zones = [
+        { min: 0, max: 30, color: 'rgba(34,197,94,0.06)' },
+        { min: 30, max: 60, color: 'rgba(59,130,246,0.06)' },
+        { min: 60, max: 75, color: 'rgba(245,158,11,0.07)' },
+        { min: 75, max: 100, color: 'rgba(239,68,68,0.08)' }
+      ];
+      zones.forEach(function(z) {
+        var y1 = yScale.getPixelForValue(z.max);
+        var y2 = yScale.getPixelForValue(z.min);
+        c.save();
+        c.fillStyle = z.color;
+        c.fillRect(left, y1, right - left, y2 - y1);
+        c.restore();
+      });
+    }
+  };
+
+  var markerPlugin1Y = {
+    id: 'markers1Y',
+    afterDraw: function(chart) {
+      var c = chart.ctx, chartArea = chart.chartArea, scales = chart.scales;
+      if (!chartArea || !scales.x || !scales.y) return;
+      var chartLabels = chart.data.labels || [];
+      var arcDs = chart.data.datasets && chart.data.datasets[0] ? chart.data.datasets[0].data : [];
+      var oneYearAgoInner = new Date();
+      oneYearAgoInner.setFullYear(oneYearAgoInner.getFullYear() - 1);
+      var recentMarkers = (typeof CYCLE_MARKERS !== 'undefined' ? CYCLE_MARKERS : []).filter(function(m) {
+        return new Date(m.date) >= oneYearAgoInner;
+      });
+      recentMarkers.forEach(function(marker) {
+        var target = new Date(marker.date).getTime();
+        var bestIdx = -1, bestDiff = Infinity;
+        chartLabels.forEach(function(lbl, i) {
+          var diff = Math.abs(new Date(lbl).getTime() - target);
+          if (diff < bestDiff) { bestDiff = diff; bestIdx = i; }
+        });
+        if (bestIdx === -1 || bestDiff > 14 * 86400000) return;
+        var x = scales.x.getPixelForIndex(bestIdx);
+        var arcVal = arcDs[bestIdx] != null ? arcDs[bestIdx] : 50;
+        var y = scales.y.getPixelForValue(arcVal);
+        var isTop = marker.type === 'top';
+        c.save();
+        c.beginPath();
+        if (isTop) {
+          c.moveTo(x, y - 6);
+          c.lineTo(x - 6, y - 16);
+          c.lineTo(x + 6, y - 16);
+        } else {
+          c.moveTo(x, y + 6);
+          c.lineTo(x - 6, y + 16);
+          c.lineTo(x + 6, y + 16);
+        }
+        c.closePath();
+        c.fillStyle = isTop ? '#ef4444' : '#22c55e';
+        c.fill();
+        c.restore();
+      });
+      if (typeof getCurrentMarker === 'function') {
+        var dm = getCurrentMarker();
+        if (dm) {
+          var targetCur = new Date(dm.date).getTime();
+          var bestIdxCur = -1, bestDiffCur = Infinity;
+          chartLabels.forEach(function(lbl, i) {
+            var d = new Date(lbl).getTime();
+            var diff = Math.abs(d - targetCur);
+            if (diff < bestDiffCur) { bestDiffCur = diff; bestIdxCur = i; }
+          });
+          if (bestIdxCur !== -1 && bestDiffCur < 7 * 86400000) {
+            var xCur = scales.x.getPixelForIndex(bestIdxCur);
+            var arcValCur = arcDs[bestIdxCur] != null ? arcDs[bestIdxCur] : 50;
+            var yCur = scales.y.getPixelForValue(arcValCur);
+            c.save();
+            c.beginPath();
+            c.arc(xCur, yCur, 6, 0, Math.PI * 2);
+            c.fillStyle = 'rgba(14,165,233,0.9)';
+            c.fill();
+            c.strokeStyle = '#fff';
+            c.lineWidth = 1.5;
+            c.stroke();
+            c.restore();
+          }
+        }
+      }
+    }
+  };
+
+  _arcChart1Y = new Chart(ctx, {
+    type: 'line',
+    plugins: [riskZonePlugin1Y, markerPlugin1Y],
+    data: {
+      labels: labels,
+      datasets: [
+        { label: 'ARC Index', data: arcData, borderColor: 'rgba(255,255,255,0.85)', borderWidth: 2, pointRadius: 0, tension: 0.3, yAxisID: 'y', spanGaps: true },
+        { label: 'BTC Price', data: btcData, borderColor: 'rgba(245,158,11,0.7)', borderWidth: 1.5, pointRadius: 0, tension: 0.3, yAxisID: 'y2', spanGaps: true }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 600 },
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: true, labels: { color: 'rgba(255,255,255,0.5)', font: { size: 10 }, usePointStyle: true } },
+        tooltip: {
+          backgroundColor: 'rgba(2,5,16,0.95)',
+          borderColor: 'rgba(255,255,255,0.1)',
+          borderWidth: 1,
+          callbacks: {
+            label: function(ctx) {
+              if (ctx.dataset.label === 'ARC Index') return ' ARC: ' + Math.round(ctx.parsed.y);
+              var v = ctx.parsed.y;
+              return ' BTC: $' + (v != null ? v.toLocaleString() : 'N/A');
+            }
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { color: 'rgba(255,255,255,0.3)', font: { size: 9 }, maxTicksLimit: 12 }, grid: { color: 'rgba(255,255,255,0.04)' } },
+        y: { min: 0, max: 100, position: 'left', ticks: { color: 'rgba(255,255,255,0.3)', font: { size: 9 }, stepSize: 25 }, grid: { color: 'rgba(255,255,255,0.04)' } },
+        y2: { position: 'right', type: 'logarithmic', min: priceMin, max: priceMax, ticks: { color: 'rgba(245,158,11,0.5)', font: { size: 9 }, callback: function(v) { if (v >= 1000) return '$' + (v/1000).toFixed(0) + 'k'; return '$' + v; } }, grid: { display: false } }
+      }
+    }
+  });
+}
+
+function exportArcChart1Y() {
+  var canvas = document.getElementById('arc-chart-1y');
+  if (!canvas) return;
+  var TARGET_W = 1200, TARGET_H = 675;
+  var off = document.createElement('canvas');
+  off.width = TARGET_W;
+  off.height = TARGET_H;
+  var octx = off.getContext('2d');
+  octx.fillStyle = '#020510';
+  octx.fillRect(0, 0, TARGET_W, TARGET_H);
+  var scale = Math.min(TARGET_W / canvas.width, TARGET_H / canvas.height);
+  var offX = (TARGET_W - canvas.width * scale) / 2;
+  var offY = (TARGET_H - canvas.height * scale) / 2;
+  octx.drawImage(canvas, 0, 0, canvas.width, canvas.height, offX, offY, canvas.width * scale, canvas.height * scale);
+  octx.fillStyle = 'rgba(14,165,233,0.6)';
+  octx.font = '500 13px DM Mono, monospace';
+  octx.textAlign = 'right';
+  octx.fillText('alphacycle.app', TARGET_W - 16, TARGET_H - 12);
+  var link = document.createElement('a');
+  link.download = 'alphacycle-1y-' + new Date().toISOString().split('T')[0] + '.png';
+  link.href = off.toDataURL('image/png');
   link.click();
 }
 
