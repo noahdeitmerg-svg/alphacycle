@@ -36,7 +36,7 @@ Beim Bearbeiten von backend/fetcher.py, backend/main.py, backend/scoring.py oder
 - In `drawdown_score(prices)`: Nach `if not clean: return 50.0` muss die Zeile **`if len(clean) < 10: return 50.0`** stehen (Guard gegen zu wenig Daten).
 - ARC-Formel: ma_200w*0.30 + drawdown*0.25 + fear_greed*0.20 + liquidity*0.25 — Gewichte nicht ändern.
 - **ALWAYS** `short_term` dict in `compute_btc_score()` return (rsi, funding, mvrv, power_law, pi_cycle, puell) — **NEVER** nur Defaults aus main.py-Fallback; die echten Werte kommen aus scoring.
-- **macro_liq** in compute_btc_score(): 52w window + pct*2.5 amplification (50 - pct*2.5, clamped) — **NEVER** plain trend_score for WALCL (WALCL ~7–8M makes % change too small).
+- **macro_liq** in compute_btc_score(): Primär aus **Net Liquidity** (net_liq_values, 52w window, 50 - pct*2.0). Fallback auf WALCL (52w, 50 - pct*2.5) wenn net_liq_values zu wenig Daten. compute_btc_score(..., net_liq_values=None). main.py übergibt raw.get("net_liq_series", []) als net_liq_values.
 
 ## index.html
 - `BACKEND_URL = 'https://alphacycle-production.up.railway.app'` (oder window.BACKEND_URL || diese URL).
