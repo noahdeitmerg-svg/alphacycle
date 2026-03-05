@@ -2417,12 +2417,12 @@ function updateUI() {
     $('pc-fg-signal').textContent = S.fgCurrent<30?'BUY Zone':S.fgCurrent>75?'SELL Zone':'Neutral';
   }
 
-  // Stable card
-  if(S.stableCurrent>0 && $('pc-stable-val')) {
-    $('pc-stable-val').textContent = fmtB(S.stableCurrent);
-    const prev = S.stableHistory.at(-31)?.v||S.stableCurrent;
+  // Stable card (null-checks: card was removed from DOM)
+  if (document.getElementById('pc-stable-val') && S.stableCurrent > 0) {
+    setText('pc-stable-val', fmtB(S.stableCurrent));
+    const prev = S.stableHistory.at(-31)?.v || S.stableCurrent;
     const sc = pctChg(S.stableCurrent, prev);
-    setChangeEl('pc-stable-chg', sc);
+    if (document.getElementById('pc-stable-chg')) setChangeEl('pc-stable-chg', sc);
   }
 
   // Indicator chips
@@ -2978,7 +2978,7 @@ function renderSparklines() {
   drawSparkline('spark-btc', S.btcPrices.slice(-30), '#0ea5e9');
   drawSparkline('spark-eth', S.ethPrices.slice(-30), '#8fa5ff');
   drawSparkline('spark-fg',  S.fgHistory.slice(-30).map(x=>x.v), '#ffcc00');
-  drawSparkline('spark-stable', S.stableHistory.slice(-30).map(x=>x.v/1e9), '#00e5aa');
+  if (document.getElementById('spark-stable')) drawSparkline('spark-stable', S.stableHistory.slice(-30).map(x=>x.v/1e9), '#00e5aa');
 }
 
 // ── REFRESH ORCHESTRATION ─────────────────────────────────────────────────
