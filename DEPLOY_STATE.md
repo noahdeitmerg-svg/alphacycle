@@ -71,7 +71,8 @@ DO NOT modify weights. DO NOT add scoring components.
 45. fetcher.py: CoinGecko fetch_market_data aus fetch_all() entfernt (429 auf Railway). asyncio.gather nur noch 11 Aufrufe (0: Kraken BTC/ETH prices+ticker, 4: F&G, 5: TVL, 6: stable, 7: WALCL, 8: DGS10, 9: global_data, 10: funding). btc_cg/eth_cg = leere Fallback-Dicts. Spart ~3s pro Refresh.
 46. backtest_engine.py: _fetch_btc_history() since=1381363200 (2013-10-10, Kraken BTC live); bei Kraken OHLC error/kein result Logging; _load_or_build_cache() Exception loggen statt pass.
 47. fetcher.py: FRED Net Liquidity (WALCL - WTREGEN - RRPONTSYD). fetch_all() gather 13 Aufrufe: 11/12 fetch_fred_series("WTREGEN") und ("RRPONTSYD"). _compute_net_liquidity(); return net_liq_series, tga_series, rrp_series.
-48. scoring.py: macro_liq aus Net Liquidity (net_liq_values). compute_btc_score(net_liq_values=None); 52w Fenster, pct*2.0; Fallback WALCL (pct*2.5). main.py: net_liq_series an compute_btc_score übergeben.
+48. scoring.py: macro_liq aus Net Liquidity (net_liq_values). compute_btc_score(net_liq_values=None); 52w Fenster, pct*2.0; Fallback WALCL (pct*2.5). main.py: net_liq_series an compute_btc_score übergeben (data.get("net_liq_series", []) im Cache-Refresh).
+49. backtest_engine.py: Net Liquidity im Backtest. _fetch_fred(series_id) lädt WALCL/WTREGEN/RRPONTSYD ab 2013-01-01; net_liq_by_date = WALCL - TGA - RRP; _get_net_liq_score(date_str, net_liq_by_date) für 52w-Trend (50 - pct*2.0). macro_liq pro Tag dynamisch, Fallback 50.0.
 
 ## Active Endpoints (Railway)
 /health /api/prices /api/cycle/btc /api/cycle/eth /api/cycle/macro

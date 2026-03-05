@@ -60,7 +60,7 @@ Beim Bearbeiten von backend/fetcher.py, backend/main.py, backend/scoring.py oder
 - WINDOW_200W=1400 (echter 200W MA). HTTP_TIMEOUT=60. Cache min 2000 Eintraege, sonst unlink + refetch.
 - _fetch_btc_history: **since=1381363200** (2013-10-10, Kraken BTC live) — nicht now-5200 Tage (Kraken hat Daten erst ab Okt 2013). Bei data.get("error") oder "result" not in data: logger.warning mit error + since. Abbruchbedingung len(candles) < 10.
 - _load_or_build_cache: Bei Exception logger.warning("backtest cache load failed: %s", e), nicht pass.
-- Backtest nutzt /tmp/backtest_cache.json. ARC = ma_200w*0.35 + drawdown*0.35 + fear_greed(50)*0.15 + macro_liq(50)*0.15. Return: [{"date", "price", "score"}, ...].
+- Backtest nutzt /tmp/backtest_cache.json. ARC = ma_200w*0.35 + drawdown*0.35 + fear_greed(50)*0.15 + macro_liq*0.15. macro_liq dynamisch aus FRED Net Liquidity: _fetch_fred(WALCL/WTREGEN/RRPONTSYD), net_liq_by_date, _get_net_liq_score(date_str) (52w, 50 - pct*2.0); sonst 50.0. Return: [{"date", "price", "score"}, ...].
 
 ## backend/liquidity_engine.py
 - **bond_score** aus absolutem Yield-Niveau (us10y_vals[-1]) berechnen — **NICHT** aus trend_score (sonst us10y_trend=0 → 150 → clamp 100 Bug). Stufen: <2% → 20, <3% → 20–50, <4% → 50–70, <5% → 70–85, else → 85–100.
