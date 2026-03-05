@@ -1248,11 +1248,11 @@ canvas.sparkline {
       </div>
       <div class="decision-item">
         <div class="decision-label">Cycle Top</div>
-        <div class="decision-value" id="ca-next-top">Oct 2025</div>
+        <div class="decision-value" id="ca-halving-pos">Oct 2025</div>
       </div>
       <div class="decision-item">
         <div class="decision-label">Est. Next Bottom</div>
-        <div class="decision-value" id="ca-days-to-top">—</div>
+        <div class="decision-value" id="ca-window">Oct 2026</div>
       </div>
       <div class="decision-item">
         <div class="decision-label">Time Confidence</div>
@@ -2182,13 +2182,14 @@ function updateUI() {
     const days = ca.days_since_cycle_bottom ?? ca.days_since_bottom ?? null;
     if (days != null) setText('ca-days-since', days + 'd');
 
-    setText('ca-next-top',
-      ca.cycle_top_date ?? 'Oct 2025');
-    const dtb = ca.days_to_next_bottom;
-    setText('ca-days-to-top',
-      dtb != null
-        ? 'in ' + dtb + 'd'
-        : '~Oct 2026');
+    // Cycle Top hardcoded Oct 2025
+    setText('ca-halving-pos', 'Oct 2025');
+
+    // Days to Next Bottom (Oct 2026)
+    const nextBottom = new Date('2026-10-01');
+    const today = new Date();
+    const dtb = Math.round((nextBottom - today) / 86400000);
+    setText('ca-window', dtb > 0 ? 'in ' + dtb + 'd' : Math.abs(dtb) + 'd past');
 
     const conf = ca.cycle_time_confidence ?? null;
     if (conf != null) {
