@@ -2510,8 +2510,9 @@ function renderCharts() {
         const labels = data.map(d => d.date);
         const arcData = data.map(d => Number(d.score));
         const priceData = data.map(d => Math.max(100, Number(d.price)));
-        const priceMin = Math.max(1, Math.floor(Math.min(...priceData) * 0.9));
-        const priceMax = Math.ceil(Math.max(...priceData) * 1.1);
+        const validPrices = priceData.filter(v => v > 100);
+        const priceMin = validPrices.length ? Math.floor(Math.min(...validPrices) * 0.88) : 1000;
+        const priceMax = validPrices.length ? Math.ceil(Math.max(...validPrices) * 1.08) : 150000;
         const n = labels.length;
         const zone = (val) => Array(n).fill(val);
         const datasets = [
@@ -2532,12 +2533,18 @@ function renderCharts() {
             plugins: {
               legend: { display: true, labels: { color: '#94a3b8' }, filter: (item, ch) => item.datasetIndex >= 5 },
               tooltip: {
-                filter: function(tooltipItem) { return tooltipItem.dataset.label === 'ARC Index' || tooltipItem.dataset.label === 'BTC Price'; },
+                filter: function(tooltipItem) {
+                  return tooltipItem.dataset.label === 'ARC Index' ||
+                         tooltipItem.dataset.label === 'BTC Price';
+                },
                 callbacks: {
                   label: function(context) {
-                    if (context.dataset.label === 'ARC Index') return 'ARC Index: ' + context.parsed.y.toFixed(1);
-                    if (context.dataset.label === 'BTC Price') return 'BTC Price: $' + Math.round(context.parsed.y).toLocaleString();
-                    return context.dataset.label + ': ' + context.parsed.y;
+                    if (context.dataset.label === 'ARC Index') {
+                      return 'ARC Index: ' + Number(context.parsed.y).toFixed(1);
+                    }
+                    if (context.dataset.label === 'BTC Price') {
+                      return 'BTC Price: $' + Math.round(context.parsed.y).toLocaleString();
+                    }
                   }
                 }
               }
@@ -2545,7 +2552,7 @@ function renderCharts() {
             scales: {
               x: { ticks: { color: '#64748b', maxTicksLimit: 12 }, grid: { color: 'rgba(255,255,255,0.05)' } },
               yArc: { type: 'linear', position: 'left', min: 0, max: 100, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-              yPrice: { type: 'logarithmic', position: 'right', min: priceMin, max: priceMax, ticks: { color: 'rgba(251,146,60,0.7)', callback: v => '$' + (typeof v === 'number' ? v.toLocaleString() : v) }, grid: { display: false } }
+              yPrice: { type: 'logarithmic', position: 'right', min: priceMin, max: priceMax, ticks: { color: 'rgba(251,146,60,0.7)', callback: v => '$' + (typeof v === 'number' ? Math.round(v).toLocaleString() : v) }, grid: { display: false } }
             }
           }
         });
