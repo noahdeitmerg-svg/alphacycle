@@ -50,15 +50,26 @@ async def fetch_binance_ticker(coin_id):
     return {"price":_sf(data.get("lastPrice")),"change_24h":_sf(data.get("priceChangePercent")),"volume_24h":_sf(data.get("quoteVolume"))}
 
 async def fetch_funding_rates():
+    """Bybit public funding rate — no auth required, Railway-compatible."""
     try:
-        btc=await _get("https://fapi.binance.com/fapi/v1/fundingRate",params={"symbol":"BTCUSDT","limit":1})
-        eth=await _get("https://fapi.binance.com/fapi/v1/fundingRate",params={"symbol":"ETHUSDT","limit":1})
-        return {
-            "btc_funding_rate": round(_sf(btc[0]["fundingRate"])*100,4) if btc else 0.0,
-            "eth_funding_rate": round(_sf(eth[0]["fundingRate"])*100,4) if eth else 0.0,
-        }
+        btc = await _get(
+            "https://api.bybit.com/v5/market/tickers",
+            params={"category": "linear", "symbol": "BTCUSDT"}
+        )
+        eth = await _get(
+            "https://api.bybit.com/v5/market/tickers",
+            params={"category": "linear", "symbol": "ETHUSDT"}
+        )
+        btc_rate = 0.0
+        eth_rate = 0.0
+        if btc and btc.get("result", {}).get("list"):
+            btc_rate = round(_sf(btc["result"]["list"][0].get("fundingRate", 0)) * 100, 4)
+        if eth and eth.get("result", {}).get("list"):
+            eth_rate = round(_sf(eth["result"]["list"][0].get("fundingRate", 0)) * 100, 4)
+        return {"btc_funding_rate": btc_rate, "eth_funding_rate": eth_rate}
     except Exception as e:
-        logger.warning(f"Funding rates: {e}"); return {"btc_funding_rate":0.0,"eth_funding_rate":0.0}
+        logger.warning(f"Funding rates (Bybit): {e}")
+        return {"btc_funding_rate": 0.0, "eth_funding_rate": 0.0}
 
 
 async def fetch_kraken_prices(pair="XBTUSD", days=730):
