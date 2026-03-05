@@ -356,129 +356,121 @@ body::before {
 @media(min-width:600px){ .scores-grid { grid-template-columns: repeat(2,1fr); } }
 
 #btc-card.hero-card {
-  max-width: 760px;
+  max-width: 780px;
   margin: 1.5rem auto 2rem auto;
-  padding: 2.5rem 2.5rem 2rem;
+  padding: 2rem 2.5rem;
   background: linear-gradient(160deg,
     rgba(14,165,233,0.08) 0%,
     rgba(14,165,233,0.02) 40%,
-    rgba(0,0,0,0) 100%),
-    var(--glass);
-  border: 1px solid rgba(14,165,233,0.3);
-  box-shadow:
-    0 0 80px rgba(14,165,233,0.1),
-    0 0 0 1px rgba(14,165,233,0.05) inset,
-    0 24px 48px rgba(0,0,0,0.4);
+    transparent 100%),
+    rgba(10,18,40,0.7);
+  border: 1px solid rgba(14,165,233,0.28);
+  box-shadow: 0 0 80px rgba(14,165,233,0.1), 0 24px 48px rgba(0,0,0,0.5);
+  position: relative;
+  overflow: hidden;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: auto auto auto;
-  gap: 0;
-  align-items: center;
+  grid-template-areas: "header header" "gauge info" "comps comps";
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto 1fr auto;
+  text-align: left;
 }
-@media(max-width:600px){
+@media(max-width:580px){
   #btc-card.hero-card {
+    grid-template-areas: "header" "gauge" "info" "comps";
     grid-template-columns: 1fr;
+    text-align: center;
   }
 }
-#btc-card.hero-card::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 2px;
-  background: linear-gradient(90deg,
-    transparent 0%,
-    rgba(14,165,233,0.9) 30%,
-    rgba(14,165,233,0.9) 70%,
-    transparent 100%);
-}
+
 #btc-card.hero-card .score-card-header {
-  grid-column: 1 / -1;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-bottom: 1.5rem;
+  grid-area: header;
   border-bottom: 1px solid rgba(255,255,255,0.05);
+  padding-bottom: 1.25rem;
   margin-bottom: 1.5rem;
+  justify-content: space-between;
 }
 #btc-card.hero-card .gauge-wrap {
-  max-width: 220px;
-  margin: 0 auto;
-}
-#btc-card.hero-card .gauge-wrap svg { width: 100%; }
-#btc-card.hero-card .gauge-val {
-  font-size: clamp(52px, 9vw, 72px);
-  font-weight: 800;
-  letter-spacing: -0.05em;
-  line-height: 1;
-}
-#btc-card.hero-card .gauge-denom {
-  font-size: 18px;
-  color: var(--tx-ter);
-  margin-bottom: 10px;
+  grid-area: gauge;
+  max-width: 200px;
+  min-width: 140px;
+  padding-right: 1.5rem;
+  align-self: center;
 }
 #btc-card.hero-card .score-footer {
+  grid-area: info;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: flex-start;
-  padding-left: 2rem;
-  gap: 8px;
+  gap: 10px;
   border-top: none;
   margin-top: 0;
+  padding-top: 0;
+}
+@media(max-width:580px){
+  #btc-card.hero-card .score-footer {
+    align-items: center;
+    padding-top: 0.5rem;
+  }
+}
+#btc-card.hero-card .gauge-val {
+  font-size: clamp(56px, 9vw, 72px);
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  line-height: 1;
 }
 #btc-card.hero-card .score-phase {
-  font-size: 28px;
+  font-size: clamp(24px, 4vw, 32px);
   font-weight: 700;
   line-height: 1;
 }
 #btc-card.hero-card .score-price {
-  font-size: 18px;
-  color: var(--tx-sec);
+  font-size: 16px;
   font-family: var(--f-mono);
+  color: var(--tx-sec);
 }
+
 #btc-card.hero-card .components-grid {
-  grid-column: 1 / -1;
+  grid-area: comps;
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
   padding-top: 1.5rem;
   margin-top: 1.5rem;
   border-top: 1px solid rgba(255,255,255,0.05);
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
 }
-@media(max-width:600px){
+@media(max-width:580px){
   #btc-card.hero-card .components-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-  #btc-card.hero-card .score-footer {
-    padding-left: 0;
-    align-items: center;
-    padding-top: 1rem;
-  }
 }
 #btc-card.hero-card .comp-row {
-  flex-direction: column;
-  gap: 6px;
-  padding: 10px 12px;
-  background: rgba(255,255,255,0.02);
-  border-radius: 8px;
-  border: 1px solid var(--border);
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 8px !important;
+  padding: 12px 14px;
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px;
 }
 #btc-card.hero-card .comp-label {
-  width: 100%;
+  width: 100% !important;
   font-size: 9px;
   letter-spacing: 0.1em;
-  text-transform: uppercase;
+  color: var(--tx-ter) !important;
 }
 #btc-card.hero-card .comp-bar {
-  width: 100%;
-  height: 4px;
-  border-radius: 2px;
+  width: 100% !important;
+  height: 3px;
+  flex: none !important;
 }
 #btc-card.hero-card .comp-val {
-  font-weight: 700;
-  font-size: 13px;
-  color: var(--tx-pri);
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  color: var(--tx-pri) !important;
+  width: auto !important;
 }
+
 .hero-subtitle {
   font-size: 0.65rem;
   letter-spacing: 0.16em;
@@ -530,19 +522,18 @@ body::before {
   color: var(--tx-ter);
 }
 .decision-value {
-  font-size: 1.5rem;
+  font-size: 1.6rem;
   font-weight: 700;
-  font-family: var(--f-display);
   color: var(--tx-pri);
   line-height: 1.1;
 }
 .decision-note {
-  padding: 0.75rem 1.75rem;
-  border-top: 1px solid var(--border);
-  font-family: var(--f-mono);
-  font-size: 10px;
+  font-size: 0.7rem;
   color: var(--tx-ter);
-  letter-spacing: 0.06em;
+  border-top: 1px solid var(--border);
+  padding: 0.75rem 1.75rem;
+  font-family: var(--f-mono);
+  letter-spacing: 0.04em;
 }
 
 .two-col-row {
