@@ -911,6 +911,44 @@ canvas.sparkline {
   text-transform: uppercase;
 }
 
+/* ── DATA INSPECTOR ───────────────────────────────────────────── */
+.di-toggle {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  padding: 6px 12px;
+  background: var(--glass2);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  color: var(--btc);
+  cursor: pointer;
+  margin-left: auto;
+}
+.di-toggle:hover { background: rgba(14,165,233,0.12); border-color: rgba(14,165,233,0.3); }
+.di-card { padding: 1rem 1.25rem; }
+.di-body { padding-top: 0.5rem; }
+.di-body.hidden { display: none; }
+.di-category { margin-bottom: 1.25rem; }
+.di-category:last-child { margin-bottom: 0; }
+.di-cat-title {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--tx-ter);
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+}
+.di-grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 1.5rem;
+  font-size: 12px;
+  font-family: var(--f-mono);
+}
+.di-row .di-lbl { color: var(--tx-sec); }
+.di-row .di-val { color: var(--tx-pri); text-align: right; }
+.di-val.null { color: #f59e0b; }
+.di-val.default { color: #eab308; }
+
 /* ════════════════════════════════════════════════════════════════
    FOOTER
 ════════════════════════════════════════════════════════════════ */
@@ -1378,6 +1416,17 @@ canvas.sparkline {
     <div class="status-src" id="src-ts"><span class="status-dot"></span><span id="src-ts-lbl">—</span></div>
   </div>
 
+  <!-- ── DATA INSPECTOR ── -->
+  <div class="sec-header anim d6">
+    <div class="sec-title">DATA INSPECTOR</div>
+    <div class="sec-line"></div>
+    <button type="button" class="di-toggle" id="di-toggle" aria-expanded="false">SHOW</button>
+  </div>
+  <div class="card di-card" id="di-card">
+    <div class="card-accent accent-btc"></div>
+    <div class="di-body hidden" id="di-body"></div>
+  </div>
+
   <!-- ── FOOTER ── -->
   <footer class="footer anim d6">
     <div class="footer-brand">
@@ -1432,6 +1481,7 @@ const S = {
   btcAth:              0,
   btcAthChange:        0,
   ethAth:              0,
+  ethAthChange:        0,
   btcDominance:        50,
   totalMarketCap:      0,
   fgCurrent:    50,
@@ -1439,6 +1489,7 @@ const S = {
   tvlCurrent:   0,
   stableCurrent:0,
   walclCurrent: 0,
+  funding:      null,
 };
 
 let countdown = REFRESH_INTERVAL;
@@ -1710,6 +1761,7 @@ async function loadAllData() {
         S.btcAth       = prices?.btc?.ath ?? 0;
         S.btcAthChange = prices?.btc?.ath_change_pct ?? 0;
         S.ethAth       = prices?.eth?.ath ?? 0;
+        S.ethAthChange = prices?.eth?.ath_change_pct ?? 0;
         S.btcDominance = prices?.global?.btc_dominance ?? 50;
         S.totalMarketCap = prices?.global?.total_market_cap ?? 0;
         // change_24h from last 2 history points (Kraken ticker has no 24h change)
@@ -1721,6 +1773,7 @@ async function loadAllData() {
         S.ethChange24h = ethHist.length >= 2
           ? ((ethHist[ethHist.length-1].v - ethHist[ethHist.length-2].v) / ethHist[ethHist.length-2].v * 100)
           : 0;
+        S.funding = prices.funding ?? null;
       }
       S.backtest = backtest?.results ?? [];
       S.liquidityRegime = liquidity ?? null;
@@ -2105,6 +2158,127 @@ function updateUI() {
 
   renderCharts();
   renderSparklines();
+  renderDataInspector();
+}
+
+function diValClass(v) {
+  if (v == null || v === '' || (typeof v === 'number' && Number(v) === 0)) return 'null';
+  if (typeof v === 'number' && Number(v) === 50) return 'default';
+  return '';
+}
+function diRow(lbl, val, fmt) {
+  const disp = fmt != null ? (typeof fmt === 'function' ? fmt(val) : String(val ?? '—')) : (val != null && val !== '' ? String(val) : '—');
+  const cl = diValClass(val);
+  return `<div class="di-row"><span class="di-lbl">${lbl}</span><span class="di-val ${cl}">${disp}</span></div>`;
+}
+function renderDataInspector() {
+  const el = $('di-body');
+  if (!el) return;
+  const btcChg = S.btcChange24h != null ? S.btcChange24h : (S.btcMarket?.change_24h ?? S.btcMarket?.change24h);
+  const ethChg = S.ethChange24h != null ? S.ethChange24h : (S.ethMarket?.change_24h ?? S.ethMarket?.change24h);
+  const sections = [];
+
+  // 1. PRICES
+  sections.push({
+    title: 'PRICES (/api/prices)',
+    rows: [
+      diRow('BTC Price', S.btcMarket?.price, v => v != null ? '$' + fmt(v) : '—'),
+      diRow('BTC Change 24h', btcChg, v => v != null ? (Number(v).toFixed(2) + '%') : '—'),
+      diRow('BTC Market Cap', S.btcMarket?.market_cap, v => v != null ? fmtB(v) : '—'),
+      diRow('BTC Volume', S.btcMarket?.volume_24h ?? S.btcMarket?.volume),
+      diRow('BTC ATH', S.btcAth, v => v > 0 ? '$' + fmt(v) : '—'),
+      diRow('BTC ATH Change %', S.btcAthChange, v => v != null ? Number(v).toFixed(1) + '%' : '—'),
+      diRow('ETH Price', S.ethMarket?.price, v => v != null ? '$' + fmt(v) : '—'),
+      diRow('ETH Change 24h', ethChg, v => v != null ? (Number(v).toFixed(2) + '%') : '—'),
+      diRow('ETH ATH', S.ethAth, v => v > 0 ? '$' + fmt(v) : '—'),
+      diRow('ETH ATH Change %', S.ethAthChange, v => v != null ? Number(v).toFixed(1) + '%' : '—'),
+      diRow('BTC Dominance', S.btcDominance, v => v != null ? Number(v).toFixed(1) + '%' : '—'),
+      diRow('Total Market Cap', S.totalMarketCap, v => v > 0 ? fmtB(v) : '—'),
+      diRow('Stablecoin Cap (B)', S.stableCurrent, v => v > 0 ? fmtB(v) : '—'),
+      diRow('Funding BTC Rate', S.funding?.btc_funding_rate, v => v != null ? Number(v).toFixed(4) + '%' : '—'),
+      diRow('Funding ETH Rate', S.funding?.eth_funding_rate, v => v != null ? Number(v).toFixed(4) + '%' : '—'),
+    ],
+  });
+
+  // 2. BTC CYCLE
+  const btcComp = S.btcComponents || {};
+  const btcRows = [diRow('Score', S.btcScore)];
+  ['ma_200w','drawdown','fear_greed','rsi','puell','pi_cycle','macro_liq','funding','power_law'].forEach(k => {
+    const v = btcComp[k]?.score ?? btcComp[k];
+    if (v !== undefined) btcRows.push(diRow(k.replace('_',' '), v));
+  });
+  const st = S.btcShortTerm || {};
+  ['rsi','funding','mvrv','power_law','pi_cycle','puell'].forEach(k => {
+    btcRows.push(diRow('ST ' + k, st[k]));
+  });
+  sections.push({ title: 'BTC CYCLE (/api/cycle/btc)', rows: btcRows });
+
+  // 3. ETH CYCLE
+  const ethComp = S.ethComponents || {};
+  const ethRows = [diRow('Score', S.ethScore)];
+  Object.keys(ethComp).forEach(k => {
+    const v = ethComp[k]?.score ?? ethComp[k];
+    ethRows.push(diRow(k.replace(/_/g,' '), v));
+  });
+  sections.push({ title: 'ETH CYCLE (/api/cycle/eth)', rows: ethRows.length > 1 ? ethRows : [diRow('Score', S.ethScore)] });
+
+  // 4. MACRO
+  sections.push({
+    title: 'MACRO (/api/cycle/macro)',
+    rows: [
+      diRow('Score', S.macScore),
+      diRow('WALCL Current (T)', S.walclCurrent, v => v > 0 ? fmtT(v) : '—'),
+      diRow('Stable Current (B)', S.stableCurrent, v => v > 0 ? fmtB(v) : '—'),
+      diRow('BTC Dominance %', S.btcDominance, v => v != null ? Number(v).toFixed(1) + '%' : '—'),
+    ],
+  });
+
+  // 5. LIQUIDITY REGIME
+  const liq = S.liquidityRegime || {};
+  const liqComp = liq.components || {};
+  sections.push({
+    title: 'LIQUIDITY REGIME (/api/liquidity-regime)',
+    rows: [
+      diRow('Regime', liq.regime),
+      diRow('Score', liq.score),
+      diRow('Confidence', liq.confidence),
+      diRow('Trend Direction', liq.trend_direction),
+      diRow('WALCL Trend', liqComp.walcl_trend_score),
+      diRow('Stablecoin', liqComp.stablecoin_score),
+      diRow('Bond', liqComp.bond_score),
+      diRow('BTC Confirmation', liqComp.btc_confirmation_score),
+    ],
+  });
+
+  // 6. ARC SUMMARY
+  const arcRows = [
+    diRow('ARC Score', S.combined),
+    diRow('BTC Score', S.btcScore),
+    diRow('ETH Score', S.ethScore),
+    diRow('Macro Score', S.macScore),
+    diRow('Regime', liq.regime),
+    diRow('Decision', liq.decision),
+    diRow('Confidence', liq.confidence),
+    diRow('Fear & Greed', S.fgCurrent),
+    diRow('MA200W', btcComp.ma_200w?.score ?? btcComp.ma_200w),
+    diRow('Drawdown', btcComp.drawdown?.score ?? btcComp.drawdown),
+    diRow('F&G', btcComp.fear_greed?.score ?? btcComp.fear_greed),
+    diRow('Liquidity', btcComp.macro_liq ?? btcComp.liquidity?.score),
+  ];
+  ['rsi','funding','mvrv','power_law','pi_cycle','puell'].forEach(k => {
+    arcRows.push(diRow('ST ' + k, st[k]));
+  });
+  sections.push({ title: 'ARC SUMMARY (/api/arc-summary)', rows: arcRows });
+
+  // 7. FEAR & GREED
+  sections.push({
+    title: 'FEAR & GREED',
+    rows: [diRow('Current', S.fgCurrent), diRow('Label', S.fgLabel)],
+  });
+
+  el.innerHTML = sections.map(sec =>
+    `<div class="di-category"><div class="di-cat-title">${sec.title}</div><div class="di-grid">${sec.rows.join('')}</div></div>`
+  ).join('');
 }
 
 function setText(id, val, color) {
@@ -2393,6 +2567,21 @@ async function boot() {
 window.addEventListener('resize',()=>{
   clearTimeout(window._resizeT);
   window._resizeT=setTimeout(renderCharts,200);
+});
+
+$('di-toggle')?.addEventListener('click', function() {
+  const body = $('di-body');
+  const btn = $('di-toggle');
+  if (!body || !btn) return;
+  if (body.classList.contains('hidden')) {
+    body.classList.remove('hidden');
+    btn.textContent = 'HIDE';
+    btn.setAttribute('aria-expanded', 'true');
+  } else {
+    body.classList.add('hidden');
+    btn.textContent = 'SHOW';
+    btn.setAttribute('aria-expanded', 'false');
+  }
 });
 
 boot();
