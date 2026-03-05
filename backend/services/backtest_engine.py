@@ -27,7 +27,7 @@ except ImportError:  # pragma: no cover
 
 
 HTTP_TIMEOUT = httpx.Timeout(60.0, connect=10.0)
-WINDOW_200W = 1400  # 200 Wochen = 1400 Tage (echter 200W MA)
+WINDOW_200W = 200  # 200 wöchentliche Datenpunkte = 200-Wochen MA
 CACHE_FILE = Path("/tmp/backtest_cache.json")
 
 
@@ -36,7 +36,7 @@ async def _fetch_since(since_ts: int) -> List[Dict[str, Any]]:
     async with httpx.AsyncClient(timeout=HTTP_TIMEOUT, follow_redirects=True) as client:
         resp = await client.get(
             "https://api.kraken.com/0/public/OHLC",
-            params={"pair": "XBTUSD", "interval": 1440, "since": since_ts},
+            params={"pair": "XBTUSD", "interval": 10080, "since": since_ts},
         )
         data = resp.json()
     if data.get("error") or "result" not in data:
@@ -64,7 +64,7 @@ async def _load_or_build_cache() -> List[Dict[str, Any]]:
         try:
             cached = json.loads(CACHE_FILE.read_text())
             if cached and isinstance(cached, list):
-                if len(cached) < 2000:  # expect 4700+ days
+                if len(cached) < 400:  # expect ~720 weekly candles
                     try:
                         CACHE_FILE.unlink()
                     except Exception:
@@ -99,7 +99,7 @@ async def _load_or_build_cache() -> List[Dict[str, Any]]:
 
 
 async def _fetch_btc_history() -> List[Dict[str, Any]]:
-    """Paginated Kraken OHLC for 14 years (5200 days); ARC chart ~10y from ~2016."""
+    """Kraken OHLC weekly (interval=10080). 720 weeks = ~13.8y. since=2013-10-10. ARC chart ~10y from ~2014."""
     import time as _time
     since = 1381363200  # 2013-10-10, Kraken BTC live
     all_candles: List[list] = []
@@ -108,7 +108,7 @@ async def _fetch_btc_history() -> List[Dict[str, Any]]:
         while True:
             resp = await client.get(
                 "https://api.kraken.com/0/public/OHLC",
-                params={"pair": "XBTUSD", "interval": 1440, "since": since},
+                params={"pair": "XBTUSD", "interval": 10080, "since": since},
             )
             data = resp.json()
             if data.get("error") or "result" not in data:
