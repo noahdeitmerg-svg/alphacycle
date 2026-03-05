@@ -105,13 +105,10 @@ def compute_cycle_anchor(reference_date: Optional[date] = None) -> dict:
     _next_bottom = date(2026, 10, 1)
     _days_to_bottom = (_next_bottom - today).days
 
-    # Always use canonical UTC-based days since Nov 2022 bottom for API response
-    _days_since_bottom = compute_days_since_bottom()
-
     return {
         "cycle_position_percent": round(cycle_position_percent, 2),
-        "days_since_bottom": _days_since_bottom,
-        "days_since_cycle_bottom": _days_since_bottom,
+        "days_since_bottom": compute_days_since_bottom(),
+        "days_since_cycle_bottom": compute_days_since_bottom(),
         "days_since_cycle_top": days_since_top,
         "days_to_next_cycle_top": days_to_next_top,
         "days_to_next_cycle_bottom": days_to_next_bottom,
