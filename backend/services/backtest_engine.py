@@ -94,9 +94,9 @@ async def _load_or_build_cache() -> List[Dict[str, Any]]:
 
 
 async def _fetch_btc_history() -> List[Dict[str, Any]]:
-    """Paginated Kraken OHLC for 10 years."""
+    """Paginated Kraken OHLC for 14 years (5200 days); ARC chart ~10y from ~2016."""
     import time as _time
-    since = int(_time.time()) - (3650 * 86400)  # 10 years
+    since = int(_time.time()) - (5200 * 86400)  # 14 years, ARC chart ~10y from ~2016
     all_candles: List[list] = []
 
     async with httpx.AsyncClient(timeout=HTTP_TIMEOUT, follow_redirects=True) as client:
@@ -116,7 +116,7 @@ async def _fetch_btc_history() -> List[Dict[str, Any]]:
                 break
             all_candles.extend(candles)
             last = data["result"].get("last", 0)
-            if last <= since or len(candles) < 700:
+            if last <= since or len(candles) < 10:
                 break
             since = last
             await asyncio.sleep(1.2)

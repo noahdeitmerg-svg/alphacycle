@@ -60,7 +60,10 @@ Beim Bearbeiten von backend/fetcher.py, backend/main.py, backend/scoring.py oder
 - **CMD** mit `$PORT`: `--bind 0.0.0.0:$PORT`, **workers=1** (Railway setzt PORT) — **NICHT** hardcoded 8000.
 
 ## backend/services/backtest_engine.py
-- Backtest nutzt /tmp/backtest_cache.json: WINDOW_200W=1400 (echter 200-Wochen-MA). HTTP_TIMEOUT=60. Cache min 2000 Eintraege, sonst unlink + refetch. Einmal komplett laden (10y paginiert), taeglich 1 Datenpunkt ergaenzen. ARC = ma_200w*0.35 + drawdown*0.35 + fear_greed(50)*0.15 + macro_liq(50)*0.15. Return: [{"date": "YYYY-MM-DD", "price": float, "score": float}, ...].
+- WINDOW_200W=1400 (echter 200W MA). HTTP_TIMEOUT=60. Cache min 2000 Eintraege, sonst unlink + refetch.
+- Fetch 5200 Tage (14 Jahre); ARC-Chart zeigt ~10 Jahre ab ca. 2016 (5200 - 1400 Window).
+- _fetch_btc_history: Abbruchbedingung **len(candles) < 10** (nicht < 700; < 700 bricht nach erstem Request ab).
+- Backtest nutzt /tmp/backtest_cache.json. ARC = ma_200w*0.35 + drawdown*0.35 + fear_greed(50)*0.15 + macro_liq(50)*0.15. Return: [{"date", "price", "score"}, ...].
 
 ## backend/liquidity_engine.py
 - **bond_score** aus absolutem Yield-Niveau (us10y_vals[-1]) berechnen — **NICHT** aus trend_score (sonst us10y_trend=0 → 150 → clamp 100 Bug). Stufen: <2% → 20, <3% → 20–50, <4% → 50–70, <5% → 70–85, else → 85–100.
