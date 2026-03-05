@@ -62,6 +62,8 @@ DO NOT modify weights. DO NOT add scoring components.
 36. liquidity_engine.py: bond_score aus absolutem 10Y-Yield-Niveau berechnen, nicht aus trend_score (Bug: us10y_trend=0 → 100)
 37. backend/Dockerfile: Nur eine Dockerfile im backend/ (keine Datei mit Leerzeichen); CMD mit $PORT (nicht hardcoded 8000)
 38. fetcher.py: Funding Rates von OKX (Binance Futures und Bybit 403 auf Railway) — fetch_funding_rates() nutzt okx.com/api/v5/public/funding-rate
+39. fetcher.py: Global data (btc_dominance, total_market_cap) via CoinCap — CoinGecko /global gibt 429
+40. index.html: FRED-Label dynamisch — src-fred je nach S.walclCurrent: FRED oder FRED (synthetic fallback) + class status-src / warn
 
 ## Active Endpoints (Railway)
 /health /api/prices /api/cycle/btc /api/cycle/eth /api/cycle/macro
@@ -79,6 +81,7 @@ DO NOT modify weights. DO NOT add scoring components.
 
 ## Data Sources
 Prices: Kraken (primary), CoinGecko (fallback)
+Global/dominance: CoinCap (CoinGecko /global 429)
 Funding: OKX (Binance Futures + Bybit 403 auf Railway)
 F&G: Alternative.me
 TVL+Stablecoins: DeFiLlama

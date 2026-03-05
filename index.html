@@ -1412,7 +1412,7 @@ canvas.sparkline {
     <div class="status-src" id="src-fg"><span class="status-dot"></span>Alt.me Fear&amp;Greed</div>
     <div class="status-src" id="src-dl"><span class="status-dot"></span>DeFiLlama TVL</div>
     <div class="status-src" id="src-stable"><span class="status-dot"></span>DeFiLlama Stablecoins</div>
-    <div class="status-src warn" id="src-fred"><span class="status-dot"></span>FRED (synthetic fallback)</div>
+    <div class="status-src" id="src-fred"><span class="status-dot"></span>FRED</div>
     <div class="status-src" id="src-ts"><span class="status-dot"></span><span id="src-ts-lbl">—</span></div>
   </div>
 
@@ -1817,6 +1817,16 @@ async function loadAllData() {
         S.walclCurrent  = safeNum(macC.data.walcl_current_T)*1e12;
         S.stableCurrent = safeNum(macC.data.stable_current_B)*1e9;
       }
+      const fredEl = document.getElementById('src-fred');
+      if (fredEl) {
+        if (S.walclCurrent > 0) {
+          fredEl.className = 'status-src';
+          fredEl.innerHTML = '<span class="status-dot"></span>FRED';
+        } else {
+          fredEl.className = 'status-src warn';
+          fredEl.innerHTML = '<span class="status-dot"></span>FRED (synthetic fallback)';
+        }
+      }
 
       markSources(errors);
       return;
@@ -1847,6 +1857,16 @@ async function loadAllData() {
   S.tvlCurrent    = S.tvlHistory.at(-1)?.v || 0;
   S.stableCurrent = S.stableHistory.at(-1)?.v || 0;
   S.walclCurrent  = S.walclHistory.at(-1)?.v * 1e6 || 0; // already millions
+  const fredEl = document.getElementById('src-fred');
+  if (fredEl) {
+    if (S.walclCurrent > 0) {
+      fredEl.className = 'status-src';
+      fredEl.innerHTML = '<span class="status-dot"></span>FRED';
+    } else {
+      fredEl.className = 'status-src warn';
+      fredEl.innerHTML = '<span class="status-dot"></span>FRED (synthetic fallback)';
+    }
+  }
 
   // Build ratio history
   const ml=Math.min(S.btcPrices.length, S.ethPrices.length);

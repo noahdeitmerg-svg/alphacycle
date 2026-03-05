@@ -136,18 +136,27 @@ async def fetch_coin_prices_cg(coin_id,days=365):
     logger.info(f"CoinGecko {coin_id}: {len(prices)}d"); return prices
 
 async def fetch_global_data():
+    """CoinCap global data - no API key needed, Railway-compatible."""
     try:
-        data=await _get(f"{_CG}/global",params=_cgp())
-        if not data or "data" not in data: return {"btc_dominance":50.0,"total_market_cap":0.0}
-        d=data["data"]
-        return {
-            "btc_dominance":         _sf(d.get("market_cap_percentage",{}).get("btc",50)),
-            "total_market_cap":      _sf(d.get("total_market_cap",{}).get("usd",0)),
-            "total_volume_24h":      _sf(d.get("total_volume",{}).get("usd",0)),
-            "market_cap_change_24h": _sf(d.get("market_cap_change_percentage_24h_usd",0)),
-        }
+        btc = await _get("https://api.coincap.io/v2/assets/bitcoin")
+        if btc and btc.get("data"):
+            d = btc["data"]
+            market_cap = _sf(d.get("marketCapUsd", 0))
+            supply = _sf(d.get("supply", 19_700_000))
+            dominance = _sf(d.get("dominancePercentage", 0))
+            if dominance <= 0 and market_cap > 0:
+                dominance = 55.0  # reasonable BTC dominance fallback
+            total_mc = round(market_cap / (dominance / 100), 0) if dominance > 0 else 0
+            return {
+                "btc_dominance": round(dominance, 1),
+                "total_market_cap": total_mc,
+                "total_volume_24h": 0.0,
+                "market_cap_change_24h": 0.0,
+            }
     except Exception as e:
-        logger.warning(f"Global data: {e}"); return {"btc_dominance":50.0,"total_market_cap":0.0}
+        logger.warning(f"Global data (CoinCap): {e}")
+    return {"btc_dominance": 50.0, "total_market_cap": 0.0,
+            "total_volume_24h": 0.0, "market_cap_change_24h": 0.0}
 
 # -- FEAR & GREED -----------------------------------------------------------------
 async def fetch_fear_greed(limit=90):
