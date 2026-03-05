@@ -1,0 +1,62 @@
+---
+description: AlphaCycle permanent fixes - NEVER revert when editing backend or index
+globs: backend/**/*.py, **/index.html, DEPLOY_STATE.md
+alwaysApply: true
+---
+
+# AlphaCycle — Permanent Fixes (NIEMALS überschreiben)
+
+Beim Bearbeiten von backend/fetcher.py, backend/main.py, backend/scoring.py oder index.html diese Fixes **niemals rückgängig machen oder überschreiben**. Sonst entstehen wieder Bugs (z. B. Binance auf Railway blockiert, Score 50, etc.).
+
+## Vor jeder Änderung
+- DEPLOY_STATE.md im Repo-Root prüfen und die dort genannten "Permanent Fixes" einhalten.
+
+## backend/fetcher.py
+- **Kraken ist primäre Preisquelle** (nicht Binance für Preise; Binance ist auf Railway US-West blockiert).
+- In `fetch_all()`: Die ersten 4 Einträge im `asyncio.gather` müssen sein:
+  - `fetch_kraken_prices("XBTUSD", 730)`  (# 0)
+  - `fetch_kraken_prices("XETHUSD", 730)` (# 1)
+  - `fetch_kraken_ticker("XBTUSD")`       (# 2)
+  - `fetch_kraken_ticker("XETHUSD")`      (# 3)
+- Die Funktionen `fetch_kraken_prices` und `fetch_kraken_ticker` müssen existieren (nach fetch_funding_rates, vor CoinGecko-Sektion).
+- **ALWAYS Bybit für Funding Rates** (fetch_funding_rates nutzt api.bybit.com/v5/market/tickers) — **NEVER Binance Futures** (blockiert auf Railway US-West). CoinGecko-Fallback-Logik unverändert lassen.
+
+## backend/main.py
+- Keine Unicode-Zeichen in Kommentaren oder String-Literalen (═ ─ — → ™ … etc.).
+- CycleAnalyzer importieren und `_analyzer = CycleAnalyzer()`; Endpoint `/api/analyzer` muss aktiv sein.
+- Endpoint `/api/arc-summary` muss aktiv sein.
+- **ALWAYS** in get_arc_summary() components: `btc.get("macro_liq", 50.0)` für Liquidity — **NEVER** `btc.get("liquidity")` (Key existiert nicht in btc_scores).
+- **ALWAYS** regime/decision in get_arc_summary(): `regime = mac.get("regime", "NEUTRAL") or "NEUTRAL"`, `decision = com.get("signal", "HOLD") or "HOLD"` (keine leeren Strings).
+
+## backend/fetcher.py (merge)
+- **ALWAYS** in merge(): Wenn market_cap 0 und price > 0, Fallback market_cap = price * 19_700_000 (BTC Umlaufmenge).
+- **ALWAYS** in fetch_all() nach merge(): Wenn gdata.btc_dominance == 50.0 (CoinGecko-Fallback) und btc_market.market_cap sowie gdata.total_market_cap > 0, gdata["btc_dominance"] = round(btc_mc / total_mc * 100, 1) — btc_dominance Fallback aus market_cap.
+
+## backend/scoring.py
+- **compute_combined()** ALWAYS returns **signal** (STRONG BUY/BUY/ACCUMULATE/HOLD/REDUCE/SELL) and **confidence** (round(abs(combined-50)*2, 1)).
+- **compute_macro_score()** ALWAYS returns **regime** (EXPANSION if macro_score < 35, NEUTRAL if < 60, else CONTRACTION).
+- In `drawdown_score(prices)`: Nach `if not clean: return 50.0` muss die Zeile **`if len(clean) < 10: return 50.0`** stehen (Guard gegen zu wenig Daten).
+- ARC-Formel: ma_200w*0.30 + drawdown*0.25 + fear_greed*0.20 + liquidity*0.25 — Gewichte nicht ändern.
+- **ALWAYS** `short_term` dict in `compute_btc_score()` return (rsi, funding, mvrv, power_law, pi_cycle, puell) — **NEVER** nur Defaults aus main.py-Fallback; die echten Werte kommen aus scoring.
+- **macro_liq** in compute_btc_score(): 52w window + pct*2.5 amplification (50 - pct*2.5, clamped) — **NEVER** plain trend_score for WALCL (WALCL ~7–8M makes % change too small).
+
+## index.html
+- `BACKEND_URL = 'https://alphacycle-production.up.railway.app'` (oder window.BACKEND_URL || diese URL).
+- API-Fetch mit **Promise.allSettled** (nicht Promise.all), danach `results.map(r => r.status === 'fulfilled' ? r.value : null)`.
+- `phaseOf(s)`: Grenzen <30 Low Risk, <61 Moderate Risk, <81 Elevated Risk, sonst Extreme Risk.
+- Nach `S.btcComponents = btcC?.components || null` müssen stehen: `S.btcShortTerm = btcC?.short_term || null` und `S.ethComponents = ethC?.components || null`.
+- `S.btcScore`: Nur API-Wert nutzen wenn `btcC?.score != null && btcC.score > 0`, sonst Fallback computeBTCScore().
+- **ALWAYS** Data Inspector Panel am Ende der Seite (vor Footer) vorhanden — Titel "DATA INSPECTOR", Toggle "SHOW / HIDE", Standard eingeklappt; Inhalt aus S.*.
+- Data Inspector ARC Summary: Liquidity **niemals** [object Object] — immer Zahl (S.arcSummary?.components?.liquidity oder .score wenn Objekt); Regime/Decision/Confidence aus S.arcSummary (nach Fetch /api/arc-summary).
+- Data Inspector: Alle Score-Werte auf 1 Dezimalstelle runden (roundScore / Math.round(x*10)/10) — keine Floating-Point-Anzeige.
+- Data Inspector Funding Rate: Bei 0 oder null "N/A" anzeigen (fmtFunding); ARC Score = Math.round((S.combined ?? 50) * 10) / 10.
+- Data Inspector Liquidity Regime / ARC Summary Fallback: **liq.liquidity_regime** und **liq.liquidity_score** (NICHT liq.regime / liq.score) — liquidity_engine liefert diese Keys.
+
+## backend/liquidity_engine.py
+- **bond_score** aus absolutem Yield-Niveau (us10y_vals[-1]) berechnen — **NICHT** aus trend_score (sonst us10y_trend=0 → 150 → clamp 100 Bug). Stufen: <2% → 20, <3% → 20–50, <4% → 50–70, <5% → 70–85, else → 85–100.
+
+## Kurz: Was du dir merken musst
+- Kraken für Preise, Bybit für Funding (nicht Binance Futures).
+- drawdown_score: len(clean) < 10 → return 50.0.
+- main.py: kein Unicode, /api/analyzer + /api/arc-summary.
+- index.html: allSettled, phaseOf-Grenzen, btcShortTerm/ethComponents/btcScore-Guard, BACKEND_URL Railway.

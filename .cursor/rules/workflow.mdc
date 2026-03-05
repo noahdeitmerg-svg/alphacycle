@@ -1,0 +1,49 @@
+---
+description: Workflow rule — nach jeder Änderung Deploy State und Permanent Fixes updaten
+alwaysApply: true
+---
+
+# PFLICHT-WORKFLOW NACH JEDER ÄNDERUNG
+
+Nach **jeder** Code-Änderung, jedem Fix und jedem neuen Feature MUSST du folgende zwei Dateien updaten. Kein Commit, kein Abschluss ohne diesen Schritt.
+
+---
+
+## 1. `deploy-state.md` updaten
+
+Trage jeden Fix / jedes Feature ein:
+
+```
+## [DATUM] — [Kurzbezeichnung]
+- Datei(en): backend/main.py, index.html, etc.
+- Was wurde geändert: [kurze Beschreibung]
+- Warum: [Problem das gelöst wurde]
+- Status: ✅ deployed / 🔄 in progress
+```
+
+**Zweck:** Jeder neue Chat-Context weiß sofort, was aktuell live ist und was sich zuletzt geändert hat.
+
+---
+
+## 2. `permanent-fixed.mdc` updaten
+
+Wenn ein Bug dauerhaft gefixt wurde, trage ihn ein:
+
+```
+## NEVER / ALWAYS — [Kurzbezeichnung]
+- ❌ NEVER: [was du nie wieder tun sollst]
+- ✅ ALWAYS: [was stattdessen zu tun ist]
+- Grund: [warum dieser Fix permanent ist]
+```
+
+**Zweck:** Alte Bugs dürfen nie wieder eingebaut werden. Cursor kennt alle permanenten Entscheidungen.
+
+---
+
+## REGELN
+
+- ❌ NEVER einen Fix abschließen ohne `permanent-fixed.mdc` Eintrag
+- ❌ NEVER einen Commit machen ohne `deploy-state.md` Update
+- ✅ ALWAYS beide Dateien am Ende jeder Session auf aktuellem Stand halten
+- ✅ ALWAYS bei neuen Chats `deploy-state.md` als Kontext mitgeben
+- ✅ ALWAYS prüfen ob der Fix bereits in `permanent-fixed.mdc` steht bevor du Code schreibst — damit kein alter Bug wiederholt wird
