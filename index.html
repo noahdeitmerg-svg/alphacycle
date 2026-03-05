@@ -2599,9 +2599,10 @@ function updateUI() {
   (function renderCycleAnchor() {
     if (!S.cycleAnchor) return;
     const ca = S.cycleAnchor;
+    console.log('cycle anchor:', ca);
 
-    const days = ca.days_since_cycle_bottom ?? ca.days_since_bottom ?? null;
-    if (days != null) setText('ca-days-since', days + 'd');
+    const daysSince = ca?.days_since_bottom ?? ca?.days_since_cycle_bottom ?? null;
+    setText('ca-days-since', daysSince != null ? daysSince + 'd' : '—');
 
     // Cycle Top hardcoded Oct 2025
     setText('ca-halving-pos', 'Oct 2025');
