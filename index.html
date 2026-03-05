@@ -2572,6 +2572,14 @@ function drawSparkline(canvasId, vals, color) {
   ctx.fillStyle=grad; ctx.fill();
 }
 
+// Cycle Top/Bottom Marker für ARC History Chart (hardcoded, erweiterbar)
+const CYCLE_MARKERS = [
+  { date: '2017-12-17', type: 'top',    label: 'Cycle Top' },
+  { date: '2021-11-10', type: 'top',    label: 'Cycle Top' },
+  { date: '2018-12-15', type: 'bottom', label: 'Cycle Bottom' },
+  { date: '2022-11-21', type: 'bottom', label: 'Cycle Bottom' },
+];
+
 function renderCharts() {
   const ph = $('arc-chart-placeholder');
   const wrap = $('arc-chart-wrap');
@@ -2628,6 +2636,58 @@ function renderCharts() {
                       return 'BTC Price: $' + Math.round(context.parsed.y).toLocaleString();
                     }
                   }
+                }
+              },
+              cycleMarkers: {
+                afterDraw(chart) {
+                  const ctx = chart.ctx;
+                  const xAxis = chart.scales.x;
+                  const yPrice = chart.scales.yPrice;
+                  if (!xAxis || !yPrice || !Array.isArray(CYCLE_MARKERS)) return;
+
+                  CYCLE_MARKERS.forEach(marker => {
+                    const idx = chart.data.labels.indexOf(marker.date);
+                    if (idx < 0) return;
+
+                    const x = xAxis.getPixelForValue(idx);
+                    const priceVal = chart.data.datasets
+                      .find(d => d.label === 'BTC Price')?.data[idx];
+                    if (!priceVal) return;
+                    const y = yPrice.getPixelForValue(priceVal);
+
+                    const isTop = marker.type === 'top';
+                    const color = isTop ? '#ef4444' : '#22c55e';
+                    const size = 8;
+
+                    ctx.save();
+                    ctx.beginPath();
+                    if (isTop) {
+                      // Dreieck nach unten (Top)
+                      ctx.moveTo(x, y + size);
+                      ctx.lineTo(x - size, y - size / 2);
+                      ctx.lineTo(x + size, y - size / 2);
+                    } else {
+                      // Dreieck nach oben (Bottom)
+                      ctx.moveTo(x, y - size);
+                      ctx.lineTo(x - size, y + size / 2);
+                      ctx.lineTo(x + size, y + size / 2);
+                    }
+                    ctx.closePath();
+                    ctx.fillStyle = color;
+                    ctx.globalAlpha = 0.9;
+                    ctx.fill();
+
+                    ctx.font = 'bold 9px DM Mono, monospace';
+                    ctx.fillStyle = color;
+                    ctx.globalAlpha = 0.85;
+                    ctx.textAlign = 'center';
+                    ctx.fillText(
+                      marker.label,
+                      x,
+                      isTop ? y + size + 12 : y - size - 4
+                    );
+                    ctx.restore();
+                  });
                 }
               }
             },
