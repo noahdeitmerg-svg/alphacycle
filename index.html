@@ -2245,8 +2245,8 @@ function renderDataInspector() {
   sections.push({
     title: 'LIQUIDITY REGIME (/api/liquidity-regime)',
     rows: [
-      diRow('Regime', liq.regime),
-      diRow('Score', roundScore(liq.score)),
+      diRow('Regime', liq.liquidity_regime),
+      diRow('Score', roundScore(liq.liquidity_score)),
       diRow('Confidence', roundScore(liq.confidence)),
       diRow('Trend Direction', liq.trend_direction),
       diRow('WALCL Trend', roundScore(liqComp.walcl_trend_score)),
@@ -2262,8 +2262,8 @@ function renderDataInspector() {
     diRow('BTC Score', roundScore(S.btcScore)),
     diRow('ETH Score', roundScore(S.ethScore)),
     diRow('Macro Score', roundScore(S.macScore)),
-    diRow('Regime', S.arcSummary?.regime ?? liq.regime),
-    diRow('Decision', S.arcSummary?.decision ?? liq.decision),
+    diRow('Regime', S.arcSummary?.regime ?? liq.liquidity_regime),
+    diRow('Decision', S.arcSummary?.decision ?? liq.liquidity_regime),
     diRow('Confidence', roundScore(S.arcSummary?.confidence ?? liq.confidence)),
     diRow('Fear & Greed', roundScore(S.fgCurrent)),
     diRow('MA200W', roundScore(btcComp.ma_200w?.score ?? btcComp.ma_200w)),
