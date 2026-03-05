@@ -78,6 +78,7 @@ DO NOT modify weights. DO NOT add scoring components.
 52. fetcher.py: fetch_fred_series() Logging (FRED series_id: len pts). WTREGEN/RRPONTSYD mit start="2015-01-01". main.py /api/arc-summary: components.net_liq + components.tga aus raw (net_liq_series/tga_series letzter Wert) fuer Data Inspector.
 53. backtest_engine.py: F&G im Backtest: _fetch_fg_history() (limit=0, alle Daten ab 2018), Mapping {date_str: value}. _rsi_to_fg() als RSI-Proxy für Perioden ohne echte F&G-Werte (Aug 2017–Feb 2018). In run_backtest() pro Tag: fear_greed = fg_history[date] oder _rsi_to_fg(prices_so_far); ARC-Gewicht weiterhin 15%.
 54. index.html: ARC History Chart Export (PNG). Button „Export Chart (PNG)“ unter dem ARC-Chart (arc-history-chart). exportArcChart(): 1200x675 Canvas, Hintergrund #0D1117, Chart-Canvas als Bild, Footer mit AlphaCycle Branding + URL, ARC Index + Datum; Download als alphacycle-arc-YYYY-MM-DD.png.
+55. main.py: Daily Snapshot System. /api/snapshot/today speichert aktuellen ARC Snapshot in /tmp/arc_snapshots.json (date, arc, btc_price, regime, liquidity, fear_greed, decision, confidence) und gibt ihn zurück. /api/snapshots liefert alle Snapshots. Nach erfolgreichem Cache-Refresh wird _save_today_snapshot() automatisch aufgerufen.
 
 ## Active Endpoints (Railway)
 /health /api/prices /api/cycle/btc /api/cycle/eth /api/cycle/macro

@@ -25,6 +25,7 @@ Beim Bearbeiten von backend/fetcher.py, backend/main.py, backend/scoring.py oder
 - Endpoint `/api/arc-summary` muss aktiv sein.
 - **ALWAYS** in get_arc_summary() components: `btc.get("macro_liq", 50.0)` für Liquidity — **NEVER** `btc.get("liquidity")` (Key existiert nicht in btc_scores). components.net_liq und components.tga aus raw (net_liq_series[-1]["v"], tga_series[-1]["v"]) für Data Inspector.
 - **ALWAYS** regime/decision in get_arc_summary(): `regime = mac.get("regime", "NEUTRAL") or "NEUTRAL"`, `decision = com.get("signal", "HOLD") or "HOLD"` (keine leeren Strings).
+- Daily Snapshot System: `/api/snapshot/today` speichert einen Snapshot pro Tag in `/tmp/arc_snapshots.json` (date, arc, btc_price, regime, liquidity, fear_greed, decision, confidence) und gibt ihn zurück. `/api/snapshots` liefert alle Snapshots. Nach jedem erfolgreichen Cache-Refresh muss `_save_today_snapshot()` aufgerufen werden.
 
 ## backend/fetcher.py (merge)
 - **ALWAYS** in merge(): Wenn market_cap 0 und price > 0, Fallback market_cap = price * 19_700_000 (BTC Umlaufmenge).
