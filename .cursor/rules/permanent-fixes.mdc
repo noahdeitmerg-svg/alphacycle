@@ -1,6 +1,6 @@
 ---
 description: AlphaCycle permanent fixes - NEVER revert when editing backend or index
-globs: backend/**/*.py, **/index.html, DEPLOY_STATE.md
+globs: backend/**/*.py, backend/Dockerfile, **/index.html, DEPLOY_STATE.md
 alwaysApply: true
 ---
 
@@ -19,7 +19,7 @@ Beim Bearbeiten von backend/fetcher.py, backend/main.py, backend/scoring.py oder
   - `fetch_kraken_ticker("XBTUSD")`       (# 2)
   - `fetch_kraken_ticker("XETHUSD")`      (# 3)
 - Die Funktionen `fetch_kraken_prices` und `fetch_kraken_ticker` müssen existieren (nach fetch_funding_rates, vor CoinGecko-Sektion).
-- **ALWAYS Bybit für Funding Rates** (fetch_funding_rates nutzt api.bybit.com/v5/market/tickers) — **NEVER Binance Futures** (blockiert auf Railway US-West). CoinGecko-Fallback-Logik unverändert lassen.
+- **ALWAYS OKX für Funding Rates** (fetch_funding_rates nutzt www.okx.com/api/v5/public/funding-rate, instId BTC-USDT-SWAP / ETH-USDT-SWAP) — **NEVER Binance Futures oder Bybit** (beide 403 auf Railway). CoinGecko-Fallback-Logik unverändert lassen.
 
 ## backend/main.py
 - Keine Unicode-Zeichen in Kommentaren oder String-Literalen (═ ─ — → ™ … etc.).
@@ -52,11 +52,15 @@ Beim Bearbeiten von backend/fetcher.py, backend/main.py, backend/scoring.py oder
 - Data Inspector Funding Rate: Bei 0 oder null "N/A" anzeigen (fmtFunding); ARC Score = Math.round((S.combined ?? 50) * 10) / 10.
 - Data Inspector Liquidity Regime / ARC Summary Fallback: **liq.liquidity_regime** und **liq.liquidity_score** (NICHT liq.regime / liq.score) — liquidity_engine liefert diese Keys.
 
+## backend/Dockerfile
+- **NUR eine** Dockerfile im Ordner `backend/` (keine zweite Datei mit Leerzeichen im Namen wie " Dockerfile").
+- **CMD** muss `$PORT` verwenden: `--bind 0.0.0.0:$PORT` (Railway setzt PORT) — **NICHT** hardcoded `8000`.
+
 ## backend/liquidity_engine.py
 - **bond_score** aus absolutem Yield-Niveau (us10y_vals[-1]) berechnen — **NICHT** aus trend_score (sonst us10y_trend=0 → 150 → clamp 100 Bug). Stufen: <2% → 20, <3% → 20–50, <4% → 50–70, <5% → 70–85, else → 85–100.
 
 ## Kurz: Was du dir merken musst
-- Kraken für Preise, Bybit für Funding (nicht Binance Futures).
+- Kraken für Preise, OKX für Funding (nicht Binance/Bybit — 403 auf Railway).
 - drawdown_score: len(clean) < 10 → return 50.0.
 - main.py: kein Unicode, /api/analyzer + /api/arc-summary.
 - index.html: allSettled, phaseOf-Grenzen, btcShortTerm/ethComponents/btcScore-Guard, BACKEND_URL Railway.

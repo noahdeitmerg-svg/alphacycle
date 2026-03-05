@@ -50,25 +50,15 @@ async def fetch_binance_ticker(coin_id):
     return {"price":_sf(data.get("lastPrice")),"change_24h":_sf(data.get("priceChangePercent")),"volume_24h":_sf(data.get("quoteVolume"))}
 
 async def fetch_funding_rates():
-    """Bybit public funding rate — no auth required, Railway-compatible."""
+    """OKX public funding rate - Binance/Bybit 403 on Railway."""
     try:
-        btc = await _get(
-            "https://api.bybit.com/v5/market/tickers",
-            params={"category": "linear", "symbol": "BTCUSDT"}
-        )
-        eth = await _get(
-            "https://api.bybit.com/v5/market/tickers",
-            params={"category": "linear", "symbol": "ETHUSDT"}
-        )
-        btc_rate = 0.0
-        eth_rate = 0.0
-        if btc and btc.get("result", {}).get("list"):
-            btc_rate = round(_sf(btc["result"]["list"][0].get("fundingRate", 0)) * 100, 4)
-        if eth and eth.get("result", {}).get("list"):
-            eth_rate = round(_sf(eth["result"]["list"][0].get("fundingRate", 0)) * 100, 4)
+        btc = await _get("https://www.okx.com/api/v5/public/funding-rate", params={"instId": "BTC-USDT-SWAP"})
+        eth = await _get("https://www.okx.com/api/v5/public/funding-rate", params={"instId": "ETH-USDT-SWAP"})
+        btc_rate = round(_sf(btc["data"][0].get("fundingRate", 0)) * 100, 4) if btc and btc.get("data") else 0.0
+        eth_rate = round(_sf(eth["data"][0].get("fundingRate", 0)) * 100, 4) if eth and eth.get("data") else 0.0
         return {"btc_funding_rate": btc_rate, "eth_funding_rate": eth_rate}
     except Exception as e:
-        logger.warning(f"Funding rates (Bybit): {e}")
+        logger.warning(f"Funding rates (OKX): {e}")
         return {"btc_funding_rate": 0.0, "eth_funding_rate": 0.0}
 
 

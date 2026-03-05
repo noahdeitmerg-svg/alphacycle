@@ -9,6 +9,8 @@
 - ✅ FIX 4: index.html ATH/Dominanz aus /api/prices (kein CoinGecko mehr)
 - ✅ FIX 5: index.html backtest + liquidity-regime in Promise.allSettled + liquidity-components
 - ✅ FIX 6: scoring.py short_term dict in compute_btc_score()
+- ✅ FIX 37: backend/Dockerfile — eine Datei, CMD mit $PORT; Duplikat " Dockerfile" entfernt
+- ✅ FIX 38: fetcher.py Funding Rates auf OKX umgestellt (Bybit/Binance 403 auf Railway)
 - ✅ Deployed auf Railway, getestet — Dashboard live bei Score 30/100
 
 ## Nächste Schritte
@@ -58,6 +60,8 @@ DO NOT modify weights. DO NOT add scoring components.
 34. fetcher.py: Funding Rates von Binance auf Bybit umgestellt (Binance Futures auf Railway blockiert)
 35. index.html: Data Inspector Liquidity Regime/ARC Summary — liq.liquidity_regime und liq.liquidity_score (NICHT liq.regime / liq.score)
 36. liquidity_engine.py: bond_score aus absolutem 10Y-Yield-Niveau berechnen, nicht aus trend_score (Bug: us10y_trend=0 → 100)
+37. backend/Dockerfile: Nur eine Dockerfile im backend/ (keine Datei mit Leerzeichen); CMD mit $PORT (nicht hardcoded 8000)
+38. fetcher.py: Funding Rates von OKX (Binance Futures und Bybit 403 auf Railway) — fetch_funding_rates() nutzt okx.com/api/v5/public/funding-rate
 
 ## Active Endpoints (Railway)
 /health /api/prices /api/cycle/btc /api/cycle/eth /api/cycle/macro
@@ -75,7 +79,7 @@ DO NOT modify weights. DO NOT add scoring components.
 
 ## Data Sources
 Prices: Kraken (primary), CoinGecko (fallback)
-Funding: Bybit (Binance Futures auf Railway blockiert)
+Funding: OKX (Binance Futures + Bybit 403 auf Railway)
 F&G: Alternative.me
 TVL+Stablecoins: DeFiLlama
 Fed Balance: FRED
