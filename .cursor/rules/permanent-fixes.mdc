@@ -59,7 +59,7 @@ Beim Bearbeiten von backend/fetcher.py, backend/main.py, backend/scoring.py oder
 - **CMD** mit `$PORT`: `--bind 0.0.0.0:$PORT`, **workers=1** (Railway setzt PORT) — **NICHT** hardcoded 8000.
 
 ## backend/services/backtest_engine.py
-- Paginated Kraken OHLC (max 720/request), _fetch_btc_history() seit 10 Jahren. WINDOW_200W=200 (~28 Wochen). ARC = ma_200w*0.35 + drawdown*0.35 + fear_greed(50)*0.15 + macro_liq(50)*0.15. Return: [{"date": "YYYY-MM-DD", "price": float, "score": float}, ...].
+- Backtest nutzt /tmp/backtest_cache.json: einmal komplett laden (10y paginiert), taeglich 1 Datenpunkt ergaenzen. WINDOW_200W=200. ARC = ma_200w*0.35 + drawdown*0.35 + fear_greed(50)*0.15 + macro_liq(50)*0.15. Return: [{"date": "YYYY-MM-DD", "price": float, "score": float}, ...].
 
 ## backend/liquidity_engine.py
 - **bond_score** aus absolutem Yield-Niveau (us10y_vals[-1]) berechnen — **NICHT** aus trend_score (sonst us10y_trend=0 → 150 → clamp 100 Bug). Stufen: <2% → 20, <3% → 20–50, <4% → 50–70, <5% → 70–85, else → 85–100.

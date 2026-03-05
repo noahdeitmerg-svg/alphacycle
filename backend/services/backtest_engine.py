@@ -1,14 +1,16 @@
 """
 backtest_engine.py - Alpha Cycle Intelligence v3.0
 
-Historical backtest: paginated Kraken OHLC (max 720/request).
-ARC = ma_200w*0.35 + drawdown*0.35 + fear_greed(50)*0.15 + macro_liq(50)*0.15.
+Historical backtest: file cache /tmp/backtest_cache.json.
+Once loaded, only missing days (1-2) fetched. ARC = ma_200w*0.35 + drawdown*0.35 + fg(50)*0.15 + liq(50)*0.15.
 Return: [{"date": "YYYY-MM-DD", "price": float, "score": float}, ...]
 """
 
 import asyncio
+import json
 import math
 from datetime import datetime
+from pathlib import Path
 from typing import List, Dict, Any
 
 import httpx
@@ -20,7 +22,69 @@ except ImportError:  # pragma: no cover
 
 
 HTTP_TIMEOUT = httpx.Timeout(30.0, connect=10.0)
-WINDOW_200W = 200  # ~28 weeks min window for early data points
+WINDOW_200W = 200  # min window for early data points
+CACHE_FILE = Path("/tmp/backtest_cache.json")
+
+
+async def _fetch_since(since_ts: int) -> List[Dict[str, Any]]:
+    """Fetch only new candles since given timestamp."""
+    async with httpx.AsyncClient(timeout=HTTP_TIMEOUT, follow_redirects=True) as client:
+        resp = await client.get(
+            "https://api.kraken.com/0/public/OHLC",
+            params={"pair": "XBTUSD", "interval": 1440, "since": since_ts},
+        )
+        data = resp.json()
+    if data.get("error") or "result" not in data:
+        return []
+    keys = [k for k in data["result"] if k != "last"]
+    if not keys:
+        return []
+    out = []
+    for c in data["result"][keys[0]]:
+        try:
+            price = float(c[4])
+            if price > 0:
+                dt = datetime.utcfromtimestamp(int(c[0])).date().isoformat()
+                out.append({"date": dt, "price": price})
+        except (IndexError, TypeError, ValueError):
+            continue
+    return out
+
+
+async def _load_or_build_cache() -> List[Dict[str, Any]]:
+    """Load from file cache or build from scratch."""
+    today = datetime.utcnow().date().isoformat()
+
+    if CACHE_FILE.exists():
+        try:
+            cached = json.loads(CACHE_FILE.read_text())
+            if cached and isinstance(cached, list):
+                last_date = cached[-1]["date"]
+                if last_date >= today:
+                    return cached
+                since_ts = int(datetime.fromisoformat(last_date).timestamp())
+                new_candles = await _fetch_since(since_ts)
+                if new_candles:
+                    cached.extend(new_candles)
+                    seen = set()
+                    deduped = []
+                    for item in cached:
+                        if item["date"] not in seen:
+                            seen.add(item["date"])
+                            deduped.append(item)
+                    cached = sorted(deduped, key=lambda x: x["date"])
+                CACHE_FILE.write_text(json.dumps(cached))
+                return cached
+        except Exception:
+            pass
+
+    history = await _fetch_btc_history()
+    if history:
+        try:
+            CACHE_FILE.write_text(json.dumps(history))
+        except Exception:
+            pass
+    return history
 
 
 async def _fetch_btc_history() -> List[Dict[str, Any]]:
@@ -73,7 +137,7 @@ async def run_backtest() -> Dict[str, Any]:
     Run historical backtest. Returns {"results": [{"date", "price", "score"}, ...], "error": "..."} on failure.
     """
     try:
-        history = await _fetch_btc_history()
+        history = await _load_or_build_cache()
     except Exception as e:
         return {"results": [], "error": f"Fetch failed: {e!s}"}
     if not history:
