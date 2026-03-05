@@ -1019,6 +1019,20 @@ canvas.sparkline {
   100% { background-position: -200% 0; }
 }
 
+/* ARC chart container to prevent infinite growth on resize */
+#arc-chart-wrap {
+  position: relative;
+  height: 420px;
+  width: 100%;
+}
+#arc-history-chart {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100% !important;
+  height: 100% !important;
+}
+
 @media (max-width: 768px) {
   .dashboard-grid, .cards-grid,
   .scores-grid, .metrics-grid {
@@ -1027,8 +1041,8 @@ canvas.sparkline {
   .hero-section {
     padding: 12px !important;
   }
-  #arc-history-chart {
-    height: 250px !important;
+  #arc-chart-wrap {
+    height: 280px;
   }
   .data-inspector {
     font-size: 11px !important;
@@ -1419,7 +1433,7 @@ canvas.sparkline {
       <div class="chart-title">BTC Price + ARC Score</div>
     </div>
     <div id="arc-chart-placeholder" class="arc-chart-placeholder">Historische Daten werden geladen (kann bis zu 15 Sek. dauern)...</div>
-    <div id="arc-chart-wrap" style="display:none; position:relative; min-height:280px;">
+    <div id="arc-chart-wrap" style="display:none;">
       <canvas id="arc-history-chart" class="arc-chart-canvas"></canvas>
       <button id="export-arc-btn" onclick="exportArcChart()" class="btn-secondary" style="margin-top:12px;">
         Export Chart (PNG)
