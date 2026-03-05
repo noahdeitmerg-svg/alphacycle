@@ -143,7 +143,15 @@ def compute_btc_score(prices_daily, fear_greed, walcl_values, stablecoin_supply,
     s["fear_greed"]=fg_to_score(fear_greed)
 
     walcl=[safe_float(v) for v in walcl_values if v and safe_float(v)>0]
-    s["macro_liq"]=clamp(100-trend_score(walcl,min(26,len(walcl)-1))) if len(walcl)>=2 else 50.0
+    if len(walcl)>=2:
+        window=min(52,len(walcl)-1)
+        cur=walcl[-1]; prev=walcl[-window-1] if window<len(walcl) else walcl[0]
+        pct=((cur-prev)/prev*100) if prev>0 else 0.0
+        # Expanding Fed = risk-on (low score), Contracting = risk-off (high score)
+        raw=clamp(50-pct*2.5)
+        s["macro_liq"]=raw
+    else:
+        s["macro_liq"]=50.0
 
     stable=[safe_float(v) for v in stablecoin_supply if v and safe_float(v)>0]
     s["stable_supply"]=clamp(100-trend_score(stable,min(90,len(stable)-1))) if len(stable)>=2 else 50.0
