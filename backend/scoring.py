@@ -280,6 +280,11 @@ def compute_macro_score(walcl_series, stablecoin_supply, btc_prices,
         "dxy_trend":0.10,"yield_trend":0.10,"btc_dom_macro":0.10,
     }
     s["macro_score"]=_weighted(s,weights)
+    s["regime"] = (
+        "EXPANSION"   if s["macro_score"] < 35 else
+        "NEUTRAL"     if s["macro_score"] < 60 else
+        "CONTRACTION"
+    )
     return s
 
 def compute_combined(btc_score,eth_score,macro_score):
@@ -303,6 +308,15 @@ def compute_combined(btc_score,eth_score,macro_score):
         "combined_score":round(combined,1),
         "btc_weight":0.45,"eth_weight":0.30,"macro_weight":0.25,
         "phase":phase,"phase_color":color,"phase_desc":desc,
+        "signal": (
+            "STRONG BUY"  if combined < 20 else
+            "BUY"         if combined < 35 else
+            "ACCUMULATE"  if combined < 45 else
+            "HOLD"        if combined < 60 else
+            "REDUCE"      if combined < 75 else
+            "SELL"
+        ),
+        "confidence": round(abs(combined - 50) * 2, 1),
     }
 
 def _weighted(scores,weights):
