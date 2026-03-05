@@ -53,6 +53,7 @@ Beim Bearbeiten von backend/fetcher.py, backend/main.py, backend/scoring.py oder
 - ARC History Chart: Loading-Text "Historische Daten werden geladen (kann bis zu 15 Sek. dauern)...". yPrice (rechte Achse) dynamisch skaliert (validPrices > 100, 0.88/1.08, Fallback 1000/150000); Tooltip nur "ARC Index" und "BTC Price".
 - **FRED-Label dynamisch:** src-fred (id="src-fred") nach S.walclCurrent setzen: bei S.walclCurrent > 0 class "status-src", Text "FRED"; sonst class "status-src warn", Text "FRED (synthetic fallback)". In updateUI() direkt nach Setzen von S.walclCurrent (Backend-Pfad und Fallback-Pfad).
 - ARC History Chart Export: Button unter dem Chart (`export-arc-btn`, onclick `exportArcChart()`). exportArcChart() rendert 1200x675 PNG mit Hintergrund #0D1117, ARC/BTC Chart (Canvas), Footer mit "AlphaCycle — Crypto Cycle Intelligence" und URL `alphacycle-production.up.railway.app`, plus ARC Index + Datum; Download-Filename `alphacycle-arc-YYYY-MM-DD.png`.
+- Mobile Responsive: @media (max-width: 768px) erzwingt 1-Spalten-Layout für dashboard/cards/scores/metrics, kleinere Hero-Padding, ARC-Chart-Höhe 250px, kleinere Data Inspector Schrift, Ticker-Bar hidden, kein horizontales Scrolling, kompakter Nav- und Score-Card-Stil. ARC History Chart Optionen: `responsive: true`, `maintainAspectRatio: false`. BOOT_STEPS: Text "CONNECTING TO KRAKEN…" (kein CoinGecko mehr).
 
 ## backend/Dockerfile
 - **Nur 1 Datei** im Ordner `backend/` (keine zweite Datei mit Leerzeichen im Namen wie " Dockerfile").
