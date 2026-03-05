@@ -2647,15 +2647,15 @@ function renderCharts() {
                 ctx.save();
                 ctx.beginPath();
                 if (isTop) {
-                  // Dreieck zeigt NACH OBEN (Top-Marker über Linie)
-                  ctx.moveTo(x, yDraw - size);
-                  ctx.lineTo(x - size, yDraw + size/2);
-                  ctx.lineTo(x + size, yDraw + size/2);
-                } else {
-                  // Dreieck zeigt NACH UNTEN (Bottom-Marker unter Linie)
+                  // Dreieck zeigt NACH UNTEN ▼ (Top = Warnung, zeigt runter)
                   ctx.moveTo(x, yDraw + size);
                   ctx.lineTo(x - size, yDraw - size/2);
                   ctx.lineTo(x + size, yDraw - size/2);
+                } else {
+                  // Dreieck zeigt NACH OBEN ▲ (Bottom = Chance, zeigt hoch)
+                  ctx.moveTo(x, yDraw - size);
+                  ctx.lineTo(x - size, yDraw + size/2);
+                  ctx.lineTo(x + size, yDraw + size/2);
                 }
                 ctx.closePath();
                 ctx.fillStyle = color;
