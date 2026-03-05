@@ -8,12 +8,15 @@ Return: [{"date": "YYYY-MM-DD", "price": float, "score": float}, ...]
 
 import asyncio
 import json
+import logging
 import math
 from datetime import datetime
 from pathlib import Path
 from typing import List, Dict, Any
 
 import httpx
+
+logger = logging.getLogger(__name__)
 
 try:
     from scoring import drawdown_score, ma_deviation_score, safe_float
@@ -81,8 +84,8 @@ async def _load_or_build_cache() -> List[Dict[str, Any]]:
                     cached = sorted(deduped, key=lambda x: x["date"])
                 CACHE_FILE.write_text(json.dumps(cached))
                 return cached
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning("backtest cache load failed: %s", e)
 
     history = await _fetch_btc_history()
     if history:
@@ -96,7 +99,7 @@ async def _load_or_build_cache() -> List[Dict[str, Any]]:
 async def _fetch_btc_history() -> List[Dict[str, Any]]:
     """Paginated Kraken OHLC for 14 years (5200 days); ARC chart ~10y from ~2016."""
     import time as _time
-    since = int(_time.time()) - (5200 * 86400)  # 14 years, ARC chart ~10y from ~2016
+    since = 1381363200  # 2013-10-10, Kraken BTC live
     all_candles: List[list] = []
 
     async with httpx.AsyncClient(timeout=HTTP_TIMEOUT, follow_redirects=True) as client:
@@ -107,6 +110,11 @@ async def _fetch_btc_history() -> List[Dict[str, Any]]:
             )
             data = resp.json()
             if data.get("error") or "result" not in data:
+                logger.warning(
+                    "Kraken OHLC error: %s since=%s",
+                    data.get("error"),
+                    since,
+                )
                 break
             keys = [k for k in data["result"] if k != "last"]
             if not keys:
