@@ -169,6 +169,14 @@ def compute_btc_score(prices_daily, fear_greed, walcl_values, stablecoin_supply,
     }
     s["btc_score"]=_weighted(s,weights)
     s["current_price"]=round(current,2)
+    s["short_term"] = {
+        "rsi":       round(s.get("rsi", 50.0), 1),
+        "funding":   round(s.get("funding", 50.0), 1),
+        "mvrv":      round(s.get("mvrv", 50.0), 1),
+        "power_law": round(s.get("power_law", 50.0), 1),
+        "pi_cycle":  round(s.get("pi_cycle", 50.0), 1),
+        "puell":     round(s.get("puell", 50.0), 1),
+    }
     return s
 
 def compute_eth_score(eth_prices, btc_prices, tvl_series, stablecoin_supply,
