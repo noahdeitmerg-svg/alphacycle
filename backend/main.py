@@ -514,6 +514,12 @@ async def get_cycle_anchor():
         })
 
 
+@app.get("/api/cycle-anchor-debug")
+async def debug_cycle_anchor():
+    """Debug: days since bottom only (no compute_cycle_anchor)."""
+    return api_response({"days": compute_days_since_bottom()})
+
+
 @app.get("/api/arc-summary")
 async def get_arc_summary():
     """ARC Index consolidated summary."""

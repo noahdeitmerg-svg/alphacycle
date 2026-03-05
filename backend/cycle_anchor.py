@@ -3,17 +3,23 @@ cycle_anchor.py - Cycle Anchor Engine
 Anchors the system to REAL historical Bitcoin cycle structure.
 Deterministic, datetime-only. No randomness.
 """
+import logging
 from datetime import date, datetime, timedelta, timezone
 from typing import Optional
 
-# Last confirmed BTC cycle bottom (price ca. $15,742)
-CYCLE_BOTTOM_DATE = datetime(2022, 11, 21, tzinfo=timezone.utc)
+logger = logging.getLogger(__name__)
 
 
 def compute_days_since_bottom() -> int:
+    CYCLE_BOTTOM_DATE = datetime(2022, 11, 21, tzinfo=timezone.utc)
     now = datetime.now(timezone.utc)
     delta = now - CYCLE_BOTTOM_DATE
-    return max(0, delta.days)
+    result = max(0, delta.days)
+    logger.info(
+        "compute_days_since_bottom: %s days (from %s to %s)",
+        result, CYCLE_BOTTOM_DATE.date(), now.date(),
+    )
+    return result
 
 
 # -----------------------------------------------------------------------------
