@@ -2615,6 +2615,58 @@ function renderCharts() {
         window._arcHistoryChart = new Chart(canvas, {
           type: 'line',
           data: { labels, datasets },
+          plugins: [{
+            id: 'cycleMarkers',
+            afterDraw(chart) {
+              const ctx = chart.ctx;
+              const xAxis = chart.scales.x;
+              const yPrice = chart.scales.yPrice;
+              if (!xAxis || !yPrice) return;
+              CYCLE_MARKERS.forEach(marker => {
+                const markerMs = new Date(marker.date).getTime();
+                let idx = -1, minDiff = Infinity;
+                chart.data.labels.forEach((lbl, i) => {
+                  const diff = Math.abs(new Date(lbl).getTime() - markerMs);
+                  if (diff < minDiff) { minDiff = diff; idx = i; }
+                });
+                if (idx < 0 || minDiff > 14 * 86400000) return;
+                const x = xAxis.getPixelForValue(idx);
+                const priceVal = chart.data.datasets
+                  .find(d => d.label === 'BTC Price')?.data[idx];
+                if (!priceVal) return;
+                const y = yPrice.getPixelForValue(priceVal);
+                const isTop = marker.type === 'top';
+                const color = isTop ? '#ef4444' : '#22c55e';
+                const size = 12;
+                ctx.save();
+                ctx.beginPath();
+                if (isTop) {
+                  ctx.moveTo(x, y + size);
+                  ctx.lineTo(x - size, y - size/2);
+                  ctx.lineTo(x + size, y - size/2);
+                } else {
+                  ctx.moveTo(x, y - size);
+                  ctx.lineTo(x - size, y + size/2);
+                  ctx.lineTo(x + size, y + size/2);
+                }
+                ctx.closePath();
+                ctx.fillStyle = color;
+                ctx.globalAlpha = 1.0;
+                ctx.fill();
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                ctx.font = 'bold 10px monospace';
+                ctx.fillStyle = color;
+                ctx.textAlign = 'center';
+                ctx.fillText(
+                  marker.label, x,
+                  isTop ? y + size + 14 : y - size - 5
+                );
+                ctx.restore();
+              });
+            }
+          }],
           options: {
             responsive: true,
             maintainAspectRatio: false,
@@ -2635,58 +2687,6 @@ function renderCharts() {
                       return 'BTC Price: $' + Math.round(context.parsed.y).toLocaleString();
                     }
                   }
-                }
-              },
-              cycleMarkers: {
-                afterDraw(chart) {
-                  const ctx = chart.ctx;
-                  const xAxis = chart.scales.x;
-                  const yPrice = chart.scales.yPrice;
-                  if (!xAxis || !yPrice || !Array.isArray(CYCLE_MARKERS)) return;
-
-                  CYCLE_MARKERS.forEach(marker => {
-                    const idx = chart.data.labels.indexOf(marker.date);
-                    if (idx < 0) return;
-
-                    const x = xAxis.getPixelForValue(idx);
-                    const priceVal = chart.data.datasets
-                      .find(d => d.label === 'BTC Price')?.data[idx];
-                    if (!priceVal) return;
-                    const y = yPrice.getPixelForValue(priceVal);
-
-                    const isTop = marker.type === 'top';
-                    const color = isTop ? '#ef4444' : '#22c55e';
-                    const size = 8;
-
-                    ctx.save();
-                    ctx.beginPath();
-                    if (isTop) {
-                      // Dreieck nach unten (Top)
-                      ctx.moveTo(x, y + size);
-                      ctx.lineTo(x - size, y - size / 2);
-                      ctx.lineTo(x + size, y - size / 2);
-                    } else {
-                      // Dreieck nach oben (Bottom)
-                      ctx.moveTo(x, y - size);
-                      ctx.lineTo(x - size, y + size / 2);
-                      ctx.lineTo(x + size, y + size / 2);
-                    }
-                    ctx.closePath();
-                    ctx.fillStyle = color;
-                    ctx.globalAlpha = 0.9;
-                    ctx.fill();
-
-                    ctx.font = 'bold 9px DM Mono, monospace';
-                    ctx.fillStyle = color;
-                    ctx.globalAlpha = 0.85;
-                    ctx.textAlign = 'center';
-                    ctx.fillText(
-                      marker.label,
-                      x,
-                      isTop ? y + size + 12 : y - size - 4
-                    );
-                    ctx.restore();
-                  });
                 }
               }
             },
