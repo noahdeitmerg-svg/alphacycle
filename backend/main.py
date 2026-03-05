@@ -463,7 +463,7 @@ async def get_arc_summary():
             "ma_200w":    round(btc.get("ma_200w", 50.0), 1),
             "drawdown":   round(btc.get("drawdown", 50.0), 1),
             "fear_greed": round(btc.get("fear_greed", 50.0), 1),
-            "liquidity":  round(btc.get("liquidity", 50.0), 1),
+            "liquidity":  round(btc.get("macro_liq", 50.0), 1),
         },
         "short_term": btc.get("short_term", {}),
     })
