@@ -2052,15 +2052,16 @@ function updateUI() {
   const ratio = btcP>0 ? ethP/btcP : 0;
 
   // Score colors
-  const bCol=scoreColor(S.btcScore), eCol=scoreColor(S.ethScore), mCol=scoreColor(S.macScore);
+  const combinedScore = S.combined ?? S.arcSummary?.arc_score ?? S.btcScore;
+  const bCol=scoreColor(combinedScore), eCol=scoreColor(S.ethScore), mCol=scoreColor(S.macScore);
 
   // Gauges
-  animateGauge('btc-arc', S.btcScore);
+  animateGauge('btc-arc', combinedScore);
   animateGauge('eth-arc', S.ethScore);
   animateGauge('mac-arc', S.macScore);
 
-  // Score numbers
-  setText('btc-score-val', Math.round(S.btcScore), bCol);
+  // Score numbers (Hero ARC Gauge nutzt kombinierten ARC Score)
+  setText('btc-score-val', Math.round(combinedScore), bCol);
   (function updateHeroRisk() {
     const el = document.getElementById('hero-risk-label');
     if (!el) return;
@@ -2098,11 +2099,17 @@ function updateUI() {
   const btcWeekly = S.btcPrices.filter((_,i)=>i%7===0);
   const ethWeekly = S.ethPrices.filter((_,i)=>i%7===0);
   if (S.btcComponents) {
+    const liqScore =
+      S.arcSummary?.components?.liquidity ??
+      S.btcComponents.macro_liq?.score ??
+      S.btcComponents.macro_liq ??
+      S.btcComponents.liquidity?.score ??
+      50;
     renderComponents('btc-components', [
       {label:'200W MA Dev',  score: S.btcComponents.ma_200w?.score    ?? 50},
       {label:'Drawdown',     score: S.btcComponents.drawdown?.score   ?? 50},
       {label:'Fear & Greed', score: S.btcComponents.fear_greed?.score ?? 50},
-      {label:'Liquidity',    score: S.btcComponents.liquidity?.score  ?? 50},
+      {label:'Liquidity',    score: liqScore},
     ]);
   } else {
     renderComponents('btc-components', [
