@@ -45,6 +45,7 @@ DO NOT modify weights. DO NOT add scoring components.
 21. scoring.py: short_term dict in compute_btc_score() return (rsi, funding, mvrv, power_law, pi_cycle, puell)
 22. main.py: arc-summary components.liquidity nutzt macro_liq (nicht liquidity)
 23. scoring.py: macro_liq uses 52w window + pct*2.5 amplification (not plain trend_score for WALCL)
+24. index.html: Data Inspector panel at bottom (before footer), SHOW/HIDE toggle, renders from S.*; values 0/null orange, 50 default yellow
 
 ## Active Endpoints (Railway)
 /health /api/prices /api/cycle/btc /api/cycle/eth /api/cycle/macro
@@ -58,6 +59,7 @@ DO NOT modify weights. DO NOT add scoring components.
 4. Cycle Anchor card
 5. Sub-Analysis: ETH Relative Strength + Liquidity Regime
 6. Phase Banner, Key Indicators, Live Prices, Cycle Phase Guide
+7. Data Inspector (collapsed by default, SHOW/HIDE toggle)
 
 ## Data Sources
 Prices: Kraken (primary), CoinGecko (fallback)
