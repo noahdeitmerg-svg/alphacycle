@@ -105,12 +105,14 @@ async def refresh_cache(force: bool = False):
             funding_data = raw.get("funding_data", {})
             global_data  = raw.get("global_data",  {})
             btc_dom      = global_data.get("btc_dominance", 50.0)
+            net_liq_series = raw.get("net_liq_series", [])
 
             btc_scores = compute_btc_score(
                 btc_p, fg, walcl, stable,
                 indicators=indicators,
                 funding_data=funding_data,
                 btc_dominance=btc_dom,
+                net_liq_values=net_liq_series,
             )
             eth_scores = compute_eth_score(
                 eth_p, btc_p, tvl, stable, fg,

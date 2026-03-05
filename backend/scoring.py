@@ -121,7 +121,8 @@ def _power_law_score(prices):
     except: return 50.0
 
 def compute_btc_score(prices_daily, fear_greed, walcl_values, stablecoin_supply,
-                      indicators=None, funding_data=None, btc_dominance=None):
+                      indicators=None, funding_data=None, btc_dominance=None,
+                      net_liq_values=None):
     s={}
     prices=[safe_float(p) for p in prices_daily if p and safe_float(p)>0]
     if not prices: prices=[50000.0]
@@ -142,16 +143,28 @@ def compute_btc_score(prices_daily, fear_greed, walcl_values, stablecoin_supply,
     s["drawdown"]=drawdown_score(prices)
     s["fear_greed"]=fg_to_score(fear_greed)
 
-    walcl=[safe_float(v) for v in walcl_values if v and safe_float(v)>0]
-    if len(walcl)>=2:
-        window=min(52,len(walcl)-1)
-        cur=walcl[-1]; prev=walcl[-window-1] if window<len(walcl) else walcl[0]
-        pct=((cur-prev)/prev*100) if prev>0 else 0.0
-        # Expanding Fed = risk-on (low score), Contracting = risk-off (high score)
-        raw=clamp(50-pct*2.5)
-        s["macro_liq"]=raw
+    net_liq = [safe_float(item["v"] if isinstance(item, dict) else item)
+               for item in (net_liq_values or [])
+               if safe_float(item["v"] if isinstance(item, dict) else item) != 0]
+    if len(net_liq) >= 2:
+        window = min(52, len(net_liq) - 1)
+        cur  = net_liq[-1]
+        prev = net_liq[-window - 1] if window < len(net_liq) else net_liq[0]
+        pct  = ((cur - prev) / abs(prev) * 100) if prev != 0 else 0.0
+        raw = clamp(50 - pct * 2.0)
+        s["macro_liq"] = raw
+    elif len(walcl_values) >= 2:
+        walcl = [safe_float(v) for v in walcl_values if v and safe_float(v) > 0]
+        if len(walcl) >= 2:
+            window = min(52, len(walcl) - 1)
+            cur  = walcl[-1]
+            prev = walcl[-window - 1] if window < len(walcl) else walcl[0]
+            pct  = ((cur - prev) / prev * 100) if prev > 0 else 0.0
+            s["macro_liq"] = clamp(50 - pct * 2.5)
+        else:
+            s["macro_liq"] = 50.0
     else:
-        s["macro_liq"]=50.0
+        s["macro_liq"] = 50.0
 
     stable=[safe_float(v) for v in stablecoin_supply if v and safe_float(v)>0]
     s["stable_supply"]=clamp(100-trend_score(stable,min(90,len(stable)-1))) if len(stable)>=2 else 50.0
