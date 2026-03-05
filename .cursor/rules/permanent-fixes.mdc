@@ -13,7 +13,7 @@ Beim Bearbeiten von backend/fetcher.py, backend/main.py, backend/scoring.py oder
 
 ## backend/fetcher.py
 - **Kraken ist primäre Preisquelle** (nicht Binance für Preise; Binance ist auf Railway US-West blockiert).
-- In `fetch_all()`: **Kein** `fetch_market_data("bitcoin")` / `fetch_market_data("ethereum")` (CoinGecko 429 auf Railway). asyncio.gather genau 13 Aufrufe: 0-3 Kraken, 4 fg, 5 tvl, 6 stable, 7 walcl, 8 DGS10, 9 global_data, 10 funding, 11 WTREGEN (TGA), 12 RRPONTSYD (Reverse Repo). btc_cg/eth_cg = leere Fallback-Dicts. Net Liquidity = _compute_net_liquidity(walcl, tga_series, rrp_series); return net_liq_series, tga_series, rrp_series.
+- In `fetch_all()`: **Kein** `fetch_market_data("bitcoin")` / `fetch_market_data("ethereum")` (CoinGecko 429 auf Railway). asyncio.gather genau 13 Aufrufe: 0-3 Kraken, 4 fg, 5 tvl, 6 stable, 7 walcl, 8 DGS10, 9 global_data, 10 funding, 11 WTREGEN (TGA), 12 RRPONTSYD (Reverse Repo). WTREGEN und RRPONTSYD mit **start="2015-01-01"**. fetch_fred_series(): logger.info("FRED %s: %s pts", series_id, len(result)). btc_cg/eth_cg = leere Fallback-Dicts. Net Liquidity = _compute_net_liquidity(walcl, tga_series, rrp_series); return net_liq_series, tga_series, rrp_series.
 - Die ersten 4 Einträge im gather: `fetch_kraken_prices("XBTUSD", 730)`, `fetch_kraken_prices("XETHZUSD", 730)`, `fetch_kraken_ticker("XBTUSD")`, `fetch_kraken_ticker("XETHZUSD")`.
 - Die Funktionen `fetch_kraken_prices` und `fetch_kraken_ticker` müssen existieren (nach fetch_funding_rates, vor CoinGecko-Sektion).
 - **ALWAYS OKX für Funding** — Binance UND Bybit auf Railway blockiert (403). fetch_funding_rates nutzt www.okx.com/api/v5/public/funding-rate (instId BTC-USDT-SWAP / ETH-USDT-SWAP). CoinGecko-Fallback-Logik unverändert lassen.
@@ -23,7 +23,7 @@ Beim Bearbeiten von backend/fetcher.py, backend/main.py, backend/scoring.py oder
 - Keine Unicode-Zeichen in Kommentaren oder String-Literalen (═ ─ — → ™ … etc.).
 - CycleAnalyzer importieren und `_analyzer = CycleAnalyzer()`; Endpoint `/api/analyzer` muss aktiv sein.
 - Endpoint `/api/arc-summary` muss aktiv sein.
-- **ALWAYS** in get_arc_summary() components: `btc.get("macro_liq", 50.0)` für Liquidity — **NEVER** `btc.get("liquidity")` (Key existiert nicht in btc_scores).
+- **ALWAYS** in get_arc_summary() components: `btc.get("macro_liq", 50.0)` für Liquidity — **NEVER** `btc.get("liquidity")` (Key existiert nicht in btc_scores). components.net_liq und components.tga aus raw (net_liq_series[-1]["v"], tga_series[-1]["v"]) für Data Inspector.
 - **ALWAYS** regime/decision in get_arc_summary(): `regime = mac.get("regime", "NEUTRAL") or "NEUTRAL"`, `decision = com.get("signal", "HOLD") or "HOLD"` (keine leeren Strings).
 
 ## backend/fetcher.py (merge)
