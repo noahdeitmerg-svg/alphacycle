@@ -64,6 +64,7 @@ DO NOT modify weights. DO NOT add scoring components.
 38. fetcher.py: Funding Rates von OKX (Binance Futures und Bybit 403 auf Railway) — fetch_funding_rates() nutzt okx.com/api/v5/public/funding-rate
 39. fetcher.py: Global data (btc_dominance, total_market_cap) via CoinCap — CoinGecko /global gibt 429
 40. index.html: FRED-Label dynamisch — src-fred je nach S.walclCurrent: FRED oder FRED (synthetic fallback) + class status-src / warn
+41. fetcher.py: CoinCap /v2/global fuer global data (bitcoinDominancePercent, totalMarketCapUsd) — nicht /v2/assets/bitcoin
 
 ## Active Endpoints (Railway)
 /health /api/prices /api/cycle/btc /api/cycle/eth /api/cycle/macro

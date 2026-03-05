@@ -20,7 +20,7 @@ Beim Bearbeiten von backend/fetcher.py, backend/main.py, backend/scoring.py oder
   - `fetch_kraken_ticker("XETHUSD")`      (# 3)
 - Die Funktionen `fetch_kraken_prices` und `fetch_kraken_ticker` müssen existieren (nach fetch_funding_rates, vor CoinGecko-Sektion).
 - **ALWAYS OKX für Funding** — Binance UND Bybit auf Railway blockiert (403). fetch_funding_rates nutzt www.okx.com/api/v5/public/funding-rate (instId BTC-USDT-SWAP / ETH-USDT-SWAP). CoinGecko-Fallback-Logik unverändert lassen.
-- **ALWAYS CoinCap für btc_dominance/total_market_cap** — CoinGecko /global gibt 429. fetch_global_data() nutzt api.coincap.io/v2/assets/bitcoin.
+- **ALWAYS CoinCap für btc_dominance/total_market_cap** — CoinGecko /global gibt 429. fetch_global_data() nutzt api.coincap.io/v2/global (bitcoinDominancePercent, totalMarketCapUsd, totalVolumeUsd).
 
 ## backend/main.py
 - Keine Unicode-Zeichen in Kommentaren oder String-Literalen (═ ─ — → ™ … etc.).

@@ -136,21 +136,19 @@ async def fetch_coin_prices_cg(coin_id,days=365):
     logger.info(f"CoinGecko {coin_id}: {len(prices)}d"); return prices
 
 async def fetch_global_data():
-    """CoinCap global data - no API key needed, Railway-compatible."""
+    """CoinCap global endpoint - no API key, Railway-compatible."""
     try:
-        btc = await _get("https://api.coincap.io/v2/assets/bitcoin")
-        if btc and btc.get("data"):
-            d = btc["data"]
-            market_cap = _sf(d.get("marketCapUsd", 0))
-            supply = _sf(d.get("supply", 19_700_000))
-            dominance = _sf(d.get("dominancePercentage", 0))
-            if dominance <= 0 and market_cap > 0:
-                dominance = 55.0  # reasonable BTC dominance fallback
-            total_mc = round(market_cap / (dominance / 100), 0) if dominance > 0 else 0
+        data = await _get("https://api.coincap.io/v2/global")
+        if data and data.get("data"):
+            d = data["data"]
+            btc_dom = _sf(d.get("bitcoinDominancePercent", 0))
+            total_mc = _sf(d.get("totalMarketCapUsd", 0))
+            if btc_dom <= 0:
+                btc_dom = 55.0
             return {
-                "btc_dominance": round(dominance, 1),
+                "btc_dominance": round(btc_dom, 1),
                 "total_market_cap": total_mc,
-                "total_volume_24h": 0.0,
+                "total_volume_24h": _sf(d.get("totalVolumeUsd", 0)),
                 "market_cap_change_24h": 0.0,
             }
     except Exception as e:
