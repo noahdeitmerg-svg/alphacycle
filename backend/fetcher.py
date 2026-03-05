@@ -207,6 +207,42 @@ async def fetch_fred_series(series_id,start="2020-01-01"):
     return [{"t":int(datetime.strptime(o["date"],"%Y-%m-%d").timestamp())*1000,"v":_sf(o["value"])}
             for o in data["observations"] if o.get("value",".")!="."]
 
+
+def _compute_net_liquidity(walcl, tga, rrp):
+    """
+    Net Liquidity = WALCL - TGA - RRP
+    Alle drei Serien sind weekly/daily FRED Daten {"t":..,"v":..}
+    Wir alignen auf gemeinsame Timestamps (nearest week).
+    Returns list of {"t": timestamp_ms, "v": net_liq_value}
+    """
+    if not walcl:
+        return []
+    tga_dict = {item["t"]: item["v"] for item in tga if isinstance(item, dict)}
+    rrp_dict = {item["t"]: item["v"] for item in rrp if isinstance(item, dict)}
+    result = []
+    for item in walcl:
+        t = item["t"]
+        w = _sf(item.get("v", 0))
+        if w <= 0:
+            continue
+        tga_val = 0.0
+        rrp_val = 0.0
+        for delta in [0, 86400000, -86400000, 172800000, -172800000,
+                      604800000, -604800000]:
+            if t + delta in tga_dict:
+                tga_val = _sf(tga_dict[t + delta])
+                break
+        for delta in [0, 86400000, -86400000, 172800000, -172800000,
+                      604800000, -604800000]:
+            if t + delta in rrp_dict:
+                rrp_val = _sf(rrp_dict[t + delta])
+                break
+        net = w - tga_val - rrp_val
+        if net != 0:
+            result.append({"t": t, "v": net})
+    return result
+
+
 # -- ON-CHAIN PROXIES -------------------------------------------------------------
 def _compute_mvrv_zscore(prices):
     if len(prices)<30: return 50.0
@@ -266,6 +302,8 @@ async def fetch_all():
         fetch_fred_series("DGS10"),             # 8
         fetch_global_data(),                   # 9
         fetch_funding_rates(),                 # 10
+        fetch_fred_series("WTREGEN"),          # 11 Treasury General Account
+        fetch_fred_series("RRPONTSYD"),        # 12 Reverse Repo
         return_exceptions=True,
     )
     def safe(r,d): return d if (isinstance(r,Exception) or r is None) else r
@@ -283,6 +321,8 @@ async def fetch_all():
     us10y  =safe(results[8],[])
     gdata  =safe(results[9],{"btc_dominance":50.0,"total_market_cap":0.0})
     funding=safe(results[10],{"btc_funding_rate":0.0,"eth_funding_rate":0.0})
+    tga_series = safe(results[11], [])
+    rrp_series = safe(results[12], [])
 
     btc_prices=btc_p if len(btc_p)>10 else await fetch_coin_prices_cg("bitcoin",365)
     eth_prices=eth_p if len(eth_p)>10 else await fetch_coin_prices_cg("ethereum",365)
@@ -317,6 +357,8 @@ async def fetch_all():
         if btc_mc > 0 and total_mc > 0:
             gdata["btc_dominance"] = round(btc_mc / total_mc * 100, 1)
 
+    net_liq_series = _compute_net_liquidity(walcl, tga_series, rrp_series)
+
     logger.info(f"fetch_all done - BTC:{len(btc_prices)}d F&G:{fg['current']} "
                 f"DOM:{gdata.get('btc_dominance',0):.1f}% "
                 f"MVRV:{indicators['mvrv_score']} Pi:{indicators['pi_score']} Puell:{indicators['puell_score']}")
@@ -333,6 +375,9 @@ async def fetch_all():
         "us10y_series": us10y,
         "global_data":  gdata,
         "funding_data": funding,
+        "net_liq_series": net_liq_series,
+        "tga_series":   tga_series,
+        "rrp_series":   rrp_series,
         "indicators":   indicators,
         "fetched_at":   int(time.time()*1000),
     }
