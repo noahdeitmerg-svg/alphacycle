@@ -484,6 +484,63 @@ body::before {
   width: auto !important;
 }
 
+/* Hero kompakter */
+#btc-card.hero-card {
+  padding: 1.5rem 2rem;
+}
+#btc-card.hero-card .gauge-wrap {
+  max-width: 160px;
+  min-width: 120px;
+}
+#btc-card.hero-card .gauge-val {
+  font-size: clamp(44px, 7vw, 58px);
+}
+#btc-card.hero-card .score-phase {
+  font-size: clamp(20px, 3vw, 26px);
+}
+#btc-card.hero-card .comp-val {
+  font-size: 16px !important;
+}
+
+/* Zonen Row */
+.hero-zones {
+  grid-area: unset;
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+@media(max-width:580px){
+  .hero-zones { grid-template-columns: repeat(2, 1fr); }
+}
+.hero-zone {
+  padding: 0.75rem 1rem;
+  border-right: 1px solid rgba(255,255,255,0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.hero-zone:last-child { border-right: none; }
+.hz-range {
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.hz-label {
+  font-family: var(--f-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--tx-ter);
+}
+.zone-low  .hz-range { color: #22c55e; }
+.zone-mod  .hz-range { color: #3b82f6; }
+.zone-ele  .hz-range { color: #f59e0b; }
+.zone-ext  .hz-range { color: #ef4444; }
+
 .hero-subtitle {
   font-size: 0.65rem;
   letter-spacing: 0.16em;
@@ -1432,29 +1489,23 @@ canvas.sparkline {
       <div class="score-price" id="btc-price-sm">—</div>
     </div>
     <div class="components-grid" id="btc-components"></div>
-  </div>
-
-  <!-- ARC Score Zones -->
-  <div class="sec-header anim d2">
-    <div class="sec-title">ARC Score Zones</div>
-    <div class="sec-line"></div>
-  </div>
-  <div class="legend-grid anim d2">
-    <div class="legend-item" style="border-color:rgba(34,197,94,0.25);background:rgba(34,197,94,0.04);color:#22c55e">
-      <div class="legend-range">0-30</div>
-      <div class="legend-name">Low Risk</div>
-    </div>
-    <div class="legend-item" style="border-color:rgba(59,130,246,0.25);background:rgba(59,130,246,0.04);color:#3b82f6">
-      <div class="legend-range">30-60</div>
-      <div class="legend-name">Moderate Risk</div>
-    </div>
-    <div class="legend-item" style="border-color:rgba(245,158,11,0.25);background:rgba(245,158,11,0.04);color:#f59e0b">
-      <div class="legend-range">60-75</div>
-      <div class="legend-name">Elevated Risk</div>
-    </div>
-    <div class="legend-item" style="border-color:rgba(239,68,68,0.25);background:rgba(239,68,68,0.04);color:#ef4444">
-      <div class="legend-range">75-100</div>
-      <div class="legend-name">Extreme Risk</div>
+    <div class="hero-zones">
+      <div class="hero-zone zone-low">
+        <div class="hz-range">0–30</div>
+        <div class="hz-label">Low Risk</div>
+      </div>
+      <div class="hero-zone zone-mod">
+        <div class="hz-range">30–60</div>
+        <div class="hz-label">Moderate Risk</div>
+      </div>
+      <div class="hero-zone zone-ele">
+        <div class="hz-range">60–75</div>
+        <div class="hz-label">Elevated Risk</div>
+      </div>
+      <div class="hero-zone zone-ext">
+        <div class="hz-range">75–100</div>
+        <div class="hz-label">Extreme Risk</div>
+      </div>
     </div>
   </div>
 
