@@ -246,42 +246,50 @@ async def health():
 
 @app.get("/api/prices")
 async def get_prices():
-    c  = _require_cache()
-    bm = c["raw"]["btc_market"]
-    em = c["raw"]["eth_market"]
-    fg = c["raw"]["fear_greed"]
-    gd = c["raw"].get("global_data", {})
-    fd = c["raw"].get("funding_data", {})
+    c = _require_cache()
+    raw = c["raw"]
+    btc_market = raw.get("btc_market", {})
+    eth_market = raw.get("eth_market", {})
+    btc_prices = raw.get("btc_prices", [])
+    eth_prices = raw.get("eth_prices", [])
+    gdata = raw.get("global_data", {})
 
-    # Stablecoin current
-    stable_series = c["raw"].get("stable_series", [])
+    btc_ath = max(btc_prices) if btc_prices else 0.0
+    eth_ath = max(eth_prices) if eth_prices else 0.0
+    btc_current = btc_prices[-1] if btc_prices else 0.0
+    eth_current = eth_prices[-1] if eth_prices else 0.0
+    btc_ath_pct = round((btc_current - btc_ath) / btc_ath * 100, 2) if btc_ath > 0 else 0.0
+    eth_ath_pct = round((eth_current - eth_ath) / eth_ath * 100, 2) if eth_ath > 0 else 0.0
+
+    fg = raw["fear_greed"]
+    fd = raw.get("funding_data", {})
+    stable_series = raw.get("stable_series", [])
     stable_b = safe_float(stable_series[-1]["v"]) / 1e9 if stable_series else 0.0
 
     return api_response({
         "btc": {
-            "price":          safe_float(bm.get("price", 0)),
-            "change_24h":     safe_float(bm.get("change_24h", 0)),
-            "market_cap":     safe_float(bm.get("market_cap", 0)),
-            "volume_24h":     safe_float(bm.get("volume", 0)),
-            "ath":            safe_float(bm.get("ath", 0)),
-            "ath_change_pct": safe_float(bm.get("ath_change_pct", 0)),
-            "history":        _prices_to_series(c["raw"]["btc_prices"], 90),
+            "price":          safe_float(btc_market.get("price", 0)),
+            "change_24h":     safe_float(btc_market.get("change_24h", 0)),
+            "market_cap":     safe_float(btc_market.get("market_cap", 0)),
+            "volume_24h":     safe_float(btc_market.get("volume", 0)),
+            "ath":            round(btc_ath, 2),
+            "ath_change_pct": btc_ath_pct,
+            "history":        _prices_to_series(btc_prices, 90),
         },
         "eth": {
-            "price":          safe_float(em.get("price", 0)),
-            "change_24h":     safe_float(em.get("change_24h", 0)),
-            "market_cap":     safe_float(em.get("market_cap", 0)),
-            "volume_24h":     safe_float(em.get("volume", 0)),
-            "ath":            safe_float(em.get("ath", 0)),
-            "ath_change_pct": safe_float(em.get("ath_change_pct", 0)),
-            "history":        _prices_to_series(c["raw"]["eth_prices"], 90),
+            "price":          safe_float(eth_market.get("price", 0)),
+            "change_24h":     safe_float(eth_market.get("change_24h", 0)),
+            "market_cap":     safe_float(eth_market.get("market_cap", 0)),
+            "volume_24h":     safe_float(eth_market.get("volume", 0)),
+            "ath":            round(eth_ath, 2),
+            "ath_change_pct": eth_ath_pct,
+            "history":        _prices_to_series(eth_prices, 90),
         },
-        "eth_btc_ratio": _build_ratio_series(
-            c["raw"]["btc_prices"], c["raw"]["eth_prices"], 90),
+        "eth_btc_ratio": _build_ratio_series(btc_prices, eth_prices, 90),
         "fear_greed":    fg,
         "global": {
-            "btc_dominance":    safe_float(gd.get("btc_dominance", 50)),
-            "total_market_cap": safe_float(gd.get("total_market_cap", 0)),
+            "btc_dominance":    safe_float(gdata.get("btc_dominance", 50)),
+            "total_market_cap": safe_float(gdata.get("total_market_cap", 0)),
         },
         "funding": {
             "btc_funding_rate": safe_float(fd.get("btc_funding_rate", 0)),
@@ -311,6 +319,14 @@ async def get_btc_cycle():
             "funding":       {"score": s.get("funding", 50.0), "raw": s.get("funding_raw", 0.0)},
             "power_law":     {"score": s.get("power_law", 50.0)},
         },
+        "short_term": s.get("short_term", {
+            "rsi": 50.0,
+            "funding": 50.0,
+            "mvrv": 50.0,
+            "power_law": 50.0,
+            "pi_cycle": 50.0,
+            "puell": 50.0,
+        }),
         "weights": {
             "ma_200w": 0.18, "mvrv": 0.15, "fear_greed": 0.12,
             "drawdown": 0.10, "rsi": 0.10, "puell": 0.10,
@@ -425,6 +441,32 @@ async def get_cycle_anchor():
     """Cycle Anchor Engine: objective cycle timing from historical Bitcoin structure."""
     data = compute_cycle_anchor()
     return api_response(data)
+
+
+@app.get("/api/arc-summary")
+async def get_arc_summary():
+    """ARC Index consolidated summary."""
+    c = _require_cache()
+    btc = c["btc_scores"]
+    mac = c["macro_scores"]
+    com = c["combined"]
+    return api_response({
+        "arc_score":   round(com.get("combined_score", 50.0), 1),
+        "btc_score":   round(btc.get("btc_score", 50.0), 1),
+        "eth_score":   round(c["eth_scores"].get("eth_score", 50.0), 1),
+        "macro_score": round(mac.get("macro_score", 50.0), 1),
+        "regime":      mac.get("regime", "NEUTRAL"),
+        "decision":    com.get("signal", "HOLD"),
+        "confidence":  round(com.get("confidence", 50.0), 1),
+        "fear_greed":  c["raw"]["fear_greed"]["current"],
+        "components": {
+            "ma_200w":    round(btc.get("ma_200w", 50.0), 1),
+            "drawdown":   round(btc.get("drawdown", 50.0), 1),
+            "fear_greed": round(btc.get("fear_greed", 50.0), 1),
+            "liquidity":  round(btc.get("liquidity", 50.0), 1),
+        },
+        "short_term": btc.get("short_term", {}),
+    })
 
 
 @app.get("/api/backtest")
