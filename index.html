@@ -2252,7 +2252,7 @@ function renderComponents(containerId, components) {
 
 // ── PHASE BANNER ────────────────────────────────────────────────────────────
 function updatePhaseBanner() {
-  const score = S.btcScore ?? S.combined ?? 50;
+  const score = S.arcSummary?.arc_score ?? S.combined ?? S.btcScore ?? 50;
   const phase = phaseOf(score);
   const col   = scoreColor(score);
   const banner = $('phase-banner');
@@ -2422,7 +2422,7 @@ function updateUI() {
     setText('dec-allocation', allocation);
     setText('dec-range',      range);
     setText('dec-confidence', confidence);
-    setText('dec-index-val',  Math.round(score), col);
+    setText('dec-index-val',  Math.round(combinedScore), scoreColor(combinedScore));
   })();
 
   // Short Term Engine — from btcC short_term data
@@ -2508,7 +2508,7 @@ function updateUI() {
   // Ticker
   const tPairs = [['tk-btc','tk-btc2',`$${fmt(btcP)}`],['tk-eth','tk-eth2',`$${fmt(ethP)}`],
     ['tk-ratio','tk-ratio2',ratio.toFixed(5)],['tk-fg','tk-fg2',`${S.fgCurrent} (${S.fgLabel})`],
-    ['tk-btc-score','tk-btc-score2',`BTC ${Math.round(S.btcScore)}/100`],
+    ['tk-btc-score','tk-btc-score2',`BTC ${Math.round(combinedScore)}/100`],
     ['tk-eth-score','tk-eth-score2',`ETH ${Math.round(S.ethScore)}/100`],
     ['tk-mac-score','tk-mac-score2',`MAC ${Math.round(S.macScore)}/100`],
   ];
