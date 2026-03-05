@@ -30,28 +30,30 @@ HTTP_TIMEOUT = httpx.Timeout(25.0, connect=10.0)
 
 
 async def _fetch_btc_history() -> List[Dict[str, Any]]:
-    """
-    Fetch full BTC price history from CoinGecko.
-    Returns list of {"date": "YYYY-MM-DD", "price": float} sorted by date.
-    Deduplicates by date (last price of day).
-    """
+    """Fetch BTC price history from Kraken OHLC — Railway-compatible."""
+    import time as _time
+    since = int(_time.time()) - (1500 * 86400)
     async with httpx.AsyncClient(timeout=HTTP_TIMEOUT, follow_redirects=True) as client:
-        resp = await client.get(COINGECKO_URL)
+        resp = await client.get(
+            "https://api.kraken.com/0/public/OHLC",
+            params={"pair": "XBTUSD", "interval": 1440, "since": since}
+        )
         resp.raise_for_status()
         data = resp.json()
-
-    prices_raw = data.get("prices", []) or []
-    by_date: Dict[str, float] = {}
-    for item in prices_raw:
+    if data.get("error") or "result" not in data:
+        return []
+    keys = [k for k in data["result"] if k != "last"]
+    if not keys:
+        return []
+    out = []
+    for c in data["result"][keys[0]]:
         try:
-            ts = item[0] if isinstance(item, (list, tuple)) else item.get("timestamp", 0)
-            price = item[1] if isinstance(item, (list, tuple)) else item.get("value", 0)
-            dt = datetime.utcfromtimestamp(float(ts) / 1000.0).date()
-            key = dt.isoformat()
-            by_date[key] = safe_float(price, 0.0)
-        except (IndexError, KeyError, TypeError, ValueError):
+            price = float(c[4])
+            if price > 0:
+                dt = datetime.utcfromtimestamp(int(c[0])).date().isoformat()
+                out.append({"date": dt, "price": price})
+        except (IndexError, TypeError, ValueError):
             continue
-    out = [{"date": k, "price": v} for k, v in sorted(by_date.items())]
     return out
 
 
