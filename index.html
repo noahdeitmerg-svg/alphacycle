@@ -1019,6 +1019,32 @@ canvas.sparkline {
   100% { background-position: -200% 0; }
 }
 
+  #export-arc-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    padding: 5px 12px;
+    background: transparent;
+    border: 1px solid rgba(148,163,184,0.2);
+    border-radius: 4px;
+    color: rgba(148,163,184,0.6);
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  #export-arc-btn:hover {
+    border-color: rgba(14,165,233,0.5);
+    color: rgba(14,165,233,0.9);
+    background: rgba(14,165,233,0.05);
+  }
+  #export-arc-btn:active {
+    transform: scale(0.97);
+  }
+
 /* ARC chart container to prevent infinite growth on resize */
 #arc-chart-wrap {
   position: relative;
@@ -1435,8 +1461,8 @@ canvas.sparkline {
     <div id="arc-chart-placeholder" class="arc-chart-placeholder">Historische Daten werden geladen (kann bis zu 15 Sek. dauern)...</div>
     <div id="arc-chart-wrap" style="display:none;">
       <canvas id="arc-history-chart" class="arc-chart-canvas"></canvas>
-      <button id="export-arc-btn" onclick="exportArcChart()" class="btn-secondary" style="margin-top:12px;">
-        Export Chart (PNG)
+      <button id="export-arc-btn" onclick="exportArcChart()">
+        ↓ EXPORT PNG
       </button>
     </div>
   </div>
@@ -2631,27 +2657,11 @@ function exportArcChart() {
   ctx.fillStyle = '#0D1117';
   ctx.fillRect(0, 0, 1200, 675);
 
-  // Chart draufzeichnen (Skalierung vom aktuellen Canvas auf Exportgröße)
-  ctx.drawImage(canvas, 0, 0, 1200, 620);
-
-  // Branding Footer
-  ctx.fillStyle = '#1e293b';
-  ctx.fillRect(0, 620, 1200, 55);
-  ctx.fillStyle = '#94a3b8';
-  ctx.font = '14px monospace';
-  ctx.fillText('AlphaCycle — Crypto Cycle Intelligence', 20, 648);
-  ctx.fillStyle = '#0ea5e9';
-  ctx.font = 'bold 14px monospace';
-  ctx.fillText('alphacycle-production.up.railway.app', 820, 648);
-
-  // ARC Score + Datum
-  const today = new Date().toISOString().split('T')[0];
-  const arcScore = Math.round(S.combined ?? 34);
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 13px monospace';
-  ctx.fillText(`ARC Index: ${arcScore} | ${today}`, 20, 668);
+  // Chart auf volle Höhe zeichnen
+  ctx.drawImage(canvas, 0, 0, 1200, 675);
 
   // Download
+  const today = new Date().toISOString().split('T')[0];
   const link = document.createElement('a');
   link.download = `alphacycle-arc-${today}.png`;
   link.href = exportCanvas.toDataURL('image/png');
