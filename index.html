@@ -2572,8 +2572,9 @@ function drawSparkline(canvasId, vals, color) {
 
 // Cycle Top/Bottom Marker für ARC History Chart (hardcoded, erweiterbar)
 const CYCLE_MARKERS = [
-  { date: '2017-12-17', type: 'top',    label: 'Cycle Top' },
-  { date: '2021-11-10', type: 'top',    label: 'Cycle Top' },
+  { date: '2017-12-17', type: 'top',    label: 'Cycle Top'    },
+  { date: '2021-11-10', type: 'top',    label: 'Cycle Top'    },
+  { date: '2025-10-20', type: 'top',    label: 'Cycle Top'    },
   { date: '2018-12-15', type: 'bottom', label: 'Cycle Bottom' },
   { date: '2022-11-21', type: 'bottom', label: 'Cycle Bottom' },
 ];
@@ -2637,18 +2638,23 @@ function renderCharts() {
                 if (arcVal == null) return;
                 const y = chart.scales.yArc.getPixelForValue(arcVal);
                 const isTop = marker.type === 'top';
-                const color = isTop ? '#ef4444' : '#22c55e';
-                const size = 12;
+                const color = isTop ? '#22c55e' : '#ef4444';
+                const size = 8;
+                // y-Offset damit Dreieck die Linie nicht verdeckt
+                const offset = 10;
+                const yDraw = isTop ? y - offset : y + offset;
                 ctx.save();
                 ctx.beginPath();
                 if (isTop) {
-                  ctx.moveTo(x, y + size);
-                  ctx.lineTo(x - size, y - size/2);
-                  ctx.lineTo(x + size, y - size/2);
+                  // Dreieck zeigt NACH OBEN (Top-Marker über Linie)
+                  ctx.moveTo(x, yDraw - size);
+                  ctx.lineTo(x - size, yDraw + size/2);
+                  ctx.lineTo(x + size, yDraw + size/2);
                 } else {
-                  ctx.moveTo(x, y - size);
-                  ctx.lineTo(x - size, y + size/2);
-                  ctx.lineTo(x + size, y + size/2);
+                  // Dreieck zeigt NACH UNTEN (Bottom-Marker unter Linie)
+                  ctx.moveTo(x, yDraw + size);
+                  ctx.lineTo(x - size, yDraw - size/2);
+                  ctx.lineTo(x + size, yDraw - size/2);
                 }
                 ctx.closePath();
                 ctx.fillStyle = color;
@@ -2663,7 +2669,7 @@ function renderCharts() {
                 ctx.textAlign = 'center';
                 ctx.fillText(
                   marker.label, x,
-                  isTop ? y + size + 14 : y - size - 5
+                  isTop ? yDraw - size - 5 : yDraw + size + 14
                 );
                 ctx.restore();
               });
