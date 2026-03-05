@@ -192,6 +192,53 @@ def _get_net_liq_score(date_str: str, net_liq_by_date: Dict[str, float], history
     return max(0.0, min(100.0, 50 - pct * 2.0))
 
 
+async def _fetch_fg_history() -> Dict[str, float]:
+    """Fetch full F&G history from Alternative.me. Returns {date_str: value}."""
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            r = await client.get(
+                "https://api.alternative.me/fng/",
+                params={"limit": 0, "format": "json"},
+            )
+            data = r.json()
+        result: Dict[str, float] = {}
+        for item in data.get("data", []):
+            try:
+                dt = datetime.utcfromtimestamp(int(item["timestamp"])).date().isoformat()
+                result[dt] = float(item["value"])
+            except Exception:
+                continue
+        logger.info("F&G history: %s pts", len(result))
+        return result
+    except Exception as e:
+        logger.warning("F&G history failed: %s", e)
+        return {}
+
+
+def _rsi_to_fg(prices_so_far: List[float]) -> float:
+    """
+    Derive F&G proxy from RSI when real data unavailable.
+    Uses RSI on weekly prices; returns 0-100 where low RSI ~ fear, high RSI ~ greed.
+    """
+    if len(prices_so_far) < 15:
+        return 50.0
+    try:
+        deltas = [prices_so_far[i] - prices_so_far[i - 1] for i in range(1, len(prices_so_far))]
+        period = 14
+        gains = [max(0.0, d) for d in deltas[-period:]]
+        losses = [max(0.0, -d) for d in deltas[-period:]]
+        ag = sum(gains) / len(gains) if gains else 0.0
+        al = sum(losses) / len(losses) if losses else 0.0
+        if al == 0:
+            rsi = 100.0 if ag > 0 else 50.0
+        else:
+            rsi = 100 - (100 / (1 + ag / al))
+        rsi = max(0.0, min(100.0, rsi))
+        return rsi
+    except Exception:
+        return 50.0
+
+
 async def run_backtest() -> Dict[str, Any]:
     """
     Run historical backtest. Returns {"results": [{"date", "price", "score"}, ...], "error": "..."} on failure.
@@ -203,10 +250,11 @@ async def run_backtest() -> Dict[str, Any]:
     if not history:
         return {"results": [], "error": "No price history from API"}
 
-    walcl_raw, tga_raw, rrp_raw = await asyncio.gather(
+    walcl_raw, tga_raw, rrp_raw, fg_history = await asyncio.gather(
         _fetch_fred("WALCL"),
         _fetch_fred("WTREGEN"),
         _fetch_fred("RRPONTSYD"),
+        _fetch_fg_history(),
     )
     tga_dict = {item["t"]: item["v"] for item in tga_raw}
     rrp_dict = {item["t"]: item["v"] for item in rrp_raw}
@@ -232,7 +280,6 @@ async def run_backtest() -> Dict[str, Any]:
 
     prices: List[float] = [safe_float(item["price"], 0.0) for item in history]
     results: List[Dict[str, Any]] = []
-    fear_greed = 50.0
 
     try:
         for idx, item in enumerate(history):
@@ -250,6 +297,13 @@ async def run_backtest() -> Dict[str, Any]:
             ma_200w_score = ma_deviation_score(price, ma_200w)
             prices_so_far = prices[: idx + 1]
             dd_score = drawdown_score(prices_so_far)
+
+            # F&G: echte Daten wenn vorhanden, sonst RSI-Proxy auf Weekly-Preisen
+            if item["date"] in fg_history:
+                fear_greed = fg_history[item["date"]]
+            else:
+                fear_greed = _rsi_to_fg(prices_so_far)
+
             macro_liq = _get_net_liq_score(item["date"], net_liq_by_date, prices_so_far)
             arc = (
                 ma_200w_score * 0.35
