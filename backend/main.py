@@ -455,8 +455,8 @@ async def get_arc_summary():
         "btc_score":   round(btc.get("btc_score", 50.0), 1),
         "eth_score":   round(c["eth_scores"].get("eth_score", 50.0), 1),
         "macro_score": round(mac.get("macro_score", 50.0), 1),
-        "regime":      mac.get("regime", "NEUTRAL"),
-        "decision":    com.get("signal", "HOLD"),
+        "regime":      mac.get("regime", "NEUTRAL") or "NEUTRAL",
+        "decision":    com.get("signal", "HOLD") or "HOLD",
         "confidence":  round(com.get("confidence", 50.0), 1),
         "fear_greed":  c["raw"]["fear_greed"]["current"],
         "components": {
