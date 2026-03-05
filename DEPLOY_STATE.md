@@ -76,6 +76,7 @@ DO NOT modify weights. DO NOT add scoring components.
 50. backtest_engine.py: Kraken OHLC weekly (interval=10080) — Daily max 720 Tage API-Grenze. 720 Wochen = ~13.8 Jahre. WINDOW_200W=200 (200 wöchentliche Punkte = 200-Wochen MA). since=1381363200 (2013-10-10). Cache min 400 Einträge. Ergebnis ~520 ARC-Punkte = ~10 Jahre Chart ab ~2014.
 51. index.html: Data Inspector nach WALCL-Zeile: Net Liquidity (S.arcSummary?.components?.net_liq, $XB), TGA (S.arcSummary?.components?.tga, $XB), Macro Liq Score (S.arcSummary?.components?.liquidity, roundScore).
 52. fetcher.py: fetch_fred_series() Logging (FRED series_id: len pts). WTREGEN/RRPONTSYD mit start="2015-01-01". main.py /api/arc-summary: components.net_liq + components.tga aus raw (net_liq_series/tga_series letzter Wert) fuer Data Inspector.
+53. backtest_engine.py: F&G im Backtest: _fetch_fg_history() (limit=0, alle Daten ab 2018), Mapping {date_str: value}. _rsi_to_fg() als RSI-Proxy für Perioden ohne echte F&G-Werte (Aug 2017–Feb 2018). In run_backtest() pro Tag: fear_greed = fg_history[date] oder _rsi_to_fg(prices_so_far); ARC-Gewicht weiterhin 15%.
 
 ## Active Endpoints (Railway)
 /health /api/prices /api/cycle/btc /api/cycle/eth /api/cycle/macro
