@@ -81,6 +81,7 @@ DO NOT modify weights. DO NOT add scoring components.
 55. main.py: Daily Snapshot System. /api/snapshot/today speichert aktuellen ARC Snapshot in /tmp/arc_snapshots.json (date, arc, btc_price, regime, liquidity, fear_greed, decision, confidence) und gibt ihn zurück. /api/snapshots liefert alle Snapshots. Nach erfolgreichem Cache-Refresh wird _save_today_snapshot() automatisch aufgerufen.
 56. index.html: Mobile Responsive Dashboard. @media (max-width: 768px): dashboard/cards/scores/metrics auf 1 Spalte, kleinere Hero-Padding, ARC-Chart-Container für Mobile. ARC Chart (Chart.js) mit maintainAspectRatio: false. Boot-Screen Text „CONNECTING TO KRAKEN…“ (statt COINGECKO).
 57. index.html: ARC Chart Resize-Hotfix. Fester Container #arc-chart-wrap (Desktop: height 420px, width 100%), Canvas #arc-history-chart absolut (width/height 100%). Auf Mobile (max-width:768px) #arc-chart-wrap height 280px. In Kombination mit responsive:true + maintainAspectRatio:false verhindert dies unendliches Wachstum beim Scroll/Resize.
+58. index.html: Hero Gauge + Liquidity Fix. Hero-Gauge nutzt kombinierten ARC Score (S.combined ?? S.arcSummary?.arc_score ?? S.btcScore) für Farbe, Gauge-Animation und Wert. BTC Liquidity-Component-Bar liest primär S.arcSummary?.components?.liquidity, dann btcComponents.macro_liq (.score oder Wert), fallback 50; kein harter 50er-Default mehr bei vorhandenen Net-Liq-Daten.
 
 ## Active Endpoints (Railway)
 /health /api/prices /api/cycle/btc /api/cycle/eth /api/cycle/macro
