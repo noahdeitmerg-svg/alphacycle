@@ -261,7 +261,7 @@ async def fetch_all():
         fetch_stablecoin_supply(),              # 8
         fetch_walcl(),                          # 9
         fetch_fred_series("DGS10"),             # 10
-        fetch_global_data(),                    # 11
+        fetch_global_data(),                   # 11
         fetch_funding_rates(),                  # 12
         return_exceptions=True,
     )
@@ -285,12 +285,16 @@ async def fetch_all():
     eth_prices=eth_p if len(eth_p)>10 else await fetch_coin_prices_cg("ethereum",365)
     if not walcl: walcl=_synthetic_walcl()
 
-    def merge(tk,cg):
+    def merge(tk, cg, cap_fallback_supply=None):
+        price = _sf(tk.get("price") or cg.get("price",0))
+        mcap = _sf(cg.get("market_cap",0))
+        if mcap <= 0 and price > 0 and cap_fallback_supply is not None:
+            mcap = price * cap_fallback_supply  # e.g. BTC ~19.7M circulating
         return {
-            "price":         _sf(tk.get("price")      or cg.get("price",0)),
+            "price":         price,
             "change_24h":    _sf(tk.get("change_24h") or cg.get("change_24h",0)),
             "volume":        _sf(tk.get("volume_24h") or cg.get("volume",0)),
-            "market_cap":    _sf(cg.get("market_cap",0)),
+            "market_cap":    mcap,
             "ath":           _sf(cg.get("ath",0)),
             "ath_date":      cg.get("ath_date",""),
             "ath_change_pct":_sf(cg.get("ath_change_pct",0)),
@@ -302,6 +306,14 @@ async def fetch_all():
         "puell_score": round(_compute_puell_multiple(btc_prices),1),
     }
 
+    btc_market = merge(btc_tk, btc_cg, 19_700_000)
+    eth_market = merge(eth_tk, eth_cg)
+    if gdata.get("btc_dominance", 50.0) == 50.0:
+        btc_mc = btc_market.get("market_cap", 0)
+        total_mc = gdata.get("total_market_cap", 0)
+        if btc_mc > 0 and total_mc > 0:
+            gdata["btc_dominance"] = round(btc_mc / total_mc * 100, 1)
+
     logger.info(f"fetch_all done - BTC:{len(btc_prices)}d F&G:{fg['current']} "
                 f"DOM:{gdata.get('btc_dominance',0):.1f}% "
                 f"MVRV:{indicators['mvrv_score']} Pi:{indicators['pi_score']} Puell:{indicators['puell_score']}")
@@ -309,8 +321,8 @@ async def fetch_all():
     return {
         "btc_prices":   btc_prices,
         "eth_prices":   eth_prices,
-        "btc_market":   merge(btc_tk,btc_cg),
-        "eth_market":   merge(eth_tk,eth_cg),
+        "btc_market":   btc_market,
+        "eth_market":   eth_market,
         "fear_greed":   fg,
         "tvl_series":   tvl,
         "stable_series":stable,
