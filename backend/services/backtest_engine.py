@@ -21,8 +21,8 @@ except ImportError:  # pragma: no cover
     from backend.scoring import drawdown_score, ma_deviation_score, safe_float
 
 
-HTTP_TIMEOUT = httpx.Timeout(30.0, connect=10.0)
-WINDOW_200W = 200  # min window for early data points
+HTTP_TIMEOUT = httpx.Timeout(60.0, connect=10.0)
+WINDOW_200W = 1400  # 200-week MA (~9y ARC from ~4700 days Kraken)
 CACHE_FILE = Path("/tmp/backtest_cache.json")
 
 
@@ -59,7 +59,7 @@ async def _load_or_build_cache() -> List[Dict[str, Any]]:
         try:
             cached = json.loads(CACHE_FILE.read_text())
             if cached and isinstance(cached, list):
-                if len(cached) < 1000:
+                if len(cached) < 2000:  # expect 4700+ days
                     try:
                         CACHE_FILE.unlink()
                     except Exception:

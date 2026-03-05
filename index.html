@@ -1390,7 +1390,7 @@ canvas.sparkline {
     <div class="chart-header">
       <div class="chart-title">BTC Price + ARC Score</div>
     </div>
-    <div id="arc-chart-placeholder" class="arc-chart-placeholder">Lade historische Daten...</div>
+    <div id="arc-chart-placeholder" class="arc-chart-placeholder">Historische Daten werden geladen (kann bis zu 15 Sek. dauern)...</div>
     <div id="arc-chart-wrap" style="display:none; position:relative; min-height:280px;">
       <canvas id="arc-history-chart" class="arc-chart-canvas"></canvas>
     </div>
@@ -2556,7 +2556,7 @@ function renderCharts() {
         window._arcHistoryChart = null;
       }
       ph.style.display = 'flex';
-      ph.textContent = 'Lade historische Daten...';
+      ph.textContent = 'Historische Daten werden geladen (kann bis zu 15 Sek. dauern)...';
       wrap.style.display = 'none';
     }
   }

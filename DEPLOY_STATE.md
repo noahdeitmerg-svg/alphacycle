@@ -66,8 +66,8 @@ DO NOT modify weights. DO NOT add scoring components.
 40. index.html: FRED-Label dynamisch — src-fred je nach S.walclCurrent: FRED oder FRED (synthetic fallback) + class status-src / warn
 41. fetcher.py: btc_dominance hardcoded 55.0, total_market_cap 0 — alle externen APIs (CoinGecko 429, CoinCap/Bybit/Binance) auf Railway US-West blockiert. index.html: Data Inspector ohne diRow BTC Dominance / Total Market Cap / BTC Dominance %
 42. backtest_engine.py: Paginated Kraken OHLC (max 720/request), ARC = ma_200w*0.35 + drawdown*0.35 + fg(50)*0.15 + liq(50)*0.15. Return {date, price, score}. index.html: ARC History Chart (arc-history-chart) mit Chart.js, S.backtest, Risk-Zonen als fill, Placeholder "Lade historische Daten...".
-43. backtest_engine.py: File cache /tmp/backtest_cache.json; einmal 10y laden, taeglich 1-2 fehlende Tage nachladen. WINDOW_200W=200.
-44. backtest_engine.py: Cache-Invalidierung wenn < 1000 Eintraege (unlink + refetch). index.html ARC Chart: yPrice min/max dynamisch (0.9/1.1), Tooltip nur ARC Index + BTC Price.
+43. backtest_engine.py: File cache /tmp/backtest_cache.json; einmal 10y laden, taeglich 1-2 fehlende Tage nachladen.
+44. backtest_engine.py: WINDOW_200W=1400 (echter 200-Wochen-MA). HTTP_TIMEOUT=60. Cache-Invalidierung wenn < 2000 Eintraege. index.html: Chart-Loading-Text "Historische Daten werden geladen (kann bis zu 15 Sek. dauern)...", yPrice min/max dynamisch, Tooltip nur ARC Index + BTC Price.
 
 ## Active Endpoints (Railway)
 /health /api/prices /api/cycle/btc /api/cycle/eth /api/cycle/macro
