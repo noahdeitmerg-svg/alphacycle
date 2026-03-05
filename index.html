@@ -365,6 +365,7 @@ body::before {
               0 8px 40px rgba(0,0,0,0.4);
   position: relative;
   overflow: hidden;
+text-align: center;
 }
 #btc-card.hero-card::before {
   content: '';
@@ -384,6 +385,8 @@ body::before {
   letter-spacing: -0.04em;
 }
 #btc-card.hero-card .score-footer {
+justify-content: center;
+gap: 32px;
   margin-top: 4px;
   padding-top: 1rem;
   border-top: 1px solid rgba(255,255,255,0.06);
@@ -1187,10 +1190,7 @@ canvas.sparkline {
         <circle id="btc-dot" cx="100" cy="40" r="5" fill="var(--btc)" opacity="0"
                 style="transition:all 1.4s cubic-bezier(0.16,1,0.3,1)"/>
       </svg>
-      <div class="gauge-center">
-        <div class="gauge-val" id="btc-score-val" style="color:var(--btc)">—</div>
-        <div class="gauge-denom">/100</div>
-      </div>
+      <div class="gauge-center"><div style="display:flex;align-items:baseline;gap:3px;"><div class="gauge-val" id="btc-score-val" style="color:var(--btc)">—</div><div class="gauge-denom">/100</div></div></div>
     </div>
     <div class="score-footer">
       <div class="score-phase" id="btc-phase" style="color:var(--btc)">—</div>
@@ -1201,7 +1201,7 @@ canvas.sparkline {
 
   <!-- DECISION ENGINE -->
   <div class="sec-header anim d2">
-    <div class="sec-title">Decision Engine</div>
+    <div class="sec-title">Signal & Allocation</div>
     <div class="sec-line"></div>
   </div>
   <div class="card decision-card anim d2" id="decision-card">
@@ -1229,7 +1229,7 @@ canvas.sparkline {
 
   <!-- SHORT TERM ENGINE -->
   <div class="sec-header anim d2">
-    <div class="sec-title">Short Term Tactical Layer <span class="sec-tag">30–90d</span></div>
+    <div class="sec-title">Short Term Signals <span class="sec-tag">30-90D</span></div>
     <div class="sec-line"></div>
   </div>
   <div class="card short-term-card anim d2" id="short-term-card">
@@ -1241,7 +1241,7 @@ canvas.sparkline {
 
   <!-- CYCLE ANCHOR -->
   <div class="sec-header anim d2">
-    <div class="sec-title">Cycle Anchor</div>
+    <div class="sec-title">Cycle Timeline</div>
     <div class="sec-line"></div>
   </div>
   <div class="card cycle-anchor-card anim d2" id="cycle-anchor-card">
@@ -1267,7 +1267,7 @@ canvas.sparkline {
 
   <!-- SECTION: Sub-Analysis -->
   <div class="sec-header anim d2">
-    <div class="sec-title">Sub-Analysis</div>
+    <div class="sec-title">ETH & Liquidity</div>
     <div class="sec-line"></div>
     <div class="sec-badge" id="last-updated">LOADING…</div>
   </div>
@@ -1304,10 +1304,7 @@ canvas.sparkline {
                 filter="url(#glow-eth)"
                 style="transition:stroke-dashoffset 1.4s cubic-bezier(0.16,1,0.3,1)"/>
         </svg>
-        <div class="gauge-center">
-          <div class="gauge-val" id="eth-score-val" style="color:var(--eth)">—</div>
-          <div class="gauge-denom">/100</div>
-        </div>
+        <div class="gauge-center"><div style="display:flex;align-items:baseline;gap:3px;"><div class="gauge-val" id="eth-score-val" style="color:var(--eth)">—</div><div class="gauge-denom">/100</div></div></div>
       </div>
       <div class="score-footer">
         <div class="score-phase" id="eth-phase" style="color:var(--eth)">—</div>
@@ -1348,10 +1345,7 @@ canvas.sparkline {
                 filter="url(#glow-mac)"
                 style="transition:stroke-dashoffset 1.4s cubic-bezier(0.16,1,0.3,1)"/>
         </svg>
-        <div class="gauge-center">
-          <div class="gauge-val" id="mac-score-val" style="color:var(--mac)">—</div>
-          <div class="gauge-denom">/100</div>
-        </div>
+        <div class="gauge-center"><div style="display:flex;align-items:baseline;gap:3px;"><div class="gauge-val" id="mac-score-val" style="color:var(--mac)">—</div><div class="gauge-denom">/100</div></div></div>
       </div>
       <div class="score-footer">
         <div class="score-phase" id="mac-phase" style="color:var(--mac)">—</div>
@@ -1379,7 +1373,7 @@ canvas.sparkline {
 
   <!-- ── KEY INDICATORS ── -->
   <div class="sec-header anim d3">
-    <div class="sec-title">Key Indicators</div>
+    <div class="sec-title">Market Snapshot</div>
     <div class="sec-line"></div>
   </div>
   <div class="chips-row anim d3" id="chips-row">
@@ -1464,7 +1458,7 @@ canvas.sparkline {
 
   <!-- ── CYCLE LEGEND ── -->
   <div class="sec-header anim d5">
-    <div class="sec-title">Cycle Phase Guide</div>
+    <div class="sec-title">ARC Score Zones</div>
     <div class="sec-line"></div>
   </div>
   <div class="legend-grid anim d5">
