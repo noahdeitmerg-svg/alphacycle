@@ -2632,10 +2632,10 @@ function renderCharts() {
                 });
                 if (idx < 0 || minDiff > 14 * 86400000) return;
                 const x = xAxis.getPixelForValue(idx);
-                const priceVal = chart.data.datasets
-                  .find(d => d.label === 'BTC Price')?.data[idx];
-                if (!priceVal) return;
-                const y = yPrice.getPixelForValue(priceVal);
+                const arcVal = chart.data.datasets
+                  .find(d => d.label === 'ARC Index')?.data[idx];
+                if (arcVal == null) return;
+                const y = chart.scales.yArc.getPixelForValue(arcVal);
                 const isTop = marker.type === 'top';
                 const color = isTop ? '#ef4444' : '#22c55e';
                 const size = 12;
