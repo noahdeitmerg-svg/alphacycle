@@ -2273,6 +2273,9 @@ function renderDataInspector() {
     rows: [
       diRow('Score', roundScore(S.macScore)),
       diRow('WALCL Current (T)', S.walclCurrent, v => v > 0 ? fmtT(v) : '—'),
+      diRow('Net Liquidity', S.arcSummary?.components?.net_liq, v => v != null ? '$' + Math.round(v/1e6).toLocaleString() + 'B' : '—'),
+      diRow('TGA', S.arcSummary?.components?.tga, v => v != null ? '$' + Math.round(v/1e6).toLocaleString() + 'B' : '—'),
+      diRow('Macro Liq Score', S.arcSummary?.components?.liquidity, v => v != null ? roundScore(v) : '—'),
       diRow('Stable Current (B)', S.stableCurrent, v => v > 0 ? fmtB(v) : '—'),
     ],
   });
