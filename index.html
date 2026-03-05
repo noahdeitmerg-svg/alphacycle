@@ -2126,11 +2126,15 @@ async function loadAllData() {
       if(analyzer && typeof analyzer.alpha_cycle_position === 'number') {
         S.alphaCyclePosition = clamp(analyzer.alpha_cycle_position);
         S.analyzerPhase       = analyzer.phase || null;
-        S.analyzerSignal      = analyzer.signal || null;
+        S.analyzerSignal      = analyzer.signal || analyzer.position || null;
+        S.cycleSignal         = analyzer.cycle_signal || null;
+        S.decisionOverride   = analyzer.decision_override || null;
       } else {
         S.alphaCyclePosition = null;
         S.analyzerPhase       = null;
         S.analyzerSignal      = null;
+        S.cycleSignal         = null;
+        S.decisionOverride   = null;
       }
 
       S.cycleAnchor = anchor || null;
@@ -2267,6 +2271,10 @@ function updatePhaseBanner() {
   $('phase-icon').textContent    = phaseIcon(phase);
   $('phase-name').textContent    = phase;
   $('phase-desc').textContent    = S.analyzerSignal ? `${S.analyzerSignal} — ${phaseDesc(phase)}` : phaseDesc(phase);
+  const sigEl = document.getElementById('phase-desc');
+  if (sigEl && S.cycleSignal && S.cycleSignal.signal_type !== 'NONE' && S.cycleSignal.description) {
+    sigEl.textContent = S.cycleSignal.description;
+  }
   $('phase-combined').textContent = Math.round(score);
   $('phase-combined').style.color = col;
   const eyebrow = $('phase-eyebrow');
@@ -2308,6 +2316,20 @@ function updateUI() {
     el.style.color = `rgba(${rgb},0.9)`;
     el.style.background = `rgba(${rgb},0.07)`;
   })();
+  // Cycle Signal Badge im Hero (ueberschreibt hero-risk-label bei aktivem Signal)
+  const cs = S.cycleSignal;
+  if (cs && cs.signal_type && cs.signal_type !== 'NONE') {
+    const heroRisk = document.getElementById('hero-risk-label');
+    if (heroRisk) {
+      const isBottom = cs.signal_type.indexOf('BOTTOM') !== -1;
+      const isTop = cs.signal_type.indexOf('TOP') !== -1;
+      const col = isBottom ? 'rgba(34,197,94,0.9)' : isTop ? 'rgba(239,68,68,0.9)' : 'rgba(59,130,246,0.9)';
+      heroRisk.textContent = cs.signal_type.replace(/_/g, ' ');
+      heroRisk.style.color = col;
+      heroRisk.style.borderColor = col.replace('0.9', '0.4');
+      heroRisk.style.background = col.replace('0.9', '0.08');
+    }
+  }
   setText('hs-btc', S.btcScore != null ? String(Math.round(S.btcScore)) : '—');
   setText('hs-eth', S.ethScore != null ? String(Math.round(S.ethScore)) : '—');
   setText('hs-mac', S.macScore != null ? String(Math.round(S.macScore)) : '—');
@@ -2394,6 +2416,7 @@ function updateUI() {
       position = 'DEFENSIVE'; allocation = '0–20%';
       range = '-30% – 0%'; confidence = 'Low';
     }
+    if (S.decisionOverride) position = S.decisionOverride;
     const col = scoreColor(score);
     setText('dec-position',   position, col);
     setText('dec-allocation', allocation);
@@ -2819,6 +2842,20 @@ const CYCLE_MARKERS = [
   { date: '2022-11-21', type: 'bottom', label: 'Cycle Bottom' },
 ];
 
+function getCurrentMarker() {
+  const cs = S.cycleSignal;
+  if (!cs || cs.signal_type === 'NONE') return null;
+  const today = new Date().toISOString().split('T')[0];
+  const isBottom = cs.signal_type.indexOf('BOTTOM') !== -1;
+  const isConfirmed = cs.signal_type.indexOf('CONFIRMED') !== -1;
+  return {
+    date: today,
+    type: isBottom ? 'bottom' : 'top',
+    label: isConfirmed ? (isBottom ? 'Confirmed Bottom' : 'Confirmed Top') : (isBottom ? 'Bottom Signal' : 'Top Signal'),
+    dynamic: true
+  };
+}
+
 function renderCharts() {
   const ph = $('arc-chart-placeholder');
   const wrap = $('arc-chart-wrap');
@@ -2864,7 +2901,9 @@ function renderCharts() {
               const xAxis = chart.scales.x;
               const yPrice = chart.scales.yPrice;
               if (!xAxis || !yPrice) return;
-              CYCLE_MARKERS.forEach(marker => {
+              const dynamicMarker = getCurrentMarker();
+              const allMarkers = dynamicMarker ? [...CYCLE_MARKERS, dynamicMarker] : CYCLE_MARKERS;
+              allMarkers.forEach(marker => {
                 const markerMs = new Date(marker.date).getTime();
                 let idx = -1, minDiff = Infinity;
                 chart.data.labels.forEach((lbl, i) => {

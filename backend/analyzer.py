@@ -26,6 +26,131 @@ logger = logging.getLogger(__name__)
 
 
 # -----------------------------------------------------------------------------
+# CYCLE SIGNAL DETECTION (Top/Bottom)
+# -----------------------------------------------------------------------------
+
+def detect_cycle_signal(
+    arc_score: float,
+    drawdown_pct: float,
+    fear_greed: float,
+    rsi_weekly: float,
+    liquidity_score: float,
+    funding_score: float,
+    price: float,
+    ma_200w: float,
+) -> dict:
+    """
+    Erkennt Cycle Top/Bottom Signale basierend auf
+    multiplen Indikatoren. Gibt ein strukturiertes
+    Signal-Objekt zurueck.
+
+    Rueckgabe:
+    signal_type: NONE|BOTTOM_WATCH|BOTTOM_WARNING|BOTTOM_CONFIRMED|
+                 TOP_WATCH|TOP_WARNING|TOP_CONFIRMED
+    signal_strength: 0-100
+    bottom_conditions_met / top_conditions_met: 0-5
+    description, decision_override (optional)
+    """
+    arc = max(0.0, min(100.0, float(arc_score or 50)))
+    dd = max(0.0, min(1.0, float(drawdown_pct or 0)))
+    fg = max(0.0, min(100.0, float(fear_greed or 50)))
+    rsi = max(0.0, min(100.0, float(rsi_weekly or 50)))
+    liq = max(0.0, min(100.0, float(liquidity_score or 50)))
+    funding = max(0.0, min(100.0, float(funding_score or 50)))
+    ma200w = float(ma_200w or 0)
+    btc_price = float(price or 0)
+
+    bottom_conditions = [
+        arc < 35,
+        dd > 0.55,
+        fg < 30,
+        rsi < 35,
+        liq > 30,
+    ]
+    bottom_count = sum(bottom_conditions)
+
+    price_extended = (btc_price > ma200w * 2.5) if ma200w > 0 else False
+    top_conditions = [
+        arc > 70,
+        funding > 65,
+        fg > 75,
+        liq < 40,
+        price_extended,
+    ]
+    top_count = sum(top_conditions)
+
+    if arc < 45:
+        if arc < 30 and bottom_count >= 4:
+            signal_type = "BOTTOM_CONFIRMED"
+            strength = min(100, int(60 + (30 - arc) * 2))
+            desc = "Bestaetigtes Cycle Bottom - strukturelle Kaufzone"
+            override = "BUY"
+        elif arc < 35 and bottom_count >= 3:
+            signal_type = "BOTTOM_WARNING"
+            strength = min(100, int(40 + bottom_count * 8))
+            desc = "Bottom Warning - moegliche Akkumulationszone"
+            override = "BUY / HOLD"
+        elif arc < 40 and bottom_count >= 2:
+            signal_type = "BOTTOM_WATCH"
+            strength = min(100, int(20 + bottom_count * 8))
+            desc = "Bottom Watch - ARC in niedrigem Bereich"
+            override = None
+        else:
+            signal_type = "NONE"
+            strength = 0
+            desc = "Kein aktives Signal"
+            override = None
+    elif arc > 60:
+        if arc > 78 and top_count >= 4:
+            signal_type = "TOP_CONFIRMED"
+            strength = min(100, int(60 + (arc - 78) * 2))
+            desc = "Bestaetigtes Cycle Top - Distributionszone"
+            override = "RISK OFF"
+        elif arc > 72 and top_count >= 3:
+            signal_type = "TOP_WARNING"
+            strength = min(100, int(40 + top_count * 8))
+            desc = "Top Warning - Risikoreduktion empfohlen"
+            override = "REDUCE"
+        elif arc > 65 and top_count >= 2:
+            signal_type = "TOP_WATCH"
+            strength = min(100, int(20 + top_count * 8))
+            desc = "Top Watch - erhoehte Vorsicht"
+            override = None
+        else:
+            signal_type = "NONE"
+            strength = 0
+            desc = "Kein aktives Signal"
+            override = None
+    else:
+        signal_type = "NONE"
+        strength = 0
+        desc = "Neutraler Bereich - kein Extremsignal"
+        override = None
+
+    return {
+        "signal_type": signal_type,
+        "signal_strength": strength,
+        "bottom_conditions_met": bottom_count,
+        "top_conditions_met": top_count,
+        "description": desc,
+        "decision_override": override,
+        "arc_at_signal": round(arc, 1),
+        "conditions_detail": {
+            "arc_low": arc < 35,
+            "drawdown_deep": dd > 0.55,
+            "fear_extreme": fg < 30,
+            "rsi_oversold": rsi < 35,
+            "liq_stable": liq > 30,
+            "arc_high": arc > 70,
+            "funding_hot": funding > 65,
+            "greed_extreme": fg > 75,
+            "liq_contracting": liq < 40,
+            "price_extended": price_extended,
+        },
+    }
+
+
+# -----------------------------------------------------------------------------
 # SAFE MATH
 # -----------------------------------------------------------------------------
 
@@ -862,7 +987,7 @@ class CycleAnalyzer:
         # ── 10. Strategy
         strategy = STRATEGY_MAP.get(signal, "Hold")
 
-        return {
+        result = {
             # Core
             "phase":                   phase,
             "phase_description":       phase_desc,
@@ -916,6 +1041,45 @@ class CycleAnalyzer:
             },
         }
 
+        # Cycle Signal Detection (Top/Bottom)
+        try:
+            _arc = result.get("alpha_cycle_position", 50.0)
+            _dd_raw = _sf(dd, -30.0)
+            _dd = abs(_dd_raw) / 100.0 if _dd_raw < 0 else 0.0
+            if _dd > 1.0:
+                _dd = 1.0
+            _fg = result.get("input_scores", {}).get("fear_greed", 50.0)
+            _rsi = 50.0
+            _liq = result.get("input_scores", {}).get("macro", 50.0)
+            _fund = 50.0
+            _price = _sf(price, 0.0)
+            _ma200w = _sf(ma_200w, 0.0)
+
+            cycle_signal = detect_cycle_signal(
+                arc_score=_arc,
+                drawdown_pct=_dd,
+                fear_greed=_fg,
+                rsi_weekly=_rsi,
+                liquidity_score=_liq,
+                funding_score=_fund,
+                price=_price,
+                ma_200w=_ma200w,
+            )
+            result["cycle_signal"] = cycle_signal
+            override = cycle_signal.get("decision_override")
+            if override:
+                result["decision_override"] = override
+                result["position"] = override
+        except Exception as e:
+            logger.warning("cycle_signal detection failed: %s", e)
+            result["cycle_signal"] = {
+                "signal_type": "NONE",
+                "signal_strength": 0,
+                "error": str(e),
+            }
+
+        return result
+
     @staticmethod
     def _fallback_output(now: datetime) -> dict:
         """Emergency fallback — never raises, never returns NaN."""
@@ -953,6 +1117,11 @@ class CycleAnalyzer:
             "input_scores": {
                 "combined": 50.0, "btc": 50.0, "eth": 50.0,
                 "macro": 50.0, "fear_greed": 50.0,
+            },
+            "cycle_signal": {
+                "signal_type": "NONE",
+                "signal_strength": 0,
+                "description": "Data loading.",
             },
         }
 

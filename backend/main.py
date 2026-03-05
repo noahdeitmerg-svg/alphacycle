@@ -687,4 +687,9 @@ async def get_decision():
         stable_series       = raw.get("stable_series", []),
         score_history       = score_history,
     )
+    decision_override = analysis.get("decision_override")
+    if decision_override:
+        result["position"] = decision_override
+        if "suggested_position" in result:
+            result["suggested_position"] = decision_override
     return api_response(result)
