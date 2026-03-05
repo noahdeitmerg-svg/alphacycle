@@ -4,7 +4,7 @@ backtest_engine.py — Alpha Cycle Intelligence v3.0
 Historical backtesting engine for BTC using existing AlphaCycle score logic.
 
 Rules:
-- Uses real BTC daily prices from CoinGecko.
+- Uses real BTC daily prices from Kraken OHLC.
 - Uses existing compute_btc_score from scoring.py (no rewrites).
 - No database. Single-run per request.
 """
@@ -20,11 +20,6 @@ try:
 except ImportError:  # pragma: no cover
     from backend.scoring import compute_btc_score, safe_float
 
-
-COINGECKO_URL = (
-    "https://api.coingecko.com/api/v3/coins/bitcoin/market_chart"
-    "?vs_currency=usd&days=max"
-)
 
 HTTP_TIMEOUT = httpx.Timeout(25.0, connect=10.0)
 
@@ -120,4 +115,3 @@ async def run_backtest() -> Dict[str, Any]:
 
 
 __all__ = ["run_backtest"]
-
