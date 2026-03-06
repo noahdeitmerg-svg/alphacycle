@@ -80,9 +80,9 @@ def detect_cycle_signal(
     top_count = sum(top_conditions)
 
     if arc < 45:
-        if arc < 30 and bottom_count >= 4:
+        if arc < 35 and bottom_count >= 4:
             signal_type = "BOTTOM_CONFIRMED"
-            strength = min(100, int(60 + (30 - arc) * 2))
+            strength = min(100, int(60 + (35 - arc) * 2))
             desc = "Bestaetigtes Cycle Bottom - strukturelle Kaufzone"
             override = "BUY"
         elif arc < 35 and bottom_count >= 3:
@@ -101,17 +101,17 @@ def detect_cycle_signal(
             desc = "Kein aktives Signal"
             override = None
     elif arc > 60:
-        if arc > 78 and top_count >= 4:
+        if arc > 75 and top_count >= 4:
             signal_type = "TOP_CONFIRMED"
-            strength = min(100, int(60 + (arc - 78) * 2))
+            strength = min(100, int(60 + (arc - 75) * 2))
             desc = "Bestaetigtes Cycle Top - Distributionszone"
             override = "RISK OFF"
-        elif arc > 72 and top_count >= 3:
+        elif arc > 71 and top_count >= 3:
             signal_type = "TOP_WARNING"
             strength = min(100, int(40 + top_count * 8))
             desc = "Top Warning - Risikoreduktion empfohlen"
             override = "REDUCE"
-        elif arc > 65 and top_count >= 2:
+        elif arc > 70 and top_count >= 2:
             signal_type = "TOP_WATCH"
             strength = min(100, int(20 + top_count * 8))
             desc = "Top Watch - erhoehte Vorsicht"
