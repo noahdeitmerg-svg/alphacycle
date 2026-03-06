@@ -1925,19 +1925,19 @@ canvas.sparkline {
     <div class="hero-zones">
       <div class="hero-zone zone-low">
         <div class="hz-range">0–30</div>
-        <div class="hz-label">Low Risk</div>
+        <div class="hz-label">LOW RISK</div>
       </div>
       <div class="hero-zone zone-mod">
         <div class="hz-range">30–60</div>
-        <div class="hz-label">Moderate Risk</div>
+        <div class="hz-label">MODERATE</div>
       </div>
       <div class="hero-zone zone-ele">
         <div class="hz-range">60–75</div>
-        <div class="hz-label">Elevated Risk</div>
+        <div class="hz-label">ELEVATED</div>
       </div>
       <div class="hero-zone zone-ext">
         <div class="hz-range">75–100</div>
-        <div class="hz-label">Extreme Risk</div>
+        <div class="hz-label">HIGH RISK</div>
       </div>
     </div>
   </div>
@@ -1987,21 +1987,21 @@ canvas.sparkline {
       </div>
       <div class="hr-zone hr-mod">
         <div class="hr-zone-range">30–60</div>
-        <div class="hr-zone-label">MODERATE RISK</div>
+        <div class="hr-zone-label">MODERATE</div>
         <div class="hr-zone-return" id="hr-mod-12m">—</div>
         <div class="hr-zone-wr" id="hr-mod-wr">— win rate</div>
         <div class="hr-zone-count" id="hr-mod-count">— entries</div>
       </div>
       <div class="hr-zone hr-elv">
         <div class="hr-zone-range">60–75</div>
-        <div class="hr-zone-label">ELEVATED RISK</div>
+        <div class="hr-zone-label">ELEVATED</div>
         <div class="hr-zone-return" id="hr-elv-12m">—</div>
         <div class="hr-zone-wr" id="hr-elv-wr">— win rate</div>
         <div class="hr-zone-count" id="hr-elv-count">— entries</div>
       </div>
       <div class="hr-zone hr-ext">
         <div class="hr-zone-range">75–100</div>
-        <div class="hr-zone-label">EXTREME RISK</div>
+        <div class="hr-zone-label">HIGH RISK</div>
         <div class="hr-zone-return" id="hr-ext-12m">—</div>
         <div class="hr-zone-wr" id="hr-ext-wr">— win rate</div>
         <div class="hr-zone-count" id="hr-ext-count">— entries</div>
@@ -2076,6 +2076,10 @@ canvas.sparkline {
           <div class="ca-item">
             <div class="ca-label">Days Since Bottom</div>
             <div class="ca-value" id="ca-days-since">—</div>
+          </div>
+          <div class="ca-item">
+            <div class="ca-label">Days Since Top</div>
+            <div class="ca-value" id="ca-days-since-top">—</div>
           </div>
           <div class="ca-item">
             <div class="ca-label">Cycle Top</div>
@@ -2333,18 +2337,18 @@ function scoreColor(s) {
   if (s < 75)  return '#f59e0b';
   return '#ef4444';
 }
-function phaseOf(s) {
-  if (s < 30) return 'Low Risk';
-  if (s < 60) return 'Moderate Risk';
-  if (s < 75) return 'Elevated Risk';
-  return 'Extreme Risk';
+function phaseOf(score) {
+  if (score < 30) return 'Low Risk';
+  if (score < 60) return 'Moderate Risk';
+  if (score < 75) return 'Elevated Risk';
+  return 'High Risk';
 }
 function phaseIcon(phase) {
   const m = {
     'Low Risk':      '🟢',
     'Moderate Risk': '📈',
     'Elevated Risk': '⚠️',
-    'Extreme Risk':  '🔴',
+    'High Risk':     '🔴',
   };
   return m[phase] || '📊';
 }
@@ -2353,7 +2357,7 @@ function phaseDesc(phase) {
     'Low Risk':'Market undervalued. Smart money accumulating. Fear elevated, prices near or below 200W MA.',
     'Moderate Risk':'Uptrend confirmed. Liquidity expanding. Momentum building with healthy sentiment.',
     'Elevated Risk':'Market overheating. FOMO elevated. Whale distribution likely in progress.',
-    'Extreme Risk':'Risk-off environment. Liquidity contracting. Downtrend confirmed - caution advised.',
+    'High Risk':'Risk-off environment. Liquidity contracting. Downtrend confirmed - caution advised.',
   }[phase]||'Analyzing market conditions...';
 }
 function _getCycleDescription(arc) {
@@ -2774,7 +2778,7 @@ function updatePhaseBanner() {
     'Low Risk':      {bg:'rgba(34,197,94,0.06)',   border:'rgba(34,197,94,0.22)'},
     'Moderate Risk': {bg:'rgba(59,130,246,0.06)',  border:'rgba(59,130,246,0.22)'},
     'Elevated Risk': {bg:'rgba(245,158,11,0.06)',  border:'rgba(245,158,11,0.22)'},
-    'Extreme Risk':  {bg:'rgba(239,68,68,0.06)',   border:'rgba(239,68,68,0.22)'},
+    'High Risk':     {bg:'rgba(239,68,68,0.06)',   border:'rgba(239,68,68,0.22)'},
   };
   const st=phaseStyles[phase]||phaseStyles['Moderate Risk'];
   banner.style.background   = st.bg;
@@ -2827,10 +2831,10 @@ function updateUI() {
     if (!el) return;
     const s = S.btcScore;
     const zones = [
-      [30,  'LOW RISK',      '34,197,94'],
-      [60,  'MODERATE RISK', '59,130,246'],
-      [75,  'ELEVATED RISK', '245,158,11'],
-      [101, 'EXTREME RISK',  '239,68,68'],
+      [30,  'LOW RISK',   '34,197,94'],
+      [60,  'MODERATE',   '59,130,246'],
+      [75,  'ELEVATED',   '245,158,11'],
+      [101, 'HIGH RISK',  '239,68,68'],
     ];
     const [,label,rgb] = zones.find(([max]) => s < max);
     el.textContent = label;
@@ -2981,6 +2985,10 @@ function updateUI() {
 
   // Cycle Anchor — from /api/cycle-anchor if available, else skip
   (function renderCycleAnchor() {
+    const dst = S.arcSummary?.days_since_top ?? (S.shortTermContext && S.shortTermContext.days_since_top != null ? S.shortTermContext.days_since_top : null) ?? null;
+    const dstEl = document.getElementById('ca-days-since-top');
+    if (dstEl && dst != null) dstEl.textContent = dst + 'd'; else if (dstEl) dstEl.textContent = '—';
+
     if (!S.cycleAnchor) return;
     const ca = S.cycleAnchor;
     console.log('cycle anchor:', ca);
@@ -3753,7 +3761,7 @@ function renderArcChart(period) {
           { y: 15, text: 'LOW RISK', col: 'rgba(34,197,94,0.4)' },
           { y: 45, text: 'MODERATE', col: 'rgba(59,130,246,0.35)' },
           { y: 67, text: 'ELEVATED', col: 'rgba(245,158,11,0.4)' },
-          { y: 87, text: 'EXTREME', col: 'rgba(239,68,68,0.4)' }
+          { y: 87, text: 'HIGH RISK', col: 'rgba(239,68,68,0.4)' }
         ];
         labels.forEach(function(item) {
           var py = yArc.getPixelForValue(item.y);
