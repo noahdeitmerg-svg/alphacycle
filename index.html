@@ -3364,29 +3364,18 @@ function exportArcChart() {
 // ── 1Y ARC Chart ─────────────────────────────────────────────────────────
 var _arcChart1Y = null;
 
-function renderArcChart1Y() {
-  var oneYearAgo = new Date();
-  oneYearAgo.setDate(oneYearAgo.getDate() - 365);
-  var fullData = S.backtest || [];
-  var data = fullData.filter(function(d) { return new Date(d.date) >= oneYearAgo; });
-  if (!data.length) return;
-
-  var labels = data.map(function(d) { return d.date; });
-  var arcData = data.map(function(d) { return d.score != null ? Number(d.score) : null; });
-  var btcData = data.map(function(d) { return d.price != null ? Math.max(100, Number(d.price)) : null; });
-  var validPrices = btcData.filter(function(v) { return v != null && v > 100; });
-  var priceMin = validPrices.length ? Math.floor(Math.min.apply(null, validPrices) * 0.88) : 1000;
-  var priceMax = validPrices.length ? Math.ceil(Math.max.apply(null, validPrices) * 1.08) : 150000;
-
+function _buildArcChart1Y(labels, arcData, btcData) {
   var canvas = document.getElementById('arc-chart-1y');
   if (!canvas) return;
   var ctx = canvas.getContext('2d');
   if (!ctx) return;
-
   if (_arcChart1Y) {
     _arcChart1Y.destroy();
     _arcChart1Y = null;
   }
+  var validPrices = btcData.filter(function(v) { return v != null && v > 100; });
+  var priceMin = validPrices.length ? Math.floor(Math.min.apply(null, validPrices) * 0.88) : 1000;
+  var priceMax = validPrices.length ? Math.ceil(Math.max.apply(null, validPrices) * 1.08) : 150000;
 
   var riskZonePlugin1Y = {
     id: 'riskZones1Y',
@@ -3518,6 +3507,49 @@ function renderArcChart1Y() {
       }
     }
   });
+}
+
+function _renderArcChart1YFromBacktest() {
+  if (!S.backtest || !S.backtest.length) return;
+  var cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - 365);
+  var filtered = S.backtest.filter(function(r) {
+    return new Date(r.date || r.d) >= cutoff;
+  });
+  if (!filtered.length) return;
+  var labels = filtered.map(function(r) { return r.date || r.d; });
+  var arcData = filtered.map(function(r) {
+    var s = r.arc_score != null ? r.arc_score : (r.score != null ? r.score : null);
+    return s != null ? Number(s) : null;
+  });
+  var btcData = filtered.map(function(r) {
+    var p = r.btc_price != null ? r.btc_price : (r.price != null ? r.price : null);
+    return p != null ? Math.max(100, Number(p)) : null;
+  });
+  _buildArcChart1Y(labels, arcData, btcData);
+}
+
+async function renderArcChart1Y() {
+  try {
+    if (!BACKEND_URL) { _renderArcChart1YFromBacktest(); return; }
+    var data = await apiFetch(BACKEND_URL + '/api/history-daily');
+    if (!data || !data.results || !data.results.length) {
+      console.warn('history-daily empty, using backtest');
+      _renderArcChart1YFromBacktest();
+      return;
+    }
+    var results = data.results;
+    var labels = results.map(function(r) { return r.date; });
+    var arcData = results.map(function(r) { return r.arc_score != null ? r.arc_score : null; });
+    var btcData = results.map(function(r) {
+      var p = r.btc_price != null ? r.btc_price : null;
+      return p != null ? Math.max(100, Number(p)) : null;
+    });
+    _buildArcChart1Y(labels, arcData, btcData);
+  } catch (e) {
+    console.warn('1Y chart error:', e);
+    _renderArcChart1YFromBacktest();
+  }
 }
 
 function exportArcChart1Y() {

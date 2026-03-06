@@ -585,6 +585,82 @@ async def get_backtest():
         return api_response({"results": [], "error": str(e)})
 
 
+def _find_nearest_arc(date_str: str, bt_sorted: list) -> float:
+    """For a daily date, return ARC score from nearest weekly backtest date (latest <= date_str)."""
+    if not bt_sorted:
+        return 50.0
+    best = None
+    for b in bt_sorted:
+        bdate = b.get("date") or ""
+        if bdate <= date_str:
+            best = b
+        else:
+            break
+    if best is None:
+        return float(bt_sorted[0].get("score", 50.0))
+    return float(best.get("score", 50.0))
+
+
+@app.get("/api/history-daily")
+async def get_history_daily():
+    """
+    Daily BTC prices + ARC score for the last 365 days.
+    Uses Kraken daily candles (interval=1440). ARC from weekly backtest interpolation.
+    """
+    try:
+        from datetime import datetime, timezone, timedelta
+        import httpx
+
+        cutoff = datetime.now(timezone.utc) - timedelta(days=365)
+        since_ts = int(cutoff.timestamp())
+
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            resp = await client.get(
+                "https://api.kraken.com/0/public/OHLC",
+                params={"pair": "XBTUSD", "interval": 1440, "since": since_ts},
+            )
+            raw = resp.json()
+
+        if raw.get("error"):
+            logger.warning("history-daily Kraken error: %s", raw.get("error"))
+            return api_response({"results": [], "count": 0, "interval": "daily", "error": str(raw.get("error"))})
+
+        result = raw.get("result") or {}
+        keys = [k for k in result if k != "last"]
+        candles = result.get(keys[0], []) if keys else []
+
+        bt_data = await run_backtest()
+        bt_results = bt_data.get("results") or []
+        bt_sorted = sorted(bt_results, key=lambda x: x.get("date") or "")
+
+        results = []
+        for c in candles:
+            if len(c) < 5:
+                continue
+            ts = int(c[0])
+            price = float(c[4])
+            dt = datetime.fromtimestamp(ts, tz=timezone.utc)
+            if dt < cutoff:
+                continue
+            date_str = dt.strftime("%Y-%m-%d")
+            arc = _find_nearest_arc(date_str, bt_sorted)
+            results.append({
+                "date": date_str,
+                "timestamp": ts,
+                "btc_price": round(price, 2),
+                "arc_score": round(arc, 2),
+            })
+
+        return api_response({
+            "results": results,
+            "count": len(results),
+            "interval": "daily",
+        })
+    except Exception as e:
+        logger.error("history-daily error: %s", e)
+        return api_response({"results": [], "count": 0, "interval": "daily", "error": str(e)})
+
+
 @app.get("/api/liquidity-regime")
 async def get_liquidity_regime():
     """
