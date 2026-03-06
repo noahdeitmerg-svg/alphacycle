@@ -21,9 +21,9 @@ import httpx
 logger = logging.getLogger(__name__)
 
 try:
-    from scoring import drawdown_score, ma_deviation_score, safe_float, fg_to_score
+    from scoring import drawdown_score, ma_deviation_score, safe_float, fg_to_score, rescale_arc
 except ImportError:  # pragma: no cover
-    from backend.scoring import drawdown_score, ma_deviation_score, safe_float, fg_to_score
+    from backend.scoring import drawdown_score, ma_deviation_score, safe_float, fg_to_score, rescale_arc
 
 
 HTTP_TIMEOUT = httpx.Timeout(60.0, connect=10.0)
@@ -314,6 +314,7 @@ async def run_backtest() -> Dict[str, Any]:
                 + fg_score * 0.15
             )
             arc = max(0.0, min(100.0, arc))
+            arc = rescale_arc(arc)
 
             results.append(
                 {

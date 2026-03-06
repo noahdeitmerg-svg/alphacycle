@@ -522,30 +522,35 @@ async def get_cycle_anchor():
 
 
 def _get_expected_range(arc: float, forward_returns: list) -> dict:
-    """Pick bucket for current ARC and return 12M range from arc-forward-returns."""
-    try:
-        for bucket in forward_returns or []:
-            lo = bucket.get("arc_min", 0)
-            hi = bucket.get("arc_max", 100)
-            if lo <= arc < hi:
-                avg = bucket.get("avg_12m_return")
-                if avg is None:
-                    break
-                low_end = round(avg * 0.5, 0)
-                high_end = round(avg * 1.5, 0)
-                if low_end > 0:
-                    label = f"+{int(low_end)}% - +{int(high_end)}%"
-                else:
-                    label = f"{int(low_end)}% - +{int(high_end)}%"
-                return {
-                    "avg_12m": avg,
-                    "range_low": int(low_end),
-                    "range_high": int(high_end),
-                    "label": label,
-                }
-    except Exception:
-        pass
-    return {"avg_12m": None, "range_low": None, "range_high": None, "label": "N/A"}
+    """
+    Expected 12M return range from rescaled ARC (0-100). Fixed lookup; avg_12m capped at 300%.
+    """
+    # Rescaled ARC bands (0-100); forward_returns kept for API compatibility but not used for range
+    if arc < 10:
+        avg_12m, range_low, range_high = 200, 200, 400
+        label = "+200% - +400%"
+    elif arc < 25:
+        avg_12m, range_low, range_high = 120, 60, 180
+        label = "+60% - +180%"
+    elif arc < 40:
+        avg_12m, range_low, range_high = 50, 20, 80
+        label = "+20% - +80%"
+    elif arc < 55:
+        avg_12m, range_low, range_high = 15, -10, 40
+        label = "-10% - +40%"
+    elif arc < 70:
+        avg_12m, range_low, range_high = -10, -30, 10
+        label = "-30% - +10%"
+    else:
+        avg_12m, range_low, range_high = -30, -50, -10
+        label = "-50% - -10%"
+    avg_12m = min(300.0, avg_12m)
+    return {
+        "avg_12m": round(avg_12m, 1),
+        "range_low": int(range_low),
+        "range_high": int(range_high),
+        "label": label,
+    }
 
 
 @app.get("/api/arc-summary")

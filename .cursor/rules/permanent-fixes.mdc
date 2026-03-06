@@ -73,7 +73,8 @@ Beim Bearbeiten von backend/fetcher.py, backend/main.py, backend/scoring.py oder
 - Kraken OHLC **weekly** (interval=10080) — Daily max 720 Tage API-Grenze; 720 Wochen = ~13.8 Jahre. WINDOW_200W=**200** (200 wöchentliche Datenpunkte = 200-Wochen MA). since=**1381363200** (2013-10-10). Cache min 400 Eintraege. _fetch_since ebenfalls interval 10080.
 - _fetch_btc_history: Bei data.get("error") oder "result" not in data: logger.warning. Abbruchbedingung len(candles) < 10.
 - _load_or_build_cache: Bei Exception logger.warning("backtest cache load failed: %s", e), nicht pass.
-- Backtest nutzt /tmp/backtest_cache.json. ARC (einheitlich mit Live): ma_200w*0.35 + drawdown*0.25 + macro_liq*0.25 + fg_to_score(fear_greed)*0.15. fg_to_score aus scoring importieren. macro_liq dynamisch aus FRED Net Liquidity: _fetch_fred(WALCL/WTREGEN/RRPONTSYD), net_liq_by_date, _get_net_liq_score(date_str) (52w, 50 - pct*2.0); sonst 50.0. F&G: _fetch_fg_history(limit=0); pro Tag fear_greed_raw = fg_history[date] oder _rsi_to_fg(prices_so_far), dann fg_score = fg_to_score(fear_greed_raw). Return: [{"date", "price", "score"}, ...].
+- Backtest nutzt /tmp/backtest_cache.json. ARC (einheitlich mit Live): ma_200w*0.35 + drawdown*0.25 + macro_liq*0.25 + fg_to_score(fear_greed)*0.15. fg_to_score aus scoring importieren. **Nach clamp arc = rescale_arc(arc)** anwenden, damit /api/backtest rescaled ARC (0-100) liefert. macro_liq aus FRED Net Liquidity; F&G: _fetch_fg_history; Return: [{"date", "price", "score"}, ...].
+- **Expected Range**: main.py _get_expected_range(arc, forward_returns) feste Lookup fuer rescaled ARC 0-100 (Banden <10, <25, <40, <55, <70, >=70); avg_12m hard cap 300%.
 
 ## backend/liquidity_engine.py
 - **bond_score** aus absolutem Yield-Niveau (us10y_vals[-1]) berechnen — **NICHT** aus trend_score (sonst us10y_trend=0 → 150 → clamp 100 Bug). Stufen: <2% → 20, <3% → 20–50, <4% → 50–70, <5% → 70–85, else → 85–100.

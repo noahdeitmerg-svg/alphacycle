@@ -5,6 +5,7 @@
 ## Letzter Session-Status (2026-03-04) — VOLLSTÄNDIG DEPLOYED
 - ✅ ARC Formula Unification: scoring.compute_arc_score() (ma*0.35 + dd*0.25 + liq*0.25 + fg*0.15), backtest_engine same weights + fg_to_score, /api/arc-summary uses compute_arc_score()
 - ✅ **ARC v2**: Percentile-Rescaling (HISTORICAL_ARC_MIN 22 / HISTORICAL_ARC_MAX 78.5), rescale_arc() in scoring.py; compute_arc_score() returns rescale_arc(clamp(arc)). Momentum from backtest: scoring.compute_arc_momentum(arc_history, days=30); /api/arc-summary exposes arc_momentum (value, label, direction), arc_momentum_30d, arc_momentum_label; percentile from analyzer.
+- ✅ **ARC v2 Nachfixes**: backtest_engine run_backtest() wendet rescale_arc(arc) nach clamp an; /api/backtest liefert rescaled ARC (0-100). Expected Range in main.py _get_expected_range() feste Lookup-Tabelle fuer rescaled ARC (0-100), avg_12m hard cap 300%.
 - ✅ **Cycle Anchor Bear-Phase**: compute_cycle_anchor() phase-aware (today >= TENTATIVE_CYCLE_TOP → BEAR), cycle_position_percent from bear_progress/bull_progress; return current_phase, phase_label, phase_description, bear_progress_percent.
 - ✅ FIX 1: /api/arc-summary Endpoint ergänzt
 - ✅ FIX 2: /api/prices mit ATH + Dominanz (Kraken-basiert)
@@ -94,6 +95,8 @@ DO NOT modify weights. DO NOT add scoring components.
 63. **ARC v2 rescaling**: scoring.py HISTORICAL_ARC_MIN=22.0, HISTORICAL_ARC_MAX=78.5; rescale_arc(raw_arc) maps 22–50→0–50, 50–78.5→50–100; compute_arc_score() returns rescale_arc(clamp(arc)). Weights unchanged.
 64. **ARC momentum layer**: scoring.compute_arc_momentum(arc_history, days=30) returns {value, label, direction}. /api/arc-summary: arc_history from backtest; arc_momentum = full dict; arc_momentum_30d = momentum["value"]; arc_momentum_label = momentum["label"]; arc_percentile/arc_percentile_label from analyzer.
 65. **Cycle Anchor Bear-Phase**: compute_cycle_anchor() if today >= TENTATIVE_CYCLE_TOP then current_phase=BEAR, cycle_position_percent from bear_progress; else BULL from bull_progress. Return: current_phase, phase_label, phase_description, bear_progress_percent (0 in BULL).
+66. **Backtest rescale_arc**: backtest_engine.py import rescale_arc from scoring; after arc = max(0, min(100, arc)) apply arc = rescale_arc(arc) before results.append. /api/backtest results use rescaled ARC (0-100).
+67. **Expected Range Kalibrierung**: main.py _get_expected_range(arc, forward_returns) uses fixed lookup for rescaled ARC (0-100): bands <10, <25, <40, <55, <70, >=70 with range_low/range_high and avg_12m; avg_12m hard cap 300%.
 
 ## Active Endpoints (Railway)
 /health /api/prices /api/cycle/btc /api/cycle/eth /api/cycle/macro
