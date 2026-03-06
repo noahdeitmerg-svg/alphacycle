@@ -25,7 +25,7 @@ from fastapi.staticfiles import StaticFiles
 try:
     from fetcher import fetch_all, _synthetic_walcl
 except ImportError:
-    from backend.fetcher import fetch_all, _synthetic_walcl
+    from fetcher import fetch_all, _synthetic_walcl
 
 try:
     from scoring import (
@@ -34,7 +34,7 @@ try:
         clamp, safe_float,
     )
 except ImportError:
-    from backend.scoring import (
+    from scoring import (
         compute_btc_score, compute_eth_score,
         compute_macro_score, compute_combined,
         clamp, safe_float,
@@ -43,38 +43,38 @@ except ImportError:
 try:
     from analyzer import analyzer as cycle_analyzer, get_short_term_context
 except ImportError:
-    from backend.analyzer import analyzer as cycle_analyzer, get_short_term_context
+    from analyzer import analyzer as cycle_analyzer, get_short_term_context
 
 try:
     from decision_engine import decision_engine
 except ImportError:
-    from backend.decision_engine import decision_engine
+    from decision_engine import decision_engine
 
 try:
     from liquidity_engine import compute_liquidity_regime
 except ImportError:
-    from backend.liquidity_engine import compute_liquidity_regime
+    from liquidity_engine import compute_liquidity_regime
 
 try:
     from cycle_anchor import compute_cycle_anchor, compute_days_since_bottom
 except ImportError:
-    from backend.cycle_anchor import compute_cycle_anchor, compute_days_since_bottom
+    from cycle_anchor import compute_cycle_anchor, compute_days_since_bottom
 
 try:
     from analyzer import CycleAnalyzer
 except ImportError:
-    from backend.analyzer import CycleAnalyzer
+    from analyzer import CycleAnalyzer
 _analyzer = CycleAnalyzer()
 
 try:
     from services.backtest_engine import run_backtest
 except ImportError:
-    from backend.services.backtest_engine import run_backtest
+    from services.backtest_engine import run_backtest
 
 try:
     from snapshot import build_snapshot
 except ImportError:
-    from backend.snapshot import build_snapshot
+    from snapshot import build_snapshot
 
 # -- LOGGING --------------------------------------------------------------------
 logging.basicConfig(level=logging.INFO,
@@ -552,7 +552,7 @@ async def get_arc_summary():
         "short_term": btc.get("short_term", {}),
     }
     try:
-        from backend.analyzer import compute_arc_momentum
+        from analyzer import compute_arc_momentum
         bt = await run_backtest()
         results = bt.get("results", []) if isinstance(bt, dict) else []
         arc_history = [{"date": r.get("date", ""), "arc_score": r.get("score")} for r in results if r.get("date") and r.get("score") is not None]
@@ -568,7 +568,7 @@ async def get_arc_summary():
         out["arc_percentile"] = None
         out["arc_percentile_label"] = None
     try:
-        from backend.liquidity_engine import compute_net_liquidity
+        from liquidity_engine import compute_net_liquidity
         walcl_series = raw.get("walcl_series", [])
         tga_series = raw.get("tga_series", [])
         rrp_series = raw.get("rrp_series", [])
@@ -621,7 +621,7 @@ async def get_historical_returns():
     Average forward returns by ARC zone from backtest data.
     """
     try:
-        from backend.historical_returns import (
+        from historical_returns import (
             compute_historical_returns,
             _empty_returns,
         )
@@ -632,7 +632,7 @@ async def get_historical_returns():
     except Exception as e:
         logger.error("historical_returns error: %s", e)
         try:
-            from backend.historical_returns import _empty_returns
+            from historical_returns import _empty_returns
             return api_response({**_empty_returns(), "error": str(e)})
         except Exception:
             return api_response({"zones": {}, "best_entry_zone": None, "sample_events": [], "data_points_used": 0, "error": str(e)})
@@ -642,7 +642,7 @@ async def get_historical_returns():
 async def get_arc_forward_returns():
     """Forward returns by finer ARC buckets (0-25, 25-35, ...)."""
     try:
-        from backend.historical_returns import compute_arc_forward_returns
+        from historical_returns import compute_arc_forward_returns
         bt = await run_backtest()
         bt_list = bt.get("results", []) if isinstance(bt, dict) else []
         results = compute_arc_forward_returns(bt_list)
