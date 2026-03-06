@@ -43,7 +43,7 @@ Beim Bearbeiten von backend/fetcher.py, backend/main.py, backend/scoring.py oder
 ## index.html
 - `BACKEND_URL = 'https://alphacycle-production.up.railway.app'` (oder window.BACKEND_URL || diese URL).
 - API-Fetch mit **Promise.allSettled** (nicht Promise.all), danach `results.map(r => r.status === 'fulfilled' ? r.value : null)`.
-- `phaseOf(s)`: Grenzen <30 Low Risk, <60 Moderate Risk, <75 Elevated Risk, sonst Extreme Risk.
+- `phaseOf(s)`: Grenzen <30 Low Risk, <60 Moderate Risk, <75 Elevated Risk, sonst High Risk.
 - Nach `S.btcComponents = btcC?.components || null` müssen stehen: `S.btcShortTerm = btcC?.short_term || null` und `S.ethComponents = ethC?.components || null`.
 - `S.btcScore`: Nur API-Wert nutzen wenn `btcC?.score != null && btcC.score > 0`, sonst Fallback computeBTCScore().
 - **ALWAYS** Data Inspector Panel am Ende der Seite (vor Footer) vorhanden — Titel "DATA INSPECTOR", Toggle "SHOW / HIDE", Standard eingeklappt; Inhalt aus S.*.
@@ -62,6 +62,9 @@ Beim Bearbeiten von backend/fetcher.py, backend/main.py, backend/scoring.py oder
 ## backend/Dockerfile
 - **Nur 1 Datei** im Ordner `backend/` (keine zweite Datei mit Leerzeichen im Namen wie " Dockerfile").
 - **CMD** mit `$PORT`: `--bind 0.0.0.0:$PORT`, **workers=1** (Railway setzt PORT) — **NICHT** hardcoded 8000.
+
+## backend/cycle_anchor.py
+- **TENTATIVE_CYCLE_TOP** = date(2025, 10, 25) — einzige Definition des Cycle-Top-Datums. main.py und analyzer.py importieren TENTATIVE_CYCLE_TOP und compute_days_since_top von cycle_anchor. API liefert cycle_top_date (isoformat) und cycle_top_confirmed: False. Kein hardcodiertes "2025-10-06" oder "Oct 2025" woanders.
 
 ## backend/services/backtest_engine.py
 - Kraken OHLC **weekly** (interval=10080) — Daily max 720 Tage API-Grenze; 720 Wochen = ~13.8 Jahre. WINDOW_200W=**200** (200 wöchentliche Datenpunkte = 200-Wochen MA). since=**1381363200** (2013-10-10). Cache min 400 Eintraege. _fetch_since ebenfalls interval 10080.
