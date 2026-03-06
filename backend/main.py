@@ -523,24 +523,23 @@ async def get_cycle_anchor():
 
 def _get_expected_range(arc: float, forward_returns: list) -> dict:
     """
-    Expected 12M return range from rescaled ARC (0-100). Fixed lookup; avg_12m capped at 300%.
+    Expected 12M return range from raw ARC range (empirical ~22-78). Fixed lookup; avg_12m capped at 300%.
     """
-    # Rescaled ARC bands (0-100); forward_returns kept for API compatibility but not used for range
-    if arc < 10:
-        avg_12m, range_low, range_high = 200, 200, 400
-        label = "+200% - +400%"
-    elif arc < 25:
+    if arc < 25:
         avg_12m, range_low, range_high = 120, 60, 180
         label = "+60% - +180%"
-    elif arc < 40:
-        avg_12m, range_low, range_high = 50, 20, 80
-        label = "+20% - +80%"
+    elif arc < 35:
+        avg_12m, range_low, range_high = 60, 30, 100
+        label = "+30% - +100%"
+    elif arc < 45:
+        avg_12m, range_low, range_high = 25, 10, 50
+        label = "+10% - +50%"
     elif arc < 55:
-        avg_12m, range_low, range_high = 15, -10, 40
-        label = "-10% - +40%"
-    elif arc < 70:
-        avg_12m, range_low, range_high = -10, -30, 10
-        label = "-30% - +10%"
+        avg_12m, range_low, range_high = 10, -10, 30
+        label = "-10% - +30%"
+    elif arc < 65:
+        avg_12m, range_low, range_high = -10, -25, 10
+        label = "-25% - +10%"
     else:
         avg_12m, range_low, range_high = -30, -50, -10
         label = "-50% - -10%"

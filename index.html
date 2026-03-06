@@ -1928,15 +1928,15 @@ canvas.sparkline {
         <div class="hz-label">LOW RISK</div>
       </div>
       <div class="hero-zone zone-mod">
-        <div class="hz-range">30–60</div>
+        <div class="hz-range">30–50</div>
         <div class="hz-label">MODERATE</div>
       </div>
       <div class="hero-zone zone-ele">
-        <div class="hz-range">60–75</div>
+        <div class="hz-range">50–65</div>
         <div class="hz-label">ELEVATED</div>
       </div>
       <div class="hero-zone zone-ext">
-        <div class="hz-range">75–100</div>
+        <div class="hz-range">65–100</div>
         <div class="hz-label">HIGH RISK</div>
       </div>
     </div>
@@ -1986,21 +1986,21 @@ canvas.sparkline {
         <div class="hr-zone-count" id="hr-low-count">— entries</div>
       </div>
       <div class="hr-zone hr-mod">
-        <div class="hr-zone-range">30–60</div>
+        <div class="hr-zone-range">30–50</div>
         <div class="hr-zone-label">MODERATE</div>
         <div class="hr-zone-return" id="hr-mod-12m">—</div>
         <div class="hr-zone-wr" id="hr-mod-wr">— win rate</div>
         <div class="hr-zone-count" id="hr-mod-count">— entries</div>
       </div>
       <div class="hr-zone hr-elv">
-        <div class="hr-zone-range">60–75</div>
+        <div class="hr-zone-range">50–65</div>
         <div class="hr-zone-label">ELEVATED</div>
         <div class="hr-zone-return" id="hr-elv-12m">—</div>
         <div class="hr-zone-wr" id="hr-elv-wr">— win rate</div>
         <div class="hr-zone-count" id="hr-elv-count">— entries</div>
       </div>
       <div class="hr-zone hr-ext">
-        <div class="hr-zone-range">75–100</div>
+        <div class="hr-zone-range">65–100</div>
         <div class="hr-zone-label">HIGH RISK</div>
         <div class="hr-zone-return" id="hr-ext-12m">—</div>
         <div class="hr-zone-wr" id="hr-ext-wr">— win rate</div>
@@ -2333,14 +2333,14 @@ const fmtT    = n => '$'+safeNum(n/1e12).toFixed(2)+'T';
 function scoreColor(s) {
   s = clamp(s);
   if (s < 30)  return '#22c55e';
-  if (s < 60)  return '#3b82f6';
-  if (s < 75)  return '#f59e0b';
+  if (s < 50)  return '#3b82f6';
+  if (s < 65)  return '#f59e0b';
   return '#ef4444';
 }
 function phaseOf(score) {
   if (score < 30) return 'Low Risk';
-  if (score < 60) return 'Moderate Risk';
-  if (score < 75) return 'Elevated Risk';
+  if (score < 50) return 'Moderate Risk';
+  if (score < 65) return 'Elevated Risk';
   return 'High Risk';
 }
 function phaseIcon(phase) {
@@ -2832,8 +2832,8 @@ function updateUI() {
     const s = S.btcScore;
     const zones = [
       [30,  'LOW RISK',   '34,197,94'],
-      [60,  'MODERATE',   '59,130,246'],
-      [75,  'ELEVATED',   '245,158,11'],
+      [50,  'MODERATE',   '59,130,246'],
+      [65,  'ELEVATED',   '245,158,11'],
       [101, 'HIGH RISK',  '239,68,68'],
     ];
     const [,label,rgb] = zones.find(([max]) => s < max);
@@ -2876,7 +2876,7 @@ function updateUI() {
   var pctEl = document.getElementById('hm-percentile');
   if (pctEl && pct != null) {
     pctEl.textContent = pct + 'th';
-    pctEl.style.color = pct < 30 ? '#22c55e' : pct < 60 ? '#3b82f6' : pct < 80 ? '#f59e0b' : '#ef4444';
+    pctEl.style.color = pct < 30 ? '#22c55e' : pct < 50 ? '#3b82f6' : pct < 65 ? '#f59e0b' : '#ef4444';
   } else if (pctEl) pctEl.textContent = '—';
   setText('eth-score-val', Math.round(S.ethScore), eCol);
   setText('mac-score-val', Math.round(S.macScore), mCol);
@@ -3577,8 +3577,8 @@ function renderArcChart(period) {
   var zone = function(val) { return Array(n).fill(val); };
   var datasets = [
     { label: '0\u201325', data: zone(25), borderColor: 'transparent', backgroundColor: 'rgba(34,197,94,0.20)', fill: true, yAxisID: 'yArc', pointRadius: 0, order: 1 },
-    { label: '25\u201335', data: zone(35), borderColor: 'transparent', backgroundColor: 'rgba(34,197,94,0.08)', fill: '-1', yAxisID: 'yArc', pointRadius: 0, order: 1 },
-    { label: '35\u201360', data: zone(60), borderColor: 'transparent', backgroundColor: 'rgba(251,191,36,0.07)', fill: '-1', yAxisID: 'yArc', pointRadius: 0, order: 1 },
+    { label: '25\u201340', data: zone(40), borderColor: 'transparent', backgroundColor: 'rgba(34,197,94,0.08)', fill: '-1', yAxisID: 'yArc', pointRadius: 0, order: 1 },
+    { label: '40\u201360', data: zone(60), borderColor: 'transparent', backgroundColor: 'rgba(251,191,36,0.07)', fill: '-1', yAxisID: 'yArc', pointRadius: 0, order: 1 },
     { label: '60\u201370', data: zone(70), borderColor: 'transparent', backgroundColor: 'rgba(245,158,11,0.20)', fill: '-1', yAxisID: 'yArc', pointRadius: 0, order: 1 },
     { label: '70\u2013100', data: zone(100), borderColor: 'transparent', backgroundColor: 'rgba(239,68,68,0.22)', fill: '-1', yAxisID: 'yArc', pointRadius: 0, order: 1 },
     { label: 'ARC Index', data: arcData, borderColor: 'rgba(255,255,255,0.92)', borderWidth: 2.5, pointRadius: 0, yAxisID: 'yArc', tension: 0.4, order: 2 },

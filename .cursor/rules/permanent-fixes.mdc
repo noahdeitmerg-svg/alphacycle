@@ -37,7 +37,7 @@ Beim Bearbeiten von backend/fetcher.py, backend/main.py, backend/scoring.py oder
 - **compute_macro_score()** ALWAYS returns **regime** (EXPANSION if macro_score < 35, NEUTRAL if < 60, else CONTRACTION).
 - In `drawdown_score(prices)`: Nach `if not clean: return 50.0` muss die Zeile **`if len(clean) < 10: return 50.0`** stehen (Guard gegen zu wenig Daten).
 - ARC-Formel (einheitlich): ma_200w*0.35 + drawdown*0.25 + liquidity*0.25 + fear_greed*0.15. F&G als fg_to_score(fear_greed). scoring.compute_arc_score() nutzt dieselbe Formel; compute_btc_score() unveraendert (taktischer Score). Gewichte nicht aendern.
-- **ARC v2 Rescaling**: HISTORICAL_ARC_MIN=22.0, HISTORICAL_ARC_MAX=78.5; rescale_arc(raw_arc) bildet 22–50 auf 0–50 und 50–78.5 auf 50–100 ab; compute_arc_score() liefert rescale_arc(clamp(arc)). Nicht an Gewichten aendern.
+- **ARC Raw Range**: compute_arc_score() liefert clamp(arc) — kein rescale_arc. Empirische Range ~22-78. Nicht an Gewichten aendern.
 - **ARC Momentum**: scoring.compute_arc_momentum(arc_history, days=30) liefert {value, label, direction}. In /api/arc-summary arc_momentum setzen, arc_momentum_30d = momentum["value"], arc_momentum_label = momentum["label"]; Percentile weiter aus analyzer.
 - **ALWAYS** `short_term` dict in `compute_btc_score()` return (rsi, funding, mvrv, power_law, pi_cycle, puell) — **NEVER** nur Defaults aus main.py-Fallback; die echten Werte kommen aus scoring.
 - **macro_liq** in compute_btc_score(): Primär aus **Net Liquidity** (net_liq_values, 52w window, 50 - pct*2.0). Fallback auf WALCL (52w, 50 - pct*2.5) wenn net_liq_values zu wenig Daten. compute_btc_score(..., net_liq_values=None). main.py übergibt raw.get("net_liq_series", []) als net_liq_values.
@@ -45,7 +45,7 @@ Beim Bearbeiten von backend/fetcher.py, backend/main.py, backend/scoring.py oder
 ## index.html
 - `BACKEND_URL = 'https://alphacycle-production.up.railway.app'` (oder window.BACKEND_URL || diese URL).
 - API-Fetch mit **Promise.allSettled** (nicht Promise.all), danach `results.map(r => r.status === 'fulfilled' ? r.value : null)`.
-- `phaseOf(s)`: Grenzen <30 Low Risk, <60 Moderate Risk, <75 Elevated Risk, sonst High Risk.
+- `phaseOf(s)`: Grenzen (raw ARC) <30 Low Risk, <50 Moderate Risk, <65 Elevated Risk, sonst High Risk.
 - Nach `S.btcComponents = btcC?.components || null` müssen stehen: `S.btcShortTerm = btcC?.short_term || null` und `S.ethComponents = ethC?.components || null`.
 - `S.btcScore`: Nur API-Wert nutzen wenn `btcC?.score != null && btcC.score > 0`, sonst Fallback computeBTCScore().
 - **ALWAYS** Data Inspector Panel am Ende der Seite (vor Footer) vorhanden — Titel "DATA INSPECTOR", Toggle "SHOW / HIDE", Standard eingeklappt; Inhalt aus S.*.
@@ -73,8 +73,8 @@ Beim Bearbeiten von backend/fetcher.py, backend/main.py, backend/scoring.py oder
 - Kraken OHLC **weekly** (interval=10080) — Daily max 720 Tage API-Grenze; 720 Wochen = ~13.8 Jahre. WINDOW_200W=**200** (200 wöchentliche Datenpunkte = 200-Wochen MA). since=**1381363200** (2013-10-10). Cache min 400 Eintraege. _fetch_since ebenfalls interval 10080.
 - _fetch_btc_history: Bei data.get("error") oder "result" not in data: logger.warning. Abbruchbedingung len(candles) < 10.
 - _load_or_build_cache: Bei Exception logger.warning("backtest cache load failed: %s", e), nicht pass.
-- Backtest nutzt /tmp/backtest_cache.json. ARC (einheitlich mit Live): ma_200w*0.35 + drawdown*0.25 + macro_liq*0.25 + fg_to_score(fear_greed)*0.15. fg_to_score aus scoring importieren. **Nach clamp arc = rescale_arc(arc)** anwenden, damit /api/backtest rescaled ARC (0-100) liefert. macro_liq aus FRED Net Liquidity; F&G: _fetch_fg_history; Return: [{"date", "price", "score"}, ...].
-- **Expected Range**: main.py _get_expected_range(arc, forward_returns) feste Lookup fuer rescaled ARC 0-100 (Banden <10, <25, <40, <55, <70, >=70); avg_12m hard cap 300%.
+- Backtest nutzt /tmp/backtest_cache.json. ARC (einheitlich mit Live): ma_200w*0.35 + drawdown*0.25 + macro_liq*0.25 + fg_to_score(fear_greed)*0.15. fg_to_score aus scoring importieren. **Kein rescale_arc** — arc = max(0, min(100, arc)). /api/backtest liefert raw ARC. macro_liq aus FRED Net Liquidity; F&G: _fetch_fg_history; Return: [{"date", "price", "score"}, ...].
+- **Expected Range (raw ARC)**: main.py _get_expected_range() feste Lookup fuer raw ARC (Banden <25, <35, <45, <55, <65, >=65); avg_12m hard cap 300%.
 
 ## backend/liquidity_engine.py
 - **bond_score** aus absolutem Yield-Niveau (us10y_vals[-1]) berechnen — **NICHT** aus trend_score (sonst us10y_trend=0 → 150 → clamp 100 Bug). Stufen: <2% → 20, <3% → 20–50, <4% → 50–70, <5% → 70–85, else → 85–100.

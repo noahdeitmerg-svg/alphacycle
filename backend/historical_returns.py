@@ -53,9 +53,9 @@ def compute_historical_returns(backtest_data: list) -> dict:
     def get_zone(arc: float) -> str:
         if arc < 30:
             return "low"
-        if arc < 60:
+        if arc < 50:
             return "moderate"
-        if arc < 75:
+        if arc < 65:
             return "elevated"
         return "extreme"
 
@@ -105,9 +105,9 @@ def compute_historical_returns(backtest_data: list) -> dict:
 
     zone_meta = {
         "low": "0-30",
-        "moderate": "30-60",
-        "elevated": "60-75",
-        "extreme": "75-100",
+        "moderate": "30-50",
+        "elevated": "50-65",
+        "extreme": "65-100",
     }
 
     zones_output = {}

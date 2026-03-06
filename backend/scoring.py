@@ -83,24 +83,6 @@ def drawdown_score(prices):
 
 def fg_to_score(v): return clamp(safe_float(v,50.0))
 
-# Empirical ARC range from backtest (COVID low / Dec 2017 top) for percentile rescaling
-HISTORICAL_ARC_MIN = 22.0
-HISTORICAL_ARC_MAX = 78.5
-
-
-def rescale_arc(raw_arc: float) -> float:
-    """
-    Rescales raw ARC (empirical range 22-78.5) to full 0-100 range.
-    Preserves 50 as neutral midpoint.
-    """
-    raw = clamp(raw_arc)
-    if raw <= 50.0:
-        # Map 22-50 -> 0-50
-        return clamp((raw - HISTORICAL_ARC_MIN) / (50.0 - HISTORICAL_ARC_MIN) * 50.0)
-    else:
-        # Map 50-78.5 -> 50-100
-        return clamp(50.0 + (raw - 50.0) / (HISTORICAL_ARC_MAX - 50.0) * 50.0)
-
 
 def compute_arc_momentum(arc_history: list, days: int = 30) -> dict:
     """
@@ -278,7 +260,7 @@ def compute_arc_score(prices_daily, fear_greed, walcl_values, stablecoin_supply,
     liq_score = s["macro_liq"]
     fg_score = fg_to_score(fear_greed)
     arc = ma_score * 0.35 + dd_score * 0.25 + liq_score * 0.25 + fg_score * 0.15
-    return rescale_arc(clamp(arc))
+    return clamp(arc)
 
 
 def compute_eth_score(eth_prices, btc_prices, tvl_series, stablecoin_supply,
