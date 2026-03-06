@@ -20,7 +20,7 @@ Zero NaN guarantee. All fields always populated.
 import math
 import logging
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -95,6 +95,54 @@ def compute_arc_momentum(arc_history: list, current_arc: float) -> dict:
         }
 
 
+def compute_confidence_calibrated(
+    arc: float,
+    fear_greed: float,
+    momentum: float,
+    percentile: int,
+    win_rate: Optional[float] = None,
+) -> Tuple[float, str]:
+    """
+    Returns (confidence_pct, label). Factors: ARC extremeness, momentum confirmation,
+    historical win rate, percentile extremes.
+    """
+    score = 0.0
+    a = max(0.0, min(100.0, float(arc or 50)))
+    m = float(momentum) if momentum is not None else 0.0
+    pct = int(percentile) if percentile is not None else 50
+
+    arc_dist = abs(a - 50)
+    score += arc_dist * 0.8
+
+    if a < 50 and m < 0:
+        score += 15
+    elif a > 50 and m > 0:
+        score += 15
+    else:
+        score += 5
+
+    if win_rate is not None:
+        score += (win_rate - 50) * 0.3
+
+    if pct < 15 or pct > 85:
+        score += 10
+    elif pct < 25 or pct > 75:
+        score += 5
+
+    confidence = min(95.0, max(20.0, score))
+
+    if confidence >= 80:
+        label = "High"
+    elif confidence >= 60:
+        label = "Moderate-High"
+    elif confidence >= 40:
+        label = "Moderate"
+    else:
+        label = "Low"
+
+    return round(confidence, 1), label
+
+
 # -----------------------------------------------------------------------------
 # CYCLE SIGNAL DETECTION (Top/Bottom)
 # -----------------------------------------------------------------------------
@@ -159,7 +207,11 @@ def detect_cycle_signal(
             signal_type = "BOTTOM_WARNING"
             strength = min(100, int(40 + bottom_count * 8))
             desc = "Bottom Warning - moegliche Akkumulationszone"
-            override = "BUY / HOLD"
+            try:
+                from decision_engine import get_position
+                override = get_position(arc, 0, 50)
+            except Exception:
+                override = "BUY"
         elif arc < 40 and bottom_count >= 2:
             signal_type = "BOTTOM_WATCH"
             strength = min(100, int(20 + bottom_count * 8))

@@ -519,6 +519,33 @@ async def get_cycle_anchor():
         })
 
 
+def _get_expected_range(arc: float, forward_returns: list) -> dict:
+    """Pick bucket for current ARC and return 12M range from arc-forward-returns."""
+    try:
+        for bucket in forward_returns or []:
+            lo = bucket.get("arc_min", 0)
+            hi = bucket.get("arc_max", 100)
+            if lo <= arc < hi:
+                avg = bucket.get("avg_12m_return")
+                if avg is None:
+                    break
+                low_end = round(avg * 0.5, 0)
+                high_end = round(avg * 1.5, 0)
+                if low_end > 0:
+                    label = f"+{int(low_end)}% - +{int(high_end)}%"
+                else:
+                    label = f"{int(low_end)}% - +{int(high_end)}%"
+                return {
+                    "avg_12m": avg,
+                    "range_low": int(low_end),
+                    "range_high": int(high_end),
+                    "label": label,
+                }
+    except Exception:
+        pass
+    return {"avg_12m": None, "range_low": None, "range_high": None, "label": "N/A"}
+
+
 @app.get("/api/arc-summary")
 async def get_arc_summary():
     """ARC Index consolidated summary."""
@@ -574,12 +601,48 @@ async def get_arc_summary():
         out["arc_momentum_label"] = momentum_data.get("arc_momentum_label")
         out["arc_percentile"] = momentum_data.get("arc_percentile")
         out["arc_percentile_label"] = momentum_data.get("arc_percentile_label")
+
+        from historical_returns import compute_arc_forward_returns
+        from analyzer import compute_confidence_calibrated
+        from decision_engine import get_position
+
+        fwd = compute_arc_forward_returns(results)
+        expected = _get_expected_range(current_arc, fwd)
+        out["expected_range"] = expected
+        out["expected_range_label"] = expected.get("label", "N/A")
+
+        win_rate = None
+        for b in fwd or []:
+            if b.get("arc_min", 0) <= current_arc < b.get("arc_max", 100):
+                win_rate = b.get("win_rate_12m")
+                break
+        conf_val, conf_label = compute_confidence_calibrated(
+            arc=current_arc,
+            fear_greed=raw.get("fear_greed", {}).get("current", 50),
+            momentum=out.get("arc_momentum_30d") or 0,
+            percentile=out.get("arc_percentile") or 50,
+            win_rate=win_rate,
+        )
+        out["confidence"] = conf_val
+        out["confidence_label"] = conf_label
+        out["position"] = get_position(
+            current_arc,
+            out.get("arc_momentum_30d") if out.get("arc_momentum_30d") is not None else 0,
+            conf_val,
+        )
+        out["decision"] = out["position"]
+        _alloc = {"BUY": "60-80%", "HOLD": "40-60%", "REDUCE": "20-40%", "SELL": "0-20%"}
+        out["allocation"] = _alloc.get(out["position"], "40-60%")
     except Exception as e:
         logger.warning("arc-summary momentum: %s", e)
         out["arc_momentum_30d"] = None
         out["arc_momentum_label"] = None
         out["arc_percentile"] = None
         out["arc_percentile_label"] = None
+        out["expected_range"] = {"avg_12m": None, "range_low": None, "range_high": None, "label": "N/A"}
+        out["expected_range_label"] = "N/A"
+        out["confidence_label"] = "Moderate"
+        out["position"] = "HOLD"
     try:
         from liquidity_engine import compute_net_liquidity
         walcl_series = raw.get("walcl_series", [])
@@ -964,6 +1027,16 @@ async def get_snapshot():
         cy_sig = result.get("cycle_signal") or {}
         eth_price = safe_float(raw.get("eth_market", {}).get("price", 0))
 
+        expected_range_label = "N/A"
+        try:
+            bt = await run_backtest()
+            from historical_returns import compute_arc_forward_returns
+            fwd = compute_arc_forward_returns(bt.get("results", []) if isinstance(bt, dict) else [])
+            expected = _get_expected_range(arc_score, fwd)
+            expected_range_label = expected.get("label", "N/A")
+        except Exception:
+            pass
+
         snapshot = build_snapshot(
             arc_score=arc_score,
             btc_price=btc_price,
@@ -983,7 +1056,7 @@ async def get_snapshot():
             mac_score=c["macro_scores"].get("macro_score", 50.0),
             ma_200w_dev=c["btc_scores"].get("ma_200w_dev_pct"),
             drawdown_pct=abs(btc_drawdown) / 100.0 if btc_drawdown else None,
-            expected_range=None,
+            expected_range=expected_range_label,
             confidence=dec.get("confidence"),
             arc_momentum_30d=result.get("arc_momentum_30d"),
             arc_momentum_label=result.get("arc_momentum_label"),

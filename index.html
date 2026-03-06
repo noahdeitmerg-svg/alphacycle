@@ -2931,25 +2931,33 @@ function updateUI() {
 
   updatePhaseBanner();
 
-  // Decision Engine — derived from AlphaCycle Index (btcScore)
+  // Decision Engine — from arc-summary when available, else local fallback
   (function renderDecision() {
     const score = S.btcScore;
+    const arcSum = S.arcSummary;
     let position, allocation, range, confidence;
-    if (score < 25) {
-      position = 'ACCUMULATE'; allocation = '80–100%';
-      range = '+150% – +400%'; confidence = 'High';
-    } else if (score < 45) {
-      position = 'BUY / HOLD'; allocation = '60–80%';
-      range = '+50% – +150%'; confidence = 'Moderate-High';
-    } else if (score < 60) {
-      position = 'HOLD'; allocation = '40–60%';
-      range = '+10% – +50%'; confidence = 'Moderate';
-    } else if (score < 75) {
-      position = 'REDUCE'; allocation = '20–40%';
-      range = '-10% – +20%'; confidence = 'Low-Moderate';
+    if (arcSum?.position != null && arcSum?.position !== '') {
+      position = arcSum.position;
+      allocation = arcSum.allocation ?? (score < 45 ? '60–80%' : score < 60 ? '40–60%' : score < 75 ? '20–40%' : '0–20%');
+      range = arcSum.expected_range_label ?? '—';
+      confidence = arcSum.confidence_label ?? 'Moderate';
     } else {
-      position = 'DEFENSIVE'; allocation = '0–20%';
-      range = '-30% – 0%'; confidence = 'Low';
+      if (score < 25) {
+        position = 'ACCUMULATE'; allocation = '80–100%';
+        range = '+150% – +400%'; confidence = 'High';
+      } else if (score < 45) {
+        position = 'BUY'; allocation = '60–80%';
+        range = '+50% – +150%'; confidence = 'Moderate-High';
+      } else if (score < 60) {
+        position = 'HOLD'; allocation = '40–60%';
+        range = '+10% – +50%'; confidence = 'Moderate';
+      } else if (score < 75) {
+        position = 'REDUCE'; allocation = '20–40%';
+        range = '-10% – +20%'; confidence = 'Low-Moderate';
+      } else {
+        position = 'DEFENSIVE'; allocation = '0–20%';
+        range = '-30% – 0%'; confidence = 'Low';
+      }
     }
     if (S.decisionOverride) position = S.decisionOverride;
     const col = scoreColor(score);

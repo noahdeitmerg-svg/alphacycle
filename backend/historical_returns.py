@@ -209,6 +209,9 @@ def compute_arc_forward_returns(backtest_data: list) -> list:
                 return None
             return round(sum(vals) / len(vals), 1)
 
+        r12_vals = [e.get("r12m") for e in entries if e.get("r12m") is not None]
+        win_rate_12m = round(sum(1 for v in r12_vals if v > 0) / len(r12_vals) * 100, 1) if r12_vals else None
+
         results.append({
             "arc_range": label,
             "arc_min": lo,
@@ -217,6 +220,7 @@ def compute_arc_forward_returns(backtest_data: list) -> list:
             "avg_6m_return": avg("r6m"),
             "avg_12m_return": avg("r12m"),
             "sample_count": len(entries),
+            "win_rate_12m": win_rate_12m,
         })
     return results
 

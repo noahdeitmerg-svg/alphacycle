@@ -48,6 +48,20 @@ def _sf(v, fb=0.0):
 def _clamp(v, lo=0.0, hi=100.0):
     return max(lo, min(hi, _sf(v, (lo + hi) / 2)))
 
+
+def get_position(arc: float, momentum: float = 0, confidence: float = 50) -> str:
+    """Single clear position signal from ARC and momentum. No BUY/HOLD hybrid."""
+    a = _sf(arc, 50.0)
+    if a < 30:
+        return "BUY"
+    if a < 45:
+        return "BUY" if (momentum is not None and momentum <= 0) else "HOLD"
+    if a < 60:
+        return "HOLD"
+    if a < 75:
+        return "REDUCE"
+    return "SELL"
+
 def _trend(series: list, window: int = 26, neutral: float = 50.0) -> float:
     """Return trend score 0–100 from a list of floats."""
     clean = [_sf(v) for v in series if v is not None and _sf(v) > 0]
