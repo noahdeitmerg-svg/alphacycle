@@ -2356,6 +2356,14 @@ function phaseDesc(phase) {
     'Extreme Risk':'Risk-off environment. Liquidity contracting. Downtrend confirmed - caution advised.',
   }[phase]||'Analyzing market conditions...';
 }
+function _getCycleDescription(arc) {
+  var a = Number(arc);
+  if (a < 30) return 'Market undervalued. Smart money accumulating. Fear elevated, prices near or below 200W MA.';
+  if (a < 35) return 'Structurally favorable. Accumulation zone. Historically strong risk/reward for long-term exposure.';
+  if (a < 60) return 'Uptrend confirmed. Liquidity expanding. Momentum building with healthy sentiment.';
+  if (a < 75) return 'Market overheating. FOMO elevated. Whale distribution likely in progress.';
+  return 'Risk-off environment. Liquidity contracting. Downtrend confirmed - caution advised.';
+}
 
 // ── CLOCK ──────────────────────────────────────────────────────────────────
 function updateClock() {
@@ -2775,7 +2783,14 @@ function updatePhaseBanner() {
 
   if ($('phase-icon')) $('phase-icon').textContent = phaseIcon(phase);
   if ($('phase-name')) $('phase-name').textContent = phase;
-  if ($('phase-desc')) $('phase-desc').textContent = S.analyzerSignal ? (S.analyzerSignal + ' — ' + phaseDesc(phase)) : phaseDesc(phase);
+  var descText = '';
+  if (S.shortTermContext && S.shortTermContext.phase_desc) {
+    descText = S.shortTermContext.phase_desc;
+  } else {
+    descText = _getCycleDescription(score);
+  }
+  if (S.analyzerSignal) descText = S.analyzerSignal + ' — ' + descText;
+  if ($('phase-desc')) $('phase-desc').textContent = descText;
   var sigEl = document.getElementById('phase-desc');
   if (sigEl && S.cycleSignal && S.cycleSignal.signal_type !== 'NONE' && S.cycleSignal.description) {
     sigEl.textContent = S.cycleSignal.description;
