@@ -210,5 +210,43 @@ def compute_liquidity_regime(
     }
 
 
-__all__ = ["compute_liquidity_regime"]
+def compute_net_liquidity(
+    walcl: float,
+    tga: float = 0.0,
+    rrp: float = 0.0,
+    stablecoin_supply: float = 0.0,
+    defi_tvl: float = 0.0,
+) -> Dict[str, Any]:
+    """
+    Net Liquidity = WALCL - TGA - RRP.
+    Optional: + Stablecoin Supply + DeFi TVL.
+    """
+    try:
+        walcl = float(walcl or 0)
+        tga = float(tga or 0)
+        rrp = float(rrp or 0)
+        stable = float(stablecoin_supply or 0)
+        tvl = float(defi_tvl or 0)
+
+        net_liq = walcl - tga - rrp
+        net_liq_extended = net_liq + stable + tvl
+
+        return {
+            "net_liquidity": round(net_liq, 2),
+            "net_liquidity_extended": round(net_liq_extended, 2),
+            "walcl": walcl,
+            "tga": tga,
+            "rrp": rrp,
+            "components_available": {
+                "tga_available": tga > 0,
+                "rrp_available": rrp > 0,
+                "stable_available": stable > 0,
+                "tvl_available": tvl > 0,
+            },
+        }
+    except Exception as e:
+        return {"net_liquidity": None, "error": str(e)}
+
+
+__all__ = ["compute_liquidity_regime", "compute_net_liquidity"]
 

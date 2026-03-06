@@ -153,6 +153,74 @@ def compute_historical_returns(backtest_data: list) -> dict:
     }
 
 
+def compute_arc_forward_returns(backtest_data: list) -> list:
+    """
+    Finer buckets: 0-25, 25-35, 35-50, 50-70, 70-85, 85-100.
+    """
+    def norm(d):
+        return {
+            "date": d.get("date", ""),
+            "arc_score": d.get("arc_score") if d.get("arc_score") is not None else d.get("score"),
+            "btc_price": d.get("btc_price") if d.get("btc_price") is not None else d.get("price"),
+        }
+
+    BUCKETS = [
+        (0, 25, "0-25"),
+        (25, 35, "25-35"),
+        (35, 50, "35-50"),
+        (50, 70, "50-70"),
+        (70, 85, "70-85"),
+        (85, 100, "85-100"),
+    ]
+    WEEKS_3M = 13
+    WEEKS_6M = 26
+    WEEKS_12M = 52
+
+    data = [norm(d) for d in (backtest_data or [])]
+    data = [d for d in data if d.get("arc_score") is not None and (d.get("btc_price") or 0) > 0]
+    data = sorted(data, key=lambda x: x.get("date", ""))
+
+    bucket_data = {b[2]: [] for b in BUCKETS}
+
+    for i, entry in enumerate(data):
+        arc = float(entry.get("arc_score", 50))
+        price = float(entry.get("btc_price", 0))
+        for lo, hi, label in BUCKETS:
+            if lo <= arc < hi:
+                def fwd(weeks):
+                    ti = i + weeks
+                    if ti >= len(data):
+                        return None
+                    fp = float(data[ti].get("btc_price", 0))
+                    if fp <= 0:
+                        return None
+                    return (fp - price) / price * 100
+
+                bucket_data[label].append({"r3m": fwd(WEEKS_3M), "r6m": fwd(WEEKS_6M), "r12m": fwd(WEEKS_12M)})
+                break
+
+    results = []
+    for lo, hi, label in BUCKETS:
+        entries = bucket_data[label]
+
+        def avg(key):
+            vals = [e[key] for e in entries if e.get(key) is not None]
+            if not vals:
+                return None
+            return round(sum(vals) / len(vals), 1)
+
+        results.append({
+            "arc_range": label,
+            "arc_min": lo,
+            "arc_max": hi,
+            "avg_3m_return": avg("r3m"),
+            "avg_6m_return": avg("r6m"),
+            "avg_12m_return": avg("r12m"),
+            "sample_count": len(entries),
+        })
+    return results
+
+
 def _empty_returns() -> dict:
     empty_zone = {
         "range": "N/A",

@@ -531,8 +531,9 @@ async def get_arc_summary():
     tga_series = raw.get("tga_series", [])
     net_liq_current = float(net_liq_series[-1]["v"]) if net_liq_series else None
     tga_current = float(tga_series[-1]["v"]) if tga_series else None
-    return api_response({
-        "arc_score":   round(com.get("combined_score", 50.0), 1),
+    current_arc = round(com.get("combined_score", 50.0), 1)
+    out = {
+        "arc_score":   current_arc,
         "btc_score":   round(btc.get("btc_score", 50.0), 1),
         "eth_score":   round(c["eth_scores"].get("eth_score", 50.0), 1),
         "macro_score": round(mac.get("macro_score", 50.0), 1),
@@ -549,7 +550,36 @@ async def get_arc_summary():
             "tga":        tga_current,
         },
         "short_term": btc.get("short_term", {}),
-    })
+    }
+    try:
+        from backend.analyzer import compute_arc_momentum
+        bt = await run_backtest()
+        results = bt.get("results", []) if isinstance(bt, dict) else []
+        arc_history = [{"date": r.get("date", ""), "arc_score": r.get("score")} for r in results if r.get("date") and r.get("score") is not None]
+        momentum_data = compute_arc_momentum(arc_history, float(current_arc))
+        out["arc_momentum_30d"] = momentum_data.get("arc_momentum_30d")
+        out["arc_momentum_label"] = momentum_data.get("arc_momentum_label")
+        out["arc_percentile"] = momentum_data.get("arc_percentile")
+        out["arc_percentile_label"] = momentum_data.get("arc_percentile_label")
+    except Exception as e:
+        logger.warning("arc-summary momentum: %s", e)
+        out["arc_momentum_30d"] = None
+        out["arc_momentum_label"] = None
+        out["arc_percentile"] = None
+        out["arc_percentile_label"] = None
+    try:
+        from backend.liquidity_engine import compute_net_liquidity
+        walcl_series = raw.get("walcl_series", [])
+        tga_series = raw.get("tga_series", [])
+        rrp_series = raw.get("rrp_series", [])
+        walcl = float(walcl_series[-1]["v"]) if walcl_series else 0
+        tga = float(tga_series[-1]["v"]) if tga_series else 0
+        rrp = float(rrp_series[-1]["v"]) if rrp_series else 0
+        out["net_liquidity_data"] = compute_net_liquidity(walcl=walcl, tga=tga, rrp=rrp)
+    except Exception as e2:
+        logger.warning("arc-summary net_liquidity_data: %s", e2)
+        out["net_liquidity_data"] = None
+    return api_response(out)
 
 
 @app.get("/api/snapshot/today")
@@ -606,6 +636,20 @@ async def get_historical_returns():
             return api_response({**_empty_returns(), "error": str(e)})
         except Exception:
             return api_response({"zones": {}, "best_entry_zone": None, "sample_events": [], "data_points_used": 0, "error": str(e)})
+
+
+@app.get("/api/arc-forward-returns")
+async def get_arc_forward_returns():
+    """Forward returns by finer ARC buckets (0-25, 25-35, ...)."""
+    try:
+        from backend.historical_returns import compute_arc_forward_returns
+        bt = await run_backtest()
+        bt_list = bt.get("results", []) if isinstance(bt, dict) else []
+        results = compute_arc_forward_returns(bt_list)
+        return api_response({"buckets": results})
+    except Exception as e:
+        logger.error("arc_forward_returns error: %s", e)
+        return api_response({"buckets": [], "error": str(e)})
 
 
 def _find_nearest_arc(date_str: str, bt_sorted: list) -> float:
@@ -928,6 +972,10 @@ async def get_snapshot():
             drawdown_pct=abs(btc_drawdown) / 100.0 if btc_drawdown else None,
             expected_range=None,
             confidence=dec.get("confidence"),
+            arc_momentum_30d=result.get("arc_momentum_30d"),
+            arc_momentum_label=result.get("arc_momentum_label"),
+            arc_percentile=result.get("arc_percentile"),
+            arc_percentile_label=result.get("arc_percentile_label"),
         )
         return api_response(snapshot)
     except Exception as e:

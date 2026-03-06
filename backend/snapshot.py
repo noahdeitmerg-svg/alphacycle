@@ -13,6 +13,16 @@ def generate_post_templates(snapshot: dict) -> dict:
     """
     arc = snapshot.get("arc_score", 50)
     phase = snapshot.get("phase_label", "Moderate Risk")
+    momentum = snapshot.get("arc_momentum_30d")
+    mom_label = snapshot.get("arc_momentum_label", "")
+    percentile = snapshot.get("arc_percentile")
+    if momentum is not None:
+        mom_str = ("+" if momentum > 0 else "") + str(momentum)
+        mom_line = f"Momentum: {mom_str} ({mom_label})"
+    else:
+        mom_line = ""
+    pct_line = f"Risk Percentile: {percentile}th" if percentile is not None else ""
+    mom_pct_block = "\n".join(x for x in [mom_line, pct_line] if x) + "\n" if (mom_line or pct_line) else ""
     btc = snapshot.get("btc_price", 0)
     fg = snapshot.get("fear_greed", 50)
     position = snapshot.get("position", "HOLD")
@@ -60,7 +70,7 @@ def generate_post_templates(snapshot: dict) -> dict:
     t1 = f"""ARC Index Update - {date_str}
 
 ARC Risk Level: {phase} ({arc_int}/100)
-Cycle Phase: {cycle_phase} {phase_emoji}
+{mom_pct_block}Cycle Phase: {cycle_phase} {phase_emoji}
 BTC: {btc_fmt}
 
 ST Score: {st_score}/100
@@ -196,6 +206,10 @@ def build_snapshot(
     drawdown_pct: Optional[float],
     expected_range: Optional[str],
     confidence: Optional[str],
+    arc_momentum_30d: Optional[float] = None,
+    arc_momentum_label: Optional[str] = None,
+    arc_percentile: Optional[int] = None,
+    arc_percentile_label: Optional[str] = None,
 ) -> dict:
     """
     Builds the full snapshot dict and generates post templates.
@@ -221,6 +235,10 @@ def build_snapshot(
         "drawdown_pct": drawdown_pct,
         "expected_range": expected_range,
         "confidence": confidence,
+        "arc_momentum_30d": arc_momentum_30d,
+        "arc_momentum_label": arc_momentum_label,
+        "arc_percentile": arc_percentile,
+        "arc_percentile_label": arc_percentile_label,
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
     }

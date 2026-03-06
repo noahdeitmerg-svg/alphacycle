@@ -26,6 +26,76 @@ logger = logging.getLogger(__name__)
 
 
 # -----------------------------------------------------------------------------
+# ARC MOMENTUM + PERCENTILE
+# -----------------------------------------------------------------------------
+
+def compute_arc_momentum(arc_history: list, current_arc: float) -> dict:
+    """
+    arc_history: list of dicts with date + arc_score (or score), sorted by date.
+    Computes 30d momentum and percentile rank.
+    """
+    try:
+        if not arc_history or len(arc_history) < 5:
+            return {
+                "arc_momentum_30d": None,
+                "arc_momentum_label": "Insufficient data",
+                "arc_percentile": None,
+                "arc_percentile_label": None,
+            }
+        hist = sorted(arc_history, key=lambda x: x.get("date", ""))
+        WEEKS_30D = 4
+        arc_30d_ago = float(
+            hist[-(WEEKS_30D + 1)].get("arc_score", hist[-(WEEKS_30D + 1)].get("score", current_arc))
+        ) if len(hist) >= WEEKS_30D + 1 else float(hist[0].get("arc_score", hist[0].get("score", current_arc)))
+        momentum = round(current_arc - arc_30d_ago, 1)
+        if momentum < -10:
+            m_label = "Risk decreasing"
+        elif momentum > 10:
+            m_label = "Risk increasing"
+        elif momentum < -3:
+            m_label = "Risk slightly decreasing"
+        elif momentum > 3:
+            m_label = "Risk slightly increasing"
+        else:
+            m_label = "Risk stable"
+        all_scores = [
+            float(h.get("arc_score", h.get("score", 50)))
+            for h in hist
+            if h.get("arc_score") is not None or h.get("score") is not None
+        ]
+        if all_scores:
+            below = sum(1 for s in all_scores if s <= current_arc)
+            percentile = round(below / len(all_scores) * 100)
+        else:
+            percentile = 50
+        if percentile < 20:
+            p_label = "Historically favorable"
+        elif percentile < 40:
+            p_label = "Below average risk"
+        elif percentile < 60:
+            p_label = "Average risk"
+        elif percentile < 80:
+            p_label = "Above average risk"
+        else:
+            p_label = "Historically elevated"
+        return {
+            "arc_momentum_30d": momentum,
+            "arc_momentum_label": m_label,
+            "arc_percentile": percentile,
+            "arc_percentile_label": p_label,
+        }
+    except Exception as e:
+        logger.warning("compute_arc_momentum error: %s", e)
+        return {
+            "arc_momentum_30d": None,
+            "arc_momentum_label": "Error",
+            "arc_percentile": None,
+            "arc_percentile_label": None,
+            "error": str(e),
+        }
+
+
+# -----------------------------------------------------------------------------
 # CYCLE SIGNAL DETECTION (Top/Bottom)
 # -----------------------------------------------------------------------------
 
@@ -1191,6 +1261,23 @@ class CycleAnalyzer:
                 "signal_strength": 0,
                 "error": str(e),
             }
+
+        # ARC Momentum + Percentile (from score history)
+        try:
+            arc_hist = [
+                {"date": datetime.utcfromtimestamp(h["t"] / 1000).strftime("%Y-%m-%d"), "arc_score": h["v"]}
+                for h in (history or [])
+                if isinstance(h, dict) and h.get("t") is not None and h.get("v") is not None
+            ]
+            current_arc = result.get("alpha_cycle_position", 50.0)
+            momentum_data = compute_arc_momentum(arc_hist, current_arc)
+            result.update(momentum_data)
+        except Exception as e:
+            logger.warning("momentum error: %s", e)
+            result["arc_momentum_30d"] = None
+            result["arc_momentum_label"] = "N/A"
+            result["arc_percentile"] = None
+            result["arc_percentile_label"] = "N/A"
 
         return result
 

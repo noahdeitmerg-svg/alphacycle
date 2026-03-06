@@ -609,6 +609,28 @@ body::before {
   gap: 16px;
   margin-top: 4px;
 }
+.hero-meta-row {
+  display: flex;
+  gap: 20px;
+  margin-top: 6px;
+}
+.hero-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.hm-label {
+  font-family: var(--f-mono);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tx-ter);
+}
+.hm-val {
+  font-family: var(--f-mono);
+  font-size: 12px;
+  font-weight: 600;
+}
 .hero-subscore {
   display: flex;
   flex-direction: column;
@@ -1888,6 +1910,16 @@ canvas.sparkline {
           <span class="hs-val" id="hs-mac">—</span>
         </div>
       </div>
+      <div class="hero-meta-row">
+        <div class="hero-meta-item">
+          <span class="hm-label">30D Momentum</span>
+          <span class="hm-val" id="hm-momentum">—</span>
+        </div>
+        <div class="hero-meta-item">
+          <span class="hm-label">Percentile</span>
+          <span class="hm-val" id="hm-percentile">—</span>
+        </div>
+      </div>
     </div>
     <div class="components-grid" id="btc-components"></div>
     <div class="hero-zones">
@@ -2159,6 +2191,12 @@ canvas.sparkline {
     <div id="arc-chart-placeholder" class="arc-chart-placeholder">Historische Daten werden geladen (kann bis zu 15 Sek. dauern)...</div>
     <div id="arc-chart-wrap" style="display:none;">
       <canvas id="arc-history-chart" class="arc-chart-canvas"></canvas>
+    </div>
+  </div>
+  <div class="card anim" style="padding:1rem 1.5rem;margin-top:0.5rem">
+    <div style="font-size:11px;font-weight:600;color:var(--tx-sec);margin-bottom:0.5rem;font-family:var(--f-mono)">ARC MOMENTUM (30D)</div>
+    <div style="height:80px;position:relative">
+      <canvas id="arc-momentum-chart"></canvas>
     </div>
   </div>
 
@@ -2556,6 +2594,17 @@ async function loadAllData() {
       S.backtestHistory = backtest?.results ?? [];
       S.liquidityRegime = liquidity ?? null;
       S.arcSummary = arcSummary ?? null;
+      if (arcSummary) {
+        S.arcMomentum = arcSummary.arc_momentum_30d ?? null;
+        S.momentumLabel = arcSummary.arc_momentum_label ?? null;
+        S.arcPercentile = arcSummary.arc_percentile ?? null;
+        S.percentileLabel = arcSummary.arc_percentile_label ?? null;
+      } else {
+        S.arcMomentum = null;
+        S.momentumLabel = null;
+        S.arcPercentile = null;
+        S.percentileLabel = null;
+      }
       if(hist) {
         S.tvlHistory    = hist.tvl||[];
         S.stableHistory = (hist.stablecoin||[]);
@@ -2797,6 +2846,19 @@ function updateUI() {
   if (hsBtc) hsBtc.style.color = scoreColor(S.btcScore);
   if (hsEth) hsEth.style.color = scoreColor(S.ethScore);
   if (hsMac) hsMac.style.color = scoreColor(S.macScore);
+  var mom = S.arcMomentum;
+  var momEl = document.getElementById('hm-momentum');
+  if (momEl && mom != null) {
+    var sign = mom > 0 ? '+' : '';
+    momEl.textContent = sign + mom;
+    momEl.style.color = mom > 3 ? '#ef4444' : mom < -3 ? '#22c55e' : '#94a3b8';
+  } else if (momEl) momEl.textContent = '—';
+  var pct = S.arcPercentile;
+  var pctEl = document.getElementById('hm-percentile');
+  if (pctEl && pct != null) {
+    pctEl.textContent = pct + 'th';
+    pctEl.style.color = pct < 30 ? '#22c55e' : pct < 60 ? '#3b82f6' : pct < 80 ? '#f59e0b' : '#ef4444';
+  } else if (pctEl) pctEl.textContent = '—';
   setText('eth-score-val', Math.round(S.ethScore), eCol);
   setText('mac-score-val', Math.round(S.macScore), mCol);
 
@@ -3412,6 +3474,7 @@ function renderCharts() {
       ph.style.display = 'none';
       wrap.style.display = 'block';
       renderArcChart(typeof _arcPeriod !== 'undefined' ? _arcPeriod : '1y');
+      renderMomentumChart();
       var t = document.getElementById('arc-chart-title');
       if (t) t.textContent = (_arcPeriod === '10y') ? 'BTC Price + ARC Score (10Y)' : 'BTC Price + ARC Score (1Y)';
       var b1 = document.getElementById('arc-toggle-1y');
@@ -3447,6 +3510,7 @@ function setArcPeriod(period) {
     title.textContent = period === '1y' ? 'BTC Price + ARC Score (1Y)' : 'BTC Price + ARC Score (10Y)';
   }
   renderArcChart(period);
+  renderMomentumChart();
 }
 
 function renderArcChart(period) {
@@ -3612,6 +3676,45 @@ function renderArcChart(period) {
           ctx.fillText('\u25C9 ' + hm.label, x, yTop + 12);
           ctx.restore();
         });
+        var todayStr = new Date().toISOString().split('T')[0];
+        var todayIdx = -1, todayDiff = Infinity;
+        (chart.data.labels || []).forEach(function(lbl, i) {
+          var diff = Math.abs(new Date(lbl).getTime() - new Date(todayStr).getTime());
+          if (diff < todayDiff) { todayDiff = diff; todayIdx = i; }
+        });
+        if (todayIdx !== -1 && todayDiff < 7 * 86400000) {
+          var arcDs = (chart.data.datasets.filter(function(d) { return d.label === 'ARC Index'; })[0] || {}).data || [];
+          var arcValToday = arcDs[todayIdx] != null ? arcDs[todayIdx] : null;
+          var tx = xAxis.getPixelForValue(todayIdx);
+          var ct = chart.chartArea.top;
+          var cb = chart.chartArea.bottom;
+          ctx.save();
+          ctx.setLineDash([4, 4]);
+          ctx.strokeStyle = 'rgba(14,165,233,0.4)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(tx, ct);
+          ctx.lineTo(tx, cb);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.font = '500 8px DM Mono, monospace';
+          ctx.fillStyle = 'rgba(14,165,233,0.6)';
+          ctx.textAlign = 'center';
+          ctx.fillText('TODAY', tx, ct + 10);
+          if (arcValToday != null) {
+            var ay = yArc.getPixelForValue(arcValToday);
+            ctx.beginPath();
+            ctx.arc(tx, ay, 7, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(14,165,233,0.5)';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(tx, ay, 3, 0, Math.PI * 2);
+            ctx.fillStyle = '#0ea5e9';
+            ctx.fill();
+          }
+          ctx.restore();
+        }
       }
     },
     {
@@ -3699,6 +3802,71 @@ function renderArcChart(period) {
         x: { ticks: { color: '#64748b', maxTicksLimit: 12 }, grid: { color: 'rgba(255,255,255,0.05)' } },
         yArc: { type: 'linear', position: 'left', min: 0, max: 100, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
         yPrice: { type: 'logarithmic', position: 'right', min: priceMin, max: priceMax, ticks: { color: 'rgba(251,146,60,0.7)', callback: function(v) { return '$' + (typeof v === 'number' ? Math.round(v).toLocaleString() : v); } }, grid: { display: false } }
+      }
+    }
+  });
+}
+
+var _momentumChart = null;
+function renderMomentumChart() {
+  if (!S.backtest || !S.backtest.length) return;
+  var data = (typeof _arcPeriod !== 'undefined' && _arcPeriod === '1y')
+    ? S.backtest.filter(function(r) {
+        var cutoff = new Date();
+        cutoff.setFullYear(cutoff.getFullYear() - 1);
+        var d = r.date || r.d;
+        return d && new Date(d) >= cutoff;
+      })
+    : S.backtest;
+  var WEEKS = 4;
+  var labels = [];
+  var momentum = [];
+  for (var i = WEEKS; i < data.length; i++) {
+    var arcNow = parseFloat(data[i].score != null ? data[i].score : data[i].arc_score) || 50;
+    var arcAgo = parseFloat(data[i - WEEKS].score != null ? data[i - WEEKS].score : data[i - WEEKS].arc_score) || 50;
+    labels.push(data[i].date || data[i].d);
+    momentum.push(Math.round((arcNow - arcAgo) * 10) / 10);
+  }
+  var ctx2 = document.getElementById('arc-momentum-chart');
+  if (!ctx2) return;
+  ctx2 = ctx2.getContext('2d');
+  if (!ctx2) return;
+  if (_momentumChart) {
+    _momentumChart.destroy();
+    _momentumChart = null;
+  }
+  var colors = momentum.map(function(v) {
+    return v > 3 ? 'rgba(239,68,68,0.7)' : v < -3 ? 'rgba(34,197,94,0.7)' : 'rgba(148,163,184,0.4)';
+  });
+  _momentumChart = new Chart(ctx2, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{ data: momentum, backgroundColor: colors, borderWidth: 0, barPercentage: 0.8 }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 400 },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(2,5,16,0.95)',
+          callbacks: {
+            label: function(ctx) {
+              var v = ctx.parsed.y;
+              return ' Momentum: ' + (v > 0 ? '+' : '') + v;
+            }
+          }
+        }
+      },
+      scales: {
+        x: { display: false },
+        y: {
+          ticks: { color: 'rgba(255,255,255,0.3)', font: { size: 8 } },
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          border: { color: 'rgba(255,255,255,0.1)' }
+        }
       }
     }
   });
