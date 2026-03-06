@@ -609,12 +609,15 @@ async def get_arc_summary():
                 logger.info("analyzer attrs: %s", [a for a in dir(_analyzer) if "back" in a.lower() or "hist" in a.lower()])
             results = bt_list
         arc_history = [
-            {"date": r.get("date", ""), "arc_score": r.get("arc_score", r.get("score", 50))}
+            {"date": r.get("date", ""), "arc_score": r.get("arc_score", r.get("score", 50)), "score": r.get("arc_score", r.get("score", 50))}
             for r in results if r and (r.get("date") and (r.get("arc_score") is not None or r.get("score") is not None))
         ]
+        from scoring import compute_arc_momentum as scoring_arc_momentum
+        momentum = scoring_arc_momentum(arc_history, days=30)
+        out["arc_momentum"] = momentum
+        out["arc_momentum_30d"] = momentum["value"]
+        out["arc_momentum_label"] = momentum["label"]
         momentum_data = compute_arc_momentum(arc_history, float(current_arc))
-        out["arc_momentum_30d"] = momentum_data.get("arc_momentum_30d")
-        out["arc_momentum_label"] = momentum_data.get("arc_momentum_label")
         out["arc_percentile"] = momentum_data.get("arc_percentile")
         out["arc_percentile_label"] = momentum_data.get("arc_percentile_label")
 

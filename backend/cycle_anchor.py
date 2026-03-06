@@ -103,7 +103,21 @@ def compute_cycle_anchor(reference_date: Optional[date] = None) -> dict:
     expected_top_date = CURRENT_CYCLE_BOTTOM + timedelta(days=HISTORICAL_AVERAGE_BULL_DAYS)
     expected_bottom_date = expected_top_date + timedelta(days=HISTORICAL_AVERAGE_BEAR_DAYS)
 
-    cycle_position_percent = (days_since_bottom / HISTORICAL_AVERAGE_BULL_DAYS) * 100.0
+    if today >= TENTATIVE_CYCLE_TOP:
+        current_phase = "BEAR"
+        days_since_top = max(0, (today - TENTATIVE_CYCLE_TOP).days)
+        bear_progress = days_since_top / HISTORICAL_AVERAGE_BEAR_DAYS
+        cycle_position_percent = _clamp_pct(bear_progress * 100.0)
+        phase_label = "Bear Market"
+        phase_description = "Post-cycle correction phase. Historical avg bear: ~385 days."
+    else:
+        current_phase = "BULL"
+        bear_progress = 0.0
+        bull_progress = days_since_bottom / HISTORICAL_AVERAGE_BULL_DAYS
+        cycle_position_percent = _clamp_pct(bull_progress * 100.0)
+        phase_label = "Bull Market"
+        phase_description = "Expansion phase. Tracking historical bull cycle."
+
     cycle_position_percent = _clamp_pct(cycle_position_percent)
 
     days_to_next_top = (expected_top_date - today).days
@@ -127,6 +141,10 @@ def compute_cycle_anchor(reference_date: Optional[date] = None) -> dict:
 
     return {
         "cycle_position_percent": round(cycle_position_percent, 2),
+        "current_phase": current_phase,
+        "phase_label": phase_label,
+        "phase_description": phase_description,
+        "bear_progress_percent": round(bear_progress * 100.0, 2) if current_phase == "BEAR" else 0.0,
         "days_since_bottom": compute_days_since_bottom(),
         "days_since_cycle_bottom": compute_days_since_bottom(),
         "days_since_cycle_top": days_since_cycle_top,

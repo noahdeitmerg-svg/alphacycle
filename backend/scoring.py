@@ -83,6 +83,68 @@ def drawdown_score(prices):
 
 def fg_to_score(v): return clamp(safe_float(v,50.0))
 
+# Empirical ARC range from backtest (COVID low / Dec 2017 top) for percentile rescaling
+HISTORICAL_ARC_MIN = 22.0
+HISTORICAL_ARC_MAX = 78.5
+
+
+def rescale_arc(raw_arc: float) -> float:
+    """
+    Rescales raw ARC (empirical range 22-78.5) to full 0-100 range.
+    Preserves 50 as neutral midpoint.
+    """
+    raw = clamp(raw_arc)
+    if raw <= 50.0:
+        # Map 22-50 -> 0-50
+        return clamp((raw - HISTORICAL_ARC_MIN) / (50.0 - HISTORICAL_ARC_MIN) * 50.0)
+    else:
+        # Map 50-78.5 -> 50-100
+        return clamp(50.0 + (raw - 50.0) / (HISTORICAL_ARC_MAX - 50.0) * 50.0)
+
+
+def compute_arc_momentum(arc_history: list, days: int = 30) -> dict:
+    """
+    arc_history: [{"date": "YYYY-MM-DD", "score": float}, ...] (score or arc_score)
+    Rate-of-Change of ARC over `days` back. Returns value, label, direction.
+    """
+    if not arc_history or len(arc_history) < 2:
+        return {"value": 0.0, "label": "Insufficient data", "direction": "neutral"}
+    from datetime import datetime, timedelta
+    last = arc_history[-1]
+    today_score = safe_float(last.get("score") or last.get("arc_score"), 50.0)
+    last_date = last.get("date") or ""
+    if not last_date:
+        return {"value": 0.0, "label": "Insufficient data", "direction": "neutral"}
+    try:
+        cutoff_dt = datetime.fromisoformat(last_date[:10]) - timedelta(days=days)
+        cutoff = cutoff_dt.isoformat()[:10]
+    except Exception:
+        cutoff = last_date
+    past_entries = [e for e in arc_history if (e.get("date") or "") <= cutoff]
+    if not past_entries:
+        past_score = safe_float(arc_history[0].get("score") or arc_history[0].get("arc_score"), 50.0)
+    else:
+        p = past_entries[-1]
+        past_score = safe_float(p.get("score") or p.get("arc_score"), 50.0)
+    momentum = round(today_score - past_score, 2)
+    if momentum <= -10:
+        label = "Risk rapidly decreasing"
+        direction = "bullish"
+    elif momentum <= -3:
+        label = "Risk slightly decreasing"
+        direction = "bullish"
+    elif momentum < 3:
+        label = "Risk stable"
+        direction = "neutral"
+    elif momentum < 10:
+        label = "Risk slightly increasing"
+        direction = "bearish"
+    else:
+        label = "Risk rapidly increasing"
+        direction = "bearish"
+    return {"value": momentum, "label": label, "direction": direction}
+
+
 def funding_rate_to_score(rate_pct):
     r=safe_float(rate_pct,0.0)
     if r<=-0.05: return 10.0
@@ -216,7 +278,7 @@ def compute_arc_score(prices_daily, fear_greed, walcl_values, stablecoin_supply,
     liq_score = s["macro_liq"]
     fg_score = fg_to_score(fear_greed)
     arc = ma_score * 0.35 + dd_score * 0.25 + liq_score * 0.25 + fg_score * 0.15
-    return clamp(arc)
+    return rescale_arc(clamp(arc))
 
 
 def compute_eth_score(eth_prices, btc_prices, tvl_series, stablecoin_supply,

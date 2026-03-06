@@ -4,6 +4,8 @@
 
 ## Letzter Session-Status (2026-03-04) — VOLLSTÄNDIG DEPLOYED
 - ✅ ARC Formula Unification: scoring.compute_arc_score() (ma*0.35 + dd*0.25 + liq*0.25 + fg*0.15), backtest_engine same weights + fg_to_score, /api/arc-summary uses compute_arc_score()
+- ✅ **ARC v2**: Percentile-Rescaling (HISTORICAL_ARC_MIN 22 / HISTORICAL_ARC_MAX 78.5), rescale_arc() in scoring.py; compute_arc_score() returns rescale_arc(clamp(arc)). Momentum from backtest: scoring.compute_arc_momentum(arc_history, days=30); /api/arc-summary exposes arc_momentum (value, label, direction), arc_momentum_30d, arc_momentum_label; percentile from analyzer.
+- ✅ **Cycle Anchor Bear-Phase**: compute_cycle_anchor() phase-aware (today >= TENTATIVE_CYCLE_TOP → BEAR), cycle_position_percent from bear_progress/bull_progress; return current_phase, phase_label, phase_description, bear_progress_percent.
 - ✅ FIX 1: /api/arc-summary Endpoint ergänzt
 - ✅ FIX 2: /api/prices mit ATH + Dominanz (Kraken-basiert)
 - ✅ FIX 3: backtest_engine.py auf Kraken OHLC umgestellt (CoinGecko-Reste entfernt)
@@ -24,6 +26,7 @@
 ARC Formula (unified, research-validated): ma_200w*0.35 + drawdown*0.25 + liquidity*0.25 + fear_greed*0.15
 Use fg_to_score(fear_greed) for F&G input. Same formula in scoring.compute_arc_score(), backtest_engine, and /api/arc-summary.
 DO NOT modify weights. DO NOT add scoring components.
+**ARC v2 output**: compute_arc_score() returns rescale_arc(clamp(arc)); rescale_arc maps empirical 22–78.5 to 0–100 with 50 neutral. Momentum from backtest via scoring.compute_arc_momentum(arc_history, days=30).
 
 ## Permanent Fixes (never revert)
 1. main.py: All Unicode removed from comments AND string literals
@@ -88,6 +91,9 @@ DO NOT modify weights. DO NOT add scoring components.
 60. index.html: AlphaCycle Logo Integration. Favicon im <head> zeigt auf `/static/logo.png` (PNG). Nav-Bar Logo nutzt `<img src="/static/logo.png" alt="AlphaCycle" style="width:32px;height:32px;border-radius:6px;object-fit:contain;">` anstelle des generischen "α"-Marks; erwarteter Auslieferungspfad über backend/static/logo.png auf Railway.
 61. ARC Formula Unification: Single formula ma_200w*0.35 + drawdown*0.25 + liquidity*0.25 + fear_greed*0.15. scoring.compute_arc_score() (same liquidity logic as compute_btc_score; compute_btc_score unchanged). backtest_engine: fg_to_score(fear_greed), weights ma*0.35 + dd*0.25 + macro_liq*0.25 + fg*0.15. main.py /api/arc-summary: arc_score from compute_arc_score(), not combined_score.
 62. Cycle Anchor Cleanup: TENTATIVE_CYCLE_TOP = date(2025, 10, 6) (BTC ATH ~$126,200) in cycle_anchor.py only. main/analyzer import from cycle_anchor. API returns cycle_top_date (isoformat) and cycle_top_confirmed: False.
+63. **ARC v2 rescaling**: scoring.py HISTORICAL_ARC_MIN=22.0, HISTORICAL_ARC_MAX=78.5; rescale_arc(raw_arc) maps 22–50→0–50, 50–78.5→50–100; compute_arc_score() returns rescale_arc(clamp(arc)). Weights unchanged.
+64. **ARC momentum layer**: scoring.compute_arc_momentum(arc_history, days=30) returns {value, label, direction}. /api/arc-summary: arc_history from backtest; arc_momentum = full dict; arc_momentum_30d = momentum["value"]; arc_momentum_label = momentum["label"]; arc_percentile/arc_percentile_label from analyzer.
+65. **Cycle Anchor Bear-Phase**: compute_cycle_anchor() if today >= TENTATIVE_CYCLE_TOP then current_phase=BEAR, cycle_position_percent from bear_progress; else BULL from bull_progress. Return: current_phase, phase_label, phase_description, bear_progress_percent (0 in BULL).
 
 ## Active Endpoints (Railway)
 /health /api/prices /api/cycle/btc /api/cycle/eth /api/cycle/macro
