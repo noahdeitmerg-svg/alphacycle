@@ -704,6 +704,35 @@ body::before {
   border-color: #22c55e;
   color: #22c55e;
 }
+.arc-toggle-group {
+  display: flex;
+  gap: 2px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 2px;
+}
+.arc-toggle {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  padding: 4px 12px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: var(--tx-ter);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.arc-toggle.active {
+  background: rgba(14,165,233,0.15);
+  color: #0ea5e9;
+}
+.arc-toggle:hover:not(.active) {
+  color: var(--tx-sec);
+  background: rgba(255,255,255,0.04);
+}
 .ce-preview {
   font-family: var(--f-mono);
   font-size: 11px;
@@ -1905,38 +1934,25 @@ canvas.sparkline {
     <div id="short-term-components"></div>
   </div>
 
-  <!-- ── 1Y ARC CHART ── -->
+  <!-- ── ARC HISTORY CHART ── -->
   <div class="sec-header anim d5">
-    <div class="sec-title">ARC Index — 1 Year</div>
-    <div class="sec-line"></div>
-  </div>
-  <div class="card anim d5" style="padding:1.5rem">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
-      <div style="font-size:13px;font-weight:600;color:var(--tx-pri)">BTC Price + ARC Score (365d)</div>
-      <button class="ce-btn" type="button" onclick="exportArcChart1Y()">Export PNG</button>
-    </div>
-    <div id="arc-chart-1y-wrap" style="height:320px;position:relative">
-      <canvas id="arc-chart-1y" style="width:100%;height:100%"></canvas>
-    </div>
-  </div>
-
-  <!-- ── ARC HISTORY CHART (10Y) ── -->
-  <div class="sec-header anim d5">
-    <div class="sec-title">ARC History (10Y)</div>
+    <div class="sec-title">ARC History</div>
     <div class="sec-line"></div>
   </div>
   <div class="chart-card anim d5" id="arc-chart-card">
-    <div class="chart-header">
-      <div class="chart-title">BTC Price + ARC Score</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+      <div style="font-size:13px;font-weight:600;color:var(--tx-pri)" id="arc-chart-title">BTC Price + ARC Score</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="arc-toggle-group">
+          <button class="arc-toggle active" id="arc-toggle-1y" type="button" onclick="setArcPeriod('1y')">1Y</button>
+          <button class="arc-toggle" id="arc-toggle-10y" type="button" onclick="setArcPeriod('10y')">10Y</button>
+        </div>
+        <button class="ce-btn" type="button" onclick="exportArcChart()">↓ Export PNG</button>
+      </div>
     </div>
     <div id="arc-chart-placeholder" class="arc-chart-placeholder">Historische Daten werden geladen (kann bis zu 15 Sek. dauern)...</div>
     <div id="arc-chart-wrap" style="display:none;">
       <canvas id="arc-history-chart" class="arc-chart-canvas"></canvas>
-    </div>
-    <div id="export-arc-wrap" style="display:none;justify-content:flex-end;margin-top:8px;">
-      <button id="export-arc-btn" onclick="exportArcChart()">
-        ↓ EXPORT PNG
-      </button>
     </div>
   </div>
 
@@ -3137,192 +3153,217 @@ function renderCharts() {
     if (hasData) {
       ph.style.display = 'none';
       wrap.style.display = 'block';
-      const exportWrap = $('export-arc-wrap');
-      if (exportWrap) exportWrap.style.display = 'flex';
-      if (window._arcHistoryChart) {
-        window._arcHistoryChart.destroy();
-        window._arcHistoryChart = null;
+      renderArcChart(typeof _arcPeriod !== 'undefined' ? _arcPeriod : '1y');
+      var t = document.getElementById('arc-chart-title');
+      if (t) t.textContent = (_arcPeriod === '10y') ? 'BTC Price + ARC Score (10Y)' : 'BTC Price + ARC Score (1Y)';
+      var b1 = document.getElementById('arc-toggle-1y');
+      var b2 = document.getElementById('arc-toggle-10y');
+      if (b1 && b2) {
+        b1.classList.toggle('active', _arcPeriod === '1y');
+        b2.classList.toggle('active', _arcPeriod === '10y');
       }
-      if (typeof Chart !== 'undefined') {
-        const labels = data.map(d => d.date);
-        const arcData = data.map(d => Number(d.score));
-        const priceData = data.map(d => Math.max(100, Number(d.price)));
-        const validPrices = priceData.filter(v => v > 100);
-        const priceMin = validPrices.length ? Math.floor(Math.min(...validPrices) * 0.88) : 1000;
-        const priceMax = validPrices.length ? Math.ceil(Math.max(...validPrices) * 1.08) : 150000;
-        const n = labels.length;
-        const zone = (val) => Array(n).fill(val);
-        const datasets = [
-          { label: '0-30', data: zone(30), borderColor: 'transparent', backgroundColor: 'rgba(34,197,94,0.10)', fill: true, yAxisID: 'yArc', pointRadius: 0, order: 1 },
-          { label: '30-50', data: zone(50), borderColor: 'transparent', backgroundColor: 'rgba(234,179,8,0.10)', fill: '-1', yAxisID: 'yArc', pointRadius: 0, order: 1 },
-          { label: '50-70', data: zone(70), borderColor: 'transparent', backgroundColor: 'rgba(249,115,22,0.10)', fill: '-1', yAxisID: 'yArc', pointRadius: 0, order: 1 },
-          { label: '70-85', data: zone(85), borderColor: 'transparent', backgroundColor: 'rgba(239,68,68,0.10)', fill: '-1', yAxisID: 'yArc', pointRadius: 0, order: 1 },
-          { label: '85-100', data: zone(100), borderColor: 'transparent', backgroundColor: 'rgba(127,29,29,0.10)', fill: '-1', yAxisID: 'yArc', pointRadius: 0, order: 1 },
-          { label: 'ARC Index', data: arcData, borderColor: 'rgba(255,255,255,0.9)', borderWidth: 2, pointRadius: 0, yAxisID: 'yArc', tension: 0.3, order: 2 },
-          { label: 'BTC Price', data: priceData, borderColor: 'rgba(251,146,60,0.8)', borderWidth: 1.5, pointRadius: 0, yAxisID: 'yPrice', tension: 0.2, order: 3 }
-        ];
-        window._arcHistoryChart = new Chart(canvas, {
-          type: 'line',
-          data: { labels, datasets },
-          plugins: [{
-            id: 'cycleMarkers',
-            afterDraw(chart) {
-              const ctx = chart.ctx;
-              const xAxis = chart.scales.x;
-              const yPrice = chart.scales.yPrice;
-              if (!xAxis || !yPrice) return;
-              const dynamicMarker = getCurrentMarker();
-              const allMarkers = dynamicMarker ? [...CYCLE_MARKERS, dynamicMarker] : CYCLE_MARKERS;
-              allMarkers.forEach(marker => {
-                const markerMs = new Date(marker.date).getTime();
-                let idx = -1, minDiff = Infinity;
-                chart.data.labels.forEach((lbl, i) => {
-                  const diff = Math.abs(new Date(lbl).getTime() - markerMs);
-                  if (diff < minDiff) { minDiff = diff; idx = i; }
-                });
-                if (idx < 0 || minDiff > 14 * 86400000) return;
-                const x = xAxis.getPixelForValue(idx);
-                const arcVal = chart.data.datasets
-                  .find(d => d.label === 'ARC Index')?.data[idx];
-                if (arcVal == null) return;
-                const y = chart.scales.yArc.getPixelForValue(arcVal);
-                const isTop = marker.type === 'top';
-                const color = isTop ? '#22c55e' : '#ef4444';
-                const size = 8;
-                // y-Offset damit Dreieck die Linie nicht verdeckt
-                const offset = 10;
-                const yDraw = isTop ? y - offset : y + offset;
-                ctx.save();
-                ctx.beginPath();
-                if (isTop) {
-                  // Dreieck zeigt NACH UNTEN ▼ (Top = Warnung, zeigt runter)
-                  ctx.moveTo(x, yDraw + size);
-                  ctx.lineTo(x - size, yDraw - size/2);
-                  ctx.lineTo(x + size, yDraw - size/2);
-                } else {
-                  // Dreieck zeigt NACH OBEN ▲ (Bottom = Chance, zeigt hoch)
-                  ctx.moveTo(x, yDraw - size);
-                  ctx.lineTo(x - size, yDraw + size/2);
-                  ctx.lineTo(x + size, yDraw + size/2);
-                }
-                ctx.closePath();
-                ctx.fillStyle = color;
-                ctx.globalAlpha = 1.0;
-                ctx.fill();
-                ctx.strokeStyle = '#fff';
-                ctx.lineWidth = 1;
-                ctx.stroke();
-                ctx.font = 'bold 10px monospace';
-                ctx.fillStyle = color;
-                ctx.globalAlpha = 1.0;
-                ctx.textAlign = 'center';
-                ctx.fillText(
-                  marker.label, x,
-                  isTop ? yDraw - size - 5 : yDraw + size + 14
-                );
-                ctx.restore();
-              });
-              // Halving vertical lines
-              const labels = chart.data.labels || [];
-              HALVING_MARKERS.forEach(hm => {
-                const target = new Date(hm.date).getTime();
-                let bestIdx = -1, bestDiff = Infinity;
-                labels.forEach((lbl, i) => {
-                  const d = new Date(lbl).getTime();
-                  const diff = Math.abs(d - target);
-                  if (diff < bestDiff) { bestDiff = diff; bestIdx = i; }
-                });
-                if (bestIdx === -1 || bestDiff > 60 * 86400000) return;
-                const x = chart.scales.x.getPixelForValue(bestIdx);
-                const yTop = chart.chartArea.top;
-                const yBot = chart.chartArea.bottom;
-                ctx.save();
-                ctx.setLineDash([3, 4]);
-                ctx.strokeStyle = 'rgba(168,85,247,0.35)';
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.moveTo(x, yTop);
-                ctx.lineTo(x, yBot);
-                ctx.stroke();
-                ctx.setLineDash([]);
-                ctx.fillStyle = 'rgba(168,85,247,0.7)';
-                ctx.font = '500 9px DM Mono, monospace';
-                ctx.textAlign = 'center';
-                ctx.fillText('\u25C9 ' + hm.label, x, yTop + 12);
-                ctx.restore();
-              });
-            }
-          }],
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: { mode: 'index', intersect: false },
-            plugins: {
-              legend: { display: true, labels: { color: '#94a3b8' }, filter: (item, ch) => item.datasetIndex >= 5 },
-              tooltip: {
-                filter: function(tooltipItem) {
-                  return tooltipItem.dataset.label === 'ARC Index' ||
-                         tooltipItem.dataset.label === 'BTC Price';
-                },
-                callbacks: {
-                  label: function(context) {
-                    if (context.dataset.label === 'ARC Index') {
-                      return 'ARC Index: ' + Number(context.parsed.y).toFixed(1);
-                    }
-                    if (context.dataset.label === 'BTC Price') {
-                      return 'BTC Price: $' + Math.round(context.parsed.y).toLocaleString();
-                    }
-                  },
-                  afterBody: function(tooltipItems) {
-                    if (!tooltipItems.length) return [];
-                    const ctx = tooltipItems[0];
-                    const label = ctx.label;
-                    const idx = ctx.dataIndex;
-                    const dynamicMarker = getCurrentMarker();
-                    const allMarkers = dynamicMarker ? [...CYCLE_MARKERS, dynamicMarker] : CYCLE_MARKERS;
-                    const markerInfo = allMarkers.find(m => {
-                      const mDate = new Date(m.date).getTime();
-                      const lDate = new Date(label).getTime();
-                      return Math.abs(mDate - lDate) < 14 * 86400000;
-                    });
-                    if (!markerInfo) return [];
-                    const arcDs = ctx.chart.data.datasets.find(d => d.label === 'ARC Index');
-                    const priceDs = ctx.chart.data.datasets.find(d => d.label === 'BTC Price');
-                    const arcVal = arcDs && arcDs.data[idx] != null ? Number(arcDs.data[idx]) : '';
-                    const btcVal = priceDs && priceDs.data[idx] != null ? Number(priceDs.data[idx]) : '';
-                    const lines = ['Signal: ' + markerInfo.label];
-                    if (arcVal !== '') lines.push('ARC: ' + arcVal);
-                    if (btcVal !== '') lines.push('BTC: $' + Math.round(btcVal).toLocaleString());
-                    return lines;
-                  }
-                }
-              }
-            },
-            scales: {
-              x: { ticks: { color: '#64748b', maxTicksLimit: 12 }, grid: { color: 'rgba(255,255,255,0.05)' } },
-              yArc: { type: 'linear', position: 'left', min: 0, max: 100, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-              yPrice: { type: 'logarithmic', position: 'right', min: priceMin, max: priceMax, ticks: { color: 'rgba(251,146,60,0.7)', callback: v => '$' + (typeof v === 'number' ? Math.round(v).toLocaleString() : v) }, grid: { display: false } }
-            }
-          }
-        });
-      }
-      renderArcChart1Y();
     } else {
       if (window._arcHistoryChart) {
         window._arcHistoryChart.destroy();
         window._arcHistoryChart = null;
       }
-      if (_arcChart1Y) {
-        _arcChart1Y.destroy();
-        _arcChart1Y = null;
-      }
       ph.style.display = 'flex';
       ph.textContent = 'Historische Daten werden geladen (kann bis zu 15 Sek. dauern)...';
       wrap.style.display = 'none';
-      const exportWrap = $('export-arc-wrap');
-      if (exportWrap) exportWrap.style.display = 'none';
     }
   }
+}
+
+var _arcPeriod = '1y';
+
+function setArcPeriod(period) {
+  _arcPeriod = period;
+  var btn1y = document.getElementById('arc-toggle-1y');
+  var btn10y = document.getElementById('arc-toggle-10y');
+  if (btn1y && btn10y) {
+    btn1y.classList.toggle('active', period === '1y');
+    btn10y.classList.toggle('active', period === '10y');
+  }
+  var title = document.getElementById('arc-chart-title');
+  if (title) {
+    title.textContent = period === '1y' ? 'BTC Price + ARC Score (1Y)' : 'BTC Price + ARC Score (10Y)';
+  }
+  renderArcChart(period);
+}
+
+function renderArcChart(period) {
+  period = period || _arcPeriod;
+  if (!S.backtest || !S.backtest.length) return;
+  var data = S.backtest;
+  if (period === '1y') {
+    var cutoff = new Date();
+    cutoff.setFullYear(cutoff.getFullYear() - 1);
+    data = S.backtest.filter(function(r) {
+      var d = r.date || r.d;
+      return d && new Date(d) >= cutoff;
+    });
+  }
+  var ph = $('arc-chart-placeholder');
+  var wrap = $('arc-chart-wrap');
+  var canvas = $('arc-history-chart');
+  if (!ph || !wrap || !canvas) return;
+  ph.style.display = 'none';
+  wrap.style.display = 'block';
+  if (window._arcHistoryChart) {
+    window._arcHistoryChart.destroy();
+    window._arcHistoryChart = null;
+  }
+  if (typeof Chart === 'undefined') return;
+  var labels = data.map(function(d) { return d.date; });
+  var arcData = data.map(function(d) { return Number(d.score); });
+  var priceData = data.map(function(d) { return Math.max(100, Number(d.price)); });
+  var validPrices = priceData.filter(function(v) { return v > 100; });
+  var priceMin = validPrices.length ? Math.floor(Math.min.apply(null, validPrices) * 0.88) : 1000;
+  var priceMax = validPrices.length ? Math.ceil(Math.max.apply(null, validPrices) * 1.08) : 150000;
+  var n = labels.length;
+  var zone = function(val) { return Array(n).fill(val); };
+  var datasets = [
+    { label: '0-30', data: zone(30), borderColor: 'transparent', backgroundColor: 'rgba(34,197,94,0.10)', fill: true, yAxisID: 'yArc', pointRadius: 0, order: 1 },
+    { label: '30-50', data: zone(50), borderColor: 'transparent', backgroundColor: 'rgba(234,179,8,0.10)', fill: '-1', yAxisID: 'yArc', pointRadius: 0, order: 1 },
+    { label: '50-70', data: zone(70), borderColor: 'transparent', backgroundColor: 'rgba(249,115,22,0.10)', fill: '-1', yAxisID: 'yArc', pointRadius: 0, order: 1 },
+    { label: '70-85', data: zone(85), borderColor: 'transparent', backgroundColor: 'rgba(239,68,68,0.10)', fill: '-1', yAxisID: 'yArc', pointRadius: 0, order: 1 },
+    { label: '85-100', data: zone(100), borderColor: 'transparent', backgroundColor: 'rgba(127,29,29,0.10)', fill: '-1', yAxisID: 'yArc', pointRadius: 0, order: 1 },
+    { label: 'ARC Index', data: arcData, borderColor: 'rgba(255,255,255,0.9)', borderWidth: 2, pointRadius: 0, yAxisID: 'yArc', tension: 0.3, order: 2 },
+    { label: 'BTC Price', data: priceData, borderColor: 'rgba(251,146,60,0.8)', borderWidth: 1.5, pointRadius: 0, yAxisID: 'yPrice', tension: 0.2, order: 3 }
+  ];
+  window._arcHistoryChart = new Chart(canvas, {
+    type: 'line',
+    data: { labels: labels, datasets: datasets },
+    plugins: [{
+      id: 'cycleMarkers',
+      afterDraw: function(chart) {
+        var ctx = chart.ctx;
+        var xAxis = chart.scales.x;
+        var yPrice = chart.scales.yPrice;
+        if (!xAxis || !yPrice) return;
+        var dynamicMarker = getCurrentMarker();
+        var allMarkers = dynamicMarker ? CYCLE_MARKERS.concat([dynamicMarker]) : CYCLE_MARKERS;
+        allMarkers.forEach(function(marker) {
+          var markerMs = new Date(marker.date).getTime();
+          var idx = -1, minDiff = Infinity;
+          chart.data.labels.forEach(function(lbl, i) {
+            var diff = Math.abs(new Date(lbl).getTime() - markerMs);
+            if (diff < minDiff) { minDiff = diff; idx = i; }
+          });
+          if (idx < 0 || minDiff > 14 * 86400000) return;
+          var x = xAxis.getPixelForValue(idx);
+          var arcVal = chart.data.datasets.filter(function(d) { return d.label === 'ARC Index'; })[0];
+          arcVal = arcVal && arcVal.data[idx] != null ? arcVal.data[idx] : null;
+          if (arcVal == null) return;
+          var y = chart.scales.yArc.getPixelForValue(arcVal);
+          var isTop = marker.type === 'top';
+          var color = isTop ? '#22c55e' : '#ef4444';
+          var size = 8;
+          var offset = 10;
+          var yDraw = isTop ? y - offset : y + offset;
+          ctx.save();
+          ctx.beginPath();
+          if (isTop) {
+            ctx.moveTo(x, yDraw + size);
+            ctx.lineTo(x - size, yDraw - size/2);
+            ctx.lineTo(x + size, yDraw - size/2);
+          } else {
+            ctx.moveTo(x, yDraw - size);
+            ctx.lineTo(x - size, yDraw + size/2);
+            ctx.lineTo(x + size, yDraw + size/2);
+          }
+          ctx.closePath();
+          ctx.fillStyle = color;
+          ctx.globalAlpha = 1.0;
+          ctx.fill();
+          ctx.strokeStyle = '#fff';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+          ctx.font = 'bold 10px monospace';
+          ctx.fillStyle = color;
+          ctx.globalAlpha = 1.0;
+          ctx.textAlign = 'center';
+          ctx.fillText(marker.label, x, isTop ? yDraw - size - 5 : yDraw + size + 14);
+          ctx.restore();
+        });
+        var labelsArr = chart.data.labels || [];
+        HALVING_MARKERS.forEach(function(hm) {
+          var target = new Date(hm.date).getTime();
+          var bestIdx = -1, bestDiff = Infinity;
+          labelsArr.forEach(function(lbl, i) {
+            var d = new Date(lbl).getTime();
+            var diff = Math.abs(d - target);
+            if (diff < bestDiff) { bestDiff = diff; bestIdx = i; }
+          });
+          if (bestIdx === -1 || bestDiff > 60 * 86400000) return;
+          var x = chart.scales.x.getPixelForValue(bestIdx);
+          var yTop = chart.chartArea.top;
+          var yBot = chart.chartArea.bottom;
+          ctx.save();
+          ctx.setLineDash([3, 4]);
+          ctx.strokeStyle = 'rgba(168,85,247,0.35)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(x, yTop);
+          ctx.lineTo(x, yBot);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.fillStyle = 'rgba(168,85,247,0.7)';
+          ctx.font = '500 9px DM Mono, monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText('\u25C9 ' + hm.label, x, yTop + 12);
+          ctx.restore();
+        });
+      }
+    }],
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: true, labels: { color: '#94a3b8' }, filter: function(item, ch) { return item.datasetIndex >= 5; } },
+        tooltip: {
+          filter: function(tooltipItem) {
+            return tooltipItem.dataset.label === 'ARC Index' || tooltipItem.dataset.label === 'BTC Price';
+          },
+          callbacks: {
+            label: function(context) {
+              if (context.dataset.label === 'ARC Index') return 'ARC Index: ' + Number(context.parsed.y).toFixed(1);
+              if (context.dataset.label === 'BTC Price') return 'BTC Price: $' + Math.round(context.parsed.y).toLocaleString();
+              return '';
+            },
+            afterBody: function(tooltipItems) {
+              if (!tooltipItems.length) return [];
+              var ctx = tooltipItems[0];
+              var label = ctx.label;
+              var idx = ctx.dataIndex;
+              var dynamicMarker = getCurrentMarker();
+              var allMarkers = dynamicMarker ? CYCLE_MARKERS.concat([dynamicMarker]) : CYCLE_MARKERS;
+              var markerInfo = allMarkers.filter(function(m) {
+                var mDate = new Date(m.date).getTime();
+                var lDate = new Date(label).getTime();
+                return Math.abs(mDate - lDate) < 14 * 86400000;
+              })[0];
+              if (!markerInfo) return [];
+              var arcDs = ctx.chart.data.datasets.filter(function(d) { return d.label === 'ARC Index'; })[0];
+              var priceDs = ctx.chart.data.datasets.filter(function(d) { return d.label === 'BTC Price'; })[0];
+              var arcVal = arcDs && arcDs.data[idx] != null ? Number(arcDs.data[idx]) : '';
+              var btcVal = priceDs && priceDs.data[idx] != null ? Number(priceDs.data[idx]) : '';
+              var lines = ['Signal: ' + markerInfo.label];
+              if (arcVal !== '') lines.push('ARC: ' + arcVal);
+              if (btcVal !== '') lines.push('BTC: $' + Math.round(btcVal).toLocaleString());
+              return lines;
+            }
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { color: '#64748b', maxTicksLimit: 12 }, grid: { color: 'rgba(255,255,255,0.05)' } },
+        yArc: { type: 'linear', position: 'left', min: 0, max: 100, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+        yPrice: { type: 'logarithmic', position: 'right', min: priceMin, max: priceMax, ticks: { color: 'rgba(251,146,60,0.7)', callback: function(v) { return '$' + (typeof v === 'number' ? Math.round(v).toLocaleString() : v); } }, grid: { display: false } }
+      }
+    }
+  });
 }
 
 function exportArcChart() {
@@ -3358,221 +3399,6 @@ function exportArcChart() {
   const link = document.createElement('a');
   link.download = 'alphacycle-arc-' + new Date().toISOString().split('T')[0] + '.png';
   link.href = offscreen.toDataURL('image/png');
-  link.click();
-}
-
-// ── 1Y ARC Chart ─────────────────────────────────────────────────────────
-var _arcChart1Y = null;
-
-function _buildArcChart1Y(labels, arcData, btcData) {
-  var canvas = document.getElementById('arc-chart-1y');
-  if (!canvas) return;
-  var ctx = canvas.getContext('2d');
-  if (!ctx) return;
-  if (_arcChart1Y) {
-    _arcChart1Y.destroy();
-    _arcChart1Y = null;
-  }
-  var validPrices = btcData.filter(function(v) { return v != null && v > 100; });
-  var priceMin = validPrices.length ? Math.floor(Math.min.apply(null, validPrices) * 0.88) : 1000;
-  var priceMax = validPrices.length ? Math.ceil(Math.max.apply(null, validPrices) * 1.08) : 150000;
-
-  var riskZonePlugin1Y = {
-    id: 'riskZones1Y',
-    beforeDraw: function(chart) {
-      var c = chart.ctx, chartArea = chart.chartArea, scales = chart.scales;
-      if (!chartArea || !scales.y) return;
-      var left = chartArea.left, right = chartArea.right;
-      var yScale = scales.y;
-      var zones = [
-        { min: 0, max: 30, color: 'rgba(34,197,94,0.06)' },
-        { min: 30, max: 60, color: 'rgba(59,130,246,0.06)' },
-        { min: 60, max: 75, color: 'rgba(245,158,11,0.07)' },
-        { min: 75, max: 100, color: 'rgba(239,68,68,0.08)' }
-      ];
-      zones.forEach(function(z) {
-        var y1 = yScale.getPixelForValue(z.max);
-        var y2 = yScale.getPixelForValue(z.min);
-        c.save();
-        c.fillStyle = z.color;
-        c.fillRect(left, y1, right - left, y2 - y1);
-        c.restore();
-      });
-    }
-  };
-
-  var markerPlugin1Y = {
-    id: 'markers1Y',
-    afterDraw: function(chart) {
-      var c = chart.ctx, chartArea = chart.chartArea, scales = chart.scales;
-      if (!chartArea || !scales.x || !scales.y) return;
-      var chartLabels = chart.data.labels || [];
-      var arcDs = chart.data.datasets && chart.data.datasets[0] ? chart.data.datasets[0].data : [];
-      var oneYearAgoInner = new Date();
-      oneYearAgoInner.setFullYear(oneYearAgoInner.getFullYear() - 1);
-      var recentMarkers = (typeof CYCLE_MARKERS !== 'undefined' ? CYCLE_MARKERS : []).filter(function(m) {
-        return new Date(m.date) >= oneYearAgoInner;
-      });
-      recentMarkers.forEach(function(marker) {
-        var target = new Date(marker.date).getTime();
-        var bestIdx = -1, bestDiff = Infinity;
-        chartLabels.forEach(function(lbl, i) {
-          var diff = Math.abs(new Date(lbl).getTime() - target);
-          if (diff < bestDiff) { bestDiff = diff; bestIdx = i; }
-        });
-        if (bestIdx === -1 || bestDiff > 14 * 86400000) return;
-        var x = scales.x.getPixelForIndex(bestIdx);
-        var arcVal = arcDs[bestIdx] != null ? arcDs[bestIdx] : 50;
-        var y = scales.y.getPixelForValue(arcVal);
-        var isTop = marker.type === 'top';
-        c.save();
-        c.beginPath();
-        if (isTop) {
-          c.moveTo(x, y - 6);
-          c.lineTo(x - 6, y - 16);
-          c.lineTo(x + 6, y - 16);
-        } else {
-          c.moveTo(x, y + 6);
-          c.lineTo(x - 6, y + 16);
-          c.lineTo(x + 6, y + 16);
-        }
-        c.closePath();
-        c.fillStyle = isTop ? '#ef4444' : '#22c55e';
-        c.fill();
-        c.restore();
-      });
-      if (typeof getCurrentMarker === 'function') {
-        var dm = getCurrentMarker();
-        if (dm) {
-          var targetCur = new Date(dm.date).getTime();
-          var bestIdxCur = -1, bestDiffCur = Infinity;
-          chartLabels.forEach(function(lbl, i) {
-            var d = new Date(lbl).getTime();
-            var diff = Math.abs(d - targetCur);
-            if (diff < bestDiffCur) { bestDiffCur = diff; bestIdxCur = i; }
-          });
-          if (bestIdxCur !== -1 && bestDiffCur < 7 * 86400000) {
-            var xCur = scales.x.getPixelForIndex(bestIdxCur);
-            var arcValCur = arcDs[bestIdxCur] != null ? arcDs[bestIdxCur] : 50;
-            var yCur = scales.y.getPixelForValue(arcValCur);
-            c.save();
-            c.beginPath();
-            c.arc(xCur, yCur, 6, 0, Math.PI * 2);
-            c.fillStyle = 'rgba(14,165,233,0.9)';
-            c.fill();
-            c.strokeStyle = '#fff';
-            c.lineWidth = 1.5;
-            c.stroke();
-            c.restore();
-          }
-        }
-      }
-    }
-  };
-
-  _arcChart1Y = new Chart(ctx, {
-    type: 'line',
-    plugins: [riskZonePlugin1Y, markerPlugin1Y],
-    data: {
-      labels: labels,
-      datasets: [
-        { label: 'ARC Index', data: arcData, borderColor: 'rgba(255,255,255,0.85)', borderWidth: 2, pointRadius: 0, tension: 0.3, yAxisID: 'y', spanGaps: true },
-        { label: 'BTC Price', data: btcData, borderColor: 'rgba(245,158,11,0.7)', borderWidth: 1.5, pointRadius: 0, tension: 0.3, yAxisID: 'y2', spanGaps: true }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: { duration: 600 },
-      interaction: { mode: 'index', intersect: false },
-      plugins: {
-        legend: { display: true, labels: { color: 'rgba(255,255,255,0.5)', font: { size: 10 }, usePointStyle: true } },
-        tooltip: {
-          backgroundColor: 'rgba(2,5,16,0.95)',
-          borderColor: 'rgba(255,255,255,0.1)',
-          borderWidth: 1,
-          callbacks: {
-            label: function(ctx) {
-              if (ctx.dataset.label === 'ARC Index') return ' ARC: ' + Math.round(ctx.parsed.y);
-              var v = ctx.parsed.y;
-              return ' BTC: $' + (v != null ? v.toLocaleString() : 'N/A');
-            }
-          }
-        }
-      },
-      scales: {
-        x: { ticks: { color: 'rgba(255,255,255,0.3)', font: { size: 9 }, maxTicksLimit: 12 }, grid: { color: 'rgba(255,255,255,0.04)' } },
-        y: { min: 0, max: 100, position: 'left', ticks: { color: 'rgba(255,255,255,0.3)', font: { size: 9 }, stepSize: 25 }, grid: { color: 'rgba(255,255,255,0.04)' } },
-        y2: { position: 'right', type: 'logarithmic', min: priceMin, max: priceMax, ticks: { color: 'rgba(245,158,11,0.5)', font: { size: 9 }, callback: function(v) { if (v >= 1000) return '$' + (v/1000).toFixed(0) + 'k'; return '$' + v; } }, grid: { display: false } }
-      }
-    }
-  });
-}
-
-function _renderArcChart1YFromBacktest() {
-  if (!S.backtest || !S.backtest.length) return;
-  var cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - 365);
-  var filtered = S.backtest.filter(function(r) {
-    return new Date(r.date || r.d) >= cutoff;
-  });
-  if (!filtered.length) return;
-  var labels = filtered.map(function(r) { return r.date || r.d; });
-  var arcData = filtered.map(function(r) {
-    var s = r.arc_score != null ? r.arc_score : (r.score != null ? r.score : null);
-    return s != null ? Number(s) : null;
-  });
-  var btcData = filtered.map(function(r) {
-    var p = r.btc_price != null ? r.btc_price : (r.price != null ? r.price : null);
-    return p != null ? Math.max(100, Number(p)) : null;
-  });
-  _buildArcChart1Y(labels, arcData, btcData);
-}
-
-async function renderArcChart1Y() {
-  try {
-    if (!BACKEND_URL) { _renderArcChart1YFromBacktest(); return; }
-    var data = await apiFetch(BACKEND_URL + '/api/history-daily');
-    if (!data || !data.results || !data.results.length) {
-      console.warn('history-daily empty, using backtest');
-      _renderArcChart1YFromBacktest();
-      return;
-    }
-    var results = data.results;
-    var labels = results.map(function(r) { return r.date; });
-    var arcData = results.map(function(r) { return r.arc_score != null ? r.arc_score : null; });
-    var btcData = results.map(function(r) {
-      var p = r.btc_price != null ? r.btc_price : null;
-      return p != null ? Math.max(100, Number(p)) : null;
-    });
-    _buildArcChart1Y(labels, arcData, btcData);
-  } catch (e) {
-    console.warn('1Y chart error:', e);
-    _renderArcChart1YFromBacktest();
-  }
-}
-
-function exportArcChart1Y() {
-  var canvas = document.getElementById('arc-chart-1y');
-  if (!canvas) return;
-  var TARGET_W = 1200, TARGET_H = 675;
-  var off = document.createElement('canvas');
-  off.width = TARGET_W;
-  off.height = TARGET_H;
-  var octx = off.getContext('2d');
-  octx.fillStyle = '#020510';
-  octx.fillRect(0, 0, TARGET_W, TARGET_H);
-  var scale = Math.min(TARGET_W / canvas.width, TARGET_H / canvas.height);
-  var offX = (TARGET_W - canvas.width * scale) / 2;
-  var offY = (TARGET_H - canvas.height * scale) / 2;
-  octx.drawImage(canvas, 0, 0, canvas.width, canvas.height, offX, offY, canvas.width * scale, canvas.height * scale);
-  octx.fillStyle = 'rgba(14,165,233,0.6)';
-  octx.font = '500 13px DM Mono, monospace';
-  octx.textAlign = 'right';
-  octx.fillText('alphacycle.app', TARGET_W - 16, TARGET_H - 12);
-  var link = document.createElement('a');
-  link.download = 'alphacycle-1y-' + new Date().toISOString().split('T')[0] + '.png';
-  link.href = off.toDataURL('image/png');
   link.click();
 }
 
