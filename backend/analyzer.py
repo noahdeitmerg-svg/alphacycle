@@ -183,27 +183,34 @@ def get_short_term_context(
     st_score = round((rsi + funding + pl + mvrv) / 4)
     st_score = max(0, min(100, st_score))
 
-    if arc < 30 and days < 400:
-        phase_label = "Early Bull"
-        phase_desc = "Akkumulationsphase. Strukturelles Risiko tief. Historisch beste Einstiegszone."
-    elif arc < 35 and days > 1200:
-        phase_label = "Late Bear"
-        phase_desc = "Spaeter Abschwung. Cycle Reset naehert sich. Fruehe Akkumulation moeglich."
-    elif arc < 50 and days < 700:
-        phase_label = "Mid Bull"
-        phase_desc = "Expansion laeuft. Momentum aufbauend. Risiko moderat aber kontrollierbar."
-    elif arc < 65 and days < 1000:
-        phase_label = "Late Bull"
-        phase_desc = "Spaetphase. Relief Rallyes moeglich aber strukturelles Risiko steigt."
-    elif arc < 75 and days >= 1000:
-        phase_label = "Distribution"
-        phase_desc = "Verteilungsphase. Hohe Volatilitaet. Positionen schrittweise reduzieren."
-    elif arc >= 75:
+    # Cycle Phase: ARC primary, days secondary
+    if arc >= 75:
         phase_label = "Bear / Risk Off"
-        phase_desc = "Extremes Risiko. Kapitalerhalt Prioritaet. Warten auf Reset."
+        phase_desc = "Extremes Risiko. Kapitalerhalt Prioritaet."
+    elif arc >= 60:
+        phase_label = "Distribution"
+        phase_desc = "Verteilungsphase. Risiko steigt. Positionen reduzieren."
+    elif arc >= 45:
+        if days > 900:
+            phase_label = "Late Bull"
+            phase_desc = "Spaetphase. Relief Rallyes moeglich. Vorsicht."
+        else:
+            phase_label = "Mid Bull"
+            phase_desc = "Expansion. Momentum aufbauend. Risiko kontrollierbar."
+    elif arc >= 30:
+        if days > 900:
+            phase_label = "Late Bear"
+            phase_desc = "Spaeter Abschwung. Cycle Reset naehert sich."
+        else:
+            phase_label = "Mid Bull"
+            phase_desc = "Aufwaertstrend intakt. Strukturelles Risiko niedrig."
     else:
-        phase_label = "Transition"
-        phase_desc = "Uebergangsphase. Kein klares Signal. Abwarten empfohlen."
+        if days < 300:
+            phase_label = "Early Bull"
+            phase_desc = "Fruehe Aufwaertsphase. Historisch beste Einstiegszone."
+        else:
+            phase_label = "Late Bear"
+            phase_desc = "Tiefer ARC. Cycle Reset Zone. Akkumulation moeglich."
 
     phase_scenarios = {
         "Early Bull":       {"upside": (25, 60),  "downside": (8, 20)},

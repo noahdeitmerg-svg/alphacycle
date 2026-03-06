@@ -866,7 +866,20 @@ async def get_snapshot():
             spot.get("btc", 40), spot.get("eth", 20), spot.get("cash", 40),
         )
 
-        arc_score = result.get("alpha_cycle_position", c["combined"].get("combined_score", 50.0))
+        analysis = {
+            "arc_summary": c.get("arc_summary") or {},
+            "combined": c.get("combined", {}).get("combined_score"),
+            "alpha_cycle_position": result.get("alpha_cycle_position"),
+            "arc_score": result.get("arc_score"),
+        }
+        arc_score = (
+            analysis.get("arc_summary", {}).get("arc_score")
+            or analysis.get("combined")
+            or analysis.get("alpha_cycle_position")
+            or analysis.get("arc_score")
+            or 50
+        )
+        arc_score = float(arc_score) if arc_score is not None else 50.0
         st_ctx = result.get("short_term_context") or st_ctx
         cy_sig = result.get("cycle_signal") or {}
         eth_price = safe_float(raw.get("eth_market", {}).get("price", 0))
