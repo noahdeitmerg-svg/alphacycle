@@ -1157,7 +1157,9 @@ body::before {
   line-height: 1.55;
 }
 .cycle-phase-tag {
-  display: inline-block;
+  display: inline-block !important;
+  width: auto !important;
+  align-self: flex-start !important;
   font-family: var(--f-mono);
   font-size: 9px;
   letter-spacing: 0.12em;
@@ -1919,16 +1921,15 @@ canvas.sparkline {
   <div class="card short-term-card anim d4" id="short-term-card">
     <div class="card-accent accent-btc"></div>
     <div class="st-header">
-      <div class="st-phase-block">
-        <div class="st-phase-eyebrow">Cycle Phase</div>
-        <div class="st-phase-label" id="st-phase-label">—</div>
-        <div class="st-phase-desc" id="st-phase-desc">Loading…</div>
-      </div>
-      <div class="st-score-block">
-        <div class="st-score-eyebrow">ST Score</div>
+      <div class="st-score-block" style="text-align:left">
+        <div class="st-score-eyebrow">Short Term Score</div>
         <div class="st-score-val" id="st-score-val">—</div>
         <div class="st-score-signal" id="st-tactical">—</div>
       </div>
+    </div>
+    <div style="display:none">
+      <span id="st-phase-label"></span>
+      <span id="st-phase-desc"></span>
     </div>
     <div class="st-scenario">
       <div class="st-scenario-item st-upside">
