@@ -6,6 +6,7 @@
 - ✅ ARC Formula Unification: scoring.compute_arc_score() (ma*0.35 + dd*0.25 + liq*0.25 + fg*0.15), backtest_engine same weights + fg_to_score, /api/arc-summary uses compute_arc_score()
 - ✅ **ARC v2**: Momentum from backtest: scoring.compute_arc_momentum(arc_history, days=30); /api/arc-summary exposes arc_momentum (value, label, direction), arc_momentum_30d, arc_momentum_label; percentile from analyzer.
 - ✅ **Rescaling reverted**: Raw ARC range (empirical ~22-78). compute_arc_score() returns clamp(arc); no rescale_arc. backtest_engine uses clamp only. Expected range and UI zones (phaseOf, chart bands, hr-grid) calibrated to raw range: bands <25, <35, <45, <55, <65, >=65 (expected range); phaseOf <30 Low, <50 Moderate, <65 Elevated, >=65 High; chart zones 0-25, 25-40, 40-60, 60-70, 70-100.
+- ✅ **Short Term Engine v2**: scoring.compute_short_term_score() (RSI 20%, MVRV 20%, Funding 15%, F&G 15%, 50D MA 15%, Puell 15%); signal labels STRONG BUY/BUY/CAUTIOUS LONG/NEUTRAL/REDUCE/SELL. main.py: short_term_scores in cache; /api/short-term endpoint; /api/cycle/btc short_term_v2. index.html: fetch /api/short-term, S.shortTerm, 6 component bars (no Power Law/Pi Cycle), stBarColor <35/<65/>=65.
 - ✅ **Cycle Anchor Bear-Phase**: compute_cycle_anchor() phase-aware (today >= TENTATIVE_CYCLE_TOP → BEAR), cycle_position_percent from bear_progress/bull_progress; return current_phase, phase_label, phase_description, bear_progress_percent.
 - ✅ FIX 1: /api/arc-summary Endpoint ergänzt
 - ✅ FIX 2: /api/prices mit ATH + Dominanz (Kraken-basiert)
@@ -98,11 +99,12 @@ DO NOT modify weights. DO NOT add scoring components.
 66. **Backtest raw ARC**: backtest_engine.py no rescale_arc; arc = max(0, min(100, arc)) only. /api/backtest results use raw ARC.
 67. **Expected Range (raw ARC)**: main.py _get_expected_range() fixed lookup for raw ARC: bands <25, <35, <45, <55, <65, >=65; avg_12m cap 300%.
 68. **UI zones raw ARC**: index.html phaseOf <30/<50/<65; chart risk bands 0-25, 25-40, 40-60, 60-70, 70-100; hero/hr-grid labels 0-30, 30-50, 50-65, 65-100. historical_returns get_zone 30, 50, 65.
+69. **Short Term Engine v2**: scoring.compute_short_term_score() (prices_daily, fear_greed, funding_data, indicators, walcl_values, net_liq_values). Components: RSI 20%, MVRV 20%, Funding 15%, Fear&Greed 15%, 50D MA 15%, Puell 15%. Signal labels by score. main.py: short_term_scores in cache; GET /api/short-term; /api/cycle/btc short_term_v2. index.html: fetch /api/short-term, S.shortTerm; Short Term card 6 bars (RSI, MVRV, Funding, Fear & Greed, 50D MA, Puell), no Power Law/Pi Cycle; bar color <35 green, <65 yellow, >=65 red.
 
 ## Active Endpoints (Railway)
 /health /api/prices /api/cycle/btc /api/cycle/eth /api/cycle/macro
 /api/arc-summary /api/cycle/combined /api/history /api/fear-greed
-/api/cycle-anchor /api/analyzer /api/backtest /api/liquidity-regime /api/decision
+/api/short-term /api/cycle-anchor /api/analyzer /api/backtest /api/liquidity-regime /api/decision
 
 ## Frontend Sections (in order)
 1. Hero: ARC Index (btc-card with hero-card class)

@@ -127,6 +127,93 @@ def compute_arc_momentum(arc_history: list, days: int = 30) -> dict:
     return {"value": momentum, "label": label, "direction": direction}
 
 
+def compute_short_term_score(prices_daily, fear_greed, funding_data=None, indicators=None, walcl_values=None, net_liq_values=None):
+    """
+    Short Term Tactical Score (30-90D horizon).
+    Separate from ARC (macro) and compute_btc_score (combined).
+    Components: RSI, MVRV, Funding, F&G Trend, 50D MA Position, Puell.
+    Power Law and Pi Cycle excluded (wrong timeframe).
+    """
+    s = {}
+    prices = [safe_float(p) for p in prices_daily if p and safe_float(p) > 0]
+    if not prices:
+        prices = [50000.0]
+    current = prices[-1]
+
+    # 1. RSI Weekly (20%) - momentum
+    weekly = prices[::7] if len(prices) >= 14 else prices
+    rsi_val = compute_rsi(weekly, min(14, max(2, len(weekly) - 1)))
+    s["rsi"] = rsi_to_score(rsi_val)
+    s["rsi_raw"] = round(rsi_val, 1)
+
+    # 2. MVRV Score (20%) - on-chain valuation
+    ind = indicators or {}
+    s["mvrv"] = clamp(safe_float(ind.get("mvrv_score", 50.0)))
+
+    # 3. Funding Rate (15%) - leverage sentiment
+    fd = funding_data or {}
+    s["funding"] = funding_rate_to_score(fd.get("btc_funding_rate", 0.0))
+    s["funding_raw"] = round(safe_float(fd.get("btc_funding_rate", 0.0)), 4)
+
+    # 4. Fear & Greed (15%) - sentiment
+    s["fear_greed"] = fg_to_score(fear_greed)
+
+    # 5. 50D MA Position (15%) - trend structure
+    ma50 = moving_average(prices, min(50, len(prices)))
+    if ma50 and ma50 > 0:
+        dev50 = pct_change(current, ma50)
+        if dev50 <= -30:
+            s["ma_50d"] = 5.0
+        elif dev50 <= 0:
+            s["ma_50d"] = clamp(5 + (dev50 + 30) * 1.5)
+        elif dev50 <= 30:
+            s["ma_50d"] = clamp(50 + dev50 * 1.5)
+        else:
+            s["ma_50d"] = clamp(95.0)
+    else:
+        s["ma_50d"] = 50.0
+    s["ma_50d_raw"] = round(ma50 or current, 0)
+    s["ma_50d_dev_pct"] = round(pct_change(current, ma50) if ma50 else 0.0, 1)
+
+    # 6. Puell Multiple (15%) - miner profitability cycle proxy
+    s["puell"] = clamp(safe_float(ind.get("puell_score", 50.0)))
+
+    weights = {
+        "rsi": 0.20,
+        "mvrv": 0.20,
+        "funding": 0.15,
+        "fear_greed": 0.15,
+        "ma_50d": 0.15,
+        "puell": 0.15,
+    }
+    score = _weighted(s, weights)
+    s["short_term_score"] = score
+
+    # Signal Labels
+    if score < 20:
+        signal = "STRONG BUY"
+        signal_color = "#22c55e"
+    elif score < 35:
+        signal = "BUY"
+        signal_color = "#4ade80"
+    elif score < 50:
+        signal = "CAUTIOUS LONG"
+        signal_color = "#3b82f6"
+    elif score < 65:
+        signal = "NEUTRAL"
+        signal_color = "#f59e0b"
+    elif score < 80:
+        signal = "REDUCE"
+        signal_color = "#f97316"
+    else:
+        signal = "SELL"
+        signal_color = "#ef4444"
+
+    s["signal"] = signal
+    s["signal_color"] = signal_color
+    return s
+
+
 def funding_rate_to_score(rate_pct):
     r=safe_float(rate_pct,0.0)
     if r<=-0.05: return 10.0

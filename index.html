@@ -2289,6 +2289,7 @@ const S = {
   analyzerPhase:       null,
   analyzerSignal:      null,
   btcShortTerm:        null,
+  shortTerm:           null,
   cycleAnchor:         null,
   ethComponents:       null,
   backtest:            [],
@@ -2572,8 +2573,9 @@ async function loadAllData() {
         apiFetch(`${BACKEND_URL}/api/backtest`),
         apiFetch(`${BACKEND_URL}/api/liquidity-regime`),
         apiFetch(`${BACKEND_URL}/api/arc-summary`),
+        apiFetch(`${BACKEND_URL}/api/short-term`),
       ]);
-      const [prices, btcC, ethC, macC, hist, analyzer, anchor, backtest, liquidity, arcSummary] =
+      const [prices, btcC, ethC, macC, hist, analyzer, anchor, backtest, liquidity, arcSummary, shortTermData] =
         results.map(r => r.status === 'fulfilled' ? r.value : null);
 
       if(prices) {
@@ -2632,6 +2634,7 @@ async function loadAllData() {
         : safeNum(btcC?.score, computeBTCScore());
       S.btcComponents = btcC?.components || null;
       S.btcShortTerm  = btcC?.short_term  || null;
+      S.shortTerm     = shortTermData || btcC?.short_term_v2 || null;
       S.ethComponents = ethC?.components  || null;
       S.ethScore = safeNum(ethC?.score, computeETHScore());
       S.macScore = safeNum(macC?.score, computeMacroScore());
@@ -2972,15 +2975,42 @@ function updateUI() {
     setText('dec-index-val',  Math.round(combinedScore), scoreColor(combinedScore));
   })();
 
-  // Short Term Engine — from btcC short_term data
+  // Short Term Engine — from /api/short-term (v2) or btcC short_term fallback
   (function renderShortTerm() {
-    const st = S.btcShortTerm || {};
-    renderComponents('short-term-components', [
-      {label:'RSI',       score: st.rsi       ?? 50},
-      {label:'Funding',   score: st.funding   ?? 50},
-      {label:'Power Law', score: st.power_law ?? st.power_law_score ?? 50},
-      {label:'MVRV',      score: st.mvrv      ?? 50},
-    ]);
+    var compEl = $('short-term-components');
+    if (!compEl) return;
+    var st = S.shortTerm || {};
+    var comps = st.components || {};
+    var legacy = S.btcShortTerm || {};
+    var score = st.score != null ? Number(st.score) : (legacy.rsi != null ? 50 : null);
+    var signal = st.signal || '—';
+    var signalColor = st.signal_color || '#f59e0b';
+    setText('st-score-val', score != null ? Math.round(score) : '—');
+    var stValEl = document.getElementById('st-score-val');
+    if (stValEl && score != null) stValEl.style.color = signalColor;
+    var tactEl = document.getElementById('st-tactical');
+    if (tactEl) {
+      tactEl.textContent = signal;
+      tactEl.style.color = signalColor;
+    }
+    function stBarColor(s) {
+      if (s < 35) return '#22c55e';
+      if (s < 65) return '#eab308';
+      return '#ef4444';
+    }
+    var items = [
+      { label: 'RSI', score: comps.rsi?.score ?? comps.rsi ?? legacy.rsi ?? 50 },
+      { label: 'MVRV', score: comps.mvrv?.score ?? comps.mvrv ?? legacy.mvrv ?? 50 },
+      { label: 'Funding', score: comps.funding?.score ?? comps.funding ?? legacy.funding ?? 50 },
+      { label: 'Fear & Greed', score: comps.fear_greed?.score ?? comps.fear_greed ?? 50 },
+      { label: '50D MA', score: comps.ma_50d?.score ?? comps.ma_50d ?? 50 },
+      { label: 'Puell', score: comps.puell?.score ?? comps.puell ?? legacy.puell ?? 50 },
+    ];
+    compEl.innerHTML = items.map(function(it) {
+      var s = clamp(it.score);
+      var col = stBarColor(s);
+      return '<div class="comp-row"><div class="comp-label">' + it.label + '</div><div class="comp-bar"><div class="comp-fill" style="width:' + s + '%;background:' + col + '"></div></div><div class="comp-val" style="color:' + col + '">' + Math.round(s) + '</div></div>';
+    }).join('');
   })();
 
   // Cycle Anchor — from /api/cycle-anchor if available, else skip
@@ -3149,6 +3179,7 @@ function _setCyclePhaseTag(phase, ctx) {
 }
 
 function updateShortTermContext() {
+  if (S.shortTerm && S.shortTerm.signal) return;
   var ctx = S.shortTermContext;
   if (!ctx) {
     var arc = S.arcSummary && S.arcSummary.arc_score != null ? S.arcSummary.arc_score : (S.combined != null ? S.combined : (S.btcScore != null ? S.btcScore : 50));

@@ -31,14 +31,14 @@ try:
     from scoring import (
         compute_btc_score, compute_eth_score,
         compute_macro_score, compute_combined,
-        compute_arc_score,
+        compute_arc_score, compute_arc_momentum, compute_short_term_score,
         clamp, safe_float,
     )
 except ImportError:
     from scoring import (
         compute_btc_score, compute_eth_score,
         compute_macro_score, compute_combined,
-        compute_arc_score,
+        compute_arc_score, compute_arc_momentum, compute_short_term_score,
         clamp, safe_float,
     )
 
@@ -124,6 +124,14 @@ async def refresh_cache(force: bool = False):
                 btc_dominance=btc_dom,
                 net_liq_values=net_liq_series,
             )
+            short_term_scores = compute_short_term_score(
+                prices_daily=btc_p,
+                fear_greed=fg,
+                funding_data=raw.get("funding_data", raw.get("funding", {})),
+                indicators=raw.get("indicators", {}),
+                walcl_values=walcl,
+                net_liq_values=net_liq_series,
+            )
             eth_scores = compute_eth_score(
                 eth_p, btc_p, tvl, stable, fg,
                 funding_data=funding_data,
@@ -155,6 +163,7 @@ async def refresh_cache(force: bool = False):
             CACHE.update({
                 "raw":          raw,
                 "btc_scores":   btc_scores,
+                "short_term_scores": short_term_scores,
                 "eth_scores":   eth_scores,
                 "macro_scores": macro_scores,
                 "combined":     combined,
@@ -394,12 +403,38 @@ async def get_btc_cycle():
             "pi_cycle": 50.0,
             "puell": 50.0,
         }),
+        "short_term_v2": c.get("short_term_scores", {}),
         "weights": {
             "ma_200w": 0.18, "mvrv": 0.15, "fear_greed": 0.12,
             "drawdown": 0.10, "rsi": 0.10, "puell": 0.10,
             "pi_cycle": 0.08, "macro_liq": 0.08, "stable_supply": 0.05,
             "funding": 0.02, "power_law": 0.02,
         },
+    })
+
+
+@app.get("/api/short-term")
+async def get_short_term():
+    c = _require_cache()
+    st = c.get("short_term_scores", {})
+    return api_response({
+        "score": st.get("short_term_score", 50.0),
+        "signal": st.get("signal", "NEUTRAL"),
+        "signal_color": st.get("signal_color", "#f59e0b"),
+        "components": {
+            "rsi":        {"score": st.get("rsi", 50.0), "raw": st.get("rsi_raw", 50.0)},
+            "mvrv":       {"score": st.get("mvrv", 50.0)},
+            "funding":    {"score": st.get("funding", 50.0), "raw": st.get("funding_raw", 0.0)},
+            "fear_greed": {"score": st.get("fear_greed", 50.0)},
+            "ma_50d":     {"score": st.get("ma_50d", 50.0), "raw": st.get("ma_50d_raw", 0.0), "dev_pct": st.get("ma_50d_dev_pct", 0.0)},
+            "puell":      {"score": st.get("puell", 50.0)},
+        },
+        "weights": {
+            "rsi": 0.20, "mvrv": 0.20, "funding": 0.15,
+            "fear_greed": 0.15, "ma_50d": 0.15, "puell": 0.15,
+        },
+        "horizon": "30-90D",
+        "note": "Tactical layer only - does not override ARC Index",
     })
 
 
