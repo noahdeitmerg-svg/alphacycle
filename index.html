@@ -3223,11 +3223,10 @@ function renderArcChart(period) {
   var n = labels.length;
   var zone = function(val) { return Array(n).fill(val); };
   var datasets = [
-    { label: '0-30', data: zone(30), borderColor: 'transparent', backgroundColor: 'rgba(34,197,94,0.10)', fill: true, yAxisID: 'yArc', pointRadius: 0, order: 1 },
-    { label: '30-50', data: zone(50), borderColor: 'transparent', backgroundColor: 'rgba(234,179,8,0.10)', fill: '-1', yAxisID: 'yArc', pointRadius: 0, order: 1 },
-    { label: '50-70', data: zone(70), borderColor: 'transparent', backgroundColor: 'rgba(249,115,22,0.10)', fill: '-1', yAxisID: 'yArc', pointRadius: 0, order: 1 },
-    { label: '70-85', data: zone(85), borderColor: 'transparent', backgroundColor: 'rgba(239,68,68,0.10)', fill: '-1', yAxisID: 'yArc', pointRadius: 0, order: 1 },
-    { label: '85-100', data: zone(100), borderColor: 'transparent', backgroundColor: 'rgba(127,29,29,0.10)', fill: '-1', yAxisID: 'yArc', pointRadius: 0, order: 1 },
+    { label: '0\u201330', data: zone(30), borderColor: 'transparent', backgroundColor: 'rgba(34,197,94,0.18)', fill: true, yAxisID: 'yArc', pointRadius: 0, order: 1 },
+    { label: '30\u201360', data: zone(60), borderColor: 'transparent', backgroundColor: 'rgba(59,130,246,0.14)', fill: '-1', yAxisID: 'yArc', pointRadius: 0, order: 1 },
+    { label: '60\u201375', data: zone(75), borderColor: 'transparent', backgroundColor: 'rgba(245,158,11,0.18)', fill: '-1', yAxisID: 'yArc', pointRadius: 0, order: 1 },
+    { label: '75\u2013100', data: zone(100), borderColor: 'transparent', backgroundColor: 'rgba(239,68,68,0.20)', fill: '-1', yAxisID: 'yArc', pointRadius: 0, order: 1 },
     { label: 'ARC Index', data: arcData, borderColor: 'rgba(255,255,255,0.9)', borderWidth: 2, pointRadius: 0, yAxisID: 'yArc', tension: 0.3, order: 2 },
     { label: 'BTC Price', data: priceData, borderColor: 'rgba(251,146,60,0.8)', borderWidth: 1.5, pointRadius: 0, yAxisID: 'yPrice', tension: 0.2, order: 3 }
   ];
@@ -3321,7 +3320,7 @@ function renderArcChart(period) {
       maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend: { display: true, labels: { color: '#94a3b8' }, filter: function(item, ch) { return item.datasetIndex >= 5; } },
+        legend: { display: true, labels: { color: '#94a3b8' }, filter: function(item, ch) { return true; } },
         tooltip: {
           filter: function(tooltipItem) {
             return tooltipItem.dataset.label === 'ARC Index' || tooltipItem.dataset.label === 'BTC Price';
