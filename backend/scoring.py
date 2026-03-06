@@ -200,6 +200,25 @@ def compute_btc_score(prices_daily, fear_greed, walcl_values, stablecoin_supply,
     }
     return s
 
+
+def compute_arc_score(prices_daily, fear_greed, walcl_values, stablecoin_supply, net_liq_values=None):
+    """
+    Unified ARC formula (research-validated): ma_200w*0.35 + drawdown*0.25 + liquidity*0.25 + fear_greed*0.15.
+    Liquidity logic identical to compute_btc_score (Net Liq preferred, WALCL fallback).
+    """
+    s = compute_btc_score(
+        prices_daily, fear_greed, walcl_values, stablecoin_supply,
+        indicators=None, funding_data=None, btc_dominance=None,
+        net_liq_values=net_liq_values,
+    )
+    ma_score = s["ma_200w"]
+    dd_score = s["drawdown"]
+    liq_score = s["macro_liq"]
+    fg_score = fg_to_score(fear_greed)
+    arc = ma_score * 0.35 + dd_score * 0.25 + liq_score * 0.25 + fg_score * 0.15
+    return clamp(arc)
+
+
 def compute_eth_score(eth_prices, btc_prices, tvl_series, stablecoin_supply,
                       fear_greed, funding_data=None):
     s={}

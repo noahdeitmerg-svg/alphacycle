@@ -3,6 +3,7 @@
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 ## Letzter Session-Status (2026-03-04) — VOLLSTÄNDIG DEPLOYED
+- ✅ ARC Formula Unification: scoring.compute_arc_score() (ma*0.35 + dd*0.25 + liq*0.25 + fg*0.15), backtest_engine same weights + fg_to_score, /api/arc-summary uses compute_arc_score()
 - ✅ FIX 1: /api/arc-summary Endpoint ergänzt
 - ✅ FIX 2: /api/prices mit ATH + Dominanz (Kraken-basiert)
 - ✅ FIX 3: backtest_engine.py auf Kraken OHLC umgestellt (CoinGecko-Reste entfernt)
@@ -20,7 +21,8 @@
 
 
 ## Architecture Lock (NEVER change without architect approval)
-ARC Formula: ma_200w*0.30 + drawdown*0.25 + fear_greed*0.20 + liquidity*0.25
+ARC Formula (unified, research-validated): ma_200w*0.35 + drawdown*0.25 + liquidity*0.25 + fear_greed*0.15
+Use fg_to_score(fear_greed) for F&G input. Same formula in scoring.compute_arc_score(), backtest_engine, and /api/arc-summary.
 DO NOT modify weights. DO NOT add scoring components.
 
 ## Permanent Fixes (never revert)
@@ -84,6 +86,7 @@ DO NOT modify weights. DO NOT add scoring components.
 58. index.html: Hero Gauge + Liquidity Fix. Hero-Gauge nutzt kombinierten ARC Score (S.combined ?? S.arcSummary?.arc_score ?? S.btcScore) für Farbe, Gauge-Animation und Wert. BTC Liquidity-Component-Bar liest primär S.arcSummary?.components?.liquidity, dann btcComponents.macro_liq (.score oder Wert), fallback 50; kein harter 50er-Default mehr bei vorhandenen Net-Liq-Daten.
 59. index.html: ARC History Cycle Marker. Hardcodierte CYCLE_MARKERS-Liste mit Top-/Bottom-Daten (2017-12-17, 2021-11-10, 2018-12-15, 2022-11-21). Chart.js inline Plugin `cycleMarkers` im ARC History Chart (options.plugins.cycleMarkers.afterDraw) zeichnet Dreiecksmarker auf der BTC-Preisachse (rot für Tops, grün für Bottoms) und Label „Cycle Top“ / „Cycle Bottom“ direkt im Chart; Marker-Liste kann später erweitert werden.
 60. index.html: AlphaCycle Logo Integration. Favicon im <head> zeigt auf `/static/logo.png` (PNG). Nav-Bar Logo nutzt `<img src="/static/logo.png" alt="AlphaCycle" style="width:32px;height:32px;border-radius:6px;object-fit:contain;">` anstelle des generischen "α"-Marks; erwarteter Auslieferungspfad über backend/static/logo.png auf Railway.
+61. ARC Formula Unification: Single formula ma_200w*0.35 + drawdown*0.25 + liquidity*0.25 + fear_greed*0.15. scoring.compute_arc_score() (same liquidity logic as compute_btc_score; compute_btc_score unchanged). backtest_engine: fg_to_score(fear_greed), weights ma*0.35 + dd*0.25 + macro_liq*0.25 + fg*0.15. main.py /api/arc-summary: arc_score from compute_arc_score(), not combined_score.
 
 ## Active Endpoints (Railway)
 /health /api/prices /api/cycle/btc /api/cycle/eth /api/cycle/macro

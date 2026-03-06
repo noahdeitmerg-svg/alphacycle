@@ -2,7 +2,7 @@
 backtest_engine.py - Alpha Cycle Intelligence v3.0
 
 Historical backtest: file cache /tmp/backtest_cache.json.
-Once loaded, only missing days (1-2) fetched. ARC = ma_200w*0.35 + drawdown*0.35 + fg(50)*0.15 + macro_liq*0.15.
+Once loaded, only missing days (1-2) fetched. ARC = ma_200w*0.35 + drawdown*0.25 + macro_liq*0.25 + fg_to_score(fear_greed)*0.15.
 macro_liq from FRED Net Liquidity (WALCL - TGA - RRP) when available.
 Return: [{"date": "YYYY-MM-DD", "price": float, "score": float}, ...]
 """
@@ -21,9 +21,9 @@ import httpx
 logger = logging.getLogger(__name__)
 
 try:
-    from scoring import drawdown_score, ma_deviation_score, safe_float
+    from scoring import drawdown_score, ma_deviation_score, safe_float, fg_to_score
 except ImportError:  # pragma: no cover
-    from backend.scoring import drawdown_score, ma_deviation_score, safe_float
+    from backend.scoring import drawdown_score, ma_deviation_score, safe_float, fg_to_score
 
 
 HTTP_TIMEOUT = httpx.Timeout(60.0, connect=10.0)
@@ -300,16 +300,17 @@ async def run_backtest() -> Dict[str, Any]:
 
             # F&G: echte Daten wenn vorhanden, sonst RSI-Proxy auf Weekly-Preisen
             if item["date"] in fg_history:
-                fear_greed = fg_history[item["date"]]
+                fear_greed_raw = fg_history[item["date"]]
             else:
-                fear_greed = _rsi_to_fg(prices_so_far)
+                fear_greed_raw = _rsi_to_fg(prices_so_far)
+            fg_score = fg_to_score(fear_greed_raw)
 
             macro_liq = _get_net_liq_score(item["date"], net_liq_by_date, prices_so_far)
             arc = (
                 ma_200w_score * 0.35
-                + dd_score * 0.35
-                + fear_greed * 0.15
-                + macro_liq * 0.15
+                + dd_score * 0.25
+                + macro_liq * 0.25
+                + fg_score * 0.15
             )
             arc = max(0.0, min(100.0, arc))
 

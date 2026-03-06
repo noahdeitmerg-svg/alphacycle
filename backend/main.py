@@ -31,12 +31,14 @@ try:
     from scoring import (
         compute_btc_score, compute_eth_score,
         compute_macro_score, compute_combined,
+        compute_arc_score,
         clamp, safe_float,
     )
 except ImportError:
     from scoring import (
         compute_btc_score, compute_eth_score,
         compute_macro_score, compute_combined,
+        compute_arc_score,
         clamp, safe_float,
     )
 
@@ -548,7 +550,7 @@ def _get_expected_range(arc: float, forward_returns: list) -> dict:
 
 @app.get("/api/arc-summary")
 async def get_arc_summary():
-    """ARC Index consolidated summary."""
+    """ARC Index consolidated summary. arc_score from unified compute_arc_score()."""
     c = _require_cache()
     raw = c["raw"]
     btc = c["btc_scores"]
@@ -558,7 +560,18 @@ async def get_arc_summary():
     tga_series = raw.get("tga_series", [])
     net_liq_current = float(net_liq_series[-1]["v"]) if net_liq_series else None
     tga_current = float(tga_series[-1]["v"]) if tga_series else None
-    current_arc = round(com.get("combined_score", 50.0), 1)
+    walcl = [item["v"] for item in raw.get("walcl_series", [])]
+    stable = [item["v"] for item in raw.get("stable_series", [])]
+    current_arc = round(
+        compute_arc_score(
+            raw.get("btc_prices", []),
+            raw.get("fear_greed", {}).get("current", 50.0),
+            walcl,
+            stable,
+            raw.get("net_liq_series"),
+        ),
+        1,
+    )
     out = {
         "arc_score":   current_arc,
         "btc_score":   round(btc.get("btc_score", 50.0), 1),

@@ -25,6 +25,7 @@ Beim Bearbeiten von backend/fetcher.py, backend/main.py, backend/scoring.py oder
 - Endpoint `/api/arc-summary` muss aktiv sein.
 - **ALWAYS** in get_arc_summary() components: `btc.get("macro_liq", 50.0)` für Liquidity — **NEVER** `btc.get("liquidity")` (Key existiert nicht in btc_scores). components.net_liq und components.tga aus raw (net_liq_series[-1]["v"], tga_series[-1]["v"]) für Data Inspector.
 - **ALWAYS** regime/decision in get_arc_summary(): `regime = mac.get("regime", "NEUTRAL") or "NEUTRAL"`, `decision = com.get("signal", "HOLD") or "HOLD"` (keine leeren Strings).
+- **arc_score in /api/arc-summary** aus compute_arc_score(prices, fear_greed, walcl, stable, net_liq_series) berechnen — nicht aus combined_score oder btc_score.
 - Daily Snapshot System: `/api/snapshot/today` speichert einen Snapshot pro Tag in `/tmp/arc_snapshots.json` (date, arc, btc_price, regime, liquidity, fear_greed, decision, confidence) und gibt ihn zurück. `/api/snapshots` liefert alle Snapshots. Nach jedem erfolgreichen Cache-Refresh muss `_save_today_snapshot()` aufgerufen werden.
 
 ## backend/fetcher.py (merge)
@@ -35,7 +36,7 @@ Beim Bearbeiten von backend/fetcher.py, backend/main.py, backend/scoring.py oder
 - **compute_combined()** ALWAYS returns **signal** (STRONG BUY/BUY/ACCUMULATE/HOLD/REDUCE/SELL) and **confidence** (round(abs(combined-50)*2, 1)).
 - **compute_macro_score()** ALWAYS returns **regime** (EXPANSION if macro_score < 35, NEUTRAL if < 60, else CONTRACTION).
 - In `drawdown_score(prices)`: Nach `if not clean: return 50.0` muss die Zeile **`if len(clean) < 10: return 50.0`** stehen (Guard gegen zu wenig Daten).
-- ARC-Formel: ma_200w*0.30 + drawdown*0.25 + fear_greed*0.20 + liquidity*0.25 — Gewichte nicht ändern.
+- ARC-Formel (einheitlich): ma_200w*0.35 + drawdown*0.25 + liquidity*0.25 + fear_greed*0.15. F&G als fg_to_score(fear_greed). scoring.compute_arc_score() nutzt dieselbe Formel; compute_btc_score() unveraendert (taktischer Score). Gewichte nicht aendern.
 - **ALWAYS** `short_term` dict in `compute_btc_score()` return (rsi, funding, mvrv, power_law, pi_cycle, puell) — **NEVER** nur Defaults aus main.py-Fallback; die echten Werte kommen aus scoring.
 - **macro_liq** in compute_btc_score(): Primär aus **Net Liquidity** (net_liq_values, 52w window, 50 - pct*2.0). Fallback auf WALCL (52w, 50 - pct*2.5) wenn net_liq_values zu wenig Daten. compute_btc_score(..., net_liq_values=None). main.py übergibt raw.get("net_liq_series", []) als net_liq_values.
 
@@ -66,7 +67,7 @@ Beim Bearbeiten von backend/fetcher.py, backend/main.py, backend/scoring.py oder
 - Kraken OHLC **weekly** (interval=10080) — Daily max 720 Tage API-Grenze; 720 Wochen = ~13.8 Jahre. WINDOW_200W=**200** (200 wöchentliche Datenpunkte = 200-Wochen MA). since=**1381363200** (2013-10-10). Cache min 400 Eintraege. _fetch_since ebenfalls interval 10080.
 - _fetch_btc_history: Bei data.get("error") oder "result" not in data: logger.warning. Abbruchbedingung len(candles) < 10.
 - _load_or_build_cache: Bei Exception logger.warning("backtest cache load failed: %s", e), nicht pass.
-- Backtest nutzt /tmp/backtest_cache.json. ARC = ma_200w*0.35 + drawdown*0.35 + fear_greed*0.15 + macro_liq*0.15. macro_liq dynamisch aus FRED Net Liquidity: _fetch_fred(WALCL/WTREGEN/RRPONTSYD), net_liq_by_date, _get_net_liq_score(date_str) (52w, 50 - pct*2.0); sonst 50.0. F&G im Backtest: _fetch_fg_history(limit=0) lädt komplette Historie; _rsi_to_fg() nutzt RSI auf Weekly-Preisen als Proxy vor Feb 2018. Pro Tag: fear_greed = fg_history[date] oder _rsi_to_fg(prices_so_far). Return: [{"date", "price", "score"}, ...].
+- Backtest nutzt /tmp/backtest_cache.json. ARC (einheitlich mit Live): ma_200w*0.35 + drawdown*0.25 + macro_liq*0.25 + fg_to_score(fear_greed)*0.15. fg_to_score aus scoring importieren. macro_liq dynamisch aus FRED Net Liquidity: _fetch_fred(WALCL/WTREGEN/RRPONTSYD), net_liq_by_date, _get_net_liq_score(date_str) (52w, 50 - pct*2.0); sonst 50.0. F&G: _fetch_fg_history(limit=0); pro Tag fear_greed_raw = fg_history[date] oder _rsi_to_fg(prices_so_far), dann fg_score = fg_to_score(fear_greed_raw). Return: [{"date", "price", "score"}, ...].
 
 ## backend/liquidity_engine.py
 - **bond_score** aus absolutem Yield-Niveau (us10y_vals[-1]) berechnen — **NICHT** aus trend_score (sonst us10y_trend=0 → 150 → clamp 100 Bug). Stufen: <2% → 20, <3% → 20–50, <4% → 50–70, <5% → 70–85, else → 85–100.
