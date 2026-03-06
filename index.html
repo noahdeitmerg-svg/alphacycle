@@ -3295,65 +3295,96 @@ function renderArcChart(period) {
             if (diff < bestDiff) { bestDiff = diff; bestIdx = i; }
           });
           if (bestIdx === -1 || bestDiff > 30 * 86400000) return;
+          var arcDataset = (chart.data.datasets.filter(function(d) { return d.label === 'ARC Index'; })[0] || {}).data || [];
+          var btcDataset = (chart.data.datasets.filter(function(d) { return d.label === 'BTC Price'; })[0] || {}).data || [];
           var x = xAxis.getPixelForValue(bestIdx);
-          var arcVal = arcData[bestIdx] != null ? arcData[bestIdx] : 50;
-          var btcVal = btcData[bestIdx] != null ? btcData[bestIdx] : 0;
-          var y = yArc.getPixelForValue(arcVal);
+          var arcVal = arcDataset[bestIdx] != null ? arcDataset[bestIdx] : 50;
+          var btcVal = btcDataset[bestIdx] != null ? btcDataset[bestIdx] : 0;
           var isTop = marker.type === 'top';
-          var col = isTop ? 'rgba(239,68,68,0.95)' : 'rgba(34,197,94,0.95)';
-          var colFill = isTop ? 'rgba(239,68,68,0.12)' : 'rgba(34,197,94,0.12)';
-          var colBorder = isTop ? 'rgba(239,68,68,0.5)' : 'rgba(34,197,94,0.5)';
-          var stemLen = 52;
-          var arrowSize = 7;
-          var labelH = 52;
-          var labelW = 130;
-          var padding = 6;
-          var stemStartY = isTop ? y - arrowSize : y + arrowSize;
-          var stemEndY = isTop ? y - stemLen - labelH : y + stemLen + labelH;
-          var boxY = isTop ? stemEndY : stemEndY - labelH;
+          var col = isTop ? 'rgba(34,197,94,0.95)' : 'rgba(239,68,68,0.95)';
+          var colFill = isTop ? 'rgba(34,197,94,0.10)' : 'rgba(239,68,68,0.10)';
+          var colBorder = isTop ? 'rgba(34,197,94,0.45)' : 'rgba(239,68,68,0.45)';
+          var arcY = yArc.getPixelForValue(arcVal);
+          var cTop = chart.chartArea.top, cBot = chart.chartArea.bottom;
+          var cLeft = chart.chartArea.left, cRight = chart.chartArea.right;
+          var tipY = Math.max(cTop + 5, Math.min(cBot - 5, arcY));
+          var labelW = 134, labelH = 54, stemLen = 65, arrowSz = 7, pad = 7;
+          var windowSz = 8;
+          var nearArc = [], nearBtc = [];
+          for (var i = Math.max(0, bestIdx - windowSz); i <= Math.min(arcDataset.length - 1, bestIdx + windowSz); i++) {
+            if (arcDataset[i] != null) nearArc.push(yArc.getPixelForValue(arcDataset[i]));
+            if (btcDataset[i] != null && chart.scales.yPrice) nearBtc.push(chart.scales.yPrice.getPixelForValue(btcDataset[i]));
+          }
+          var allNearY = nearArc.concat(nearBtc).filter(function(v) { return !isNaN(v); });
+          var avgNearY = allNearY.length ? allNearY.reduce(function(a, b) { return a + b; }, 0) / allNearY.length : (cTop + cBot) / 2;
+          var candidates = [
+            { bx: x - labelW - 20, by: tipY - stemLen - labelH },
+            { bx: x + 20, by: tipY - stemLen - labelH },
+            { bx: x - labelW - 20, by: tipY + stemLen },
+            { bx: x + 20, by: tipY + stemLen },
+            { bx: x - labelW / 2, by: tipY - stemLen - labelH },
+            { bx: x - labelW / 2, by: tipY + stemLen }
+          ];
+          var preferred = isTop ? [0, 1, 4, 2, 3, 5] : [2, 3, 5, 0, 1, 4];
+          var chosen = null;
+          for (var p = 0; p < preferred.length; p++) {
+            var c = candidates[preferred[p]];
+            if (c.bx < cLeft) continue;
+            if (c.bx + labelW > cRight) continue;
+            if (c.by < cTop + 2) continue;
+            if (c.by + labelH > cBot - 2) continue;
+            chosen = c;
+            break;
+          }
+          if (!chosen) {
+            chosen = {
+              bx: Math.max(cLeft, Math.min(cRight - labelW, x - labelW / 2)),
+              by: isTop ? Math.max(cTop + 2, tipY - stemLen - labelH) : Math.min(cBot - labelH - 2, tipY + stemLen)
+            };
+          }
+          var boxX = chosen.bx, boxY = chosen.by;
+          var boxCenterX = boxX + labelW / 2;
+          var boxCenterY = isTop ? boxY + labelH : boxY;
           ctx.save();
           ctx.beginPath();
           ctx.strokeStyle = col;
           ctx.lineWidth = 1.5;
           ctx.setLineDash([]);
-          ctx.moveTo(x, stemStartY);
-          ctx.lineTo(x, isTop ? stemEndY + labelH : stemEndY - labelH);
+          ctx.moveTo(boxCenterX, boxCenterY);
+          ctx.lineTo(x, isTop ? tipY - arrowSz * 1.8 : tipY + arrowSz * 1.8);
           ctx.stroke();
           ctx.beginPath();
           if (isTop) {
-            ctx.moveTo(x, y);
-            ctx.lineTo(x - arrowSize, y - arrowSize * 1.8);
-            ctx.lineTo(x + arrowSize, y - arrowSize * 1.8);
+            ctx.moveTo(x, tipY);
+            ctx.lineTo(x - arrowSz, tipY - arrowSz * 1.8);
+            ctx.lineTo(x + arrowSz, tipY - arrowSz * 1.8);
           } else {
-            ctx.moveTo(x, y);
-            ctx.lineTo(x - arrowSize, y + arrowSize * 1.8);
-            ctx.lineTo(x + arrowSize, y + arrowSize * 1.8);
+            ctx.moveTo(x, tipY);
+            ctx.lineTo(x - arrowSz, tipY + arrowSz * 1.8);
+            ctx.lineTo(x + arrowSz, tipY + arrowSz * 1.8);
           }
           ctx.closePath();
           ctx.fillStyle = col;
           ctx.fill();
-          var boxX = x - labelW / 2;
           ctx.beginPath();
-          if (ctx.roundRect) {
-            ctx.roundRect(boxX, boxY, labelW, labelH, 5);
-          } else {
-            ctx.rect(boxX, boxY, labelW, labelH);
-          }
+          if (ctx.roundRect) ctx.roundRect(boxX, boxY, labelW, labelH, 5);
+          else ctx.rect(boxX, boxY, labelW, labelH);
           ctx.fillStyle = colFill;
           ctx.fill();
           ctx.strokeStyle = colBorder;
           ctx.lineWidth = 1;
           ctx.stroke();
           ctx.textAlign = 'center';
+          var textX = boxX + labelW / 2;
           ctx.font = '700 10px DM Mono, monospace';
           ctx.fillStyle = col;
-          ctx.fillText(isTop ? '\u25B2 CYCLE TOP' : '\u25BC CYCLE BOTTOM', x, boxY + padding + 11);
+          ctx.fillText(isTop ? 'CYCLE TOP' : 'CYCLE BOTTOM', textX, boxY + pad + 12);
           ctx.font = '500 9px DM Mono, monospace';
           ctx.fillStyle = 'rgba(255,255,255,0.75)';
           var btcFmt = btcVal >= 1000 ? '$' + (btcVal / 1000).toFixed(1) + 'k' : '$' + Math.round(btcVal);
-          ctx.fillText('BTC ' + btcFmt, x, boxY + padding + 26);
-          ctx.fillStyle = 'rgba(255,255,255,0.55)';
-          ctx.fillText('ARC ' + Math.round(arcVal) + '/100', x, boxY + padding + 40);
+          ctx.fillText('BTC ' + btcFmt, textX, boxY + pad + 27);
+          ctx.fillStyle = 'rgba(255,255,255,0.50)';
+          ctx.fillText('ARC ' + Math.round(arcVal) + '/100', textX, boxY + pad + 41);
           ctx.restore();
         });
         var labelsArr = chart.data.labels || [];
