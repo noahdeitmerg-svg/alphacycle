@@ -913,15 +913,10 @@ async def get_analyzer():
 
 
 def _phase_label(arc: float) -> str:
-    """Match frontend phaseOf(): Low / Moderate / Elevated / Extreme Risk."""
-    a = max(0.0, min(100.0, float(arc)))
-    if a < 30:
-        return "Low Risk"
-    if a < 60:
-        return "Moderate Risk"
-    if a < 75:
-        return "Elevated Risk"
-    return "Extreme Risk"
+    if arc < 30: return "Low Risk"
+    if arc < 60: return "Moderate Risk"
+    if arc < 75: return "Elevated Risk"
+    return "High Risk"
 
 
 @app.get("/api/snapshot")
@@ -1070,6 +1065,7 @@ async def get_snapshot():
             cycle_phase_label=st_ctx.get("phase_label", "Transition"),
             signal_type=cy_sig.get("signal_type", "NONE"),
             days_since_bottom=compute_days_since_bottom(),
+            days_since_top=st_ctx.get("days_since_top") if st_ctx else compute_days_since_top(),
             btc_score=c["btc_scores"].get("btc_score", 50.0),
             eth_score=c["eth_scores"].get("eth_score", 50.0),
             mac_score=c["macro_scores"].get("macro_score", 50.0),
