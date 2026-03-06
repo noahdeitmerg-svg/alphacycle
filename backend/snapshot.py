@@ -29,8 +29,6 @@ def generate_post_templates(snapshot: dict) -> dict:
     upside = snapshot.get("upside_pct", 0)
     downside = snapshot.get("downside_pct", 0)
     days_bottom = snapshot.get("days_since_bottom", 0)
-    days_top = snapshot.get("days_since_top")
-    days_top_str = f"{days_top} days post-top" if days_top is not None else ""
     cycle_phase = snapshot.get("cycle_phase_label", "Mid Bull")
     signal_type = snapshot.get("signal_type", "NONE")
     allocation = snapshot.get("allocation", "60-80%")
@@ -73,8 +71,6 @@ def generate_post_templates(snapshot: dict) -> dict:
 
 ARC Risk Level: {phase} ({arc_int}/100)
 {mom_pct_block}Cycle Phase: {cycle_phase} {phase_emoji}
-Days Post-Top: {days_top_str}
-
 BTC: {btc_fmt}
 
 ST Score: {st_score}/100
@@ -87,7 +83,7 @@ Allocation: {allocation}
 \u2191 Upside: +{up_int}%
 \u2193 Downside: -{dn_int}%
 
-{f"{days_bottom} days since cycle bottom." + (f"\n{days_top} days since cycle top." if days_top else "")}
+{days_bottom} days since cycle bottom.
 
 Not financial advice. DYOR.
 alphacycle.app"""
@@ -203,7 +199,6 @@ def build_snapshot(
     cycle_phase_label: str,
     signal_type: str,
     days_since_bottom: int,
-    days_since_top: Optional[int] = None,
     btc_score: float,
     eth_score: float,
     mac_score: float,
@@ -233,7 +228,6 @@ def build_snapshot(
         "cycle_phase_label": cycle_phase_label,
         "signal_type": signal_type,
         "days_since_bottom": days_since_bottom,
-        "days_since_top": days_since_top,
         "btc_score": round(btc_score, 1),
         "eth_score": round(eth_score, 1),
         "mac_score": round(mac_score, 1),
