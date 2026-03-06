@@ -59,11 +59,10 @@ def generate_post_templates(snapshot: dict) -> dict:
     # Template 1: Daily ARC Update
     t1 = f"""ARC Index Update - {date_str}
 
-ARC Score: {arc_int}/100
-Phase: {phase}
+ARC Risk Level: {phase} ({arc_int}/100)
+Cycle Phase: {cycle_phase} {phase_emoji}
 BTC: {btc_fmt}
 
-{phase_emoji} Cycle Phase: {cycle_phase}
 ST Score: {st_score}/100
 Fear & Greed: {fg_int}
 
@@ -71,8 +70,8 @@ Signal: {position}
 Allocation: {allocation}
 
 30-90d Outlook:
-Upside: +{up_int}%
-Downside: -{dn_int}%
+\u2191 Upside: +{up_int}%
+\u2193 Downside: -{dn_int}%
 
 {days_bottom} days since cycle bottom.
 
@@ -101,31 +100,30 @@ alphacycle.app"""
     drawdown_pct_val = int(round(drawdown * 100)) if drawdown else "N/A"
     t3 = f"""Where are we in the Bitcoin cycle?
 
-{phase_emoji} {cycle_phase} - Day {days_bottom}
-
-ARC Index: {arc_int}/100
-Structural risk level: {phase}
+{phase_emoji} Cycle Phase: {cycle_phase} - Day {days_bottom}
+ARC Risk Level: {phase} ({arc_int}/100)
 
 Key inputs:
 - 200W MA Dev: {int(round(ma_dev)) if ma_dev else 'N/A'}
 - Drawdown from ATH: {drawdown_pct_val}%
 - Fear & Greed: {fg_int}
 
-Decision Engine says: {position}
+Decision Engine: {position}
+Allocation: {allocation}
 
 This is not a price prediction.
-It is a risk model.
+It is a structural risk model.
 
 alphacycle.app"""
 
     # Template 4: Compact / Thread Starter
-    t4 = f"""Bitcoin ARC Index: {arc_int}/100 {phase_emoji}
+    t4 = f"""Bitcoin Cycle Update {phase_emoji}
 
-Phase: {cycle_phase}
+ARC Risk: {phase} ({arc_int}/100)
+Cycle Phase: {cycle_phase}
 Signal: {position}
 BTC: {btc_fmt}
 
-Full breakdown
 alphacycle.app"""
 
     return {
