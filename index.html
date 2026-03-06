@@ -544,7 +544,7 @@ body::before {
   color: var(--tx-ter);
 }
 .zone-low  .hz-range { color: #22c55e; }
-.zone-mod  .hz-range { color: #fbbf24; }
+.zone-mod  .hz-range { color: #3b82f6; }
 .zone-ele  .hz-range { color: #f59e0b; }
 .zone-ext  .hz-range { color: #ef4444; }
 
@@ -1755,19 +1755,19 @@ canvas.sparkline {
     <div class="components-grid" id="btc-components"></div>
     <div class="hero-zones">
       <div class="hero-zone zone-low">
-        <div class="hz-range">0–35</div>
+        <div class="hz-range">0–30</div>
         <div class="hz-label">Low Risk</div>
       </div>
       <div class="hero-zone zone-mod">
-        <div class="hz-range">35–60</div>
+        <div class="hz-range">30–60</div>
         <div class="hz-label">Moderate Risk</div>
       </div>
       <div class="hero-zone zone-ele">
-        <div class="hz-range">60–70</div>
+        <div class="hz-range">60–75</div>
         <div class="hz-label">Elevated Risk</div>
       </div>
       <div class="hero-zone zone-ext">
-        <div class="hz-range">70–100</div>
+        <div class="hz-range">75–100</div>
         <div class="hz-label">Extreme Risk</div>
       </div>
     </div>
@@ -2100,15 +2100,15 @@ const fmtT    = n => '$'+safeNum(n/1e12).toFixed(2)+'T';
 
 function scoreColor(s) {
   s = clamp(s);
-  if (s < 35)  return '#22c55e';
-  if (s < 60)  return '#fbbf24';
-  if (s < 70)  return '#f59e0b';
+  if (s < 30)  return '#22c55e';
+  if (s < 60)  return '#3b82f6';
+  if (s < 75)  return '#f59e0b';
   return '#ef4444';
 }
 function phaseOf(s) {
-  if (s < 35) return 'Low Risk';
+  if (s < 30) return 'Low Risk';
   if (s < 60) return 'Moderate Risk';
-  if (s < 70) return 'Elevated Risk';
+  if (s < 75) return 'Elevated Risk';
   return 'Extreme Risk';
 }
 function phaseIcon(phase) {
@@ -2571,9 +2571,9 @@ function updateUI() {
     if (!el) return;
     const s = S.btcScore;
     const zones = [
-      [35,  'LOW RISK',      '34,197,94'],
-      [60,  'MODERATE RISK', '251,191,36'],
-      [70,  'ELEVATED RISK', '245,158,11'],
+      [30,  'LOW RISK',      '34,197,94'],
+      [60,  'MODERATE RISK', '59,130,246'],
+      [75,  'ELEVATED RISK', '245,158,11'],
       [101, 'EXTREME RISK',  '239,68,68'],
     ];
     const [,label,rgb] = zones.find(([max]) => s < max);
@@ -3264,8 +3264,9 @@ function renderArcChart(period) {
   var n = labels.length;
   var zone = function(val) { return Array(n).fill(val); };
   var datasets = [
-    { label: '0\u201335', data: zone(35), borderColor: 'transparent', backgroundColor: 'rgba(34,197,94,0.18)', fill: true, yAxisID: 'yArc', pointRadius: 0, order: 1 },
-    { label: '35\u201360', data: zone(60), borderColor: 'transparent', backgroundColor: 'rgba(251,191,36,0.16)', fill: '-1', yAxisID: 'yArc', pointRadius: 0, order: 1 },
+    { label: '0\u201325', data: zone(25), borderColor: 'transparent', backgroundColor: 'rgba(34,197,94,0.20)', fill: true, yAxisID: 'yArc', pointRadius: 0, order: 1 },
+    { label: '25\u201335', data: zone(35), borderColor: 'transparent', backgroundColor: 'rgba(34,197,94,0.08)', fill: '-1', yAxisID: 'yArc', pointRadius: 0, order: 1 },
+    { label: '35\u201360', data: zone(60), borderColor: 'transparent', backgroundColor: 'rgba(251,191,36,0.07)', fill: '-1', yAxisID: 'yArc', pointRadius: 0, order: 1 },
     { label: '60\u201370', data: zone(70), borderColor: 'transparent', backgroundColor: 'rgba(245,158,11,0.20)', fill: '-1', yAxisID: 'yArc', pointRadius: 0, order: 1 },
     { label: '70\u2013100', data: zone(100), borderColor: 'transparent', backgroundColor: 'rgba(239,68,68,0.22)', fill: '-1', yAxisID: 'yArc', pointRadius: 0, order: 1 },
     { label: 'ARC Index', data: arcData, borderColor: 'rgba(255,255,255,0.9)', borderWidth: 2, pointRadius: 0, yAxisID: 'yArc', tension: 0.3, order: 2 },

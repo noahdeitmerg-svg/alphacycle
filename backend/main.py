@@ -755,11 +755,11 @@ async def get_analyzer():
 def _phase_label(arc: float) -> str:
     """Match frontend phaseOf(): Low / Moderate / Elevated / Extreme Risk."""
     a = max(0.0, min(100.0, float(arc)))
-    if a < 35:
+    if a < 30:
         return "Low Risk"
     if a < 60:
         return "Moderate Risk"
-    if a < 70:
+    if a < 75:
         return "Elevated Risk"
     return "Extreme Risk"
 

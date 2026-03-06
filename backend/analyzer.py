@@ -61,7 +61,7 @@ def detect_cycle_signal(
     btc_price = float(price or 0)
 
     bottom_conditions = [
-        arc < 35,
+        arc < 30,
         dd > 0.55,
         fg < 30,
         rsi < 35,
@@ -71,7 +71,7 @@ def detect_cycle_signal(
 
     price_extended = (btc_price > ma200w * 2.5) if ma200w > 0 else False
     top_conditions = [
-        arc > 70,
+        arc > 75,
         funding > 65,
         fg > 75,
         liq < 40,
@@ -80,9 +80,9 @@ def detect_cycle_signal(
     top_count = sum(top_conditions)
 
     if arc < 45:
-        if arc < 35 and bottom_count >= 4:
+        if arc < 30 and bottom_count >= 4:
             signal_type = "BOTTOM_CONFIRMED"
-            strength = min(100, int(60 + (35 - arc) * 2))
+            strength = min(100, int(60 + (30 - arc) * 2))
             desc = "Bestaetigtes Cycle Bottom - strukturelle Kaufzone"
             override = "BUY"
         elif arc < 35 and bottom_count >= 3:
@@ -101,17 +101,17 @@ def detect_cycle_signal(
             desc = "Kein aktives Signal"
             override = None
     elif arc > 60:
-        if arc > 75 and top_count >= 4:
+        if arc > 78 and top_count >= 4:
             signal_type = "TOP_CONFIRMED"
-            strength = min(100, int(60 + (arc - 75) * 2))
+            strength = min(100, int(60 + (arc - 78) * 2))
             desc = "Bestaetigtes Cycle Top - Distributionszone"
             override = "RISK OFF"
-        elif arc > 71 and top_count >= 3:
+        elif arc > 72 and top_count >= 3:
             signal_type = "TOP_WARNING"
             strength = min(100, int(40 + top_count * 8))
             desc = "Top Warning - Risikoreduktion empfohlen"
             override = "REDUCE"
-        elif arc > 70 and top_count >= 2:
+        elif arc > 65 and top_count >= 2:
             signal_type = "TOP_WATCH"
             strength = min(100, int(20 + top_count * 8))
             desc = "Top Watch - erhoehte Vorsicht"
@@ -136,12 +136,12 @@ def detect_cycle_signal(
         "decision_override": override,
         "arc_at_signal": round(arc, 1),
         "conditions_detail": {
-            "arc_low": arc < 35,
+            "arc_low": arc < 30,
             "drawdown_deep": dd > 0.55,
             "fear_extreme": fg < 30,
             "rsi_oversold": rsi < 35,
             "liq_stable": liq > 30,
-            "arc_high": arc > 70,
+            "arc_high": arc > 75,
             "funding_hot": funding > 65,
             "greed_extreme": fg > 75,
             "liq_contracting": liq < 40,
