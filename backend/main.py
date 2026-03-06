@@ -555,7 +555,20 @@ async def get_arc_summary():
         from analyzer import compute_arc_momentum
         bt = await run_backtest()
         results = bt.get("results", []) if isinstance(bt, dict) else []
-        arc_history = [{"date": r.get("date", ""), "arc_score": r.get("score")} for r in results if r.get("date") and r.get("score") is not None]
+        logger.info("backtest sample: %s", results[:2] if results else "empty")
+        if not results:
+            bt_fallback = getattr(_analyzer, "last_backtest", None)
+            if bt_fallback is not None:
+                bt_list = bt_fallback if isinstance(bt_fallback, list) else (bt_fallback.get("results", []) if isinstance(bt_fallback, dict) else [])
+            else:
+                bt_list = []
+            if not bt_list:
+                logger.info("analyzer attrs: %s", [a for a in dir(_analyzer) if "back" in a.lower() or "hist" in a.lower()])
+            results = bt_list
+        arc_history = [
+            {"date": r.get("date", ""), "arc_score": r.get("arc_score", r.get("score", 50))}
+            for r in results if r and (r.get("date") and (r.get("arc_score") is not None or r.get("score") is not None))
+        ]
         momentum_data = compute_arc_momentum(arc_history, float(current_arc))
         out["arc_momentum_30d"] = momentum_data.get("arc_momentum_30d")
         out["arc_momentum_label"] = momentum_data.get("arc_momentum_label")
