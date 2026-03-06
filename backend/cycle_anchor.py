@@ -9,8 +9,8 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-# Single source of truth for tentative cycle top (unconfirmed - may not be final top)
-TENTATIVE_CYCLE_TOP = date(2025, 10, 25)
+# Single source of truth for tentative cycle top (BTC ATH ~$126,200 — may not be final top)
+TENTATIVE_CYCLE_TOP = date(2025, 10, 6)
 
 
 def compute_days_since_bottom() -> int:
