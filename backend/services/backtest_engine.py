@@ -272,7 +272,8 @@ async def run_backtest() -> Dict[str, Any]:
                 break
         for delta in [0, 86400000, -86400000, 172800000, -172800000, 604800000, -604800000]:
             if t + delta in rrp_dict:
-                rrp_val = rrp_dict[t + delta]
+                # FRED RRPONTSYD in billions; WALCL/TGA in millions
+                rrp_val = float(rrp_dict[t + delta]) * 1000
                 break
         net = w - tga_val - rrp_val
         date_str = datetime.utcfromtimestamp(t // 1000).date().isoformat()

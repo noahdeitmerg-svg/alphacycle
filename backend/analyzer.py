@@ -19,8 +19,17 @@ Zero NaN guarantee. All fields always populated.
 
 import math
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, Tuple
+
+# Known cycle top for post-top phase detection (Oct 2025)
+CYCLE_TOP_DATE = datetime(2025, 10, 6, tzinfo=timezone.utc)
+
+
+def compute_days_since_top() -> int:
+    now = datetime.now(timezone.utc)
+    delta = now - CYCLE_TOP_DATE
+    return max(0, delta.days)
 
 logger = logging.getLogger(__name__)
 
@@ -286,14 +295,17 @@ def get_short_term_context(
     btc_price: float,
     ath_price: float,
     ma_200w: float,
+    drawdown_pct: float = 0.0,
 ) -> dict:
     """
     Berechnet taktischen Kontext fuer 30-90 Tage.
     Gibt Cycle Phase Label, Upside/Downside Szenario
     und aggregierten Short Term Score zurueck.
+    Post-Top-Erkennung hat Prioritaet (Late Bull -> Early Bear).
     """
     arc = max(0.0, min(100.0, float(arc_score or 50)))
     days = max(0, int(days_since_bottom or 0))
+    days_since_top = compute_days_since_top()
     rsi = max(0.0, min(100.0, float(rsi_score or 50)))
     funding = max(0.0, min(100.0, float(funding_score or 50)))
     pl = max(0.0, min(100.0, float(power_law_score or 50)))
@@ -305,43 +317,55 @@ def get_short_term_context(
     st_score = round((rsi + funding + pl + mvrv) / 4)
     st_score = max(0, min(100, st_score))
 
-    # Cycle Phase: ARC primary, days secondary
-    if arc >= 75:
-        phase_label = "Bear / Risk Off"
-        phase_desc = "Extremes Risiko. Kapitalerhalt Prioritaet."
-    elif arc >= 60:
-        phase_label = "Distribution"
-        phase_desc = "Verteilungsphase. Risiko steigt. Positionen reduzieren."
-    elif arc >= 45:
-        if days > 900:
-            phase_label = "Late Bull"
-            phase_desc = "Spaetphase. Relief Rallyes moeglich. Vorsicht."
+    # Post-Top Detection has priority
+    if days_since_top > 0 and days_since_top < 180:
+        if arc >= 60:
+            phase_label = "Bear / Risk Off"
+            phase_desc = "Post-Top Abschwung. Kapitalerhalt Prioritaet."
+        elif arc >= 40:
+            phase_label = "Early Bear"
+            phase_desc = "Korrekturphase nach Cycle Top. Strukturelles Risiko faellt."
         else:
-            phase_label = "Mid Bull"
-            phase_desc = "Expansion. Momentum aufbauend. Risiko kontrollierbar."
-    elif arc >= 30:
-        if days > 900:
+            phase_label = "Early Bear"
+            phase_desc = "Tief-Korrektur. ARC naehert sich Akkumulationszone."
+    elif days_since_top >= 180 and days_since_top < 540:
+        if arc < 35:
+            phase_label = "Late Bear / Accumulation"
+            phase_desc = "Spaeter Abschwung. Historische Kaufzone naehert sich."
+        elif arc < 55:
             phase_label = "Late Bear"
-            phase_desc = "Spaeter Abschwung. Cycle Reset naehert sich."
+            phase_desc = "Uebergangsphase. Cycle Reset laeuft."
         else:
-            phase_label = "Mid Bull"
-            phase_desc = "Aufwaertstrend intakt. Strukturelles Risiko niedrig."
+            phase_label = "Distribution"
+            phase_desc = "Erholung mit erhoehtem Risiko."
     else:
-        if days < 300:
+        # New cycle or no top known
+        if arc < 30:
             phase_label = "Early Bull"
             phase_desc = "Fruehe Aufwaertsphase. Historisch beste Einstiegszone."
+        elif arc < 50:
+            phase_label = "Mid Bull"
+            phase_desc = "Expansion. Strukturelles Risiko kontrollierbar."
+        elif arc < 65:
+            phase_label = "Late Bull"
+            phase_desc = "Spaetphase. Risiko steigt. Vorsicht."
+        elif arc < 80:
+            phase_label = "Distribution"
+            phase_desc = "Verteilung. Positionen reduzieren."
         else:
-            phase_label = "Late Bear"
-            phase_desc = "Tiefer ARC. Cycle Reset Zone. Akkumulation moeglich."
+            phase_label = "Bear / Risk Off"
+            phase_desc = "Maximales Risiko. Kapitalerhalt."
 
     phase_scenarios = {
-        "Early Bull":       {"upside": (25, 60),  "downside": (8, 20)},
-        "Mid Bull":         {"upside": (15, 40),  "downside": (10, 25)},
-        "Late Bull":        {"upside": (10, 25),  "downside": (15, 35)},
-        "Distribution":     {"upside": (5, 15),   "downside": (20, 45)},
-        "Bear / Risk Off":  {"upside": (5, 20),   "downside": (25, 55)},
-        "Late Bear":        {"upside": (10, 30),  "downside": (15, 30)},
-        "Transition":       {"upside": (8, 20),   "downside": (10, 25)},
+        "Early Bull":             {"upside": (25, 60),  "downside": (8, 20)},
+        "Mid Bull":               {"upside": (15, 40),  "downside": (10, 25)},
+        "Late Bull":              {"upside": (10, 25),  "downside": (15, 35)},
+        "Distribution":           {"upside": (5, 15),   "downside": (20, 45)},
+        "Bear / Risk Off":        {"upside": (5, 20),   "downside": (25, 55)},
+        "Late Bear":              {"upside": (10, 30),  "downside": (15, 30)},
+        "Late Bear / Accumulation": {"upside": (15, 40), "downside": (10, 25)},
+        "Early Bear":             {"upside": (5, 20),   "downside": (20, 50)},
+        "Transition":             {"upside": (8, 20),   "downside": (10, 25)},
     }
     scenario = phase_scenarios.get(phase_label, phase_scenarios["Transition"])
 
@@ -383,6 +407,8 @@ def get_short_term_context(
         "tactical_signal": tactical,
         "tactical_color": tactical_color,
         "days_since_bottom": days,
+        "days_since_top": days_since_top,
+        "cycle_top_date": "2025-10-06",
     }
 
 

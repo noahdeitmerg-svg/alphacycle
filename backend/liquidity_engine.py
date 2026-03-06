@@ -219,16 +219,18 @@ def compute_net_liquidity(
 ) -> Dict[str, Any]:
     """
     Net Liquidity = WALCL - TGA - RRP.
+    WALCL and TGA in millions USD; FRED RRPONTSYD in billions -> convert to millions.
     Optional: + Stablecoin Supply + DeFi TVL.
     """
     try:
         walcl = float(walcl or 0)
         tga = float(tga or 0)
-        rrp = float(rrp or 0)
+        rrp_billions = float(rrp or 0)
+        rrp_millions = rrp_billions * 1000
         stable = float(stablecoin_supply or 0)
         tvl = float(defi_tvl or 0)
 
-        net_liq = walcl - tga - rrp
+        net_liq = walcl - tga - rrp_millions
         net_liq_extended = net_liq + stable + tvl
 
         return {
@@ -236,7 +238,7 @@ def compute_net_liquidity(
             "net_liquidity_extended": round(net_liq_extended, 2),
             "walcl": walcl,
             "tga": tga,
-            "rrp": rrp,
+            "rrp": rrp_millions,
             "components_available": {
                 "tga_available": tga > 0,
                 "rrp_available": rrp > 0,

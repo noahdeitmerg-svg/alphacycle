@@ -237,7 +237,8 @@ def _compute_net_liquidity(walcl, tga, rrp):
         for delta in [0, 86400000, -86400000, 172800000, -172800000,
                       604800000, -604800000]:
             if t + delta in rrp_dict:
-                rrp_val = _sf(rrp_dict[t + delta])
+                # FRED RRPONTSYD in billions USD; WALCL/TGA in millions
+                rrp_val = _sf(rrp_dict[t + delta]) * 1000
                 break
         net = w - tga_val - rrp_val
         if net != 0:

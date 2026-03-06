@@ -43,9 +43,9 @@ except ImportError:
     )
 
 try:
-    from analyzer import analyzer as cycle_analyzer, get_short_term_context
+    from analyzer import analyzer as cycle_analyzer, get_short_term_context, compute_days_since_top
 except ImportError:
-    from analyzer import analyzer as cycle_analyzer, get_short_term_context
+    from analyzer import analyzer as cycle_analyzer, get_short_term_context, compute_days_since_top
 
 try:
     from decision_engine import decision_engine
@@ -590,6 +590,8 @@ async def get_arc_summary():
             "tga":        tga_current,
         },
         "short_term": btc.get("short_term", {}),
+        "days_since_top": compute_days_since_top(),
+        "cycle_top_date": "2025-10-06",
     }
     try:
         from analyzer import compute_arc_momentum
@@ -888,6 +890,8 @@ async def get_analyzer():
                 ma_200w=ma_200w,
             )
             result["short_term_context"] = st_ctx
+            result["days_since_top"] = st_ctx.get("days_since_top")
+            result["cycle_top_date"] = st_ctx.get("cycle_top_date", "2025-10-06")
         except Exception as e:
             logger.warning("short_term_context failed: %s", e)
             result["short_term_context"] = {
@@ -967,6 +971,8 @@ async def get_snapshot():
                 ma_200w=ma_200w,
             )
             result["short_term_context"] = st_ctx
+            result["days_since_top"] = st_ctx.get("days_since_top")
+            result["cycle_top_date"] = st_ctx.get("cycle_top_date", "2025-10-06")
         except Exception as e:
             logger.warning("short_term_context failed: %s", e)
             st_ctx = {
