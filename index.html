@@ -933,13 +933,64 @@ body::before {
 }
 
 .short-term-card { padding: 0; background: rgba(255,255,255,0.015); overflow: hidden; }
-.st-header {
+.st-card-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.75rem;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--f-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tx-ter);
+}
+.st-card-title-right { color: var(--tx-sec); }
+.short-term-card .st-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   gap: 1rem;
-  padding: 1.5rem 1.75rem 1rem;
+  padding: 1.25rem 1.75rem;
   border-bottom: 1px solid var(--border);
+}
+.short-term-card .st-score-block {
+  text-align: left;
+  flex-shrink: 0;
+}
+.short-term-card .st-score-val {
+  font-size: clamp(48px, 8vw, 56px);
+  font-weight: 700;
+  font-family: var(--f-mono);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.short-term-card .st-signal-badge {
+  display: inline-block;
+  font-family: var(--f-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-top: 6px;
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+.short-term-card .st-banner-wrap {
+  align-self: center;
+  max-width: 280px;
+}
+.short-term-warning {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: #6b7280;
+  text-transform: uppercase;
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 4px;
 }
 .st-phase-eyebrow,
 .st-score-eyebrow {
@@ -980,6 +1031,54 @@ body::before {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   margin-top: 4px;
+}
+.st-breakdown-title {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tx-ter);
+  padding: 1rem 1.75rem 0.5rem;
+}
+.short-term-card .st-comp-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0.35rem 1.75rem;
+}
+.short-term-card .st-comp-label {
+  width: 80px;
+  flex-shrink: 0;
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--tx-sec);
+}
+.short-term-card .st-comp-bar {
+  flex: 1;
+  min-width: 0;
+  height: 6px;
+  background: #1a2332;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.short-term-card .st-comp-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+.short-term-card .st-comp-num {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  font-weight: 600;
+  width: 32px;
+  text-align: right;
+}
+.short-term-card .st-comp-ctx {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  color: #6b7280;
+  flex-shrink: 0;
 }
 .st-scenario {
   display: flex;
@@ -1026,14 +1125,6 @@ body::before {
   .st-score-block { text-align: left; }
   .st-scenario { flex-direction: column; gap: 1rem; }
   .st-scenario-divider { display: none; }
-}
-.short-term-warning {
-  font-size: 0.65rem; letter-spacing: 0.08em; color: var(--yellow);
-  text-transform: uppercase; margin: 0 1.75rem 1rem;
-  padding: 0.4rem 0.75rem;
-  background: rgba(245,158,11,0.06);
-  border: 1px solid rgba(245,158,11,0.2);
-  border-radius: 4px;
 }
 .sec-tag {
   font-size: 0.6rem; color: var(--tx-sec);
@@ -2155,11 +2246,18 @@ canvas.sparkline {
   </div>
   <div class="card short-term-card anim d4" id="short-term-card">
     <div class="card-accent accent-btc"></div>
+    <div class="st-card-title">
+      <span class="st-card-title-left">SHORT TERM SIGNALS</span>
+      <span class="st-card-title-right">30-90D</span>
+    </div>
     <div class="st-header">
-      <div class="st-score-block" style="text-align:left">
-        <div class="st-score-eyebrow">Short Term Score</div>
+      <div class="st-score-block">
+        <div class="st-score-eyebrow">SHORT TERM SCORE</div>
         <div class="st-score-val" id="st-score-val">—</div>
-        <div class="st-score-signal" id="st-tactical">—</div>
+        <div class="st-score-signal"><span class="st-signal-badge" id="st-tactical">—</span></div>
+      </div>
+      <div class="st-banner-wrap">
+        <div class="short-term-warning">TACTICAL LAYER ONLY — DOES NOT OVERRIDE ALPHACYCLE INDEX</div>
       </div>
     </div>
     <div style="display:none">
@@ -2170,9 +2268,7 @@ canvas.sparkline {
       <span id="st-upside-price"></span>
       <span id="st-downside-price"></span>
     </div>
-    <div class="short-term-warning">
-      &#9889; TACTICAL LAYER ONLY — DOES NOT OVERRIDE ALPHACYCLE INDEX
-    </div>
+    <div class="st-breakdown-title">Component Breakdown</div>
     <div id="short-term-components"></div>
   </div>
 
@@ -2987,29 +3083,50 @@ function updateUI() {
     var signalColor = st.signal_color || '#f59e0b';
     setText('st-score-val', score != null ? Math.round(score) : '—');
     var stValEl = document.getElementById('st-score-val');
-    if (stValEl && score != null) stValEl.style.color = signalColor;
+    if (stValEl) {
+      stValEl.style.color = score != null ? (score < 35 ? '#22c55e' : score < 65 ? '#f59e0b' : '#ef4444') : 'var(--tx-pri)';
+    }
     var tactEl = document.getElementById('st-tactical');
     if (tactEl) {
       tactEl.textContent = signal;
-      tactEl.style.color = signalColor;
+      tactEl.style.color = '#0D1117';
+      if (signal === 'STRONG BUY' || signal === 'BUY') tactEl.style.background = 'rgba(34,197,94,0.25)';
+      else if (signal === 'CAUTIOUS LONG') tactEl.style.background = 'rgba(59,130,246,0.2)';
+      else if (signal === 'NEUTRAL') tactEl.style.background = 'rgba(245,158,11,0.2)';
+      else if (signal === 'REDUCE') tactEl.style.background = 'rgba(249,115,22,0.25)';
+      else if (signal === 'SELL') tactEl.style.background = 'rgba(239,68,68,0.25)';
+      else tactEl.style.background = 'rgba(255,255,255,0.06)';
     }
     function stBarColor(s) {
       if (s < 35) return '#22c55e';
-      if (s < 65) return '#eab308';
+      if (s < 65) return '#f59e0b';
       return '#ef4444';
     }
+    function ctxLabel(key, s, devPct) {
+      if (key === 'RSI') return s < 30 ? 'OVERSOLD' : s < 50 ? 'NEUTRAL' : 'ELEVATED';
+      if (key === 'MVRV') return s < 35 ? 'UNDERVALUED' : s < 65 ? 'FAIR' : 'OVERVALUED';
+      if (key === 'Funding') return s < 35 ? 'NEGATIVE' : s < 55 ? 'NEUTRAL' : 'ELEVATED';
+      if (key === 'Fear & Greed') return s < 25 ? 'EXTREME FEAR' : s < 45 ? 'FEAR' : s < 55 ? 'NEUTRAL' : 'GREED';
+      if (key === '50D MA') return (devPct != null && devPct < -10) ? 'BELOW MA' : (devPct != null && devPct < 5) ? 'AT MA' : 'ABOVE MA';
+      if (key === 'Puell') return s < 35 ? 'LOW' : s < 65 ? 'NEUTRAL' : 'HIGH';
+      return '';
+    }
+    var devPct = comps.ma_50d && (comps.ma_50d.dev_pct != null) ? Number(comps.ma_50d.dev_pct) : null;
     var items = [
-      { label: 'RSI', score: comps.rsi?.score ?? comps.rsi ?? legacy.rsi ?? 50 },
-      { label: 'MVRV', score: comps.mvrv?.score ?? comps.mvrv ?? legacy.mvrv ?? 50 },
-      { label: 'Funding', score: comps.funding?.score ?? comps.funding ?? legacy.funding ?? 50 },
-      { label: 'Fear & Greed', score: comps.fear_greed?.score ?? comps.fear_greed ?? 50 },
-      { label: '50D MA', score: comps.ma_50d?.score ?? comps.ma_50d ?? 50 },
-      { label: 'Puell', score: comps.puell?.score ?? comps.puell ?? legacy.puell ?? 50 },
+      { key: 'RSI', label: 'RSI', score: comps.rsi?.score ?? comps.rsi ?? legacy.rsi ?? 50, devPct: null },
+      { key: 'MVRV', label: 'MVRV', score: comps.mvrv?.score ?? comps.mvrv ?? legacy.mvrv ?? 50, devPct: null },
+      { key: 'Funding', label: 'FUNDING', score: comps.funding?.score ?? comps.funding ?? legacy.funding ?? 50, devPct: null },
+      { key: 'Fear & Greed', label: 'FEAR & GREED', score: comps.fear_greed?.score ?? comps.fear_greed ?? 50, devPct: null },
+      { key: '50D MA', label: '50D MA', score: comps.ma_50d?.score ?? comps.ma_50d ?? 50, devPct: devPct },
+      { key: 'Puell', label: 'PUELL', score: comps.puell?.score ?? comps.puell ?? legacy.puell ?? 50, devPct: null },
     ];
     compEl.innerHTML = items.map(function(it) {
       var s = clamp(it.score);
+      var pct = Math.max(0, Math.min(100, s));
       var col = stBarColor(s);
-      return '<div class="comp-row"><div class="comp-label">' + it.label + '</div><div class="comp-bar"><div class="comp-fill" style="width:' + s + '%;background:' + col + '"></div></div><div class="comp-val" style="color:' + col + '">' + Math.round(s) + '</div></div>';
+      var num = Math.round(s * 10) / 10;
+      var ctx = ctxLabel(it.key, s, it.devPct);
+      return '<div class="st-comp-row"><div class="st-comp-label">' + it.label + '</div><div class="st-comp-bar"><div class="st-comp-fill" style="width:' + pct + '%;background:' + col + '"></div></div><div class="st-comp-num" style="color:' + col + '">' + num + '</div><div class="st-comp-ctx">' + (ctx || '') + '</div></div>';
     }).join('');
   })();
 
