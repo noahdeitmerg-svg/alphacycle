@@ -9,6 +9,9 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
+# Single source of truth for tentative cycle top (unconfirmed - may not be final top)
+TENTATIVE_CYCLE_TOP = date(2025, 10, 25)
+
 
 def compute_days_since_bottom() -> int:
     CYCLE_BOTTOM_DATE = datetime(2022, 11, 21, tzinfo=timezone.utc)
@@ -36,7 +39,7 @@ CYCLE_TOPS: list = [
     date(2013, 12, 4),
     date(2017, 12, 17),
     date(2021, 11, 10),
-    date(2025, 10, 25),  # estimated / reference
+    TENTATIVE_CYCLE_TOP,
 ]
 
 BITCOIN_HALVINGS: list = [
@@ -69,6 +72,17 @@ POST_HALVING_TO_TOP_2 = (date(2021, 11, 10) - date(2020, 5, 11)).days
 AVERAGE_POST_HALVING_TO_TOP_DAYS = (POST_HALVING_TO_TOP_1 + POST_HALVING_TO_TOP_2) // 2
 
 
+def compute_days_since_cycle_top(reference_date: Optional[date] = None) -> int:
+    """Days since TENTATIVE_CYCLE_TOP. Uses single source of truth."""
+    today = reference_date or date.today()
+    delta = today - TENTATIVE_CYCLE_TOP
+    return max(0, delta.days)
+
+
+# Alias for consumers that expect this name
+compute_days_since_top = compute_days_since_cycle_top
+
+
 def _clamp_pct(value: float) -> float:
     """Clamp to 0–100."""
     return max(0.0, min(100.0, value))
@@ -84,7 +98,7 @@ def compute_cycle_anchor(reference_date: Optional[date] = None) -> dict:
         days_since_bottom = compute_days_since_bottom()
     else:
         days_since_bottom = max(0, (today - CURRENT_CYCLE_BOTTOM).days)
-    days_since_top: Optional[int] = None
+    days_since_cycle_top = compute_days_since_cycle_top(today)
 
     expected_top_date = CURRENT_CYCLE_BOTTOM + timedelta(days=HISTORICAL_AVERAGE_BULL_DAYS)
     expected_bottom_date = expected_top_date + timedelta(days=HISTORICAL_AVERAGE_BEAR_DAYS)
@@ -115,14 +129,15 @@ def compute_cycle_anchor(reference_date: Optional[date] = None) -> dict:
         "cycle_position_percent": round(cycle_position_percent, 2),
         "days_since_bottom": compute_days_since_bottom(),
         "days_since_cycle_bottom": compute_days_since_bottom(),
-        "days_since_cycle_top": days_since_top,
+        "days_since_cycle_top": days_since_cycle_top,
         "days_to_next_cycle_top": days_to_next_top,
         "days_to_next_cycle_bottom": days_to_next_bottom,
         "expected_cycle_top_date": expected_top_date.isoformat(),
         "expected_cycle_bottom_date": expected_bottom_date.isoformat(),
         "halving_cycle_position_percent": round(halving_cycle_position_percent, 2),
         "cycle_time_confidence": round(cycle_time_confidence, 2),
-        "cycle_top_date": "Oct 2025",
+        "cycle_top_date": TENTATIVE_CYCLE_TOP.isoformat(),
+        "cycle_top_confirmed": False,
         "next_bottom_estimate": "Oct 2026",
         "days_to_next_bottom": _days_to_bottom,
         "current_cycle_anchor": {

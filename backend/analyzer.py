@@ -22,14 +22,7 @@ import logging
 from datetime import datetime, timezone
 from typing import Optional, Tuple
 
-# Known cycle top for post-top phase detection (Oct 2025)
-CYCLE_TOP_DATE = datetime(2025, 10, 6, tzinfo=timezone.utc)
-
-
-def compute_days_since_top() -> int:
-    now = datetime.now(timezone.utc)
-    delta = now - CYCLE_TOP_DATE
-    return max(0, delta.days)
+from cycle_anchor import TENTATIVE_CYCLE_TOP, compute_days_since_top
 
 logger = logging.getLogger(__name__)
 
@@ -408,7 +401,7 @@ def get_short_term_context(
         "tactical_color": tactical_color,
         "days_since_bottom": days,
         "days_since_top": days_since_top,
-        "cycle_top_date": "2025-10-06",
+        "cycle_top_date": TENTATIVE_CYCLE_TOP.isoformat(),
     }
 
 

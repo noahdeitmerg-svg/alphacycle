@@ -43,9 +43,9 @@ except ImportError:
     )
 
 try:
-    from analyzer import analyzer as cycle_analyzer, get_short_term_context, compute_days_since_top
+    from analyzer import analyzer as cycle_analyzer, get_short_term_context
 except ImportError:
-    from analyzer import analyzer as cycle_analyzer, get_short_term_context, compute_days_since_top
+    from analyzer import analyzer as cycle_analyzer, get_short_term_context
 
 try:
     from decision_engine import decision_engine
@@ -58,9 +58,9 @@ except ImportError:
     from liquidity_engine import compute_liquidity_regime
 
 try:
-    from cycle_anchor import compute_cycle_anchor, compute_days_since_bottom
+    from cycle_anchor import compute_cycle_anchor, compute_days_since_bottom, TENTATIVE_CYCLE_TOP, compute_days_since_top
 except ImportError:
-    from cycle_anchor import compute_cycle_anchor, compute_days_since_bottom
+    from cycle_anchor import compute_cycle_anchor, compute_days_since_bottom, TENTATIVE_CYCLE_TOP, compute_days_since_top
 
 try:
     from analyzer import CycleAnalyzer
@@ -591,7 +591,8 @@ async def get_arc_summary():
         },
         "short_term": btc.get("short_term", {}),
         "days_since_top": compute_days_since_top(),
-        "cycle_top_date": "2025-10-06",
+        "cycle_top_date": TENTATIVE_CYCLE_TOP.isoformat(),
+        "cycle_top_confirmed": False,
     }
     try:
         from analyzer import compute_arc_momentum
@@ -891,7 +892,8 @@ async def get_analyzer():
             )
             result["short_term_context"] = st_ctx
             result["days_since_top"] = st_ctx.get("days_since_top")
-            result["cycle_top_date"] = st_ctx.get("cycle_top_date", "2025-10-06")
+            result["cycle_top_date"] = st_ctx.get("cycle_top_date", TENTATIVE_CYCLE_TOP.isoformat())
+            result["cycle_top_confirmed"] = False
         except Exception as e:
             logger.warning("short_term_context failed: %s", e)
             result["short_term_context"] = {
@@ -967,7 +969,8 @@ async def get_snapshot():
             )
             result["short_term_context"] = st_ctx
             result["days_since_top"] = st_ctx.get("days_since_top")
-            result["cycle_top_date"] = st_ctx.get("cycle_top_date", "2025-10-06")
+            result["cycle_top_date"] = st_ctx.get("cycle_top_date", TENTATIVE_CYCLE_TOP.isoformat())
+            result["cycle_top_confirmed"] = False
         except Exception as e:
             logger.warning("short_term_context failed: %s", e)
             st_ctx = {
