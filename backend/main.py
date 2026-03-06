@@ -585,6 +585,29 @@ async def get_backtest():
         return api_response({"results": [], "error": str(e)})
 
 
+@app.get("/api/historical-returns")
+async def get_historical_returns():
+    """
+    Average forward returns by ARC zone from backtest data.
+    """
+    try:
+        from backend.historical_returns import (
+            compute_historical_returns,
+            _empty_returns,
+        )
+        bt = await run_backtest()
+        bt_list = bt.get("results", []) if isinstance(bt, dict) else []
+        result = compute_historical_returns(bt_list)
+        return api_response(result)
+    except Exception as e:
+        logger.error("historical_returns error: %s", e)
+        try:
+            from backend.historical_returns import _empty_returns
+            return api_response({**_empty_returns(), "error": str(e)})
+        except Exception:
+            return api_response({"zones": {}, "best_entry_zone": None, "sample_events": [], "data_points_used": 0, "error": str(e)})
+
+
 def _find_nearest_arc(date_str: str, bt_sorted: list) -> float:
     """For a daily date, return ARC score from nearest weekly backtest date (latest <= date_str)."""
     if not bt_sorted:
