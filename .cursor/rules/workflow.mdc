@@ -40,6 +40,12 @@ Wenn ein Bug dauerhaft gefixt wurde, trage ihn ein:
 
 ---
 
+## 3. Zu GitHub pushen
+
+Nach jedem abgeschlossenen Fix/Feature: Änderungen stagen, committen und pushen (`git add` → `git commit -m "..."` → `git push`), damit du direkt neu starten/deployen kannst.
+
+---
+
 ## REGELN
 
 - ❌ NEVER einen Fix abschließen ohne `permanent-fixed.mdc` Eintrag
@@ -47,3 +53,4 @@ Wenn ein Bug dauerhaft gefixt wurde, trage ihn ein:
 - ✅ ALWAYS beide Dateien am Ende jeder Session auf aktuellem Stand halten
 - ✅ ALWAYS bei neuen Chats `deploy-state.md` als Kontext mitgeben
 - ✅ ALWAYS prüfen ob der Fix bereits in `permanent-fixed.mdc` steht bevor du Code schreibst — damit kein alter Bug wiederholt wird
+- ✅ **ALWAYS am Ende: Änderungen committen und zu GitHub pushen**, damit direkt neu gestartet/neu deployed werden kann. Kein Abschluss ohne `git add` → `git commit -m "..."` → `git push`.
