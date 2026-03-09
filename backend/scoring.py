@@ -75,13 +75,33 @@ def drawdown_score(prices):
     if not clean: return 50.0
     if len(clean) < 10: return 50.0
     dd=safe_div(clean[-1]-max(clean),max(clean),-0.5)*100
-    if dd>=0:   return 85.0
+    if dd>=0:   return 90.0
     if dd>=-15: return clamp(70+(dd+15)*1.0)
     if dd>=-40: return clamp(45+(dd+40)*1.0)
     if dd>=-70: return clamp(15+(dd+70)*1.0)
     return 5.0
 
-def fg_to_score(v): return clamp(safe_float(v,50.0))
+def fg_to_score(v):
+    """
+    Non-linear Fear & Greed -> ARC component score.
+    Amplifies extremes: historic F&G <15 and >85 occur <5% of time
+    and deserve stronger signal for cycle detection.
+    Neutral range (40-60) unchanged. Extremes amplified.
+    """
+    v = clamp(safe_float(v, 50.0))
+    if v <= 10:
+        return clamp(v * 0.4)
+    if v <= 20:
+        return clamp(4 + (v - 10) * 0.9)
+    if v <= 40:
+        return clamp(13 + (v - 20) * 1.2)
+    if v <= 60:
+        return clamp(37 + (v - 40) * 1.3)
+    if v <= 80:
+        return clamp(63 + (v - 60) * 1.2)
+    if v <= 90:
+        return clamp(87 + (v - 80) * 0.9)
+    return clamp(96 + (v - 90) * 0.4)
 
 
 def compute_arc_momentum(arc_history: list, days: int = 30) -> dict:
@@ -347,6 +367,16 @@ def compute_arc_score(prices_daily, fear_greed, walcl_values, stablecoin_supply,
     liq_score = s["macro_liq"]
     fg_score = fg_to_score(fear_greed)
     arc = ma_score * 0.35 + dd_score * 0.25 + liq_score * 0.25 + fg_score * 0.15
+
+    if ma_score > 78 and fg_score > 82:
+        arc += 7.0
+    elif ma_score > 72 and fg_score > 75:
+        arc += 3.0
+    if dd_score < 18 and fg_score < 15:
+        arc -= 7.0
+    elif dd_score < 25 and fg_score < 20:
+        arc -= 3.0
+
     return clamp(arc)
 
 

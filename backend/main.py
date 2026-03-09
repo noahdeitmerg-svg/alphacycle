@@ -216,6 +216,10 @@ async def _refresh_loop():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Alpha Cycle Intelligence API starting…")
+    try:
+        Path("/tmp/backtest_cache.json").unlink(missing_ok=True)
+    except Exception:
+        pass
     await refresh_cache(force=True)
     task = asyncio.create_task(_refresh_loop())
     yield
