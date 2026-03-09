@@ -323,40 +323,40 @@ def get_short_term_context(
 
     if days_since_top > 0:
         # Post-top (bear) regime
-        if days_since_top < 60:
+        if days_since_top < 60 and drawdown_from_top > -15:
             phase_label = "Late Bull"
             phase_desc = "Near cycle top, distribution phase."
-            tactical = "REDUCE"
+            tactical = "Late Cycle Caution"
             tactical_color = "orange"
         elif days_since_top < 180 and drawdown_from_top > -20:
             phase_label = "Early Bear"
             phase_desc = "Top confirmed, first correction phase."
-            tactical = "REDUCE / SHORT TERM ONLY"
+            tactical = "Top Confirmed"
             tactical_color = "orange"
         elif days_since_top < 365 and drawdown_from_top > -40:
             phase_label = "Mid Bear"
             phase_desc = "Active bear market, relief rallies possible."
-            tactical = "CAUTIOUS LONG — Relief Rally moeglich"
+            tactical = "Relief Rally Possible"
             tactical_color = "yellow"
         elif days_since_top < 365 and drawdown_from_top > -55:
             phase_label = "Late Bear"
             phase_desc = "Deep bear market, capitulation possible."
-            tactical = "ACCUMULATE SLOWLY"
+            tactical = "Deep Bear Territory"
             tactical_color = "green"
         elif days_since_top < 365 and drawdown_from_top <= -55:
             phase_label = "Deep Bear"
             phase_desc = "Extreme bear, historical buy zone forming."
-            tactical = "ACCUMULATE AGGRESSIVELY"
+            tactical = "Capitulation Zone"
             tactical_color = "green"
         elif days_since_top >= 365 and arc_score > 35:
             phase_label = "Accumulation"
             phase_desc = "Long bear over, structural bottom formation."
-            tactical = "BUY"
+            tactical = "Structural Bottom Forming"
             tactical_color = "green"
         elif days_since_top >= 365 and arc_score <= 35:
             phase_label = "Deep Accumulation"
             phase_desc = "Historical buy zone."
-            tactical = "STRONG BUY"
+            tactical = "Historical Buy Zone"
             tactical_color = "green"
         else:
             phase_label = "Transition"
@@ -368,17 +368,17 @@ def get_short_term_context(
         if days_since_bottom < 180:
             phase_label = "Early Bull"
             phase_desc = "New cycle starting."
-            tactical = "BUY AGGRESSIVELY"
+                tactical = "New Cycle Underway"
             tactical_color = "green"
         elif days_since_bottom < 400:
             phase_label = "Mid Bull"
             phase_desc = "Uptrend established."
-            tactical = "HOLD / BUY DIPS"
+                tactical = "Uptrend Established"
             tactical_color = "green"
         else:
             phase_label = "Late Bull"
             phase_desc = "Late cycle, caution."
-            tactical = "REDUCE"
+                tactical = "Late Cycle Caution"
             tactical_color = "orange"
 
     phase_scenarios = {
