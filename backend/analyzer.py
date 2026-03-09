@@ -368,17 +368,17 @@ def get_short_term_context(
         if days_since_bottom < 180:
             phase_label = "Early Bull"
             phase_desc = "New cycle starting."
-                tactical = "New Cycle Underway"
+            tactical = "New Cycle Underway"
             tactical_color = "green"
         elif days_since_bottom < 400:
             phase_label = "Mid Bull"
             phase_desc = "Uptrend established."
-                tactical = "Uptrend Established"
+            tactical = "Uptrend Established"
             tactical_color = "green"
         else:
             phase_label = "Late Bull"
             phase_desc = "Late cycle, caution."
-                tactical = "Late Cycle Caution"
+            tactical = "Late Cycle Caution"
             tactical_color = "orange"
 
     phase_scenarios = {
