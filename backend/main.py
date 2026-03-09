@@ -178,6 +178,28 @@ async def refresh_cache(force: bool = False):
             )
             # Save daily ARC snapshot after successful refresh
             _save_today_snapshot()
+
+            try:
+                bt_data = await run_backtest()
+                bt_results = bt_data.get("results", []) if isinstance(bt_data, dict) else []
+                if bt_results:
+                    from historical_returns import (
+                        compute_historical_returns,
+                        compute_arc_forward_returns,
+                        compute_high_risk_drawdown,
+                    )
+                    hist_returns = compute_historical_returns(bt_results)
+                    fwd_returns = compute_arc_forward_returns(bt_results)
+                    dd_data = compute_high_risk_drawdown(bt_results)
+                    CACHE.update({
+                        "backtest_results": bt_results,
+                        "hist_returns": hist_returns,
+                        "fwd_returns": fwd_returns,
+                        "high_risk_drawdown": dd_data,
+                    })
+            except Exception as e:
+                logger.warning("Backtest cache update failed (non-critical): %s", e)
+
         except Exception as e:
             logger.error(f"Cache refresh failed: {e}", exc_info=True)
 
@@ -670,18 +692,28 @@ async def get_arc_summary():
     }
     try:
         from analyzer import compute_arc_momentum
-        bt = await run_backtest()
-        results = bt.get("results", []) if isinstance(bt, dict) else []
-        logger.info("backtest sample: %s", results[:2] if results else "empty")
+        results = CACHE.get("backtest_results")
         if not results:
-            bt_fallback = getattr(_analyzer, "last_backtest", None)
-            if bt_fallback is not None:
-                bt_list = bt_fallback if isinstance(bt_fallback, list) else (bt_fallback.get("results", []) if isinstance(bt_fallback, dict) else [])
-            else:
-                bt_list = []
-            if not bt_list:
-                logger.info("analyzer attrs: %s", [a for a in dir(_analyzer) if "back" in a.lower() or "hist" in a.lower()])
-            results = bt_list
+            bt = await run_backtest()
+            results = bt.get("results", []) if isinstance(bt, dict) else []
+            if not results:
+                bt_fallback = getattr(_analyzer, "last_backtest", None)
+                if bt_fallback is not None:
+                    bt_list = bt_fallback if isinstance(bt_fallback, list) else (bt_fallback.get("results", []) if isinstance(bt_fallback, dict) else [])
+                else:
+                    bt_list = []
+                if not bt_list:
+                    logger.info("analyzer attrs: %s", [a for a in dir(_analyzer) if "back" in a.lower() or "hist" in a.lower()])
+                results = bt_list
+        fwd = CACHE.get("fwd_returns")
+        if fwd is None and results:
+            from historical_returns import compute_arc_forward_returns
+            fwd = compute_arc_forward_returns(results)
+        dd_data = CACHE.get("high_risk_drawdown")
+        if dd_data is None and results:
+            from historical_returns import compute_high_risk_drawdown
+            dd_data = compute_high_risk_drawdown(results)
+        logger.info("backtest sample: %s", results[:2] if results else "empty")
         arc_history = [
             {"date": r.get("date", ""), "arc_score": r.get("arc_score", r.get("score", 50)), "score": r.get("arc_score", r.get("score", 50))}
             for r in results if r and (r.get("date") and (r.get("arc_score") is not None or r.get("score") is not None))
@@ -699,8 +731,10 @@ async def get_arc_summary():
         from analyzer import compute_confidence_calibrated
         from decision_engine import get_position
 
-        fwd = compute_arc_forward_returns(results)
-        dd_data = compute_high_risk_drawdown(results)
+        if fwd is None:
+            fwd = []
+        if dd_data is None:
+            dd_data = {}
         expected = _get_expected_range(current_arc, fwd, dd_data)
         out["expected_range"] = expected
         out["expected_range_label"] = expected.get("label", "N/A")
@@ -775,9 +809,11 @@ async def get_snapshots():
 async def get_backtest():
     """
     Historical AlphaCycle backtest endpoint.
-    Returns BTC price+score history as JSON. On failure returns 200 with results=[] and error message.
+    Returns BTC price+score history from cache when available (fast); else runs backtest once.
     """
     try:
+        if CACHE.get("backtest_results"):
+            return api_response({"results": CACHE["backtest_results"]})
         data = await run_backtest()
         return api_response(data)
     except Exception as e:
@@ -789,12 +825,12 @@ async def get_backtest():
 async def get_historical_returns():
     """
     Average forward returns by ARC zone from backtest data.
+    Served from cache when available (fast).
     """
     try:
-        from historical_returns import (
-            compute_historical_returns,
-            _empty_returns,
-        )
+        if CACHE.get("hist_returns"):
+            return api_response(CACHE["hist_returns"])
+        from historical_returns import compute_historical_returns, _empty_returns
         bt = await run_backtest()
         bt_list = bt.get("results", []) if isinstance(bt, dict) else []
         result = compute_historical_returns(bt_list)
@@ -810,8 +846,10 @@ async def get_historical_returns():
 
 @app.get("/api/arc-forward-returns")
 async def get_arc_forward_returns():
-    """Forward returns by finer ARC buckets (0-25, 25-35, ...)."""
+    """Forward returns by finer ARC buckets (0-25, 25-35, ...). From cache when available."""
     try:
+        if CACHE.get("fwd_returns"):
+            return api_response({"buckets": CACHE["fwd_returns"]})
         from historical_returns import compute_arc_forward_returns
         bt = await run_backtest()
         bt_list = bt.get("results", []) if isinstance(bt, dict) else []
@@ -1124,11 +1162,22 @@ async def get_snapshot():
 
         expected_range_label = "N/A"
         try:
-            bt = await run_backtest()
-            from historical_returns import compute_arc_forward_returns, compute_high_risk_drawdown
-            bt_results = bt.get("results", []) if isinstance(bt, dict) else []
-            fwd = compute_arc_forward_returns(bt_results)
-            dd_data = compute_high_risk_drawdown(bt_results)
+            bt_results = CACHE.get("backtest_results")
+            fwd = CACHE.get("fwd_returns")
+            dd_data = CACHE.get("high_risk_drawdown")
+            if not bt_results:
+                bt = await run_backtest()
+                bt_results = bt.get("results", []) if isinstance(bt, dict) else []
+            if fwd is None and bt_results:
+                from historical_returns import compute_arc_forward_returns
+                fwd = compute_arc_forward_returns(bt_results)
+            if dd_data is None and bt_results:
+                from historical_returns import compute_high_risk_drawdown
+                dd_data = compute_high_risk_drawdown(bt_results)
+            if fwd is None:
+                fwd = []
+            if dd_data is None:
+                dd_data = {}
             expected = _get_expected_range(arc_score, fwd, dd_data)
             expected_range_label = expected.get("label", "N/A")
         except Exception:
