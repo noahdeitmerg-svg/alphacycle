@@ -312,15 +312,18 @@ def get_short_term_context(
 
     # Post-Top Detection has priority
     if days_since_top > 0 and days_since_top < 180:
-        if arc >= 60:
+        if arc >= 65:
             phase_label = "Bear / Risk Off"
             phase_desc = "Post-Top Abschwung. Kapitalerhalt Prioritaet."
-        elif arc >= 40:
+        elif arc >= 50:
             phase_label = "Early Bear"
             phase_desc = "Korrekturphase nach Cycle Top. Strukturelles Risiko faellt."
+        elif arc >= 35:
+            phase_label = "Accumulation"
+            phase_desc = "Post-Top Korrektur abgeschlossen. Akkumulationszone erreicht."
         else:
-            phase_label = "Early Bear"
-            phase_desc = "Tief-Korrektur. ARC naehert sich Akkumulationszone."
+            phase_label = "Deep Accumulation"
+            phase_desc = "Extreme Kaufzone. Historisch sehr hohe Forward Returns."
     elif days_since_top >= 180 and days_since_top < 540:
         if arc < 35:
             phase_label = "Late Bear / Accumulation"
@@ -358,6 +361,8 @@ def get_short_term_context(
         "Late Bear":              {"upside": (10, 30),  "downside": (15, 30)},
         "Late Bear / Accumulation": {"upside": (15, 40), "downside": (10, 25)},
         "Early Bear":             {"upside": (5, 20),   "downside": (20, 50)},
+        "Accumulation":           {"upside": (15, 40),  "downside": (10, 25)},
+        "Deep Accumulation":      {"upside": (25, 60),  "downside": (8, 20)},
         "Transition":             {"upside": (8, 20),   "downside": (10, 25)},
     }
     scenario = phase_scenarios.get(phase_label, phase_scenarios["Transition"])

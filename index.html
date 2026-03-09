@@ -4236,8 +4236,44 @@ async function fetchHistoricalReturns() {
     }
     setZone('low', 'low');
     setZone('moderate', 'mod');
-    setZone('elevated', 'elv');
-    setZone('extreme', 'ext');
+
+    var elvZone = z['elevated'];
+    if (elvZone) {
+      var elvRet = document.getElementById('hr-elv-12m');
+      if (elvRet) {
+        elvRet.textContent = '\u26A0 REDUCE';
+        elvRet.style.color = '#f97316';
+        elvRet.style.fontSize = '1.1rem';
+      }
+      var elvWr = document.getElementById('hr-elv-wr');
+      if (elvWr) elvWr.textContent = 'DO NOT BUY';
+      var elvC = document.getElementById('hr-elv-count');
+      if (elvC) elvC.textContent = (elvZone.entry_count != null ? elvZone.entry_count : '—') + ' entries';
+    }
+
+    var extZone = z['extreme'];
+    if (extZone) {
+      var extRet = document.getElementById('hr-ext-12m');
+      if (extRet) {
+        if (extZone.display_mode === 'drawdown' && extZone.avg_drawdown != null) {
+          extRet.textContent = '\u2193 AVG -' + Math.abs(extZone.avg_drawdown) + '% FROM PEAK';
+        } else {
+          extRet.textContent = 'SELL / REDUCE';
+        }
+        extRet.style.color = '#ef4444';
+        extRet.style.fontSize = '0.9rem';
+      }
+      var extWr = document.getElementById('hr-ext-wr');
+      if (extWr) {
+        if (extZone.max_drawdown != null) {
+          extWr.textContent = 'Worst: -' + Math.abs(extZone.max_drawdown) + '% from peak';
+        } else {
+          extWr.textContent = 'HIGH RISK zone';
+        }
+      }
+      var extC = document.getElementById('hr-ext-count');
+      if (extC) extC.textContent = (extZone.entry_count != null ? extZone.entry_count : '—') + ' entries';
+    }
   } catch (e) {
     console.warn('historical returns error:', e);
   }

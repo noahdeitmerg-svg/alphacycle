@@ -833,11 +833,21 @@ async def get_historical_returns():
     """
     try:
         if CACHE.get("hist_returns"):
-            return api_response(CACHE["hist_returns"])
-        from historical_returns import compute_historical_returns, _empty_returns
-        bt = await run_backtest()
-        bt_list = bt.get("results", []) if isinstance(bt, dict) else []
-        result = compute_historical_returns(bt_list)
+            result = CACHE["hist_returns"]
+        else:
+            from historical_returns import compute_historical_returns, _empty_returns
+            bt = await run_backtest()
+            bt_list = bt.get("results", []) if isinstance(bt, dict) else []
+            result = compute_historical_returns(bt_list)
+        if result.get("zones", {}).get("elevated"):
+            result["zones"]["elevated"]["display_mode"] = "reduce"
+            result["zones"]["elevated"]["display_label"] = "REDUCE — DO NOT BUY"
+        if result.get("zones", {}).get("extreme"):
+            dd = CACHE.get("high_risk_drawdown") or {}
+            result["zones"]["extreme"]["display_mode"] = "drawdown"
+            result["zones"]["extreme"]["avg_drawdown"] = dd.get("avg_drawdown")
+            result["zones"]["extreme"]["max_drawdown"] = dd.get("max_drawdown")
+            result["zones"]["extreme"]["min_drawdown"] = dd.get("min_drawdown")
         return api_response(result)
     except Exception as e:
         logger.error("historical_returns error: %s", e)
