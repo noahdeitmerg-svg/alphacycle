@@ -17,6 +17,9 @@
    DESIGN SYSTEM — ultrasound-grade dark intelligence UI
 ════════════════════════════════════════════════════════════════ */
 :root {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
   /* Palette */
   --ink:      #020510;
   --ink1:     #060c1a;
@@ -1546,7 +1549,15 @@ canvas.sparkline {
 @media(min-width:768px){ .charts-2col { grid-template-columns: 1fr 1fr; } }
 
 .arc-chart-placeholder { min-height: 280px; display: flex; align-items: center; justify-content: center; color: var(--tx-ter); font-size: 14px; }
-.arc-chart-canvas { width: 100%; max-width: 100%; height: auto; display: block; border-radius: 8px; }
+.arc-chart-canvas {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 8px;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
 
 /* ════════════════════════════════════════════════════════════════
    PHASE LEGEND
@@ -3802,6 +3813,68 @@ function renderArcChart(period) {
   window._arcHistoryChart = new Chart(canvas, {
     type: 'line',
     data: { labels: labels, datasets: datasets },
+    options: {
+      devicePixelRatio: window.devicePixelRatio || 2,
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: { padding: { right: 10 } },
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top',
+          align: 'center',
+          labels: {
+            color: 'rgba(255,255,255,0.4)',
+            font: { size: 9 },
+            usePointStyle: true,
+            pointStyleWidth: 16,
+            boxHeight: 6,
+            padding: 12
+          },
+          filter: function(item, ch) { return true; }
+        },
+        tooltip: {
+          filter: function(tooltipItem) {
+            return tooltipItem.dataset.label === 'ARC Index' || tooltipItem.dataset.label === 'BTC Price';
+          },
+          callbacks: {
+            label: function(context) {
+              if (context.dataset.label === 'ARC Index') return 'ARC Index: ' + Number(context.parsed.y).toFixed(1);
+              if (context.dataset.label === 'BTC Price') return 'BTC Price: $' + Math.round(context.parsed.y).toLocaleString();
+              return '';
+            },
+            afterBody: function(tooltipItems) {
+              if (!tooltipItems.length) return [];
+              var ctx = tooltipItems[0];
+              var label = ctx.label;
+              var idx = ctx.dataIndex;
+              var dynamicMarker = getCurrentMarker();
+              var allMarkers = dynamicMarker ? CYCLE_MARKERS.concat([dynamicMarker]) : CYCLE_MARKERS;
+              var markerInfo = allMarkers.filter(function(m) {
+                var mDate = new Date(m.date).getTime();
+                var lDate = new Date(label).getTime();
+                return Math.abs(mDate - lDate) < 14 * 86400000;
+              })[0];
+              if (!markerInfo) return [];
+              var arcDs = ctx.chart.data.datasets.filter(function(d) { return d.label === 'ARC Index'; })[0];
+              var priceDs = ctx.chart.data.datasets.filter(function(d) { return d.label === 'BTC Price'; })[0];
+              var arcVal = arcDs && arcDs.data[idx] != null ? Number(arcDs.data[idx]) : '';
+              var btcVal = priceDs && priceDs.data[idx] != null ? Number(priceDs.data[idx]) : '';
+              var lines = ['Signal: ' + markerInfo.label];
+              if (arcVal !== '') lines.push('ARC: ' + arcVal);
+              if (btcVal !== '') lines.push('BTC: $' + Math.round(btcVal).toLocaleString());
+              return lines;
+            }
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { color: '#64748b', maxTicksLimit: 12 }, grid: { color: 'rgba(255,255,255,0.05)' } },
+        yArc: { type: 'linear', position: 'left', min: 0, max: 100, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+        yPrice: { type: 'logarithmic', position: 'right', min: priceMin, max: priceMax, ticks: { color: 'rgba(251,146,60,0.7)', callback: function(v) { return '$' + (typeof v === 'number' ? Math.round(v).toLocaleString() : v); } }, grid: { display: false } }
+      }
+    }
     plugins: [{
       id: 'cycleMarkers',
       afterDraw: function(chart) {
@@ -4094,6 +4167,7 @@ function renderMomentumChart() {
       datasets: [{ data: momentum, backgroundColor: colors, borderWidth: 0, barPercentage: 0.8 }]
     },
     options: {
+      devicePixelRatio: window.devicePixelRatio || 2,
       responsive: true,
       maintainAspectRatio: false,
       animation: { duration: 400 },
