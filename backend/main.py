@@ -698,17 +698,9 @@ async def get_arc_summary():
         from analyzer import compute_arc_momentum
         results = CACHE.get("backtest_results")
         if not results:
-            bt = await run_backtest()
-            results = bt.get("results", []) if isinstance(bt, dict) else []
-            if not results:
-                bt_fallback = getattr(_analyzer, "last_backtest", None)
-                if bt_fallback is not None:
-                    bt_list = bt_fallback if isinstance(bt_fallback, list) else (bt_fallback.get("results", []) if isinstance(bt_fallback, dict) else [])
-                else:
-                    bt_list = []
-                if not bt_list:
-                    logger.info("analyzer attrs: %s", [a for a in dir(_analyzer) if "back" in a.lower() or "hist" in a.lower()])
-                results = bt_list
+            # Do not block: run_backtest() can take 10–30s; return immediately with placeholders.
+            # refresh_cache() will populate the cache; next request or reload will have full data.
+            results = []
         fwd = CACHE.get("fwd_returns")
         if fwd is None and results:
             from historical_returns import compute_arc_forward_returns
