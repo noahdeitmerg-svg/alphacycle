@@ -20,6 +20,13 @@ def safe_float(v,fb=0.0):
 def clamp(v,lo=0.0,hi=100.0):
     return max(lo,min(hi,safe_float(v,(lo+hi)/2)))
 
+def arc_display_score(arc_raw, k=1.5):
+    """Nur fuer UI-Output. Interne Berechnungen nutzen arc_raw.
+    Sigmoid-style stretch: Raw 25->~15.6, 50->50, 75->~84.4."""
+    x = (safe_float(arc_raw, 50.0) - 50.0) / 50.0
+    stretched = x * (1.0 + k * x * x)
+    return clamp(50.0 + stretched * 50.0)
+
 def safe_mean(values,fb=50.0):
     clean=[safe_float(v) for v in values if v is not None]
     clean=[v for v in clean if not math.isnan(v)]

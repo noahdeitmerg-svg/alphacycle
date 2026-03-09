@@ -21,9 +21,9 @@ import httpx
 logger = logging.getLogger(__name__)
 
 try:
-    from scoring import drawdown_score, ma_deviation_score, safe_float, fg_to_score
+    from scoring import drawdown_score, ma_deviation_score, safe_float, fg_to_score, arc_display_score
 except ImportError:  # pragma: no cover
-    from backend.scoring import drawdown_score, ma_deviation_score, safe_float, fg_to_score
+    from backend.scoring import drawdown_score, ma_deviation_score, safe_float, fg_to_score, arc_display_score
 
 
 HTTP_TIMEOUT = httpx.Timeout(60.0, connect=10.0)
@@ -320,6 +320,7 @@ async def run_backtest() -> Dict[str, Any]:
                     "date": item["date"],
                     "price": round(price, 2),
                     "score": round(arc, 2),
+                    "score_display": round(arc_display_score(arc), 2),
                 }
             )
     except Exception as e:

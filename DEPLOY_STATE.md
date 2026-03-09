@@ -3,6 +3,7 @@
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 ## Letzter Session-Status (2026-03-04) — VOLLSTÄNDIG DEPLOYED
+- ✅ **ARC display stretching**: scoring.arc_display_score(arc_raw, k=1.5) for UI only; /api/arc-summary arc_display, /api/cycle/combined arc_display; backtest score_display; index Hero/Gauge/Banner/Chart use arc_display/score_display; Data Inspector raw + display; phaseOf/scoreColor 25/45/65.
 - ✅ **Phase logic from cycle_anchor only**: analyzer.get_short_term_context() phase no longer derived from ARC; phase from days_since_top, days_since_bottom, drawdown_from_top only. Tactical per phase (Late Bull/Early Bear/Mid Bear/Late Bear/Accumulation/Deep Accumulation/Early Bull/Mid Bull).
 - ✅ ARC Formula Unification: scoring.compute_arc_score() (ma*0.35 + dd*0.25 + liq*0.25 + fg*0.15), backtest_engine same weights + fg_to_score, /api/arc-summary uses compute_arc_score()
 - ✅ **ARC v2**: Momentum from backtest: scoring.compute_arc_momentum(arc_history, days=30); /api/arc-summary exposes arc_momentum (value, label, direction), arc_momentum_30d, arc_momentum_label; percentile from analyzer.
@@ -37,6 +38,7 @@ ARC Formula (unified, research-validated): ma_200w*0.35 + drawdown*0.25 + liquid
 Use fg_to_score(fear_greed) for F&G input. Same formula in scoring.compute_arc_score(), backtest_engine, and /api/arc-summary.
 DO NOT modify weights. DO NOT add scoring components.
 **ARC output**: compute_arc_score() returns clamp(arc) — raw ARC range (empirical ~22-78). No rescaling. Momentum from backtest via scoring.compute_arc_momentum(arc_history, days=30).
+**ARC display (UI only)**: arc_display_score(arc_raw, k=1.5) in scoring.py — sigmoid stretch for UI/chart only. Raw 25->~15.6, 50->50, 75->~84.4. NEVER in compute_arc_score() or compute_btc_score(); only at API response and chart. Internal logic (phase, decision, expected range) uses arc_raw. UI zone thresholds: Low <25, Moderate 25-45, Elevated 45-65, High >65.
 
 ## Permanent Fixes (never revert)
 1. main.py: All Unicode removed from comments AND string literals
@@ -46,7 +48,7 @@ DO NOT modify weights. DO NOT add scoring components.
 5. scoring.py: drawdown_score() returns 50.0 if len(prices) < 10
 6. index.html: BACKEND_URL = https://alphacycle-production.up.railway.app
 7. index.html: Promise.allSettled (NOT Promise.all)
-8. index.html: phaseOf() boundaries (raw ARC): <30 Low Risk, <50 Moderate Risk, <65 Elevated Risk, >=65 High Risk.
+8. index.html: phaseOf() boundaries (display scale): <25 Low Risk, 25-45 Moderate Risk, 45-65 Elevated Risk, >65 High Risk.
 9. index.html: S.btcShortTerm = btcC?.short_term || null (after btcComponents)
 10. index.html: S.ethComponents = ethC?.components || null (after btcShortTerm)
 11. index.html: S.btcScore guard: only use API value if btcC.score > 0
@@ -115,6 +117,7 @@ DO NOT modify weights. DO NOT add scoring components.
 74. **ARC v3**: scoring.py fg_to_score() non-linear mapping (extremes amplified for cycle tops/bottoms); drawdown_score() returns 90.0 when dd>=0 (ATH); compute_arc_score() adds extreme condition boosts (ma>78 and fg>82 +7, ma>72 and fg>75 +3; dd<18 and fg<15 -7, dd<25 and fg<20 -3) before clamp. Weights unchanged. main.py lifespan deletes /tmp/backtest_cache.json at startup so backtest rebuilds with new scoring.
 75. **Phase from cycle_anchor only**: analyzer.py get_short_term_context() derives phase ONLY from cycle_anchor (days_since_top, days_since_bottom, drawdown_from_top). ARC is risk thermometer only, NOT phase indicator. Priority: (1) days_since_top<60 Late Bull, (2) days_since_top<180 and drawdown>−20% Early Bear, (3) days_since_top<365 and drawdown>−40% Mid Bear, (4) days_since_top<365 and drawdown≤−40% Late Bear, (5) days_since_top≥365 and arc>35 Accumulation, (6) days_since_top≥365 and arc≤35 Deep Accumulation, (7) days_since_bottom<180 Early Bull, (8) days_since_bottom<400 Mid Bull, (9) else Late Bull. phase_desc and tactical_signal/tactical_color per phase. main.py /api/historical-returns: elevated display_mode reduce, extreme drawdown from CACHE. index.html: Elevated REDUCE/DO NOT BUY, Extreme drawdown.
 76. **Historical Returns zone-crossing entry**: historical_returns.compute_historical_returns() counts an entry ONLY when ARC crosses FROM OUTSIDE a zone INTO the zone (previous week not in zone, current week in zone). Per zone: entry_count, avg_12m (12-month forward return), win_rate_12m; avg_3m, avg_6m, min_12m, max_12m for compatibility. compute_high_risk_drawdown() uses same zone-crossing logic for extreme (prev < 65, curr >= 65); drawdown from peak after entry within 52 weeks. Expected entry counts: low <10, moderate 10–20, elevated 5–15, extreme 3–8.
+77. **ARC display stretching**: scoring.arc_display_score(arc_raw, k=1.5) — sigmoid stretch for UI only. NEVER in compute_arc_score() or compute_btc_score(). Only at output: /api/arc-summary arc_display, /api/cycle/combined arc_display; backtest_engine score_display; index.html Hero/Gauge/Banner/Chart use arc_display or score_display; Data Inspector shows "ARC Score (raw)" and "ARC Score (display)". UI zone thresholds: phaseOf/scoreColor <25 Low, 25–45 Moderate, 45–65 Elevated, >65 High Risk.
 
 ## Active Endpoints (Railway)
 /health /api/prices /api/cycle/btc /api/cycle/eth /api/cycle/macro

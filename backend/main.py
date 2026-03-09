@@ -32,14 +32,14 @@ try:
         compute_btc_score, compute_eth_score,
         compute_macro_score, compute_combined,
         compute_arc_score, compute_arc_momentum, compute_short_term_score,
-        clamp, safe_float,
+        clamp, safe_float, arc_display_score,
     )
 except ImportError:
     from scoring import (
         compute_btc_score, compute_eth_score,
         compute_macro_score, compute_combined,
         compute_arc_score, compute_arc_momentum, compute_short_term_score,
-        clamp, safe_float,
+        clamp, safe_float, arc_display_score,
     )
 
 try:
@@ -527,8 +527,11 @@ async def get_macro_cycle():
 @app.get("/api/cycle/combined")
 async def get_combined():
     c = _require_cache()
+    raw_combined = c["combined"].get("combined_score", 50.0)
     return api_response({
         **c["combined"],
+        "combined_score": raw_combined,
+        "arc_display": round(arc_display_score(raw_combined), 1),
         "scores": {
             "btc":   c["btc_scores"].get("btc_score",   50.0),
             "eth":   c["eth_scores"].get("eth_score",   50.0),
@@ -674,6 +677,7 @@ async def get_arc_summary():
     )
     out = {
         "arc_score":   current_arc,
+        "arc_display": round(arc_display_score(current_arc), 1),
         "btc_score":   round(btc.get("btc_score", 50.0), 1),
         "eth_score":   round(c["eth_scores"].get("eth_score", 50.0), 1),
         "macro_score": round(mac.get("macro_score", 50.0), 1),

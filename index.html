@@ -2430,14 +2430,14 @@ const fmtT    = n => '$'+safeNum(n/1e12).toFixed(2)+'T';
 
 function scoreColor(s) {
   s = clamp(s);
-  if (s < 30)  return '#22c55e';
-  if (s < 50)  return '#3b82f6';
+  if (s < 25)  return '#22c55e';
+  if (s < 45)  return '#3b82f6';
   if (s < 65)  return '#f59e0b';
   return '#ef4444';
 }
 function phaseOf(score) {
-  if (score < 30) return 'Low Risk';
-  if (score < 50) return 'Moderate Risk';
+  if (score < 25) return 'Low Risk';
+  if (score < 45) return 'Moderate Risk';
   if (score < 65) return 'Elevated Risk';
   return 'High Risk';
 }
@@ -2869,7 +2869,7 @@ function renderComponents(containerId, components) {
 
 // ── PHASE BANNER ────────────────────────────────────────────────────────────
 function updatePhaseBanner() {
-  const score = S.arcSummary?.arc_score ?? S.combined ?? S.btcScore ?? 50;
+  const score = S.arcSummary?.arc_display ?? S.arcSummary?.arc_score ?? S.combined ?? S.btcScore ?? 50;
   const phase = phaseOf(score);
   const col   = scoreColor(score);
   const banner = $('phase-banner');
@@ -2915,8 +2915,8 @@ function updateUI() {
   const ethP = S.ethMarket?.price || S.ethPrices.at(-1) || 0;
   const ratio = btcP>0 ? ethP/btcP : 0;
 
-  // Score colors
-  const combinedScore = S.arcSummary?.arc_score ?? S.combined ?? S.btcScore;
+  // Score colors (use arc_display for UI)
+  const combinedScore = S.arcSummary?.arc_display ?? S.arcSummary?.arc_score ?? S.combined ?? S.btcScore;
   const bCol=scoreColor(combinedScore), eCol=scoreColor(S.ethScore), mCol=scoreColor(S.macScore);
 
   // Gauges
@@ -2924,15 +2924,15 @@ function updateUI() {
   animateGauge('eth-arc', S.ethScore);
   animateGauge('mac-arc', S.macScore);
 
-  // Score numbers (Hero ARC Gauge nutzt kombinierten ARC Score)
+  // Score numbers (Hero ARC Gauge nutzt arc_display)
   setText('btc-score-val', Math.round(combinedScore), bCol);
   (function updateHeroRisk() {
     const el = document.getElementById('hero-risk-label');
     if (!el) return;
-    const s = S.btcScore;
+    const s = combinedScore != null ? Number(combinedScore) : 50;
     const zones = [
-      [30,  'LOW RISK',   '34,197,94'],
-      [50,  'MODERATE',   '59,130,246'],
+      [25,  'LOW RISK',   '34,197,94'],
+      [45,  'MODERATE',   '59,130,246'],
       [65,  'ELEVATED',   '245,158,11'],
       [101, 'HIGH RISK',  '239,68,68'],
     ];
@@ -3449,7 +3449,8 @@ function renderDataInspector() {
 
   // 6. ARC SUMMARY
   const arcRows = [
-    diRow('ARC Score', Math.round((S.combined ?? 50) * 10) / 10),
+    diRow('ARC Score (raw)', Math.round((S.arcSummary?.arc_score ?? S.combined ?? 50) * 10) / 10),
+    diRow('ARC Score (display)', S.arcSummary?.arc_display != null ? Math.round(S.arcSummary.arc_display * 10) / 10 : '—'),
     diRow('BTC Score', roundScore(S.btcScore)),
     diRow('ETH Score', roundScore(S.ethScore)),
     diRow('Macro Score', roundScore(S.macScore)),
@@ -3749,7 +3750,7 @@ function renderArcChart(period) {
   }
   if (typeof Chart === 'undefined') return;
   var labels = data.map(function(d) { return d.date; });
-  var arcData = data.map(function(d) { return Number(d.score); });
+  var arcData = data.map(function(d) { return Number(d.score_display != null ? d.score_display : d.score); });
   var priceData = data.map(function(d) { return Math.max(100, Number(d.price)); });
   var validPrices = priceData.filter(function(v) { return v > 100; });
   var priceMin = validPrices.length ? Math.floor(Math.min.apply(null, validPrices) * 0.88) : 1000;
