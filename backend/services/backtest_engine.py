@@ -4,7 +4,7 @@ backtest_engine.py - Alpha Cycle Intelligence v3.0
 Historical backtest: file cache /tmp/backtest_cache.json.
 Once loaded, only missing days (1-2) fetched. ARC = ma_200w*0.35 + drawdown*0.25 + macro_liq*0.25 + fg_to_score(fear_greed)*0.15.
 macro_liq from FRED Net Liquidity (WALCL - TGA - RRP) when available.
-Return: [{"date": "YYYY-MM-DD", "price": float, "score": float}, ...]
+Return: [{"date": "YYYY-MM-DD", "price": float (close), "high": float, "low": float, "score": float}, ...]
 """
 
 import asyncio
@@ -47,10 +47,12 @@ async def _fetch_since(since_ts: int) -> List[Dict[str, Any]]:
     out = []
     for c in data["result"][keys[0]]:
         try:
-            price = float(c[4])
-            if price > 0:
+            close = float(c[4])
+            high = float(c[2])
+            low = float(c[3])
+            if close > 0:
                 dt = datetime.utcfromtimestamp(int(c[0])).date().isoformat()
-                out.append({"date": dt, "price": price})
+                out.append({"date": dt, "price": close, "high": high, "low": low})
         except (IndexError, TypeError, ValueError):
             continue
     return out
@@ -139,10 +141,12 @@ async def _fetch_btc_history() -> List[Dict[str, Any]]:
             if ts in seen:
                 continue
             seen.add(ts)
-            price = float(c[4])
-            if price > 0:
+            close = float(c[4])
+            high = float(c[2])
+            low = float(c[3])
+            if close > 0:
                 dt = datetime.utcfromtimestamp(ts).date().isoformat()
-                out.append({"date": dt, "price": price})
+                out.append({"date": dt, "price": close, "high": high, "low": low})
         except (IndexError, TypeError, ValueError):
             continue
     return sorted(out, key=lambda x: x["date"])
@@ -319,6 +323,8 @@ async def run_backtest() -> Dict[str, Any]:
                 {
                     "date": item["date"],
                     "price": round(price, 2),
+                    "high": round(safe_float(item.get("high"), price), 2),
+                    "low": round(safe_float(item.get("low"), price), 2),
                     "score": round(arc, 2),
                     "score_display": round(arc_display_score(arc), 2),
                 }

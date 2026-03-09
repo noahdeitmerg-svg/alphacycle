@@ -3777,9 +3777,15 @@ function renderArcChart(period) {
   var labels = data.map(function(d) { return d.date; });
   var arcData = data.map(function(d) { return Number(d.score_display != null ? d.score_display : d.score); });
   var priceData = data.map(function(d) { return Math.max(100, Number(d.price)); });
+  var highData = data.map(function(d) { var v = d.high != null ? Number(d.high) : d.price; return Math.max(100, v); });
+  var lowData = data.map(function(d) { var v = d.low != null ? Number(d.low) : d.price; return Math.max(100, v); });
   var validPrices = priceData.filter(function(v) { return v > 100; });
   var priceMin = validPrices.length ? Math.floor(Math.min.apply(null, validPrices) * 0.88) : 1000;
-  var priceMax = validPrices.length ? Math.ceil(Math.max.apply(null, validPrices) * 1.08) : 150000;
+  var priceMax = validPrices.length ? Math.ceil(Math.max.apply(null, highData.length ? highData : validPrices) * 1.08) : 150000;
+  if (highData.length) {
+    var highMax = Math.max.apply(null, highData.filter(function(v) { return v > 100; }));
+    if (highMax > priceMax) priceMax = Math.ceil(highMax * 1.08);
+  }
   var n = labels.length;
   var zone = function(val) { return Array(n).fill(val); };
   var datasets = [
@@ -3789,7 +3795,9 @@ function renderArcChart(period) {
     { label: '60\u201370', data: zone(70), borderColor: 'transparent', backgroundColor: 'rgba(245,158,11,0.20)', fill: '-1', yAxisID: 'yArc', pointRadius: 0, order: 1 },
     { label: '70\u2013100', data: zone(100), borderColor: 'transparent', backgroundColor: 'rgba(239,68,68,0.22)', fill: '-1', yAxisID: 'yArc', pointRadius: 0, order: 1 },
     { label: 'ARC Index', data: arcData, borderColor: 'rgba(255,255,255,0.92)', borderWidth: 2.5, pointRadius: 0, yAxisID: 'yArc', tension: 0.4, order: 2 },
-    { label: 'BTC Price', data: priceData, borderColor: 'rgba(251,191,36,0.55)', borderWidth: 1.5, pointRadius: 0, yAxisID: 'yPrice', tension: 0.4, order: 3 }
+    { label: 'BTC Price', data: priceData, borderColor: 'rgba(251,191,36,0.55)', borderWidth: 1.5, pointRadius: 0, yAxisID: 'yPrice', tension: 0.4, order: 3 },
+    { label: 'BTC High-Low', data: highData, fill: 9, backgroundColor: 'rgba(234,179,8,0.15)', borderWidth: 0, pointRadius: 0, yAxisID: 'yPrice', tension: 0.4, order: 4 },
+    { label: 'BTC Low', data: lowData, borderColor: 'transparent', pointRadius: 0, yAxisID: 'yPrice', tension: 0.4, order: 5 }
   ];
   window._arcHistoryChart = new Chart(canvas, {
     type: 'line',
@@ -3816,9 +3824,11 @@ function renderArcChart(period) {
           if (bestIdx === -1 || bestDiff > 30 * 86400000) return;
           var arcDataset = (chart.data.datasets.filter(function(d) { return d.label === 'ARC Index'; })[0] || {}).data || [];
           var btcDataset = (chart.data.datasets.filter(function(d) { return d.label === 'BTC Price'; })[0] || {}).data || [];
+          var raw = chart._backtestData;
+          var r = raw && raw[bestIdx];
+          var btcVal = (isTop && r && r.high != null) ? Number(r.high) : ((!isTop && r && r.low != null) ? Number(r.low) : (btcDataset[bestIdx] != null ? btcDataset[bestIdx] : 0));
           var x = xAxis.getPixelForValue(bestIdx);
           var arcVal = arcDataset[bestIdx] != null ? arcDataset[bestIdx] : 50;
-          var btcVal = btcDataset[bestIdx] != null ? btcDataset[bestIdx] : 0;
           var isTop = marker.type === 'top';
           var col = isTop ? '#22c55e' : '#ef4444';
           var colFill = isTop ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)';
@@ -4043,6 +4053,7 @@ function renderArcChart(period) {
       }
     }
   });
+  if (window._arcHistoryChart) window._arcHistoryChart._backtestData = data;
 }
 
 var _momentumChart = null;
