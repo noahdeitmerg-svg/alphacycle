@@ -585,13 +585,35 @@ async def get_cycle_anchor():
         })
 
 
-def _get_expected_range(arc: float, forward_returns: list, high_risk_drawdown: dict = None) -> dict:
+# Phase groups for phase-coherent decision engine (get_arc_summary, historical-returns)
+BEAR_PHASES = ["Early Bear", "Mid Bear", "Late Bear"]
+BULL_PHASES = ["Early Bull", "Mid Bull"]
+ACCUMULATION_PHASES = ["Accumulation", "Deep Accumulation"]
+LATE_BULL_PHASES = ["Late Bull"]
+
+
+def _phase_group(ph):
+    if ph in BEAR_PHASES:
+        return "bear"
+    if ph in LATE_BULL_PHASES:
+        return "late_bull"
+    if ph in ACCUMULATION_PHASES:
+        return "accumulation"
+    if ph in BULL_PHASES:
+        return "bull"
+    return "unknown"
+
+
+def _get_expected_range(arc: float, forward_returns: list, high_risk_drawdown: dict = None, phase: str = None) -> dict:
     """
     Zone-specific Expected Range:
-    - arc < 50: Forward Return (buy zone)
-    - arc 50-65: Elevated - no return, REDUCE signal
-    - arc >= 65: High Risk - Max Drawdown from Peak after zone entry
+    - If phase in BEAR_PHASES: bear_wait (no entry)
+    - Else arc < 50: Forward Return (buy zone)
+    - arc 50-65: Elevated - REDUCE signal
+    - arc >= 65: High Risk - Max Drawdown from Peak
     """
+    if phase is not None and phase in BEAR_PHASES:
+        return {"type": "bear_wait", "label": "Bear Market — No Entry Signal"}
     if arc < 25:
         return {
             "avg_12m": 120, "range_low": 60, "range_high": 180,
@@ -653,7 +675,7 @@ def _get_expected_range(arc: float, forward_returns: list, high_risk_drawdown: d
 
 @app.get("/api/arc-summary")
 async def get_arc_summary():
-    """ARC Index consolidated summary. arc_score from unified compute_arc_score()."""
+    """ARC Index consolidated summary. arc_score from unified compute_arc_score(). Phase-coherent position/allocation."""
     c = _require_cache()
     raw = c["raw"]
     btc = c["btc_scores"]
@@ -698,6 +720,33 @@ async def get_arc_summary():
         "cycle_top_date": TENTATIVE_CYCLE_TOP.isoformat(),
         "cycle_top_confirmed": False,
     }
+    # Phase for phase-coherent position/allocation (same inputs as /api/analyzer)
+    phase = None
+    try:
+        btc_prices = raw.get("btc_prices", [])
+        btc_price = float(btc_prices[-1]) if btc_prices else 0.0
+        ath_price = max(btc_prices) if btc_prices else btc_price
+        ath_price = safe_float(raw.get("btc_market", {}).get("ath", ath_price))
+        ma_200w = safe_float(btc.get("ma_200w_raw", 0.0))
+        anchor_data = compute_cycle_anchor()
+        days_since_bottom = anchor_data.get("days_since_cycle_bottom", 0)
+        st = btc.get("short_term", {})
+        st_ctx = get_short_term_context(
+            arc_score=current_arc,
+            days_since_bottom=days_since_bottom,
+            rsi_score=st.get("rsi", 50.0),
+            funding_score=st.get("funding", 50.0),
+            power_law_score=st.get("power_law", 50.0),
+            mvrv_score=st.get("mvrv", 50.0),
+            btc_price=btc_price,
+            ath_price=ath_price,
+            ma_200w=ma_200w,
+        )
+        phase = st_ctx.get("phase_label")
+    except Exception:
+        pass
+    out["phase_context"] = phase
+    out["phase_group"] = _phase_group(phase)
     try:
         from analyzer import compute_arc_momentum
         results = CACHE.get("backtest_results")
@@ -735,7 +784,7 @@ async def get_arc_summary():
             fwd = []
         if dd_data is None:
             dd_data = {}
-        expected = _get_expected_range(current_arc, fwd, dd_data)
+        expected = _get_expected_range(current_arc, fwd, dd_data, phase=phase)
         out["expected_range"] = expected
         out["expected_range_label"] = expected.get("label", "N/A")
 
@@ -761,6 +810,52 @@ async def get_arc_summary():
         out["decision"] = out["position"]
         _alloc = {"BUY": "60-80%", "HOLD": "40-60%", "REDUCE": "20-40%", "SELL": "0-20%"}
         out["allocation"] = _alloc.get(out["position"], "40-60%")
+
+        # Phase-coherent overrides (phase takes priority over ARC-only)
+        if phase in BEAR_PHASES:
+            out["position"] = "WAIT — Bear Market"
+            out["decision"] = out["position"]
+            out["allocation"] = "20-40%" if current_arc < 40 else "0-20%"
+            out["confidence_label"] = "Low"
+            out["expected_range"] = {"type": "bear_wait", "label": "Bear Market — No Entry Signal"}
+            out["expected_range_label"] = out["expected_range"]["label"]
+        elif phase in LATE_BULL_PHASES:
+            out["position"] = "REDUCE"
+            out["decision"] = out["position"]
+            out["allocation"] = "20-40%" if current_arc < 60 else "0-20%"
+            out["confidence_label"] = "Low-Moderate"
+        elif phase in ACCUMULATION_PHASES:
+            if current_arc < 35:
+                out["position"] = "ACCUMULATE"
+                out["decision"] = out["position"]
+                out["allocation"] = "80-100%"
+                out["confidence_label"] = "High"
+            elif current_arc < 50:
+                out["position"] = "BUY"
+                out["decision"] = out["position"]
+                out["allocation"] = "60-80%"
+                out["confidence_label"] = "Moderate-High"
+            else:
+                out["position"] = "HOLD"
+                out["decision"] = out["position"]
+                out["allocation"] = "40-60%"
+                out["confidence_label"] = "Moderate"
+        elif phase in BULL_PHASES:
+            if current_arc < 50:
+                out["position"] = "BUY"
+                out["decision"] = out["position"]
+                out["allocation"] = "60-80%"
+                out["confidence_label"] = "Moderate-High"
+            elif current_arc < 65:
+                out["position"] = "HOLD"
+                out["decision"] = out["position"]
+                out["allocation"] = "40-60%"
+                out["confidence_label"] = "Moderate"
+            else:
+                out["position"] = "REDUCE"
+                out["decision"] = out["position"]
+                out["allocation"] = "20-40%"
+                out["confidence_label"] = "Low-Moderate"
     except Exception as e:
         logger.warning("arc-summary momentum: %s", e)
         out["arc_momentum_30d"] = None
@@ -844,6 +939,43 @@ async def get_historical_returns():
             result["zones"]["extreme"]["avg_drawdown"] = dd.get("avg_drawdown")
             result["zones"]["extreme"]["max_drawdown"] = dd.get("max_drawdown")
             result["zones"]["extreme"]["min_drawdown"] = dd.get("min_drawdown")
+        phase = None
+        try:
+            c = _require_cache()
+            raw = c["raw"]
+            btc = c["btc_scores"]
+            walcl = [x["v"] for x in raw.get("walcl_series", [])]
+            stable = [x["v"] for x in raw.get("stable_series", [])]
+            current_arc = compute_arc_score(
+                raw.get("btc_prices", []),
+                raw.get("fear_greed", {}).get("current", 50.0),
+                walcl,
+                stable,
+                raw.get("net_liq_series"),
+            )
+            btc_prices = raw.get("btc_prices", [])
+            btc_price = float(btc_prices[-1]) if btc_prices else 0.0
+            ath_price = max(btc_prices) if btc_prices else btc_price
+            ath_price = safe_float(raw.get("btc_market", {}).get("ath", ath_price))
+            ma_200w = safe_float(btc.get("ma_200w_raw", 0.0))
+            anchor_data = compute_cycle_anchor()
+            days_since_bottom = anchor_data.get("days_since_cycle_bottom", 0)
+            st = btc.get("short_term", {})
+            st_ctx = get_short_term_context(
+                arc_score=current_arc,
+                days_since_bottom=days_since_bottom,
+                rsi_score=st.get("rsi", 50.0),
+                funding_score=st.get("funding", 50.0),
+                power_law_score=st.get("power_law", 50.0),
+                mvrv_score=st.get("mvrv", 50.0),
+                btc_price=btc_price,
+                ath_price=ath_price,
+                ma_200w=ma_200w,
+            )
+            phase = st_ctx.get("phase_label")
+        except Exception:
+            pass
+        result["phase_group"] = _phase_group(phase)
         return api_response(result)
     except Exception as e:
         logger.error("historical_returns error: %s", e)
