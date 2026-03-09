@@ -338,7 +338,7 @@ def get_short_term_context(
             phase_desc = "Active bear market, relief rallies possible."
             tactical = "CAUTIOUS LONG — Relief Rally moeglich"
             tactical_color = "yellow"
-        elif days_since_top < 365 and drawdown_from_top <= -40:
+        elif days_since_top < 365 and drawdown_from_top <= -55:
             phase_label = "Late Bear"
             phase_desc = "Deep in bear, capitulation possible."
             tactical = "ACCUMULATE SLOWLY"
