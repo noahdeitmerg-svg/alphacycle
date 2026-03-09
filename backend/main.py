@@ -694,6 +694,8 @@ async def get_arc_summary():
             walcl,
             stable,
             raw.get("net_liq_series"),
+            weekly_high=None,
+            weekly_low=None,
         ),
         1,
     )
@@ -952,6 +954,8 @@ async def get_historical_returns():
                 walcl,
                 stable,
                 raw.get("net_liq_series"),
+                weekly_high=None,
+                weekly_low=None,
             )
             btc_prices = raw.get("btc_prices", [])
             btc_price = float(btc_prices[-1]) if btc_prices else 0.0

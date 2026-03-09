@@ -21,9 +21,9 @@ import httpx
 logger = logging.getLogger(__name__)
 
 try:
-    from scoring import drawdown_score, ma_deviation_score, safe_float, fg_to_score, arc_display_score
+    from scoring import drawdown_score, drawdown_score_hl, ma_deviation_score, safe_float, fg_to_score, arc_display_score
 except ImportError:  # pragma: no cover
-    from backend.scoring import drawdown_score, ma_deviation_score, safe_float, fg_to_score, arc_display_score
+    from backend.scoring import drawdown_score, drawdown_score_hl, ma_deviation_score, safe_float, fg_to_score, arc_display_score
 
 
 HTTP_TIMEOUT = httpx.Timeout(60.0, connect=10.0)
@@ -299,9 +299,11 @@ async def run_backtest() -> Dict[str, Any]:
             ma_200w = sum(window_prices) / len(window_prices)
             if not math.isfinite(ma_200w) or ma_200w <= 0:
                 continue
-            ma_200w_score = ma_deviation_score(price, ma_200w)
+            weekly_high = safe_float(history[idx].get("high", price), price)
+            weekly_low = safe_float(history[idx].get("low", price), price)
+            ma_200w_score = ma_deviation_score(weekly_high, ma_200w)
             prices_so_far = prices[: idx + 1]
-            dd_score = drawdown_score(prices_so_far)
+            dd_score = drawdown_score_hl(prices_so_far, weekly_low)
 
             # F&G: echte Daten wenn vorhanden, sonst RSI-Proxy auf Weekly-Preisen
             if item["date"] in fg_history:
@@ -323,8 +325,8 @@ async def run_backtest() -> Dict[str, Any]:
                 {
                     "date": item["date"],
                     "price": round(price, 2),
-                    "high": round(safe_float(item.get("high"), price), 2),
-                    "low": round(safe_float(item.get("low"), price), 2),
+                    "high": round(weekly_high, 2),
+                    "low": round(weekly_low, 2),
                     "score": round(arc, 2),
                     "score_display": round(arc_display_score(arc), 2),
                 }

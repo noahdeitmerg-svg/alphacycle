@@ -20,8 +20,9 @@ def safe_float(v,fb=0.0):
 def clamp(v,lo=0.0,hi=100.0):
     return max(lo,min(hi,safe_float(v,(lo+hi)/2)))
 
-def arc_display_score(arc_raw, k=1.5):
+def arc_display_score(arc_raw, k=1.2):
     """Nur fuer UI-Output. Interne Berechnungen nutzen arc_raw.
+    k=1.2 optimal (verhindert 0-Werte bei echten Extrempunkten).
     Sigmoid-style stretch: Raw 25->~15.6, 50->50, 75->~84.4."""
     x = (safe_float(arc_raw, 50.0) - 50.0) / 50.0
     stretched = x * (1.0 + k * x * x)
@@ -86,6 +87,21 @@ def drawdown_score(prices):
     if dd>=-15: return clamp(70+(dd+15)*1.0)
     if dd>=-40: return clamp(45+(dd+40)*1.0)
     if dd>=-70: return clamp(15+(dd+70)*1.0)
+    return 5.0
+
+def drawdown_score_hl(prices, price_override=None):
+    """Drawdown-Score mit optionalem price_override fuer Hi/Lo Berechnung.
+    Identisch zu drawdown_score() aber price_override ersetzt clean[-1]."""
+    clean = [p for p in prices if p and p > 0]
+    if not clean or len(clean) < 10:
+        return 50.0
+    price = price_override if (price_override and price_override > 0) else clean[-1]
+    ath = max(clean)
+    dd = safe_div(price - ath, ath, -0.5) * 100
+    if dd >= 0:    return 90.0
+    if dd >= -15:  return clamp(70 + (dd + 15) * 1.0)
+    if dd >= -40:  return clamp(45 + (dd + 40) * 1.0)
+    if dd >= -70:  return clamp(15 + (dd + 70) * 1.0)
     return 5.0
 
 def fg_to_score(v):
@@ -359,10 +375,11 @@ def compute_btc_score(prices_daily, fear_greed, walcl_values, stablecoin_supply,
     return s
 
 
-def compute_arc_score(prices_daily, fear_greed, walcl_values, stablecoin_supply, net_liq_values=None):
+def compute_arc_score(prices_daily, fear_greed, walcl_values, stablecoin_supply, net_liq_values=None, weekly_high=None, weekly_low=None):
     """
     Unified ARC formula (research-validated): ma_200w*0.35 + drawdown*0.25 + liquidity*0.25 + fear_greed*0.15.
     Liquidity logic identical to compute_btc_score (Net Liq preferred, WALCL fallback).
+    weekly_high/weekly_low override ma and drawdown when present (extrempoint detection).
     """
     s = compute_btc_score(
         prices_daily, fear_greed, walcl_values, stablecoin_supply,
@@ -371,6 +388,19 @@ def compute_arc_score(prices_daily, fear_greed, walcl_values, stablecoin_supply,
     )
     ma_score = s["ma_200w"]
     dd_score = s["drawdown"]
+
+    if weekly_high and weekly_high > 0:
+        prices = [safe_float(p) for p in prices_daily if p and safe_float(p) > 0]
+        weekly_prices = prices[::7] if len(prices) >= 14 else prices
+        ma_200w_val = moving_average(weekly_prices, 200) or moving_average(weekly_prices, max(2, len(weekly_prices)))
+        if ma_200w_val and ma_200w_val > 0:
+            ma_score = ma_deviation_score(weekly_high, ma_200w_val)
+
+    if weekly_low and weekly_low > 0:
+        prices = [safe_float(p) for p in prices_daily if p and safe_float(p) > 0]
+        if len(prices) >= 10:
+            dd_score = drawdown_score_hl(prices, weekly_low)
+
     liq_score = s["macro_liq"]
     fg_score = fg_to_score(fear_greed)
     arc = ma_score * 0.35 + dd_score * 0.25 + liq_score * 0.25 + fg_score * 0.15
