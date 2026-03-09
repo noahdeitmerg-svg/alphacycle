@@ -68,6 +68,7 @@ Beim Bearbeiten von backend/fetcher.py, backend/main.py, backend/scoring.py oder
 - AlphaCycle Logo: Favicon-Link im `<head>` muss `rel="icon"` mit `type="image/png"` und `href="/static/logo.png"` verwenden. In der Nav-Bar wird als Logo ein `<img src="/static/logo.png" alt="AlphaCycle" style="width:32px;height:32px;border-radius:6px;object-fit:contain;flex-shrink:0;">` verwendet, kein generischer Text-/Icon-Platzhalter mehr. Die Datei `logo.png` liegt im vom Backend ausgelieferten Static-Pfad (z. B. `backend/static/logo.png`) und wird über `/static/logo.png` bereitgestellt.
 - Loading Screen Logo: Base64-Logo-Konstante `LOGO_B64` im `<head>` definiert; der Loading-Screen (`load-logo`) nutzt ein `<img id="load-logo-img">`, dessen `src` direkt per Inline-Script auf `LOGO_B64` gesetzt wird, damit das Logo bereits auf dem Initial-Loading-Screen sichtbar ist (unabhängig von `/static/logo.jpeg`).
 - Fix #86: _setCyclePhaseTag colMap vollständig — alle 12 Phasen mit Farben. Fix #87: updateShortTermContext Fallback Phase aus arcSummary.phase_context (SST). Fix #88: analyzer.py Phase Priority — days_since_top<60 nur wenn drawdown>-15%.
+- Index Syntax Fix: ARC History Chart `new Chart(canvas, {...})` Konfiguration ohne Syntaxfehler — `plugins`-Array ist korrekt als Property desselben Konfig-Objekts definiert (kein `Unexpected identifier 'plugins'` mehr beim Boot).
 
 ## backend/Dockerfile
 - **Nur 1 Datei** im Ordner `backend/` (keine zweite Datei mit Leerzeichen im Namen wie " Dockerfile").
