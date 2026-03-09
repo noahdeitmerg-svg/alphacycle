@@ -8,16 +8,19 @@ from typing import Optional
 def compute_historical_returns(backtest_data: list) -> dict:
     """
     Analyzes backtest data and computes average forward returns by ARC zone.
+    Zone-crossing entry logic: an entry is counted ONLY when ARC crosses FROM
+    OUTSIDE the zone INTO the zone (previous week not in zone, current week in zone).
+    Forward return = (price at 52 weeks / entry price - 1) * 100.
 
     backtest_data: List of dicts with date, arc_score (or score), btc_price (or price).
 
     Returns:
-      zones, best_entry_zone, sample_events, data_points_used
+      zones (entry_count, avg_12m, win_rate_12m, avg_3m, avg_6m, min_12m, max_12m),
+      best_entry_zone, sample_events, data_points_used
     """
     if not backtest_data or len(backtest_data) < 10:
         return _empty_returns()
 
-    # Normalize keys (backtest uses "score"/"price", we use arc_score/btc_price)
     def norm(d):
         return {
             "date": d.get("date", ""),
@@ -43,26 +46,31 @@ def compute_historical_returns(backtest_data: list) -> dict:
     WEEKS_6M = 26
     WEEKS_12M = 52
 
-    zone_results = {
+    def in_zone(arc: float, zone: str) -> bool:
+        a = float(arc)
+        if zone == "low":
+            return 0 <= a < 30
+        if zone == "moderate":
+            return 30 <= a < 50
+        if zone == "elevated":
+            return 50 <= a < 65
+        if zone == "extreme":
+            return 65 <= a <= 100
+        return False
+
+    zone_entries = {
         "low": [],
         "moderate": [],
         "elevated": [],
         "extreme": [],
     }
 
-    def get_zone(arc: float) -> str:
-        if arc < 30:
-            return "low"
-        if arc < 50:
-            return "moderate"
-        if arc < 65:
-            return "elevated"
-        return "extreme"
-
-    for i, entry in enumerate(data):
-        arc = float(entry.get("arc_score", 50))
-        price = float(entry.get("btc_price", 0))
-        zone = get_zone(arc)
+    for i in range(1, len(data)):
+        arc_curr = float(data[i].get("arc_score", 50))
+        arc_prev = float(data[i - 1].get("arc_score", 50))
+        price_curr = float(data[i].get("btc_price", 0))
+        if price_curr <= 0:
+            continue
 
         def fwd_return(weeks: int) -> Optional[float]:
             target_i = i + weeks
@@ -71,22 +79,29 @@ def compute_historical_returns(backtest_data: list) -> dict:
             fwd_price = float(data[target_i].get("btc_price", 0))
             if fwd_price <= 0:
                 return None
-            return (fwd_price - price) / price * 100
+            return (fwd_price - price_curr) / price_curr * 100
 
-        r3m = fwd_return(WEEKS_3M)
-        r6m = fwd_return(WEEKS_6M)
-        r12m = fwd_return(WEEKS_12M)
-
-        zone_results[zone].append(
-            {
-                "date": entry.get("date", ""),
-                "arc": round(arc, 1),
-                "price": price,
+        for zone in zone_entries:
+            if in_zone(arc_prev, zone) or not in_zone(arc_curr, zone):
+                continue
+            r3m = fwd_return(WEEKS_3M)
+            r6m = fwd_return(WEEKS_6M)
+            r12m = fwd_return(WEEKS_12M)
+            zone_entries[zone].append({
+                "date": data[i].get("date", ""),
+                "arc": round(arc_curr, 1),
+                "price": price_curr,
                 "r3m": r3m,
                 "r6m": r6m,
                 "r12m": r12m,
-            }
-        )
+            })
+
+    zone_meta = {
+        "low": "0-30",
+        "moderate": "30-50",
+        "elevated": "50-65",
+        "extreme": "65-100",
+    }
 
     def stats(entries: list, key: str) -> dict:
         vals = [e[key] for e in entries if e.get(key) is not None]
@@ -103,15 +118,8 @@ def compute_historical_returns(backtest_data: list) -> dict:
             "count": len(vals),
         }
 
-    zone_meta = {
-        "low": "0-30",
-        "moderate": "30-50",
-        "elevated": "50-65",
-        "extreme": "65-100",
-    }
-
     zones_output = {}
-    for zone, entries in zone_results.items():
+    for zone, entries in zone_entries.items():
         s3m = stats(entries, "r3m")
         s6m = stats(entries, "r6m")
         s12m = stats(entries, "r12m")
@@ -132,18 +140,16 @@ def compute_historical_returns(backtest_data: list) -> dict:
     )
 
     sample_events = []
-    for zone, entries in zone_results.items():
+    for zone, entries in zone_entries.items():
         for e in entries[-3:]:
             if e.get("r12m") is not None:
-                sample_events.append(
-                    {
-                        "date": e["date"],
-                        "arc": e["arc"],
-                        "price": round(e["price"]),
-                        "r12m": round(e["r12m"], 1),
-                        "zone": zone,
-                    }
-                )
+                sample_events.append({
+                    "date": e["date"],
+                    "arc": e["arc"],
+                    "price": round(e["price"]),
+                    "r12m": round(e["r12m"], 1),
+                    "zone": zone,
+                })
 
     return {
         "zones": zones_output,
@@ -227,14 +233,11 @@ def compute_arc_forward_returns(backtest_data: list) -> list:
 
 def compute_high_risk_drawdown(backtest_data: list) -> dict:
     """
-    For ARC >= 65 (High Risk Zone):
-    Computes the maximum drawdown from the peak after zone entry.
-    For each entry into the High Risk Zone (arc >= 65):
-      - Find the highest price from entry (peak)
-      - Find the lowest price after the peak within 52 weeks
-      - Drawdown = (trough - peak) / peak * 100 (negative)
-    Returns: avg_drawdown, max_drawdown (worst case),
-             min_drawdown (mildest case), sample_count
+    For Extreme zone (ARC >= 65): zone-crossing entry only.
+    Entry when ARC crosses FROM outside (prev < 65) INTO zone (curr >= 65).
+    For each such entry: max drawdown from peak after entry within 52 weeks.
+    Drawdown = (trough - peak) / peak * 100 (negative).
+    Returns: avg_drawdown, max_drawdown (worst), min_drawdown (mildest), sample_count.
     """
     def norm(d):
         return {
@@ -248,29 +251,25 @@ def compute_high_risk_drawdown(backtest_data: list) -> dict:
     data = sorted(data, key=lambda x: x.get("date", ""))
 
     drawdowns = []
-    i = 0
-    while i < len(data):
-        arc = float(data[i].get("arc_score", 0))
-        if arc >= 65:
-            entry_price = float(data[i].get("btc_price", 0))
-            window_end = min(i + 52, len(data))
-            window = data[i:window_end]
-            prices_in_window = [float(d.get("btc_price", 0)) for d in window if d.get("btc_price")]
-
-            if len(prices_in_window) >= 4:
-                peak = max(prices_in_window)
-                peak_idx = prices_in_window.index(peak)
-                post_peak = prices_in_window[peak_idx:]
-                if post_peak:
-                    trough = min(post_peak)
-                    if peak > 0:
-                        dd = (trough - peak) / peak * 100
-                        drawdowns.append(round(dd, 1))
-
-            while i < len(data) and float(data[i].get("arc_score", 0)) >= 65:
-                i += 1
+    for i in range(1, len(data)):
+        arc_curr = float(data[i].get("arc_score", 0))
+        arc_prev = float(data[i - 1].get("arc_score", 0))
+        if arc_prev >= 65 or arc_curr < 65:
             continue
-        i += 1
+        entry_price = float(data[i].get("btc_price", 0))
+        window_end = min(i + 52, len(data))
+        window = data[i:window_end]
+        prices_in_window = [float(d.get("btc_price", 0)) for d in window if d.get("btc_price")]
+
+        if len(prices_in_window) >= 4:
+            peak = max(prices_in_window)
+            peak_idx = prices_in_window.index(peak)
+            post_peak = prices_in_window[peak_idx:]
+            if post_peak:
+                trough = min(post_peak)
+                if peak > 0:
+                    dd = (trough - peak) / peak * 100
+                    drawdowns.append(round(dd, 1))
 
     if not drawdowns:
         return {"avg_drawdown": None, "max_drawdown": None, "min_drawdown": None, "sample_count": 0}
@@ -297,9 +296,9 @@ def _empty_returns() -> dict:
     return {
         "zones": {
             "low": {**empty_zone, "range": "0-30"},
-            "moderate": {**empty_zone, "range": "30-60"},
-            "elevated": {**empty_zone, "range": "60-75"},
-            "extreme": {**empty_zone, "range": "75-100"},
+            "moderate": {**empty_zone, "range": "30-50"},
+            "elevated": {**empty_zone, "range": "50-65"},
+            "extreme": {**empty_zone, "range": "65-100"},
         },
         "best_entry_zone": None,
         "sample_events": [],
