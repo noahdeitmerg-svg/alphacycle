@@ -4254,7 +4254,6 @@ async function fetchHistoricalReturns() {
     var data = await apiFetch(BACKEND_URL + '/api/historical-returns');
     if (!data || !data.zones) return;
     var z = data.zones;
-    var phaseGroup = S.arcSummary?.phase_group || getPhaseGroup();
 
     function setZone(key, elKey) {
       var zone = z[key];
@@ -4275,42 +4274,13 @@ async function fetchHistoricalReturns() {
       }
     }
 
-    if (phaseGroup === 'bear' || phaseGroup === 'late_bull') {
-      var lowRet = document.getElementById('hr-low-12m');
-      if (lowRet) { lowRet.textContent = 'Bear Market — data not applicable'; lowRet.style.color = '#6b7280'; }
-      var lowWr = document.getElementById('hr-low-wr'); if (lowWr) lowWr.textContent = '—';
-      var lowC = document.getElementById('hr-low-count'); if (lowC) lowC.textContent = '—';
-      var modRet = document.getElementById('hr-mod-12m');
-      if (modRet) { modRet.textContent = 'Bear Market — data not applicable'; modRet.style.color = '#6b7280'; }
-      var modWr = document.getElementById('hr-mod-wr'); if (modWr) modWr.textContent = '—';
-      var modC = document.getElementById('hr-mod-count'); if (modC) modC.textContent = '—';
-    } else {
-      setZone('low', 'low');
-      setZone('moderate', 'mod');
-    }
+    setZone('low', 'low');
+    setZone('moderate', 'mod');
+    setZone('elevated', 'elv');
 
     var elvZone = z['elevated'];
     if (elvZone) {
-      var elvRet = document.getElementById('hr-elv-12m');
-      var elvWr = document.getElementById('hr-elv-wr');
-      var elvC = document.getElementById('hr-elv-count');
-      if (phaseGroup === 'bear' || phaseGroup === 'accumulation' || phaseGroup === 'bull') {
-        if (elvRet) { elvRet.textContent = 'NEUTRAL ZONE'; elvRet.style.color = '#6b7280'; elvRet.style.fontSize = ''; }
-        if (elvWr) elvWr.textContent = '—';
-        if (elvC) elvC.textContent = (elvZone.entry_count != null ? elvZone.entry_count : '—') + ' entries';
-      } else if (phaseGroup === 'late_bull') {
-        if (elvRet) { elvRet.textContent = 'REDUCE EXPOSURE'; elvRet.style.color = '#f97316'; elvRet.style.fontSize = '1.1rem'; }
-        if (elvWr) elvWr.textContent = 'DO NOT BUY';
-        if (elvC) elvC.textContent = (elvZone.entry_count != null ? elvZone.entry_count : '—') + ' entries';
-      } else {
-        if (elvRet) {
-          elvRet.textContent = '\u26A0 REDUCE';
-          elvRet.style.color = '#f97316';
-          elvRet.style.fontSize = '1.1rem';
-        }
-        if (elvWr) elvWr.textContent = 'DO NOT BUY';
-        if (elvC) elvC.textContent = (elvZone.entry_count != null ? elvZone.entry_count : '—') + ' entries';
-      }
+      setZone('elevated', 'elv');
     }
 
     var extZone = z['extreme'];
