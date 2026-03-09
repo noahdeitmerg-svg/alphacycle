@@ -3319,14 +3319,25 @@ function _setCyclePhaseTag(phase, ctx) {
 }
 
 function updateShortTermContext() {
-  if (S.shortTerm && S.shortTerm.signal) return;
   var ctx = S.shortTermContext;
+  var arc = S.arcSummary && S.arcSummary.arc_score != null
+    ? S.arcSummary.arc_score
+    : (S.combined != null ? S.combined : (S.btcScore != null ? S.btcScore : 50));
+
   if (!ctx) {
-    var arc = S.arcSummary && S.arcSummary.arc_score != null ? S.arcSummary.arc_score : (S.combined != null ? S.combined : (S.btcScore != null ? S.btcScore : 50));
-    var fallbackPhase = arc < 30 ? 'Late Bear' : arc < 45 ? 'Late Bear' : arc < 60 ? 'Late Bull' : arc < 75 ? 'Distribution' : 'Bear / Risk Off';
+    var fallbackPhase = arc < 30 ? 'Late Bear'
+      : arc < 45 ? 'Late Bear'
+      : arc < 60 ? 'Late Bull'
+      : arc < 75 ? 'Distribution'
+      : 'Bear / Risk Off';
     _setCyclePhaseTag(fallbackPhase, null);
     return;
   }
+
+  _setCyclePhaseTag(ctx.phase || ctx.phase_label || 'Unknown', ctx);
+
+  if (S.shortTerm && S.shortTerm.signal) return;
+
   var stScore = ctx.st_score != null ? ctx.st_score : 50;
   var stCol = scoreColor(stScore);
   setText('st-score-val', stScore);
@@ -3342,7 +3353,6 @@ function updateShortTermContext() {
   setText('st-upside-price', ctx.upside_target ? '~$' + ctx.upside_target.toLocaleString() : '');
   setText('st-downside-pct', ctx.downside_pct != null ? '-' + ctx.downside_pct + '%' : '—');
   setText('st-downside-price', ctx.downside_target ? '~$' + ctx.downside_target.toLocaleString() : '');
-  _setCyclePhaseTag(ctx.phase_label, ctx);
 }
 
 function diValClass(v) {
