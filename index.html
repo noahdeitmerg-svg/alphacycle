@@ -2412,6 +2412,17 @@ let countdown = REFRESH_INTERVAL;
 let cdTimer;
 let isRefreshing = false;
 
+function getPhaseGroup() {
+  var pg = S.arcSummary?.phase_group;
+  if (pg) return pg;
+  var phase = S.analyzerPhase || '';
+  if (['Early Bear','Mid Bear','Late Bear'].includes(phase)) return 'bear';
+  if (['Early Bull','Mid Bull'].includes(phase)) return 'bull';
+  if (['Accumulation','Deep Accumulation'].includes(phase)) return 'accumulation';
+  if (phase === 'Late Bull') return 'late_bull';
+  return 'unknown';
+}
+
 // ── SAFE MATH ─────────────────────────────────────────────────────────────
 const safeNum  = (v, fb=0) => { const n=Number(v); return (!isFinite(n)||isNaN(n))?fb:n; };
 const clamp    = (v,lo=0,hi=100) => Math.min(hi,Math.max(lo,safeNum(v,50)));
@@ -2930,6 +2941,14 @@ function updateUI() {
     const el = document.getElementById('hero-risk-label');
     if (!el) return;
     const s = combinedScore != null ? Number(combinedScore) : 50;
+    var arcDisplay = S.arcSummary?.arc_display ?? s;
+    if (getPhaseGroup() === 'bear' && arcDisplay < 50) {
+      el.textContent = S.arcSummary?.phase_context || S.analyzerPhase || 'MID BEAR';
+      el.style.borderColor = 'rgba(245,158,11,0.4)';
+      el.style.color = '#f59e0b';
+      el.style.background = 'rgba(245,158,11,0.07)';
+      return;
+    }
     const zones = [
       [25,  'LOW RISK',   '34,197,94'],
       [45,  'MODERATE',   '59,130,246'],
@@ -3088,6 +3107,12 @@ function updateUI() {
     if (S.decisionOverride) position = S.decisionOverride;
     const col = scoreColor(score);
     setText('dec-position',   position, col);
+    var decPosEl = document.getElementById('dec-position');
+    if (decPosEl) {
+      var pg = getPhaseGroup();
+      if (position === 'WAIT — Bear Market') decPosEl.style.color = '#6b7280';
+      else if (pg === 'bear') decPosEl.style.color = '#f59e0b';
+    }
     setText('dec-allocation', allocation);
     if (!arcSum || arcSum.position == null || arcSum.position === '') setText('dec-range', range, (score < 50 ? '#22c55e' : undefined));
     setText('dec-confidence', confidence);
@@ -4218,6 +4243,8 @@ async function fetchHistoricalReturns() {
     var data = await apiFetch(BACKEND_URL + '/api/historical-returns');
     if (!data || !data.zones) return;
     var z = data.zones;
+    var phaseGroup = S.arcSummary?.phase_group || getPhaseGroup();
+
     function setZone(key, elKey) {
       var zone = z[key];
       if (!zone) return;
@@ -4225,6 +4252,7 @@ async function fetchHistoricalReturns() {
       if (retEl) {
         var val = zone.avg_12m;
         retEl.textContent = val != null ? (val > 0 ? '+' : '') + val + '%' : '—';
+        retEl.style.color = '';
       }
       var wrEl = document.getElementById('hr-' + elKey + '-wr');
       if (wrEl) {
@@ -4235,21 +4263,43 @@ async function fetchHistoricalReturns() {
         cEl.textContent = zone.entry_count != null ? zone.entry_count + ' entries' : '— entries';
       }
     }
-    setZone('low', 'low');
-    setZone('moderate', 'mod');
+
+    if (phaseGroup === 'bear' || phaseGroup === 'late_bull') {
+      var lowRet = document.getElementById('hr-low-12m');
+      if (lowRet) { lowRet.textContent = 'Bear Market — data not applicable'; lowRet.style.color = '#6b7280'; }
+      var lowWr = document.getElementById('hr-low-wr'); if (lowWr) lowWr.textContent = '—';
+      var lowC = document.getElementById('hr-low-count'); if (lowC) lowC.textContent = '—';
+      var modRet = document.getElementById('hr-mod-12m');
+      if (modRet) { modRet.textContent = 'Bear Market — data not applicable'; modRet.style.color = '#6b7280'; }
+      var modWr = document.getElementById('hr-mod-wr'); if (modWr) modWr.textContent = '—';
+      var modC = document.getElementById('hr-mod-count'); if (modC) modC.textContent = '—';
+    } else {
+      setZone('low', 'low');
+      setZone('moderate', 'mod');
+    }
 
     var elvZone = z['elevated'];
     if (elvZone) {
       var elvRet = document.getElementById('hr-elv-12m');
-      if (elvRet) {
-        elvRet.textContent = '\u26A0 REDUCE';
-        elvRet.style.color = '#f97316';
-        elvRet.style.fontSize = '1.1rem';
-      }
       var elvWr = document.getElementById('hr-elv-wr');
-      if (elvWr) elvWr.textContent = 'DO NOT BUY';
       var elvC = document.getElementById('hr-elv-count');
-      if (elvC) elvC.textContent = (elvZone.entry_count != null ? elvZone.entry_count : '—') + ' entries';
+      if (phaseGroup === 'bear' || phaseGroup === 'accumulation' || phaseGroup === 'bull') {
+        if (elvRet) { elvRet.textContent = 'NEUTRAL ZONE'; elvRet.style.color = '#6b7280'; elvRet.style.fontSize = ''; }
+        if (elvWr) elvWr.textContent = '—';
+        if (elvC) elvC.textContent = (elvZone.entry_count != null ? elvZone.entry_count : '—') + ' entries';
+      } else if (phaseGroup === 'late_bull') {
+        if (elvRet) { elvRet.textContent = 'REDUCE EXPOSURE'; elvRet.style.color = '#f97316'; elvRet.style.fontSize = '1.1rem'; }
+        if (elvWr) elvWr.textContent = 'DO NOT BUY';
+        if (elvC) elvC.textContent = (elvZone.entry_count != null ? elvZone.entry_count : '—') + ' entries';
+      } else {
+        if (elvRet) {
+          elvRet.textContent = '\u26A0 REDUCE';
+          elvRet.style.color = '#f97316';
+          elvRet.style.fontSize = '1.1rem';
+        }
+        if (elvWr) elvWr.textContent = 'DO NOT BUY';
+        if (elvC) elvC.textContent = (elvZone.entry_count != null ? elvZone.entry_count : '—') + ' entries';
+      }
     }
 
     var extZone = z['extreme'];
