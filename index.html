@@ -2052,6 +2052,7 @@ canvas.sparkline {
       <div class="decision-item">
         <div class="decision-label">12M Expected Range</div>
         <div class="decision-value" id="dec-range">—</div>
+        <div class="decision-value decision-value-sub" id="dec-range-worst" style="display:none;font-size:0.85em;color:#6b7280;margin-top:2px"></div>
       </div>
       <div class="decision-item">
         <div class="decision-label">Confidence</div>
@@ -3039,11 +3040,31 @@ function updateUI() {
     const score = S.btcScore;
     const arcSum = S.arcSummary;
     let position, allocation, range, confidence;
+    const rangeEl = document.getElementById('dec-range');
+    const rangeWorstEl = document.getElementById('dec-range-worst');
     if (arcSum?.position != null && arcSum?.position !== '') {
       position = arcSum.position;
       allocation = arcSum.allocation ?? (score < 45 ? '60–80%' : score < 60 ? '40–60%' : score < 75 ? '20–40%' : '0–20%');
-      range = arcSum.expected_range_label ?? '—';
       confidence = arcSum.confidence_label ?? 'Moderate';
+      var exp = arcSum.expected_range;
+      if (exp && exp.type === 'reduce') {
+        range = '\u26A0 REDUCE \u2014 DO NOT BUY';
+        if (rangeEl) { rangeEl.textContent = range; rangeEl.style.color = '#f97316'; }
+        if (rangeWorstEl) { rangeWorstEl.style.display = 'none'; rangeWorstEl.textContent = ''; }
+      } else if (exp && exp.type === 'drawdown') {
+        var avgDd = exp.avg_drawdown;
+        var maxDd = exp.max_drawdown;
+        range = (avgDd != null ? 'AVG -' + Math.abs(avgDd) + '% FROM PEAK' : 'HIGH RISK — SELL / REDUCE');
+        if (rangeEl) { rangeEl.textContent = (avgDd != null ? '\u2193 AVG -' + Math.abs(avgDd) + '% FROM PEAK' : range); rangeEl.style.color = '#ef4444'; }
+        if (rangeWorstEl) {
+          if (maxDd != null) { rangeWorstEl.textContent = 'Worst case: -' + Math.abs(maxDd) + '%'; rangeWorstEl.style.display = 'block'; rangeWorstEl.style.color = '#6b7280'; }
+          else { rangeWorstEl.style.display = 'none'; rangeWorstEl.textContent = ''; }
+        }
+      } else {
+        range = arcSum.expected_range_label ?? (exp && exp.label) ?? '—';
+        if (rangeEl) { rangeEl.textContent = range; rangeEl.style.color = '#22c55e'; }
+        if (rangeWorstEl) { rangeWorstEl.style.display = 'none'; rangeWorstEl.textContent = ''; }
+      }
     } else {
       if (score < 25) {
         position = 'ACCUMULATE'; allocation = '80–100%';
@@ -3061,12 +3082,14 @@ function updateUI() {
         position = 'DEFENSIVE'; allocation = '0–20%';
         range = '-30% – 0%'; confidence = 'Low';
       }
+      if (rangeEl) { rangeEl.textContent = range; rangeEl.style.color = ''; }
+      if (rangeWorstEl) { rangeWorstEl.style.display = 'none'; rangeWorstEl.textContent = ''; }
     }
     if (S.decisionOverride) position = S.decisionOverride;
     const col = scoreColor(score);
     setText('dec-position',   position, col);
     setText('dec-allocation', allocation);
-    setText('dec-range',      range);
+    if (!arcSum || arcSum.position == null || arcSum.position === '') setText('dec-range', range, (score < 50 ? '#22c55e' : undefined));
     setText('dec-confidence', confidence);
     setText('dec-index-val',  Math.round(combinedScore), scoreColor(combinedScore));
   })();

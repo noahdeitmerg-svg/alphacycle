@@ -556,35 +556,70 @@ async def get_cycle_anchor():
         })
 
 
-def _get_expected_range(arc: float, forward_returns: list) -> dict:
+def _get_expected_range(arc: float, forward_returns: list, high_risk_drawdown: dict = None) -> dict:
     """
-    Expected 12M return range from raw ARC range (empirical ~22-78). Fixed lookup; avg_12m capped at 300%.
+    Zone-specific Expected Range:
+    - arc < 50: Forward Return (buy zone)
+    - arc 50-65: Elevated - no return, REDUCE signal
+    - arc >= 65: High Risk - Max Drawdown from Peak after zone entry
     """
     if arc < 25:
-        avg_12m, range_low, range_high = 120, 60, 180
-        label = "+60% - +180%"
+        return {
+            "avg_12m": 120, "range_low": 60, "range_high": 180,
+            "label": "+60% - +180%",
+            "type": "forward_return",
+            "signal": "BUY",
+        }
     elif arc < 35:
-        avg_12m, range_low, range_high = 60, 30, 100
-        label = "+30% - +100%"
+        return {
+            "avg_12m": 60, "range_low": 30, "range_high": 100,
+            "label": "+30% - +100%",
+            "type": "forward_return",
+            "signal": "BUY",
+        }
     elif arc < 45:
-        avg_12m, range_low, range_high = 25, 10, 50
-        label = "+10% - +50%"
-    elif arc < 55:
-        avg_12m, range_low, range_high = 10, -10, 30
-        label = "-10% - +30%"
+        return {
+            "avg_12m": 25, "range_low": 10, "range_high": 50,
+            "label": "+10% - +50%",
+            "type": "forward_return",
+            "signal": "ACCUMULATE",
+        }
+    elif arc < 50:
+        return {
+            "avg_12m": 10, "range_low": -5, "range_high": 30,
+            "label": "-5% - +30%",
+            "type": "forward_return",
+            "signal": "NEUTRAL",
+        }
     elif arc < 65:
-        avg_12m, range_low, range_high = -10, -25, 10
-        label = "-25% - +10%"
+        return {
+            "avg_12m": None,
+            "range_low": None,
+            "range_high": None,
+            "label": "REDUCE — DO NOT BUY",
+            "type": "reduce",
+            "signal": "REDUCE",
+        }
     else:
-        avg_12m, range_low, range_high = -30, -50, -10
-        label = "-50% - -10%"
-    avg_12m = min(300.0, avg_12m)
-    return {
-        "avg_12m": round(avg_12m, 1),
-        "range_low": int(range_low),
-        "range_high": int(range_high),
-        "label": label,
-    }
+        dd = high_risk_drawdown or {}
+        avg_dd = dd.get("avg_drawdown")
+        max_dd = dd.get("max_drawdown")
+        min_dd = dd.get("min_drawdown")
+        if avg_dd is not None and max_dd is not None:
+            label = "Avg -%s%% / Worst -%s%% from Peak" % (abs(int(avg_dd)), abs(int(max_dd)))
+        else:
+            label = "HIGH RISK — SELL / REDUCE"
+        return {
+            "avg_drawdown": avg_dd,
+            "max_drawdown": max_dd,
+            "min_drawdown": min_dd,
+            "avg_12m": None,
+            "range_low": None,
+            "range_high": None,
+            "label": label,
+            "type": "drawdown",
+            "signal": "SELL",
+        }
 
 
 @app.get("/api/arc-summary")
@@ -660,12 +695,13 @@ async def get_arc_summary():
         out["arc_percentile"] = momentum_data.get("arc_percentile")
         out["arc_percentile_label"] = momentum_data.get("arc_percentile_label")
 
-        from historical_returns import compute_arc_forward_returns
+        from historical_returns import compute_arc_forward_returns, compute_high_risk_drawdown
         from analyzer import compute_confidence_calibrated
         from decision_engine import get_position
 
         fwd = compute_arc_forward_returns(results)
-        expected = _get_expected_range(current_arc, fwd)
+        dd_data = compute_high_risk_drawdown(results)
+        expected = _get_expected_range(current_arc, fwd, dd_data)
         out["expected_range"] = expected
         out["expected_range_label"] = expected.get("label", "N/A")
 
@@ -697,7 +733,7 @@ async def get_arc_summary():
         out["arc_momentum_label"] = None
         out["arc_percentile"] = None
         out["arc_percentile_label"] = None
-        out["expected_range"] = {"avg_12m": None, "range_low": None, "range_high": None, "label": "N/A"}
+        out["expected_range"] = {"avg_12m": None, "range_low": None, "range_high": None, "label": "N/A", "type": "forward_return"}
         out["expected_range_label"] = "N/A"
         out["confidence_label"] = "Moderate"
         out["position"] = "HOLD"
@@ -1089,9 +1125,11 @@ async def get_snapshot():
         expected_range_label = "N/A"
         try:
             bt = await run_backtest()
-            from historical_returns import compute_arc_forward_returns
-            fwd = compute_arc_forward_returns(bt.get("results", []) if isinstance(bt, dict) else [])
-            expected = _get_expected_range(arc_score, fwd)
+            from historical_returns import compute_arc_forward_returns, compute_high_risk_drawdown
+            bt_results = bt.get("results", []) if isinstance(bt, dict) else []
+            fwd = compute_arc_forward_returns(bt_results)
+            dd_data = compute_high_risk_drawdown(bt_results)
+            expected = _get_expected_range(arc_score, fwd, dd_data)
             expected_range_label = expected.get("label", "N/A")
         except Exception:
             pass

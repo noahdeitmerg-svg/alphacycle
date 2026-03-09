@@ -225,6 +225,64 @@ def compute_arc_forward_returns(backtest_data: list) -> list:
     return results
 
 
+def compute_high_risk_drawdown(backtest_data: list) -> dict:
+    """
+    For ARC >= 65 (High Risk Zone):
+    Computes the maximum drawdown from the peak after zone entry.
+    For each entry into the High Risk Zone (arc >= 65):
+      - Find the highest price from entry (peak)
+      - Find the lowest price after the peak within 52 weeks
+      - Drawdown = (trough - peak) / peak * 100 (negative)
+    Returns: avg_drawdown, max_drawdown (worst case),
+             min_drawdown (mildest case), sample_count
+    """
+    def norm(d):
+        return {
+            "date": d.get("date", ""),
+            "arc_score": d.get("arc_score") if d.get("arc_score") is not None else d.get("score"),
+            "btc_price": d.get("btc_price") if d.get("btc_price") is not None else d.get("price"),
+        }
+
+    data = [norm(d) for d in (backtest_data or [])]
+    data = [d for d in data if d.get("arc_score") is not None and (d.get("btc_price") or 0) > 0]
+    data = sorted(data, key=lambda x: x.get("date", ""))
+
+    drawdowns = []
+    i = 0
+    while i < len(data):
+        arc = float(data[i].get("arc_score", 0))
+        if arc >= 65:
+            entry_price = float(data[i].get("btc_price", 0))
+            window_end = min(i + 52, len(data))
+            window = data[i:window_end]
+            prices_in_window = [float(d.get("btc_price", 0)) for d in window if d.get("btc_price")]
+
+            if len(prices_in_window) >= 4:
+                peak = max(prices_in_window)
+                peak_idx = prices_in_window.index(peak)
+                post_peak = prices_in_window[peak_idx:]
+                if post_peak:
+                    trough = min(post_peak)
+                    if peak > 0:
+                        dd = (trough - peak) / peak * 100
+                        drawdowns.append(round(dd, 1))
+
+            while i < len(data) and float(data[i].get("arc_score", 0)) >= 65:
+                i += 1
+            continue
+        i += 1
+
+    if not drawdowns:
+        return {"avg_drawdown": None, "max_drawdown": None, "min_drawdown": None, "sample_count": 0}
+
+    return {
+        "avg_drawdown": round(sum(drawdowns) / len(drawdowns), 1),
+        "max_drawdown": round(min(drawdowns), 1),
+        "min_drawdown": round(max(drawdowns), 1),
+        "sample_count": len(drawdowns),
+    }
+
+
 def _empty_returns() -> dict:
     empty_zone = {
         "range": "N/A",
