@@ -307,50 +307,74 @@ def get_short_term_context(
     ath = max(0.0, float(ath_price or price or 1))
     ma200w = max(0.0, float(ma_200w or 0))
 
+    # Drawdown from cycle top (ATH). Negative when price below top.
+    drawdown_from_top = ((price - ath) / ath * 100.0) if ath > 0 else 0.0
+
     st_score = round((rsi + funding + pl + mvrv) / 4)
     st_score = max(0, min(100, st_score))
 
-    # Post-Top Detection has priority
-    if days_since_top > 0 and days_since_top < 180:
-        if arc >= 65:
-            phase_label = "Bear / Risk Off"
-            phase_desc = "Post-Top Abschwung. Kapitalerhalt Prioritaet."
-        elif arc >= 50:
-            phase_label = "Early Bear"
-            phase_desc = "Korrekturphase nach Cycle Top. Strukturelles Risiko faellt."
-        elif arc >= 35:
-            phase_label = "Accumulation"
-            phase_desc = "Post-Top Korrektur abgeschlossen. Akkumulationszone erreicht."
-        else:
-            phase_label = "Deep Accumulation"
-            phase_desc = "Extreme Kaufzone. Historisch sehr hohe Forward Returns."
-    elif days_since_top >= 180 and days_since_top < 540:
-        if arc < 35:
-            phase_label = "Late Bear / Accumulation"
-            phase_desc = "Spaeter Abschwung. Historische Kaufzone naehert sich."
-        elif arc < 55:
-            phase_label = "Late Bear"
-            phase_desc = "Uebergangsphase. Cycle Reset laeuft."
-        else:
-            phase_label = "Distribution"
-            phase_desc = "Erholung mit erhoehtem Risiko."
-    else:
-        # New cycle or no top known
-        if arc < 30:
-            phase_label = "Early Bull"
-            phase_desc = "Fruehe Aufwaertsphase. Historisch beste Einstiegszone."
-        elif arc < 50:
-            phase_label = "Mid Bull"
-            phase_desc = "Expansion. Strukturelles Risiko kontrollierbar."
-        elif arc < 65:
+    # Phase from cycle_anchor only (days_since_top, days_since_bottom, drawdown_from_top).
+    # ARC is risk thermometer only; phase is NOT derived from ARC.
+    # Priority 1-9; tactical_signal and tactical_color per phase.
+    phase_label = "Transition"
+    phase_desc = "Evaluating cycle phase."
+    tactical = "NEUTRAL"
+    tactical_color = "blue"
+
+    if days_since_top > 0:
+        # Post-top (bear) regime
+        if days_since_top < 60:
             phase_label = "Late Bull"
-            phase_desc = "Spaetphase. Risiko steigt. Vorsicht."
-        elif arc < 80:
-            phase_label = "Distribution"
-            phase_desc = "Verteilung. Positionen reduzieren."
+            phase_desc = "Near cycle top, distribution phase."
+            tactical = "REDUCE"
+            tactical_color = "orange"
+        elif days_since_top < 180 and drawdown_from_top > -20:
+            phase_label = "Early Bear"
+            phase_desc = "Top confirmed, first correction phase."
+            tactical = "REDUCE / SHORT TERM ONLY"
+            tactical_color = "orange"
+        elif days_since_top < 365 and drawdown_from_top > -40:
+            phase_label = "Mid Bear"
+            phase_desc = "Active bear market, relief rallies possible."
+            tactical = "CAUTIOUS LONG — Relief Rally moeglich"
+            tactical_color = "yellow"
+        elif days_since_top < 365 and drawdown_from_top <= -40:
+            phase_label = "Late Bear"
+            phase_desc = "Deep in bear, capitulation possible."
+            tactical = "ACCUMULATE SLOWLY"
+            tactical_color = "green"
+        elif days_since_top >= 365 and arc_score > 35:
+            phase_label = "Accumulation"
+            phase_desc = "Long bear over, structural bottom formation."
+            tactical = "BUY"
+            tactical_color = "green"
+        elif days_since_top >= 365 and arc_score <= 35:
+            phase_label = "Deep Accumulation"
+            phase_desc = "Historical buy zone."
+            tactical = "STRONG BUY"
+            tactical_color = "green"
         else:
-            phase_label = "Bear / Risk Off"
-            phase_desc = "Maximales Risiko. Kapitalerhalt."
+            phase_label = "Transition"
+            phase_desc = "Cycle phase transition."
+            tactical = "NEUTRAL"
+            tactical_color = "blue"
+    else:
+        # Bull regime (no top yet)
+        if days_since_bottom < 180:
+            phase_label = "Early Bull"
+            phase_desc = "New cycle starting."
+            tactical = "BUY AGGRESSIVELY"
+            tactical_color = "green"
+        elif days_since_bottom < 400:
+            phase_label = "Mid Bull"
+            phase_desc = "Uptrend established."
+            tactical = "HOLD / BUY DIPS"
+            tactical_color = "green"
+        else:
+            phase_label = "Late Bull"
+            phase_desc = "Late cycle, caution."
+            tactical = "REDUCE"
+            tactical_color = "orange"
 
     phase_scenarios = {
         "Early Bull":             {"upside": (25, 60),  "downside": (8, 20)},
@@ -358,9 +382,10 @@ def get_short_term_context(
         "Late Bull":              {"upside": (10, 25),  "downside": (15, 35)},
         "Distribution":           {"upside": (5, 15),   "downside": (20, 45)},
         "Bear / Risk Off":        {"upside": (5, 20),   "downside": (25, 55)},
+        "Early Bear":             {"upside": (5, 20),   "downside": (20, 50)},
+        "Mid Bear":               {"upside": (10, 30),  "downside": (15, 35)},
         "Late Bear":              {"upside": (10, 30),  "downside": (15, 30)},
         "Late Bear / Accumulation": {"upside": (15, 40), "downside": (10, 25)},
-        "Early Bear":             {"upside": (5, 20),   "downside": (20, 50)},
         "Accumulation":           {"upside": (15, 40),  "downside": (10, 25)},
         "Deep Accumulation":      {"upside": (25, 60),  "downside": (8, 20)},
         "Transition":             {"upside": (8, 20),   "downside": (10, 25)},
@@ -377,22 +402,6 @@ def get_short_term_context(
 
     upside_target = round(price * (1 + upside_pct / 100)) if price > 0 else None
     downside_target = round(price * (1 - downside_pct / 100)) if price > 0 else None
-
-    if st_score < 30:
-        tactical = "OVERSOLD"
-        tactical_color = "green"
-    elif st_score < 45:
-        tactical = "CAUTIOUS LONG"
-        tactical_color = "green"
-    elif st_score < 55:
-        tactical = "NEUTRAL"
-        tactical_color = "blue"
-    elif st_score < 70:
-        tactical = "CAUTION"
-        tactical_color = "orange"
-    else:
-        tactical = "OVERBOUGHT"
-        tactical_color = "red"
 
     return {
         "st_score": st_score,
