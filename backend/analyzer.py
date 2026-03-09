@@ -340,13 +340,13 @@ def get_short_term_context(
             tactical_color = "yellow"
         elif days_since_top < 365 and drawdown_from_top > -55:
             phase_label = "Late Bear"
-            phase_desc = "Deep in bear, capitulation possible."
+            phase_desc = "Deep bear market, capitulation possible."
             tactical = "ACCUMULATE SLOWLY"
             tactical_color = "green"
         elif days_since_top < 365 and drawdown_from_top <= -55:
             phase_label = "Deep Bear"
-            phase_desc = "Extreme bear, historical capitulation zone."
-            tactical = "ACCUMULATE SLOWLY"
+            phase_desc = "Extreme bear, historical buy zone forming."
+            tactical = "ACCUMULATE AGGRESSIVELY"
             tactical_color = "green"
         elif days_since_top >= 365 and arc_score > 35:
             phase_label = "Accumulation"

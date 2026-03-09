@@ -586,7 +586,7 @@ async def get_cycle_anchor():
 
 
 # Phase groups for phase-coherent decision engine (get_arc_summary, historical-returns)
-BEAR_PHASES = ["Early Bear", "Mid Bear", "Late Bear"]
+BEAR_PHASES = ["Early Bear", "Mid Bear", "Late Bear", "Deep Bear"]
 BULL_PHASES = ["Early Bull", "Mid Bull"]
 ACCUMULATION_PHASES = ["Accumulation", "Deep Accumulation"]
 LATE_BULL_PHASES = ["Late Bull"]
