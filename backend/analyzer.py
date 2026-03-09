@@ -338,9 +338,14 @@ def get_short_term_context(
             phase_desc = "Active bear market, relief rallies possible."
             tactical = "CAUTIOUS LONG — Relief Rally moeglich"
             tactical_color = "yellow"
-        elif days_since_top < 365 and drawdown_from_top <= -55:
+        elif days_since_top < 365 and drawdown_from_top > -55:
             phase_label = "Late Bear"
             phase_desc = "Deep in bear, capitulation possible."
+            tactical = "ACCUMULATE SLOWLY"
+            tactical_color = "green"
+        elif days_since_top < 365 and drawdown_from_top <= -55:
+            phase_label = "Deep Bear"
+            phase_desc = "Extreme bear, historical capitulation zone."
             tactical = "ACCUMULATE SLOWLY"
             tactical_color = "green"
         elif days_since_top >= 365 and arc_score > 35:
@@ -385,6 +390,7 @@ def get_short_term_context(
         "Early Bear":             {"upside": (5, 20),   "downside": (20, 50)},
         "Mid Bear":               {"upside": (10, 30),  "downside": (15, 35)},
         "Late Bear":              {"upside": (10, 30),  "downside": (15, 30)},
+        "Deep Bear":              {"upside": (15, 35),  "downside": (10, 30)},
         "Late Bear / Accumulation": {"upside": (15, 40), "downside": (10, 25)},
         "Accumulation":           {"upside": (15, 40),  "downside": (10, 25)},
         "Deep Accumulation":      {"upside": (25, 60),  "downside": (8, 20)},
