@@ -378,7 +378,7 @@ def compute_btc_score(prices_daily, fear_greed, walcl_values, stablecoin_supply,
 def compute_arc_score(prices_daily, fear_greed, walcl_values, stablecoin_supply, net_liq_values=None, weekly_high=None, weekly_low=None):
     """
     Unified ARC formula (research-validated): ma_200w*0.35 + drawdown*0.25 + liquidity*0.25 + fear_greed*0.15.
-    Liquidity logic identical to compute_btc_score (Net Liq preferred, WALCL fallback).
+    Liquidity for ARC uses impulse (30d/90d change of Net Liquidity); fallback to btc macro_liq if insufficient data.
     weekly_high/weekly_low override ma and drawdown when present (extrempoint detection).
     """
     s = compute_btc_score(
@@ -401,7 +401,18 @@ def compute_arc_score(prices_daily, fear_greed, walcl_values, stablecoin_supply,
         if len(prices) >= 10:
             dd_score = drawdown_score_hl(prices, weekly_low)
 
-    liq_score = s["macro_liq"]
+    # Liquidity: impulse (30d/90d change) for ARC; fallback to btc macro_liq if too few points
+    net_liq = [safe_float(item["v"] if isinstance(item, dict) else item)
+               for item in (net_liq_values or [])
+               if safe_float(item["v"] if isinstance(item, dict) else item) != 0]
+    if len(net_liq) >= 22:
+        change_30d = (net_liq[-1] - net_liq[-22]) / abs(net_liq[-22]) * 100 if net_liq[-22] != 0 else 0.0
+        change_90d = (net_liq[-1] - net_liq[-65]) / abs(net_liq[-65]) * 100 if (len(net_liq) >= 65 and net_liq[-65] != 0) else 0.0
+        impulse_score = 50.0 - change_30d * 2.5 - change_90d * 1.5
+        liq_score = clamp(impulse_score, 0.0, 100.0)
+    else:
+        liq_score = s["macro_liq"]
+
     fg_score = fg_to_score(fear_greed)
     arc = ma_score * 0.35 + dd_score * 0.25 + liq_score * 0.25 + fg_score * 0.15
 
