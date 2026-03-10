@@ -4096,25 +4096,26 @@ function renderArcChart(period) {
         var c = chart.ctx;
         var chartArea = chart.chartArea;
         if (!chartArea) return;
-        var right = chartArea.right;
         var yArc = chart.scales.yArc;
         if (!yArc) return;
+        var x = chartArea.right - 8;
         var labels = [
-          { y: 15, text: 'DEEP VALUE', col: 'rgba(0, 212, 170, 0.35)' },
-          { y: 35, text: 'ACCUMULATION', col: 'rgba(0, 180, 216, 0.35)' },
-          { y: 50, text: 'EXPANSION', col: 'rgba(88, 166, 255, 0.25)' },
-          { y: 65, text: 'RISK RISING', col: 'rgba(255, 149, 0, 0.40)' },
-          { y: 87, text: 'EUPHORIA', col: 'rgba(255, 59, 59, 0.45)' }
+          { y: 15, text: 'DEEP VALUE', col: '#00D4AA' },
+          { y: 35, text: 'ACCUMULATION', col: '#00B4D8' },
+          { y: 50, text: 'EXPANSION', col: '#58A6FF' },
+          { y: 65, text: 'RISK RISING', col: '#FF9500' },
+          { y: 85, text: 'EUPHORIA', col: '#FF3B3B' }
         ];
+        c.save();
+        c.globalAlpha = 0.7;
+        c.font = '600 9px "DM Mono", monospace';
+        c.textAlign = 'right';
         labels.forEach(function(item) {
           var py = yArc.getPixelForValue(item.y);
-          c.save();
-          c.font = '500 8px DM Mono, monospace';
           c.fillStyle = item.col;
-          c.textAlign = 'right';
-          c.fillText(item.text, right - 6, py + 3);
-          c.restore();
+          c.fillText(item.text, x, py + 3);
         });
+        c.restore();
       }
     }],
     options: {
