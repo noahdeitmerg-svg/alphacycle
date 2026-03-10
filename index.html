@@ -2541,7 +2541,7 @@ const fmtT    = n => '$'+safeNum(n/1e12).toFixed(2)+'T';
 
 function scoreColor(s) {
   s = clamp(s);
-  if (s < 30)  return '#00D4AA';
+  if (s < 30)  return '#00DC78';
   if (s < 40)  return '#00B4D8';
   if (s < 60)  return '#58A6FF';
   if (s < 70)  return '#FF9500';
@@ -3929,20 +3929,11 @@ function renderArcChart(period) {
   var liveData = [];
   for (var i = 0; i < n; i++) liveData.push(i === n - 1 ? arcData[n - 1] : null);
   var datasets = [
-    { label: 'Zones', data: zone(100), borderColor: 'transparent', backgroundColor: function(context) {
-      var chart = context.chart;
-      var ctx = chart.ctx;
-      var chartArea = chart.chartArea;
-      if (!chartArea) return 'transparent';
-      var g = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
-      g.addColorStop(0, 'rgba(0,212,170,0.5)');
-      g.addColorStop(0.30, 'rgba(0,180,216,0.4)');
-      g.addColorStop(0.40, 'rgba(88,166,255,0.25)');
-      g.addColorStop(0.60, 'rgba(255,149,0,0.35)');
-      g.addColorStop(0.70, 'rgba(255,59,59,0.5)');
-      g.addColorStop(1, 'rgba(255,0,0,0.6)');
-      return g;
-    }, fill: true, yAxisID: 'yArc', pointRadius: 0, order: 1 },
+    { label: '0-30 Deep Value (#00DC78)', data: [], borderColor: 'transparent', backgroundColor: '#00DC78', fill: false, pointRadius: 0, borderWidth: 0, yAxisID: 'yArc', order: 1 },
+    { label: '30-40 Accumulation (#00B4D8)', data: [], borderColor: 'transparent', backgroundColor: '#00B4D8', fill: false, pointRadius: 0, borderWidth: 0, yAxisID: 'yArc', order: 1 },
+    { label: '40-60 Expansion (#58A6FF)', data: [], borderColor: 'transparent', backgroundColor: '#58A6FF', fill: false, pointRadius: 0, borderWidth: 0, yAxisID: 'yArc', order: 1 },
+    { label: '60-70 Risk Rising (#FF9500)', data: [], borderColor: 'transparent', backgroundColor: '#FF9500', fill: false, pointRadius: 0, borderWidth: 0, yAxisID: 'yArc', order: 1 },
+    { label: '70-100 Euphoria (#FF3B3B)', data: [], borderColor: 'transparent', backgroundColor: '#FF3B3B', fill: false, pointRadius: 0, borderWidth: 0, yAxisID: 'yArc', order: 1 },
     { label: 'ARC Index', data: arcData, borderColor: 'rgba(255,255,255,0.92)', borderWidth: 2.5, pointRadius: 0, yAxisID: 'yArc', tension: 0.4, order: 2 },
     { label: 'BTC Price', data: priceData, borderColor: 'rgba(251,191,36,0.55)', borderWidth: 1.5, pointRadius: 0, yAxisID: 'yPrice', tension: 0.4, order: 3 },
     { label: 'BTC High-Low', data: highData, fill: 9, backgroundColor: 'rgba(234,179,8,0.15)', borderWidth: 0, pointRadius: 0, yAxisID: 'yPrice', tension: 0.4, order: 4 },
@@ -3971,7 +3962,7 @@ function renderArcChart(period) {
             boxHeight: 6,
             padding: 12
           },
-          filter: function(item, ch) { return item.text !== 'Live' && item.text !== 'Zones'; }
+          filter: function(item, ch) { return item.text !== 'Live'; }
         },
         zoom: {
           zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' },
@@ -4024,6 +4015,42 @@ function renderArcChart(period) {
       }
     },
     plugins: [{
+      id: 'zoneRects',
+      beforeDraw: function(chart) {
+        var ctx = chart.ctx;
+        var yArc = chart.scales.yArc;
+        var ca = chart.chartArea;
+        if (!yArc || !ca) return;
+        var left = ca.left, right = ca.right;
+        var zones = [
+          { y0: 0, y1: 30, fill: 'rgba(0, 220, 120, 0.42)' },
+          { y0: 30, y1: 40, fill: 'rgba(0, 180, 216, 0.38)' },
+          { y0: 40, y1: 60, fill: 'rgba(88, 166, 255, 0.28)' },
+          { y0: 60, y1: 70, fill: 'rgba(255, 149, 0, 0.42)' },
+          { y0: 70, y1: 100, fill: 'rgba(255, 59, 59, 0.50)' }
+        ];
+        zones.forEach(function(z) {
+          var py0 = yArc.getPixelForValue(z.y1);
+          var py1 = yArc.getPixelForValue(z.y0);
+          var h = py1 - py0;
+          ctx.save();
+          ctx.fillStyle = z.fill;
+          ctx.fillRect(left, py0, right - left, h);
+          ctx.restore();
+        });
+        [30, 40, 60, 70].forEach(function(y) {
+          var py = yArc.getPixelForValue(y);
+          ctx.save();
+          ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(left, py);
+          ctx.lineTo(right, py);
+          ctx.stroke();
+          ctx.restore();
+        });
+      }
+    }, {
       id: 'cycleMarkers',
       afterDraw: function(chart) {
         var ctx = chart.ctx;
@@ -4198,7 +4225,7 @@ function renderArcChart(period) {
         if (!yArc) return;
         var x = chartArea.right - 8;
         var labels = [
-          { y: 15, text: 'DEEP VALUE', col: '#00D4AA' },
+          { y: 15, text: 'DEEP VALUE', col: '#00DC78' },
           { y: 35, text: 'ACCUMULATION', col: '#00B4D8' },
           { y: 50, text: 'EXPANSION', col: '#58A6FF' },
           { y: 65, text: 'RISK RISING', col: '#FF9500' },
@@ -4234,7 +4261,7 @@ function renderArcChart(period) {
             boxHeight: 6,
             padding: 12
           },
-          filter: function(item, ch) { return item.text !== 'Live' && item.text !== 'Zones'; }
+          filter: function(item, ch) { return item.text !== 'Live'; }
         },
         zoom: {
           zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' },
@@ -4563,7 +4590,7 @@ function applyHistoricalReturnsCurrentZone() {
     : (S.combined != null ? S.combined : 50);
   arc = Number(arc);
   var key = arc < 30 ? 'dv' : arc < 40 ? 'ac' : arc < 60 ? 'ex' : arc < 70 ? 'rr' : 'eu';
-  var colors = { dv: '#00D4AA', ac: '#00B4D8', ex: '#58A6FF', rr: '#FF9500', eu: '#FF3B3B' };
+  var colors = { dv: '#00DC78', ac: '#00B4D8', ex: '#58A6FF', rr: '#FF9500', eu: '#FF3B3B' };
   document.querySelectorAll('.hr-zone').forEach(function(el) {
     el.classList.remove('hr-current-zone');
     el.style.borderColor = '';
