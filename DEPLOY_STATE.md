@@ -2,7 +2,8 @@
 **Zuletzt aktualisiert:** 2026-03-04
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
-## Letzter Session-Status (2026-03-04) — Vier Bugfixes (Logo, Bear-ARC, Tactical, Content Export)
+## Letzter Session-Status (2026-03-04) — Logo Base64 inline + Vier Bugfixes
+- **Logo Base64 eingebettet**: LOGO_B64 im ersten `<script>` im `<head>` (vor DOMContentLoaded). Favicon: `<link rel="icon" id="favicon-link" href="data:image/jpeg;base64,"/>`, sofort danach per Script `favicon-link.href = LOGO_B64`. Nav- und Footer-Logo: `<img src="" data-logo-b64>` bzw. weiterhin Ersetzung per `img[src="/static/logo.png"]`; DOMContentLoaded setzt alle auf `img.src = LOGO_B64`. Vollstaendiger Base64-String kann aus `logo_base64.txt` (Projekt-Root) uebernommen werden — Datei optional.
 - **BUG 1 Logo**: index.html nutzt durchgaengig `/static/logo.png` (Favicon `type="image/png"`, Nav-Bar, Footer). DOMContentLoaded ersetzt `img[src="/static/logo.png"]` mit LOGO_B64. Backend muss `backend/static/logo.png` ausliefern — bei vorhandener Datei `logo.jpeg` diese nach `logo.png` umbenennen.
 - **BUG 2 Bear+ARC Accumulation**: get_arc_summary() BEAR_PHASES nutzt arc_raw-Schwellen: arc_raw>40 → WAIT — Bear Market, 0-20%, Low; arc_raw>30 → LOW ACCUMULATION, 20-35%, Low-Moderate; arc_raw>25 → ACCUMULATION, 35-50%, Moderate; sonst STRONG ACCUMULATION, 50-70%, Moderate-High. ACCUMULATION_PHASES und BULL_PHASES unveraendert. ARC-Formel/compute_arc_score/arc_display_score unveraendert.
 - **BUG 3 Tactical-Konsistenz**: /api/arc-summary liefert bei Bear-Phasen `tactical_label` und `tactical_color` (Wait: "Bear Market — Wait for lower ARC", #6b7280; Accumulation-Zonen: #10b981). index.html Cycle Overview (cp-tactical) und Near-Term Card (st-tactical) nutzen S.arcSummary.tactical_label/tactical_color falls vorhanden, sonst S.shortTermContext (analyzer).
