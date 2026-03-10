@@ -724,11 +724,38 @@ body::before {
   overflow: hidden;
 }
 .hr-zone {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 4px;
   padding: 1rem 1.25rem;
   background: var(--card-bg);
+  border: 2px solid transparent;
+  transition: border-color 0.2s;
+}
+.hr-zone-context {
+  font-family: var(--f-mono);
+  font-size: 9px;
+  color: var(--tx-sec);
+  margin-bottom: 2px;
+  line-height: 1.3;
+}
+.hr-zone-badge {
+  display: none;
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  font-family: var(--f-mono);
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(0,0,0,0.4);
+  color: #fff;
+}
+.hr-zone.hr-current-zone .hr-zone-badge {
+  display: block;
 }
 .hr-zone-range {
   font-family: var(--f-mono);
@@ -770,6 +797,13 @@ body::before {
 .hr-rr .hr-zone-return { color: #FF9500; }
 .hr-eu .hr-zone-range,
 .hr-eu .hr-zone-return { color: #FF3B3B; }
+.hr-total-entries {
+  font-family: var(--f-mono);
+  font-size: 9px;
+  color: var(--tx-ter);
+  margin-top: 0.5rem;
+  text-align: center;
+}
 .hr-disclaimer {
   font-family: var(--f-mono);
   font-size: 8px;
@@ -2092,35 +2126,45 @@ canvas.sparkline {
   <div class="card hist-returns-card anim">
     <div class="hr-eyebrow">Avg. 12-Month Forward Returns by ARC Zone — Based on Backtest Data (2017–Present)</div>
     <div class="hr-grid" id="hr-grid">
-      <div class="hr-zone hr-dv">
+      <div class="hr-zone hr-dv" data-hr-zone="dv">
+        <span class="hr-zone-badge" aria-hidden="true">YOU ARE HERE</span>
+        <div class="hr-zone-context">Historically strongest entry zone</div>
         <div class="hr-zone-range">0–30</div>
         <div class="hr-zone-label">DEEP VALUE</div>
         <div class="hr-zone-return" id="hr-dv-12m">—</div>
         <div class="hr-zone-wr" id="hr-dv-wr">— win rate</div>
         <div class="hr-zone-count" id="hr-dv-count">— entries</div>
       </div>
-      <div class="hr-zone hr-ac">
+      <div class="hr-zone hr-ac" data-hr-zone="ac">
+        <span class="hr-zone-badge" aria-hidden="true">YOU ARE HERE</span>
+        <div class="hr-zone-context">High probability long-term returns</div>
         <div class="hr-zone-range">30–40</div>
         <div class="hr-zone-label">ACCUMULATION</div>
         <div class="hr-zone-return" id="hr-ac-12m">—</div>
         <div class="hr-zone-wr" id="hr-ac-wr">— win rate</div>
         <div class="hr-zone-count" id="hr-ac-count">— entries</div>
       </div>
-      <div class="hr-zone hr-ex">
+      <div class="hr-zone hr-ex" data-hr-zone="ex">
+        <span class="hr-zone-badge" aria-hidden="true">YOU ARE HERE</span>
+        <div class="hr-zone-context">Moderate upside, increasing risk</div>
         <div class="hr-zone-range">40–60</div>
         <div class="hr-zone-label">EXPANSION</div>
         <div class="hr-zone-return" id="hr-ex-12m">—</div>
         <div class="hr-zone-wr" id="hr-ex-wr">— win rate</div>
         <div class="hr-zone-count" id="hr-ex-count">— entries</div>
       </div>
-      <div class="hr-zone hr-rr">
+      <div class="hr-zone hr-rr" data-hr-zone="rr">
+        <span class="hr-zone-badge" aria-hidden="true">YOU ARE HERE</span>
+        <div class="hr-zone-context">Reduce exposure — late cycle</div>
         <div class="hr-zone-range">60–70</div>
         <div class="hr-zone-label">RISK RISING</div>
         <div class="hr-zone-return" id="hr-rr-12m">—</div>
         <div class="hr-zone-wr" id="hr-rr-wr">— win rate</div>
         <div class="hr-zone-count" id="hr-rr-count">— entries</div>
       </div>
-      <div class="hr-zone hr-eu">
+      <div class="hr-zone hr-eu" data-hr-zone="eu">
+        <span class="hr-zone-badge" aria-hidden="true">YOU ARE HERE</span>
+        <div class="hr-zone-context">Avg -40% drawdown from peak</div>
         <div class="hr-zone-range">70–100</div>
         <div class="hr-zone-label">EUPHORIA</div>
         <div class="hr-zone-return" id="hr-eu-12m">—</div>
@@ -2128,6 +2172,7 @@ canvas.sparkline {
         <div class="hr-zone-count" id="hr-eu-count">— entries</div>
       </div>
     </div>
+    <div class="hr-total-entries" id="hr-total-entries"></div>
     <div class="hr-disclaimer">Based on weekly backtest data. Past performance does not guarantee future results. Not financial advice.</div>
   </div>
 
@@ -3568,6 +3613,7 @@ function renderDataInspector() {
   el.innerHTML = sections.map(sec =>
     `<div class="di-category"><div class="di-cat-title">${sec.title}</div><div class="di-grid">${sec.rows.join('')}</div></div>`
   ).join('');
+  applyHistoricalReturnsCurrentZone();
 }
 
 function setText(id, val, color) {
@@ -4409,6 +4455,13 @@ async function fetchHistoricalReturns() {
     setZone('risk_rising', 'rr');
     setZone('euphoria', 'eu');
 
+    var total = 0;
+    ['deep_value', 'accumulation', 'expansion', 'risk_rising', 'euphoria'].forEach(function(k) { total += (z[k] && z[k].entry_count != null) ? z[k].entry_count : 0; });
+    var totalEl = document.getElementById('hr-total-entries');
+    if (totalEl) totalEl.textContent = 'Based on ' + total + ' historical zone entries since 2017.';
+
+    applyHistoricalReturnsCurrentZone();
+
     var euZone = z['euphoria'];
     if (euZone) {
       var euRet = document.getElementById('hr-eu-12m');
@@ -4434,6 +4487,24 @@ async function fetchHistoricalReturns() {
     }
   } catch (e) {
     console.warn('historical returns error:', e);
+  }
+}
+
+function applyHistoricalReturnsCurrentZone() {
+  var arc = S.arcSummary && (S.arcSummary.arc_display != null || S.arcSummary.arc_score != null)
+    ? (S.arcSummary.arc_display ?? S.arcSummary.arc_score)
+    : (S.combined != null ? S.combined : 50);
+  arc = Number(arc);
+  var key = arc < 30 ? 'dv' : arc < 40 ? 'ac' : arc < 60 ? 'ex' : arc < 70 ? 'rr' : 'eu';
+  var colors = { dv: '#00D4AA', ac: '#00B4D8', ex: '#58A6FF', rr: '#FF9500', eu: '#FF3B3B' };
+  document.querySelectorAll('.hr-zone').forEach(function(el) {
+    el.classList.remove('hr-current-zone');
+    el.style.borderColor = '';
+  });
+  var el = document.querySelector('.hr-zone[data-hr-zone="' + key + '"]');
+  if (el) {
+    el.classList.add('hr-current-zone');
+    el.style.borderColor = colors[key];
   }
 }
 
