@@ -9,7 +9,7 @@
 <meta property="og:description" content="Proprietary BTC, ETH & Macro cycle scoring. Institutional-grade market intelligence."/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <title>Alpha Cycle Intelligence</title>
-<link rel="icon" type="image/jpeg" href="/static/logo.jpeg"/>
+<link rel="icon" type="image/png" href="/static/logo.png"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
 <script>
@@ -1904,7 +1904,7 @@ canvas.sparkline {
 <!-- NAV -->
 <nav class="nav">
   <a class="nav-logo" href="#">
-    <img src="/static/logo.jpeg"
+    <img src="/static/logo.png"
          alt="α"
          style="width:32px;height:32px;border-radius:6px;object-fit:cover;display:block;image-rendering:auto;"/>
     <div>
@@ -2347,7 +2347,7 @@ canvas.sparkline {
   <!-- ── FOOTER ── -->
   <footer class="footer anim d6">
     <div class="footer-brand">
-      <img src="/static/logo.jpeg"
+      <img src="/static/logo.png"
            alt="α"
            style="width:32px;height:32px;border-radius:6px;object-fit:contain;display:block;"/>
       Alpha Cycle
@@ -2376,7 +2376,7 @@ const BACKEND_URL = window.BACKEND_URL || 'https://alphacycle-production.up.rail
 const REFRESH_INTERVAL = 60; // seconds
 
 document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('img[src="/static/logo.jpeg"]').forEach(img => {
+  document.querySelectorAll('img[src="/static/logo.png"]').forEach(img => {
     img.src = LOGO_B64;
   });
 });
@@ -3320,6 +3320,7 @@ function updateUI() {
   renderCharts();
   renderSparklines();
   if ($('di-body')) renderDataInspector();
+  updateContentPreview();
 }
 
 function _setCyclePhaseTag(phase, ctx) {
@@ -3367,9 +3368,15 @@ function _setCyclePhaseTag(phase, ctx) {
     }
     var tactEl = document.getElementById('cp-tactical');
     if (tactEl) {
-      tactEl.textContent = ctx.tactical_signal || '—';
-      var tColMap = { green: '#22c55e', blue: '#3b82f6', orange: '#f59e0b', red: '#ef4444' };
-      tactEl.style.color = tColMap[ctx.tactical_color] || '#94a3b8';
+      var as = S.arcSummary;
+      if (as && as.tactical_label) {
+        tactEl.textContent = as.tactical_label;
+        tactEl.style.color = (as.tactical_color || '#94a3b8');
+      } else {
+        tactEl.textContent = ctx.tactical_signal || '—';
+        var tColMap = { green: '#22c55e', blue: '#3b82f6', orange: '#f59e0b', red: '#ef4444' };
+        tactEl.style.color = tColMap[ctx.tactical_color] || '#94a3b8';
+      }
     }
     var upEl = document.getElementById('cp-upside');
     if (upEl) upEl.textContent = ctx.upside_pct != null ? '+' + ctx.upside_pct + '%' : '—';
@@ -3406,9 +3413,15 @@ function updateShortTermContext() {
   if (stValEl) stValEl.style.color = stCol;
   var tactEl = document.getElementById('st-tactical');
   if (tactEl) {
-    tactEl.textContent = ctx.tactical_signal || '—';
-    var colMap = { green: '#22c55e', blue: '#3b82f6', orange: '#f59e0b', red: '#ef4444' };
-    tactEl.style.color = colMap[ctx.tactical_color] || '#94a3b8';
+    var as = S.arcSummary;
+    if (as && as.tactical_label) {
+      tactEl.textContent = as.tactical_label;
+      tactEl.style.color = (as.tactical_color || '#94a3b8');
+    } else {
+      tactEl.textContent = ctx.tactical_signal || '—';
+      var colMap = { green: '#22c55e', blue: '#3b82f6', orange: '#f59e0b', red: '#ef4444' };
+      tactEl.style.color = colMap[ctx.tactical_color] || '#94a3b8';
+    }
   }
   setText('st-upside-pct', ctx.upside_pct != null ? '+' + ctx.upside_pct + '%' : '—');
   setText('st-upside-price', ctx.upside_target ? '~$' + ctx.upside_target.toLocaleString() : '');
@@ -4414,10 +4427,15 @@ function updateContentPreview() {
   const preview = document.getElementById('ce-preview');
   if (!preview) return;
   const snap = S.snapshot;
-  if (snap && snap.post_templates && snap.post_templates.daily_update) {
+  if (snap && snap.post_templates && snap.post_templates.daily_update && snap.post_templates.daily_update !== 'Data loading...') {
     preview.textContent = snap.post_templates.daily_update;
   } else {
-    preview.textContent = 'Post wird geladen…';
+    var as = S.arcSummary;
+    var arc = (as && as.arc_score != null) ? as.arc_score : (S.combined != null ? S.combined : 50);
+    var phase = (as && as.phase_context) ? as.phase_context : '—';
+    var position = (as && as.position) ? as.position : '—';
+    var allocation = (as && as.allocation) ? as.allocation : '—';
+    preview.textContent = 'ARC: ' + Math.round(arc) + ' | Phase: ' + phase + ' | Position: ' + position + ' | Allocation: ' + allocation + '. Refresh for full export.';
   }
 }
 

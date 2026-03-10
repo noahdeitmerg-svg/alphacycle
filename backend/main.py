@@ -815,10 +815,35 @@ async def get_arc_summary():
 
         # Phase-coherent overrides (phase takes priority over ARC-only)
         if phase in BEAR_PHASES:
-            out["position"] = "WAIT — Bear Market"
-            out["decision"] = out["position"]
-            out["allocation"] = "20-40%" if current_arc < 40 else "0-20%"
-            out["confidence_label"] = "Low"
+            arc_raw = current_arc
+            if arc_raw > 40:
+                out["position"] = "WAIT — Bear Market"
+                out["decision"] = out["position"]
+                out["allocation"] = "0-20%"
+                out["confidence_label"] = "Low"
+                out["tactical_label"] = "Bear Market — Wait for lower ARC"
+                out["tactical_color"] = "#6b7280"
+            elif arc_raw > 30:
+                out["position"] = "LOW ACCUMULATION"
+                out["decision"] = out["position"]
+                out["allocation"] = "20-35%"
+                out["confidence_label"] = "Low-Moderate"
+                out["tactical_label"] = "Low Accumulation Zone"
+                out["tactical_color"] = "#10b981"
+            elif arc_raw > 25:
+                out["position"] = "ACCUMULATION"
+                out["decision"] = out["position"]
+                out["allocation"] = "35-50%"
+                out["confidence_label"] = "Moderate"
+                out["tactical_label"] = "Accumulation Zone"
+                out["tactical_color"] = "#10b981"
+            else:
+                out["position"] = "STRONG ACCUMULATION"
+                out["decision"] = out["position"]
+                out["allocation"] = "50-70%"
+                out["confidence_label"] = "Moderate-High"
+                out["tactical_label"] = "Strong Accumulation Zone"
+                out["tactical_color"] = "#10b981"
             out["expected_range"] = {"type": "bear_wait", "label": "Bear Market — No Entry Signal"}
             out["expected_range_label"] = out["expected_range"]["label"]
         elif phase in LATE_BULL_PHASES:
