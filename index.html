@@ -3852,11 +3852,11 @@ function renderArcChart(period) {
   var n = labels.length;
   var zone = function(val) { return Array(n).fill(val); };
   var datasets = [
-    { label: '0\u201330', data: zone(30), borderColor: 'transparent', backgroundColor: 'rgba(0, 255, 80, 0.45)', fill: true, yAxisID: 'yArc', pointRadius: 0, order: 1 },
-    { label: '30\u201340', data: zone(40), borderColor: 'transparent', backgroundColor: 'rgba(0, 200, 80, 0.38)', fill: '-1', yAxisID: 'yArc', pointRadius: 0, order: 1 },
-    { label: '40\u201360', data: zone(60), borderColor: 'transparent', backgroundColor: 'rgba(100, 180, 255, 0.30)', fill: '-1', yAxisID: 'yArc', pointRadius: 0, order: 1 },
-    { label: '60\u201370', data: zone(70), borderColor: 'transparent', backgroundColor: 'rgba(255, 140, 0, 0.50)', fill: '-1', yAxisID: 'yArc', pointRadius: 0, order: 1 },
-    { label: '70\u2013100', data: zone(100), borderColor: 'transparent', backgroundColor: 'rgba(255, 30, 30, 0.55)', fill: '-1', yAxisID: 'yArc', pointRadius: 0, order: 1 },
+    { label: '0\u201330 Deep Value', data: zone(30), borderColor: 'transparent', backgroundColor: 'rgba(0, 212, 170, 0.35)', fill: true, yAxisID: 'yArc', pointRadius: 0, order: 1 },
+    { label: '30\u201340 Accumulation', data: zone(40), borderColor: 'transparent', backgroundColor: 'rgba(0, 180, 216, 0.35)', fill: '-1', yAxisID: 'yArc', pointRadius: 0, order: 1 },
+    { label: '40\u201360 Expansion', data: zone(60), borderColor: 'transparent', backgroundColor: 'rgba(88, 166, 255, 0.25)', fill: '-1', yAxisID: 'yArc', pointRadius: 0, order: 1 },
+    { label: '60\u201370 Risk Rising', data: zone(70), borderColor: 'transparent', backgroundColor: 'rgba(255, 149, 0, 0.40)', fill: '-1', yAxisID: 'yArc', pointRadius: 0, order: 1 },
+    { label: '70\u2013100 Euphoria', data: zone(100), borderColor: 'transparent', backgroundColor: 'rgba(255, 59, 59, 0.45)', fill: '-1', yAxisID: 'yArc', pointRadius: 0, order: 1 },
     { label: 'ARC Index', data: arcData, borderColor: 'rgba(255,255,255,0.92)', borderWidth: 2.5, pointRadius: 0, yAxisID: 'yArc', tension: 0.4, order: 2 },
     { label: 'BTC Price', data: priceData, borderColor: 'rgba(251,191,36,0.55)', borderWidth: 1.5, pointRadius: 0, yAxisID: 'yPrice', tension: 0.4, order: 3 },
     { label: 'BTC High-Low', data: highData, fill: 9, backgroundColor: 'rgba(234,179,8,0.15)', borderWidth: 0, pointRadius: 0, yAxisID: 'yPrice', tension: 0.4, order: 4 },
@@ -4100,11 +4100,11 @@ function renderArcChart(period) {
         var yArc = chart.scales.yArc;
         if (!yArc) return;
         var labels = [
-          { y: 15, text: 'DEEP VALUE', col: 'rgba(0,212,170,0.4)' },
-          { y: 35, text: 'ACCUMULATION', col: 'rgba(0,180,216,0.4)' },
-          { y: 50, text: 'EXPANSION', col: 'rgba(88,166,255,0.4)' },
-          { y: 65, text: 'RISK RISING', col: 'rgba(255,149,0,0.4)' },
-          { y: 87, text: 'EUPHORIA', col: 'rgba(255,59,59,0.4)' }
+          { y: 15, text: 'DEEP VALUE', col: 'rgba(0, 212, 170, 0.35)' },
+          { y: 35, text: 'ACCUMULATION', col: 'rgba(0, 180, 216, 0.35)' },
+          { y: 50, text: 'EXPANSION', col: 'rgba(88, 166, 255, 0.25)' },
+          { y: 65, text: 'RISK RISING', col: 'rgba(255, 149, 0, 0.40)' },
+          { y: 87, text: 'EUPHORIA', col: 'rgba(255, 59, 59, 0.45)' }
         ];
         labels.forEach(function(item) {
           var py = yArc.getPixelForValue(item.y);
