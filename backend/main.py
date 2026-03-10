@@ -616,73 +616,80 @@ def get_zone_name(arc_score):
     return "Euphoria"
 
 
-def _get_expected_range(arc: float, forward_returns: list, high_risk_drawdown: dict = None, phase: str = None) -> dict:
+def _get_expected_range(arc: float, hist_returns: dict = None, high_risk_drawdown: dict = None) -> dict:
     """
-    Zone-specific Expected Range:
-    - If phase in BEAR_PHASES: bear_wait (no entry)
-    - Else arc < 50: Forward Return (buy zone)
-    - arc 50-65: Elevated - REDUCE signal
-    - arc >= 65: High Risk - Max Drawdown from Peak
+    Expected range from historical zone stats (backtest). Always shows zone-based stats,
+    independent of phase. Uses hist_returns["zones"] (deep_value, accumulation, expansion, risk_rising, euphoria).
     """
-    if phase is not None and phase in BEAR_PHASES:
-        return {"type": "bear_wait", "label": "Bear Market — No Entry Signal"}
-    if arc < 25:
-        return {
-            "avg_12m": 120, "range_low": 60, "range_high": 180,
-            "label": "+60% - +180%",
-            "type": "forward_return",
-            "signal": "BUY",
-        }
-    elif arc < 35:
-        return {
-            "avg_12m": 60, "range_low": 30, "range_high": 100,
-            "label": "+30% - +100%",
-            "type": "forward_return",
-            "signal": "BUY",
-        }
-    elif arc < 45:
-        return {
-            "avg_12m": 25, "range_low": 10, "range_high": 50,
-            "label": "+10% - +50%",
-            "type": "forward_return",
-            "signal": "ACCUMULATE",
-        }
-    elif arc < 50:
-        return {
-            "avg_12m": 10, "range_low": -5, "range_high": 30,
-            "label": "-5% - +30%",
-            "type": "forward_return",
-            "signal": "NEUTRAL",
-        }
-    elif arc < 65:
-        return {
-            "avg_12m": None,
-            "range_low": None,
-            "range_high": None,
-            "label": "REDUCE — DO NOT BUY",
-            "type": "reduce",
-            "signal": "REDUCE",
-        }
+    arc = float(arc)
+    if arc < 30:
+        zone_key = "deep_value"
+        zone_name = "Deep Value"
+    elif arc < 40:
+        zone_key = "accumulation"
+        zone_name = "Accumulation"
+    elif arc < 60:
+        zone_key = "expansion"
+        zone_name = "Expansion"
+    elif arc < 70:
+        zone_key = "risk_rising"
+        zone_name = "Risk Rising"
     else:
+        zone_key = "euphoria"
+        zone_name = "Euphoria"
+
+    zones = (hist_returns or {}).get("zones") or {}
+    z = zones.get(zone_key) or {}
+    zone_name = z.get("zone_name") or zone_name
+    entry_count = z.get("entry_count")
+    avg_12m = z.get("avg_12m")
+    win_rate_12m = z.get("win_rate_12m")
+
+    if zone_key == "euphoria":
         dd = high_risk_drawdown or {}
-        avg_dd = dd.get("avg_drawdown")
-        max_dd = dd.get("max_drawdown")
-        min_dd = dd.get("min_drawdown")
-        if avg_dd is not None and max_dd is not None:
-            label = "Avg -%s%% / Worst -%s%% from Peak" % (abs(int(avg_dd)), abs(int(max_dd)))
+        avg_dd = z.get("avg_drawdown") or dd.get("avg_drawdown")
+        if avg_dd is not None:
+            label = "Avg -%s%% from peak" % (abs(int(round(avg_dd))),)
         else:
-            label = "HIGH RISK — SELL / REDUCE"
+            label = "Euphoria — High risk"
+        sublabel = "%s entries" % (entry_count if entry_count is not None else 0) if entry_count else "—"
         return {
-            "avg_drawdown": avg_dd,
-            "max_drawdown": max_dd,
-            "min_drawdown": min_dd,
-            "avg_12m": None,
-            "range_low": None,
-            "range_high": None,
-            "label": label,
             "type": "drawdown",
-            "signal": "SELL",
+            "label": label,
+            "sublabel": sublabel,
+            "zone": zone_name,
         }
+
+    if zone_key == "risk_rising":
+        if avg_12m is not None:
+            label = "+%s%% avg (12M) — REDUCE" % (int(round(avg_12m)),)
+        else:
+            label = "REDUCE"
+        sublabel = ("%s%% win rate · %s entries" % (int(round(win_rate_12m)), entry_count)) if (win_rate_12m is not None and entry_count is not None) else (("%s entries" % entry_count) if entry_count is not None else "—")
+        return {
+            "type": "reduce",
+            "label": label,
+            "sublabel": sublabel,
+            "zone": zone_name,
+        }
+
+    # forward_return: Deep Value, Accumulation, Expansion
+    if avg_12m is not None:
+        label = "+%s%% avg (12M)" % (int(round(avg_12m)),)
+    else:
+        label = zone_name
+    if win_rate_12m is not None and entry_count is not None:
+        sublabel = "%s%% win rate · %s entries" % (int(round(win_rate_12m)), entry_count)
+    elif entry_count is not None:
+        sublabel = "%s entries" % entry_count
+    else:
+        sublabel = "—"
+    return {
+        "type": "forward_return",
+        "label": label,
+        "sublabel": sublabel,
+        "zone": zone_name,
+    }
 
 
 @app.get("/api/arc-summary")
@@ -799,7 +806,8 @@ async def get_arc_summary():
             fwd = []
         if dd_data is None:
             dd_data = {}
-        expected = _get_expected_range(current_arc, fwd, dd_data, phase=phase)
+        hist_returns = CACHE.get("hist_returns") or {}
+        expected = _get_expected_range(current_arc, hist_returns=hist_returns, high_risk_drawdown=dd_data)
         out["expected_range"] = expected
         out["expected_range_label"] = expected.get("label", "N/A")
 
@@ -857,8 +865,6 @@ async def get_arc_summary():
                 out["confidence_label"] = "Moderate-High"
                 out["tactical_label"] = "Strong Accumulation Zone"
                 out["tactical_color"] = "#10b981"
-            out["expected_range"] = {"type": "bear_wait", "label": "Bear Market — No Entry Signal"}
-            out["expected_range_label"] = out["expected_range"]["label"]
         elif phase in LATE_BULL_PHASES:
             out["position"] = "REDUCE"
             out["decision"] = out["position"]
@@ -1362,7 +1368,11 @@ async def get_snapshot():
                 fwd = []
             if dd_data is None:
                 dd_data = {}
-            expected = _get_expected_range(arc_score, fwd, dd_data)
+            hist_returns = CACHE.get("hist_returns")
+            if hist_returns is None and bt_results:
+                from historical_returns import compute_historical_returns
+                hist_returns = compute_historical_returns(bt_results)
+            expected = _get_expected_range(arc_score, hist_returns=hist_returns or {}, high_risk_drawdown=dd_data)
             expected_range_label = expected.get("label", "N/A")
         except Exception:
             pass
