@@ -2419,6 +2419,7 @@ const S = {
   stableCurrent:0,
   walclCurrent: 0,
   funding:      null,
+  historicalReturns: null,
 };
 
 let countdown = REFRESH_INTERVAL;
@@ -4364,6 +4365,7 @@ async function fetchHistoricalReturns() {
   try {
     var data = await apiFetch(BACKEND_URL + '/api/historical-returns');
     if (!data || !data.zones) return;
+    S.historicalReturns = data;
     var z = data.zones;
 
     function setZone(key, elKey) {
@@ -4425,32 +4427,64 @@ async function fetchHistoricalReturns() {
 function updateContentPreview() {
   const preview = document.getElementById('ce-preview');
   if (!preview) return;
-  const snap = S.snapshot;
-  if (snap && snap.post_templates && snap.post_templates.daily_update && snap.post_templates.daily_update !== 'Data loading...') {
-    preview.textContent = snap.post_templates.daily_update;
-  } else {
-    var as = S.arcSummary;
-    var arc = (as && as.arc_score != null) ? as.arc_score : (S.combined != null ? S.combined : 50);
-    var phase = (as && as.phase_context) ? as.phase_context : '—';
-    var position = (as && as.position) ? as.position : '—';
-    var allocation = (as && as.allocation) ? as.allocation : '—';
-    preview.textContent = 'ARC: ' + Math.round(arc) + ' | Phase: ' + phase + ' | Position: ' + position + ' | Allocation: ' + allocation + '. Refresh for full export.';
-  }
+  var t = generateContentTemplates();
+  preview.textContent = t.daily_update || 'Post wird geladen…';
+}
+
+function formatPrice(n) {
+  return (n != null && !isNaN(n)) ? '$' + Math.round(n).toLocaleString() : '—';
+}
+
+function getZoneLabelByArc(arc) {
+  var s = Number(arc);
+  if (s < 30) return 'Low Risk';
+  if (s < 50) return 'Moderate Risk';
+  if (s < 65) return 'Elevated Risk';
+  return 'High Risk';
+}
+
+function getHistReturnForArc(arc) {
+  var z = S.historicalReturns && S.historicalReturns.zones;
+  if (!z) return '—';
+  var s = Number(arc);
+  var key = s < 30 ? 'low' : s < 50 ? 'moderate' : s < 65 ? 'elevated' : 'extreme';
+  var zone = z[key];
+  if (!zone) return '—';
+  if (zone.avg_12m != null) return (zone.avg_12m > 0 ? '+' : '') + zone.avg_12m + '%';
+  if (key === 'extreme' && zone.avg_drawdown != null) return 'AVG -' + Math.abs(zone.avg_drawdown) + '% from peak';
+  return '—';
+}
+
+function generateContentTemplates() {
+  var arc = S.arcSummary?.arc_display ?? S.combined ?? 32;
+  arc = Math.round(Number(arc)) || 32;
+  var riskLabelEl = document.getElementById('hero-risk-label');
+  var risk_label = (riskLabelEl && riskLabelEl.textContent) ? riskLabelEl.textContent.trim() : (arc < 30 ? 'Low Risk' : arc < 50 ? 'Moderate Risk' : arc < 65 ? 'Elevated Risk' : 'High Risk');
+  var phase = S.arcSummary?.phase_context || '—';
+  var btc_price = formatPrice(S.btcMarket?.price || S.btcPrices.at(-1));
+  var fg = S.fgCurrent != null ? Number(S.fgCurrent) : 50;
+  var fgLabel = S.fgLabel || 'Neutral';
+  var position = S.arcSummary?.position || '—';
+  var allocation = S.arcSummary?.allocation || '—';
+  var hist_return = getHistReturnForArc(arc);
+  var zone_label = getZoneLabelByArc(arc);
+
+  var daily_update = '🔴 AlphaCycle Daily Update\n\nARC Index: ' + arc + '/100 — ' + risk_label + '\nPhase: ' + phase + ' | BTC: ' + btc_price + '\nFear & Greed: ' + fg + ' (' + fgLabel + ')\n\n📊 Position: ' + position + '\n💼 Allocation: ' + allocation + '\n📈 12M Historical Return (this zone): ' + hist_return + '\n\n#Bitcoin #BTC #Crypto #AlphaCycle';
+
+  var compact = 'ARC ' + arc + '/100 | ' + phase + ' | ' + position + '\nBTC ' + btc_price + ' | F&G ' + fg + '\n→ ' + allocation + ' allocation\n\n#Bitcoin #AlphaCycle';
+
+  var educational = '📚 What does ARC ' + arc + '/100 mean?\n\nThe AlphaCycle Risk Index measures structural\nmarket risk from 0 (max opportunity) to 100 (max risk).\n\nAt ' + arc + '/100 we are in the ' + zone_label + ' zone.\nHistorically this zone produced ' + hist_return + ' avg returns.\n\nNot financial advice. DYOR.\n#Bitcoin #AlphaCycle';
+
+  return { daily_update: daily_update, compact: compact, educational: educational };
 }
 
 function copyTemplate(type) {
-  const snap = S.snapshot;
-  if (!snap || !snap.post_templates) {
-    alert('Snapshot not loaded yet. Wait a moment.');
-    return;
-  }
-  const text = snap.post_templates[type];
+  var t = generateContentTemplates();
+  var text = type === 'daily_update' ? t.daily_update : type === 'compact' ? t.compact : t.educational;
   if (!text) return;
-  const preview = document.getElementById('ce-preview');
-  if (preview) preview.textContent = text;
-  const btnId = type === 'daily_update' ? 'ce-copy-daily' : type === 'compact' ? 'ce-copy-compact' : 'ce-copy-edu';
-  const btn = document.getElementById(btnId);
-  const labels = { daily_update: 'Copy Daily Update', compact: 'Copy Compact Post', educational: 'Copy Educational' };
+  var btnId = type === 'daily_update' ? 'ce-copy-daily' : type === 'compact' ? 'ce-copy-compact' : 'ce-copy-edu';
+  var btn = document.getElementById(btnId);
+  var labels = { daily_update: 'Copy Daily Update', compact: 'Copy Compact Post', educational: 'Copy Educational' };
   navigator.clipboard.writeText(text).then(function() {
     if (btn) {
       btn.textContent = 'Copied!';
