@@ -604,6 +604,18 @@ def _phase_group(ph):
     return "unknown"
 
 
+def get_zone_name(arc_score):
+    if arc_score < 30:
+        return "Deep Value"
+    if arc_score < 40:
+        return "Accumulation"
+    if arc_score < 60:
+        return "Expansion"
+    if arc_score < 70:
+        return "Risk Rising"
+    return "Euphoria"
+
+
 def _get_expected_range(arc: float, forward_returns: list, high_risk_drawdown: dict = None, phase: str = None) -> dict:
     """
     Zone-specific Expected Range:
@@ -702,6 +714,7 @@ async def get_arc_summary():
     out = {
         "arc_score":   current_arc,
         "arc_display": round(arc_display_score(current_arc), 1),
+        "zone_name":   get_zone_name(current_arc),
         "btc_score":   round(btc.get("btc_score", 50.0), 1),
         "eth_score":   round(c["eth_scores"].get("eth_score", 50.0), 1),
         "macro_score": round(mac.get("macro_score", 50.0), 1),
@@ -957,15 +970,15 @@ async def get_historical_returns():
             bt = await run_backtest()
             bt_list = bt.get("results", []) if isinstance(bt, dict) else []
             result = compute_historical_returns(bt_list)
-        if result.get("zones", {}).get("elevated"):
-            result["zones"]["elevated"]["display_mode"] = "reduce"
-            result["zones"]["elevated"]["display_label"] = "REDUCE — DO NOT BUY"
-        if result.get("zones", {}).get("extreme"):
+        if result.get("zones", {}).get("risk_rising"):
+            result["zones"]["risk_rising"]["display_mode"] = "reduce"
+            result["zones"]["risk_rising"]["display_label"] = "REDUCE — DO NOT BUY"
+        if result.get("zones", {}).get("euphoria"):
             dd = CACHE.get("high_risk_drawdown") or {}
-            result["zones"]["extreme"]["display_mode"] = "drawdown"
-            result["zones"]["extreme"]["avg_drawdown"] = dd.get("avg_drawdown")
-            result["zones"]["extreme"]["max_drawdown"] = dd.get("max_drawdown")
-            result["zones"]["extreme"]["min_drawdown"] = dd.get("min_drawdown")
+            result["zones"]["euphoria"]["display_mode"] = "drawdown"
+            result["zones"]["euphoria"]["avg_drawdown"] = dd.get("avg_drawdown")
+            result["zones"]["euphoria"]["max_drawdown"] = dd.get("max_drawdown")
+            result["zones"]["euphoria"]["min_drawdown"] = dd.get("min_drawdown")
         phase = None
         try:
             c = _require_cache()

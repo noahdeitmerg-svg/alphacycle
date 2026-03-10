@@ -48,21 +48,24 @@ def compute_historical_returns(backtest_data: list) -> dict:
 
     def in_zone(arc: float, zone: str) -> bool:
         a = float(arc)
-        if zone == "low":
+        if zone == "deep_value":
             return 0 <= a < 30
-        if zone == "moderate":
-            return 30 <= a < 50
-        if zone == "elevated":
-            return 50 <= a < 65
-        if zone == "extreme":
-            return 65 <= a <= 100
+        if zone == "accumulation":
+            return 30 <= a < 40
+        if zone == "expansion":
+            return 40 <= a < 60
+        if zone == "risk_rising":
+            return 60 <= a < 70
+        if zone == "euphoria":
+            return 70 <= a <= 100
         return False
 
     zone_entries = {
-        "low": [],
-        "moderate": [],
-        "elevated": [],
-        "extreme": [],
+        "deep_value": [],
+        "accumulation": [],
+        "expansion": [],
+        "risk_rising": [],
+        "euphoria": [],
     }
 
     for i in range(1, len(data)):
@@ -97,10 +100,11 @@ def compute_historical_returns(backtest_data: list) -> dict:
             })
 
     zone_meta = {
-        "low": "0-30",
-        "moderate": "30-50",
-        "elevated": "50-65",
-        "extreme": "65-100",
+        "deep_value": ("0-30", "Deep Value"),
+        "accumulation": ("30-40", "Accumulation"),
+        "expansion": ("40-60", "Expansion"),
+        "risk_rising": ("60-70", "Risk Rising"),
+        "euphoria": ("70-100", "Euphoria"),
     }
 
     def stats(entries: list, key: str) -> dict:
@@ -120,11 +124,13 @@ def compute_historical_returns(backtest_data: list) -> dict:
 
     zones_output = {}
     for zone, entries in zone_entries.items():
+        range_str, zone_name = zone_meta[zone]
         s3m = stats(entries, "r3m")
         s6m = stats(entries, "r6m")
         s12m = stats(entries, "r12m")
         zones_output[zone] = {
-            "range": zone_meta[zone],
+            "range": range_str,
+            "zone_name": zone_name,
             "entry_count": len(entries),
             "avg_3m": s3m["avg"],
             "avg_6m": s6m["avg"],
@@ -233,8 +239,8 @@ def compute_arc_forward_returns(backtest_data: list) -> list:
 
 def compute_high_risk_drawdown(backtest_data: list) -> dict:
     """
-    For Extreme zone (ARC >= 65): zone-crossing entry only.
-    Entry when ARC crosses FROM outside (prev < 65) INTO zone (curr >= 65).
+    For Euphoria zone (ARC >= 70): zone-crossing entry only.
+    Entry when ARC crosses FROM outside (prev < 70) INTO zone (curr >= 70).
     For each such entry: max drawdown from peak after entry within 52 weeks.
     Drawdown = (trough - peak) / peak * 100 (negative).
     Returns: avg_drawdown, max_drawdown (worst), min_drawdown (mildest), sample_count.
@@ -254,7 +260,7 @@ def compute_high_risk_drawdown(backtest_data: list) -> dict:
     for i in range(1, len(data)):
         arc_curr = float(data[i].get("arc_score", 0))
         arc_prev = float(data[i - 1].get("arc_score", 0))
-        if arc_prev >= 65 or arc_curr < 65:
+        if arc_prev >= 70 or arc_curr < 70:
             continue
         entry_price = float(data[i].get("btc_price", 0))
         window_end = min(i + 52, len(data))
@@ -285,6 +291,7 @@ def compute_high_risk_drawdown(backtest_data: list) -> dict:
 def _empty_returns() -> dict:
     empty_zone = {
         "range": "N/A",
+        "zone_name": "",
         "entry_count": 0,
         "avg_3m": None,
         "avg_6m": None,
@@ -295,10 +302,11 @@ def _empty_returns() -> dict:
     }
     return {
         "zones": {
-            "low": {**empty_zone, "range": "0-30"},
-            "moderate": {**empty_zone, "range": "30-50"},
-            "elevated": {**empty_zone, "range": "50-65"},
-            "extreme": {**empty_zone, "range": "65-100"},
+            "deep_value": {**empty_zone, "range": "0-30", "zone_name": "Deep Value"},
+            "accumulation": {**empty_zone, "range": "30-40", "zone_name": "Accumulation"},
+            "expansion": {**empty_zone, "range": "40-60", "zone_name": "Expansion"},
+            "risk_rising": {**empty_zone, "range": "60-70", "zone_name": "Risk Rising"},
+            "euphoria": {**empty_zone, "range": "70-100", "zone_name": "Euphoria"},
         },
         "best_entry_zone": None,
         "sample_events": [],

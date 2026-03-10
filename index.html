@@ -521,14 +521,14 @@ body::before {
   grid-area: unset;
   grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 0;
   margin-top: 1.25rem;
   padding-top: 1.25rem;
   border-top: 1px solid rgba(255,255,255,0.05);
 }
 @media(max-width:580px){
-  .hero-zones { grid-template-columns: repeat(2, 1fr); }
+  .hero-zones { grid-template-columns: repeat(3, 1fr); }
 }
 .hero-zone {
   padding: 0.75rem 1rem;
@@ -550,10 +550,11 @@ body::before {
   text-transform: uppercase;
   color: var(--tx-ter);
 }
-.zone-low  .hz-range { color: #22c55e; }
-.zone-mod  .hz-range { color: #3b82f6; }
-.zone-ele  .hz-range { color: #f59e0b; }
-.zone-ext  .hz-range { color: #ef4444; }
+.zone-dv  .hz-range { color: #00D4AA; }
+.zone-ac  .hz-range { color: #00B4D8; }
+.zone-ex  .hz-range { color: #58A6FF; }
+.zone-rr  .hz-range { color: #FF9500; }
+.zone-eu  .hz-range { color: #FF3B3B; }
 
 /* Above-fold compact: Ticker + Hero so Decision Engine visible in ~900px */
 .ticker-bar, #ticker-bar, .ticker {
@@ -715,7 +716,7 @@ body::before {
 }
 .hr-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 1px;
   background: var(--border);
   border: 1px solid var(--border);
@@ -759,14 +760,16 @@ body::before {
   font-size: 8px;
   color: var(--tx-ter);
 }
-.hr-low .hr-zone-range,
-.hr-low .hr-zone-return { color: #22c55e; }
-.hr-mod .hr-zone-range,
-.hr-mod .hr-zone-return { color: #3b82f6; }
-.hr-elv .hr-zone-range,
-.hr-elv .hr-zone-return { color: #f59e0b; }
-.hr-ext .hr-zone-range,
-.hr-ext .hr-zone-return { color: #ef4444; }
+.hr-dv .hr-zone-range,
+.hr-dv .hr-zone-return { color: #00D4AA; }
+.hr-ac .hr-zone-range,
+.hr-ac .hr-zone-return { color: #00B4D8; }
+.hr-ex .hr-zone-range,
+.hr-ex .hr-zone-return { color: #58A6FF; }
+.hr-rr .hr-zone-range,
+.hr-rr .hr-zone-return { color: #FF9500; }
+.hr-eu .hr-zone-range,
+.hr-eu .hr-zone-return { color: #FF3B3B; }
 .hr-disclaimer {
   font-family: var(--f-mono);
   font-size: 8px;
@@ -2029,21 +2032,25 @@ canvas.sparkline {
     </div>
     <div class="components-grid" id="btc-components"></div>
     <div class="hero-zones">
-      <div class="hero-zone zone-low">
+      <div class="hero-zone zone-dv">
         <div class="hz-range">0–30</div>
-        <div class="hz-label">LOW RISK</div>
+        <div class="hz-label">DEEP VALUE</div>
       </div>
-      <div class="hero-zone zone-mod">
-        <div class="hz-range">30–50</div>
-        <div class="hz-label">MODERATE</div>
+      <div class="hero-zone zone-ac">
+        <div class="hz-range">30–40</div>
+        <div class="hz-label">ACCUMULATION</div>
       </div>
-      <div class="hero-zone zone-ele">
-        <div class="hz-range">50–65</div>
-        <div class="hz-label">ELEVATED</div>
+      <div class="hero-zone zone-ex">
+        <div class="hz-range">40–60</div>
+        <div class="hz-label">EXPANSION</div>
       </div>
-      <div class="hero-zone zone-ext">
-        <div class="hz-range">65–100</div>
-        <div class="hz-label">HIGH RISK</div>
+      <div class="hero-zone zone-rr">
+        <div class="hz-range">60–70</div>
+        <div class="hz-label">RISK RISING</div>
+      </div>
+      <div class="hero-zone zone-eu">
+        <div class="hz-range">70–100</div>
+        <div class="hz-label">EUPHORIA</div>
       </div>
     </div>
   </div>
@@ -2085,33 +2092,40 @@ canvas.sparkline {
   <div class="card hist-returns-card anim">
     <div class="hr-eyebrow">Avg. 12-Month Forward Returns by ARC Zone — Based on Backtest Data (2017–Present)</div>
     <div class="hr-grid" id="hr-grid">
-      <div class="hr-zone hr-low">
+      <div class="hr-zone hr-dv">
         <div class="hr-zone-range">0–30</div>
-        <div class="hr-zone-label">LOW RISK</div>
-        <div class="hr-zone-return" id="hr-low-12m">—</div>
-        <div class="hr-zone-wr" id="hr-low-wr">— win rate</div>
-        <div class="hr-zone-count" id="hr-low-count">— entries</div>
+        <div class="hr-zone-label">DEEP VALUE</div>
+        <div class="hr-zone-return" id="hr-dv-12m">—</div>
+        <div class="hr-zone-wr" id="hr-dv-wr">— win rate</div>
+        <div class="hr-zone-count" id="hr-dv-count">— entries</div>
       </div>
-      <div class="hr-zone hr-mod">
-        <div class="hr-zone-range">30–50</div>
-        <div class="hr-zone-label">MODERATE</div>
-        <div class="hr-zone-return" id="hr-mod-12m">—</div>
-        <div class="hr-zone-wr" id="hr-mod-wr">— win rate</div>
-        <div class="hr-zone-count" id="hr-mod-count">— entries</div>
+      <div class="hr-zone hr-ac">
+        <div class="hr-zone-range">30–40</div>
+        <div class="hr-zone-label">ACCUMULATION</div>
+        <div class="hr-zone-return" id="hr-ac-12m">—</div>
+        <div class="hr-zone-wr" id="hr-ac-wr">— win rate</div>
+        <div class="hr-zone-count" id="hr-ac-count">— entries</div>
       </div>
-      <div class="hr-zone hr-elv">
-        <div class="hr-zone-range">50–65</div>
-        <div class="hr-zone-label">ELEVATED</div>
-        <div class="hr-zone-return" id="hr-elv-12m">—</div>
-        <div class="hr-zone-wr" id="hr-elv-wr">— win rate</div>
-        <div class="hr-zone-count" id="hr-elv-count">— entries</div>
+      <div class="hr-zone hr-ex">
+        <div class="hr-zone-range">40–60</div>
+        <div class="hr-zone-label">EXPANSION</div>
+        <div class="hr-zone-return" id="hr-ex-12m">—</div>
+        <div class="hr-zone-wr" id="hr-ex-wr">— win rate</div>
+        <div class="hr-zone-count" id="hr-ex-count">— entries</div>
       </div>
-      <div class="hr-zone hr-ext">
-        <div class="hr-zone-range">65–100</div>
-        <div class="hr-zone-label">HIGH RISK</div>
-        <div class="hr-zone-return" id="hr-ext-12m">—</div>
-        <div class="hr-zone-wr" id="hr-ext-wr">— win rate</div>
-        <div class="hr-zone-count" id="hr-ext-count">— entries</div>
+      <div class="hr-zone hr-rr">
+        <div class="hr-zone-range">60–70</div>
+        <div class="hr-zone-label">RISK RISING</div>
+        <div class="hr-zone-return" id="hr-rr-12m">—</div>
+        <div class="hr-zone-wr" id="hr-rr-wr">— win rate</div>
+        <div class="hr-zone-count" id="hr-rr-count">— entries</div>
+      </div>
+      <div class="hr-zone hr-eu">
+        <div class="hr-zone-range">70–100</div>
+        <div class="hr-zone-label">EUPHORIA</div>
+        <div class="hr-zone-return" id="hr-eu-12m">—</div>
+        <div class="hr-zone-wr" id="hr-eu-wr">— win rate</div>
+        <div class="hr-zone-count" id="hr-eu-count">— entries</div>
       </div>
     </div>
     <div class="hr-disclaimer">Based on weekly backtest data. Past performance does not guarantee future results. Not financial advice.</div>
@@ -2455,32 +2469,36 @@ const fmtT    = n => '$'+safeNum(n/1e12).toFixed(2)+'T';
 
 function scoreColor(s) {
   s = clamp(s);
-  if (s < 25)  return '#22c55e';
-  if (s < 45)  return '#3b82f6';
-  if (s < 65)  return '#f59e0b';
-  return '#ef4444';
+  if (s < 30)  return '#00D4AA';
+  if (s < 40)  return '#00B4D8';
+  if (s < 60)  return '#58A6FF';
+  if (s < 70)  return '#FF9500';
+  return '#FF3B3B';
 }
 function phaseOf(score) {
-  if (score < 25) return 'Low Risk';
-  if (score < 45) return 'Moderate Risk';
-  if (score < 65) return 'Elevated Risk';
-  return 'High Risk';
+  if (score < 30) return 'Deep Value';
+  if (score < 40) return 'Accumulation';
+  if (score < 60) return 'Expansion';
+  if (score < 70) return 'Risk Rising';
+  return 'Euphoria';
 }
 function phaseIcon(phase) {
   const m = {
-    'Low Risk':      '🟢',
-    'Moderate Risk': '📈',
-    'Elevated Risk': '⚠️',
-    'High Risk':     '🔴',
+    'Deep Value':    '\uD83D\uDFE2',
+    'Accumulation': '\uD83D\uDCC8',
+    'Expansion':    '\uD83D\uDCA1',
+    'Risk Rising':  '\u26A0\uFE0F',
+    'Euphoria':     '\uD83D\uDD34',
   };
-  return m[phase] || '📊';
+  return m[phase] || '\uD83D\uDCCA';
 }
 function phaseDesc(phase) {
   return {
-    'Low Risk':'Market undervalued. Smart money accumulating. Fear elevated, prices near or below 200W MA.',
-    'Moderate Risk':'Uptrend confirmed. Liquidity expanding. Momentum building with healthy sentiment.',
-    'Elevated Risk':'Market overheating. FOMO elevated. Whale distribution likely in progress.',
-    'High Risk':'Risk-off environment. Liquidity contracting. Downtrend confirmed - caution advised.',
+    'Deep Value':'Market undervalued. Smart money accumulating. Fear elevated, prices near or below 200W MA.',
+    'Accumulation':'Structurally favorable. Accumulation zone. Historically strong risk/reward for long-term exposure.',
+    'Expansion':'Uptrend confirmed. Liquidity expanding. Momentum building with healthy sentiment.',
+    'Risk Rising':'Market overheating. FOMO elevated. Whale distribution likely in progress.',
+    'Euphoria':'Risk-off environment. Liquidity contracting. Downtrend confirmed - caution advised.',
   }[phase]||'Analyzing market conditions...';
 }
 function _getCycleDescription(arc) {
@@ -2900,12 +2918,13 @@ function updatePhaseBanner() {
   const banner = $('phase-banner');
 
   const phaseStyles = {
-    'Low Risk':      {bg:'rgba(34,197,94,0.06)',   border:'rgba(34,197,94,0.22)'},
-    'Moderate Risk': {bg:'rgba(59,130,246,0.06)',  border:'rgba(59,130,246,0.22)'},
-    'Elevated Risk': {bg:'rgba(245,158,11,0.06)',  border:'rgba(245,158,11,0.22)'},
-    'High Risk':     {bg:'rgba(239,68,68,0.06)',   border:'rgba(239,68,68,0.22)'},
+    'Deep Value':    {bg:'rgba(0,212,170,0.06)',   border:'rgba(0,212,170,0.22)'},
+    'Accumulation':  {bg:'rgba(0,180,216,0.06)',  border:'rgba(0,180,216,0.22)'},
+    'Expansion':     {bg:'rgba(88,166,255,0.06)', border:'rgba(88,166,255,0.22)'},
+    'Risk Rising':   {bg:'rgba(255,149,0,0.06)',  border:'rgba(255,149,0,0.22)'},
+    'Euphoria':      {bg:'rgba(255,59,59,0.06)',  border:'rgba(255,59,59,0.22)'},
   };
-  const st=phaseStyles[phase]||phaseStyles['Moderate Risk'];
+  const st=phaseStyles[phase]||phaseStyles['Expansion'];
   banner.style.background   = st.bg;
   banner.style.borderColor  = st.border;
   banner.style.color        = col;
@@ -2958,22 +2977,17 @@ function updateUI() {
     var arcDisplay = S.arcSummary?.arc_display ?? s;
     if (getPhaseGroup() === 'bear' && arcDisplay < 50) {
       el.textContent = S.arcSummary?.phase_context || S.analyzerPhase || 'MID BEAR';
-      el.style.borderColor = 'rgba(245,158,11,0.4)';
-      el.style.color = '#f59e0b';
-      el.style.background = 'rgba(245,158,11,0.07)';
+      el.style.borderColor = 'rgba(255,149,0,0.4)';
+      el.style.color = '#FF9500';
+      el.style.background = 'rgba(255,149,0,0.07)';
       return;
     }
-    const zones = [
-      [25,  'LOW RISK',   '34,197,94'],
-      [45,  'MODERATE',   '59,130,246'],
-      [65,  'ELEVATED',   '245,158,11'],
-      [101, 'HIGH RISK',  '239,68,68'],
-    ];
-    const [,label,rgb] = zones.find(([max]) => s < max);
-    el.textContent = label;
-    el.style.borderColor = `rgba(${rgb},0.4)`;
-    el.style.color = `rgba(${rgb},0.9)`;
-    el.style.background = `rgba(${rgb},0.07)`;
+    var zoneName = phaseOf(arcDisplay);
+    var col = scoreColor(arcDisplay);
+    el.textContent = zoneName;
+    el.style.borderColor = col + '99';
+    el.style.color = col;
+    el.style.background = col + '12';
   })();
   // Cycle Signal Badge im Hero (ueberschreibt hero-risk-label bei aktivem Signal)
   const cs = S.cycleSignal;
@@ -4086,10 +4100,11 @@ function renderArcChart(period) {
         var yArc = chart.scales.yArc;
         if (!yArc) return;
         var labels = [
-          { y: 15, text: 'LOW RISK', col: 'rgba(34,197,94,0.4)' },
-          { y: 45, text: 'MODERATE', col: 'rgba(59,130,246,0.35)' },
-          { y: 67, text: 'ELEVATED', col: 'rgba(245,158,11,0.4)' },
-          { y: 87, text: 'HIGH RISK', col: 'rgba(239,68,68,0.4)' }
+          { y: 15, text: 'DEEP VALUE', col: 'rgba(0,212,170,0.4)' },
+          { y: 35, text: 'ACCUMULATION', col: 'rgba(0,180,216,0.4)' },
+          { y: 50, text: 'EXPANSION', col: 'rgba(88,166,255,0.4)' },
+          { y: 65, text: 'RISK RISING', col: 'rgba(255,149,0,0.4)' },
+          { y: 87, text: 'EUPHORIA', col: 'rgba(255,59,59,0.4)' }
         ];
         labels.forEach(function(item) {
           var py = yArc.getPixelForValue(item.y);
@@ -4387,37 +4402,34 @@ async function fetchHistoricalReturns() {
       }
     }
 
-    setZone('low', 'low');
-    setZone('moderate', 'mod');
-    setZone('elevated', 'elv');
+    setZone('deep_value', 'dv');
+    setZone('accumulation', 'ac');
+    setZone('expansion', 'ex');
+    setZone('risk_rising', 'rr');
+    setZone('euphoria', 'eu');
 
-    var elvZone = z['elevated'];
-    if (elvZone) {
-      setZone('elevated', 'elv');
-    }
-
-    var extZone = z['extreme'];
-    if (extZone) {
-      var extRet = document.getElementById('hr-ext-12m');
-      if (extRet) {
-        if (extZone.display_mode === 'drawdown' && extZone.avg_drawdown != null) {
-          extRet.textContent = '\u2193 AVG -' + Math.abs(extZone.avg_drawdown) + '% FROM PEAK';
+    var euZone = z['euphoria'];
+    if (euZone) {
+      var euRet = document.getElementById('hr-eu-12m');
+      if (euRet) {
+        if (euZone.display_mode === 'drawdown' && euZone.avg_drawdown != null) {
+          euRet.textContent = '\u2193 AVG -' + Math.abs(euZone.avg_drawdown) + '% FROM PEAK';
         } else {
-          extRet.textContent = 'SELL / REDUCE';
+          euRet.textContent = euZone.avg_12m != null ? (euZone.avg_12m > 0 ? '+' : '') + euZone.avg_12m + '%' : 'SELL / REDUCE';
         }
-        extRet.style.color = '#ef4444';
-        extRet.style.fontSize = '0.9rem';
+        euRet.style.color = '#FF3B3B';
+        euRet.style.fontSize = '0.9rem';
       }
-      var extWr = document.getElementById('hr-ext-wr');
-      if (extWr) {
-        if (extZone.max_drawdown != null) {
-          extWr.textContent = 'Worst: -' + Math.abs(extZone.max_drawdown) + '% from peak';
+      var euWr = document.getElementById('hr-eu-wr');
+      if (euWr) {
+        if (euZone.max_drawdown != null) {
+          euWr.textContent = 'Worst: -' + Math.abs(euZone.max_drawdown) + '% from peak';
         } else {
-          extWr.textContent = 'HIGH RISK zone';
+          euWr.textContent = 'EUPHORIA zone';
         }
       }
-      var extC = document.getElementById('hr-ext-count');
-      if (extC) extC.textContent = (extZone.entry_count != null ? extZone.entry_count : '—') + ' entries';
+      var euC = document.getElementById('hr-eu-count');
+      if (euC) euC.textContent = (euZone.entry_count != null ? euZone.entry_count : '—') + ' entries';
     }
   } catch (e) {
     console.warn('historical returns error:', e);
@@ -4437,21 +4449,22 @@ function formatPrice(n) {
 
 function getZoneLabelByArc(arc) {
   var s = Number(arc);
-  if (s < 30) return 'Low Risk';
-  if (s < 50) return 'Moderate Risk';
-  if (s < 65) return 'Elevated Risk';
-  return 'High Risk';
+  if (s < 30) return 'Deep Value';
+  if (s < 40) return 'Accumulation';
+  if (s < 60) return 'Expansion';
+  if (s < 70) return 'Risk Rising';
+  return 'Euphoria';
 }
 
 function getHistReturnForArc(arc) {
   var z = S.historicalReturns && S.historicalReturns.zones;
   if (!z) return '—';
   var s = Number(arc);
-  var key = s < 30 ? 'low' : s < 50 ? 'moderate' : s < 65 ? 'elevated' : 'extreme';
+  var key = s < 30 ? 'deep_value' : s < 40 ? 'accumulation' : s < 60 ? 'expansion' : s < 70 ? 'risk_rising' : 'euphoria';
   var zone = z[key];
   if (!zone) return '—';
   if (zone.avg_12m != null) return (zone.avg_12m > 0 ? '+' : '') + zone.avg_12m + '%';
-  if (key === 'extreme' && zone.avg_drawdown != null) return 'AVG -' + Math.abs(zone.avg_drawdown) + '% from peak';
+  if (key === 'euphoria' && zone.avg_drawdown != null) return 'AVG -' + Math.abs(zone.avg_drawdown) + '% from peak';
   return '—';
 }
 
@@ -4459,7 +4472,7 @@ function generateContentTemplates() {
   var arc = S.arcSummary?.arc_display ?? S.combined ?? 32;
   arc = Math.round(Number(arc)) || 32;
   var riskLabelEl = document.getElementById('hero-risk-label');
-  var risk_label = (riskLabelEl && riskLabelEl.textContent) ? riskLabelEl.textContent.trim() : (arc < 30 ? 'Low Risk' : arc < 50 ? 'Moderate Risk' : arc < 65 ? 'Elevated Risk' : 'High Risk');
+  var risk_label = (riskLabelEl && riskLabelEl.textContent) ? riskLabelEl.textContent.trim() : phaseOf(arc);
   var phase = S.arcSummary?.phase_context || '—';
   var btc_price = formatPrice(S.btcMarket?.price || S.btcPrices.at(-1));
   var fg = S.fgCurrent != null ? Number(S.fgCurrent) : 50;

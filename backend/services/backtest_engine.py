@@ -20,6 +20,10 @@ import httpx
 
 logger = logging.getLogger(__name__)
 
+# 5-zone buckets for historical returns (aligned with phaseOf / get_zone_name)
+ZONES = [(0, 30), (30, 40), (40, 60), (60, 70), (70, 100)]
+ZONE_NAMES = ["Deep Value", "Accumulation", "Expansion", "Risk Rising", "Euphoria"]
+
 try:
     from scoring import drawdown_score, drawdown_score_hl, ma_deviation_score, safe_float, fg_to_score, arc_display_score
 except ImportError:  # pragma: no cover
