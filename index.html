@@ -13,8 +13,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
 <script>
-const LOGO_B64 = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAYGBgYHBgcICAcKCwoLCg8ODAwODxYQERAREBYiFRkVFRkVIh4kHhweJB42KiYmKjY+NDI0PkxERExfWl98fKcBBgYGBgcGBwgIBwoLCgsKDw4MDA4PFhAREBEQFiIVGRUVGRUiHiQeHB4kHjYqJiYqNj40MjQ+TERETF9aX3x8p//CABEIBAAEAAMBIgACEQEDEQH/xAAyAAEAAwEBAQEAAAAAAAAAAAAAAQIDBgUEBwEBAAMBAQAAAAAAAAAAAAAAAAECAwQF/9oADAMBAAIQAxAAAALmBaoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAkAAAAAAAAAAAAAAAAAAAAEJAAAAAAAAAAAAAAAAAAACAEgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAlEgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgkAAAAAAAAAAAAAAAAAAAAABEgAAAAAAESAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAkAAAAAAAAAAAAAAAAAAAAAAAAAAAglEgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"; 
-(function(){ var L = document.getElementById("favicon-link"); if (L) L.href = LOGO_B64; })();
+const LOGO_DATA_URL = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAYGBgYHBgcICAcKCwoLCg8ODAwODxYQERAREBYiFRkVFRkVIh4kHhweJB42KiYmKjY+NDI0PkxERExfWl98fKcBBgYGBgcGBwgIBwoLCgsKDw4MDA4PFhAREBEQFiIVGRUVGRUiHiQeHB4kHjYqJiYqNj40MjQ+TERETF9aX3x8p//CABEIBAAEAAMBIgACEQEDEQH/xAAyAAEAAwEBAQEAAAAAAAAAAAAAAQIDBgUEBwEBAAMBAQAAAAAAAAAAAAAAAAECAwQF/9oADAMBAAIQAxAAAALmBaoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAkAAAAAAAAAAAAAAAAAAAAEJAAAAAAAAAAAAAAAAAAACAEgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAlEgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgkAAAAAAAAAAAAAAAAAAAAABEgAAAAAAESAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAkAAAAAAAAAAAAAAAAAAAAAAAAAAAglEgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"; 
+(function(){ var L=document.getElementById("favicon-link"); if(L) L.href=window.LOGO_DATA_URL; var M=document.getElementById("load-logo-img"); if(M) M.src=window.LOGO_DATA_URL; })();
 </script>
 <style>
 /* ════════════════════════════════════════════════════════════════
@@ -1962,7 +1962,7 @@ canvas.sparkline {
          style="width:32px;height:32px;border-radius:6px;object-fit:contain;display:block;"/>
     Alpha Cycle
   </div>
-  <script>document.getElementById('load-logo-img').src = LOGO_B64;</script>
+  <script>document.getElementById('load-logo-img').src = window.LOGO_DATA_URL;</script>
   <div class="load-bar-wrap"><div class="load-bar" id="load-bar"></div></div>
   <div class="load-status" id="load-status">INITIALIZING…</div>
 </div>
@@ -1970,7 +1970,7 @@ canvas.sparkline {
 <!-- NAV -->
 <nav class="nav">
   <a class="nav-logo" href="#">
-    <img src="" data-logo-b64 alt="Alpha Cycle"
+    <img src="" class="logo-img" alt="Alpha Cycle"
          style="width:32px;height:32px;border-radius:6px;object-fit:cover;display:block;image-rendering:auto;"/>
     <div>
       <div class="nav-logo-text">Alpha Cycle</div>
@@ -2433,7 +2433,7 @@ canvas.sparkline {
   <!-- ── FOOTER ── -->
   <footer class="footer anim d6">
     <div class="footer-brand">
-      <img src="" data-logo-b64 alt="Alpha Cycle"
+      <img src="" class="logo-img" alt="Alpha Cycle"
            style="width:32px;height:32px;border-radius:6px;object-fit:contain;display:block;"/>
       Alpha Cycle
     </div>
@@ -2463,9 +2463,7 @@ const BACKEND_URL = window.BACKEND_URL || 'https://alphacycle-production.up.rail
 const REFRESH_INTERVAL = 60; // seconds
 
 document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('img[data-logo-b64], img[src="/static/logo.png"]').forEach(img => {
-    img.src = LOGO_B64;
-  });
+  document.querySelectorAll('img.logo-img').forEach(function(img){ img.src = window.LOGO_DATA_URL; });
 });
 
 // ── GLOBAL STATE ─────────────────────────────────────────────────────────
