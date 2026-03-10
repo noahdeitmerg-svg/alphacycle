@@ -2396,11 +2396,9 @@ canvas.sparkline {
   </div>
   <div class="card content-export-card anim">
     <div class="ce-row">
-      <button class="ce-btn" id="ce-copy-daily" type="button" onclick="copyTemplate('daily_update')">Copy Daily Update</button>
-      <button class="ce-btn" id="ce-copy-compact" type="button" onclick="copyTemplate('compact')">Copy Compact Post</button>
-      <button class="ce-btn" id="ce-copy-edu" type="button" onclick="copyTemplate('educational')">Copy Educational</button>
+      <button class="ce-btn" id="ce-copy-data" type="button" onclick="copyDataBlock()">COPY DATA</button>
     </div>
-    <div class="ce-preview" id="ce-preview">Post wird geladen…</div>
+    <pre class="ce-preview" id="ce-preview">Loading…</pre>
   </div>
 
   <!-- ── FOOTER ── -->
@@ -4511,8 +4509,7 @@ function applyHistoricalReturnsCurrentZone() {
 function updateContentPreview() {
   const preview = document.getElementById('ce-preview');
   if (!preview) return;
-  var t = generateContentTemplates();
-  preview.textContent = t.daily_update || 'Post wird geladen…';
+  preview.textContent = buildDataBlock() || 'Loading…';
 }
 
 function formatPrice(n) {
@@ -4528,54 +4525,65 @@ function getZoneLabelByArc(arc) {
   return 'Euphoria';
 }
 
-function getHistReturnForArc(arc) {
-  var z = S.historicalReturns && S.historicalReturns.zones;
-  if (!z) return '—';
-  var s = Number(arc);
-  var key = s < 30 ? 'deep_value' : s < 40 ? 'accumulation' : s < 60 ? 'expansion' : s < 70 ? 'risk_rising' : 'euphoria';
-  var zone = z[key];
-  if (!zone) return '—';
-  if (zone.avg_12m != null) return (zone.avg_12m > 0 ? '+' : '') + zone.avg_12m + '%';
-  if (key === 'euphoria' && zone.avg_drawdown != null) return 'AVG -' + Math.abs(zone.avg_drawdown) + '% from peak';
-  return '—';
+function ordinal(n) {
+  n = Math.round(Number(n));
+  if (n == null || isNaN(n)) return '—';
+  var s = n % 10, h = n % 100;
+  if (s === 1 && h !== 11) return n + 'st';
+  if (s === 2 && h !== 12) return n + 'nd';
+  if (s === 3 && h !== 13) return n + 'rd';
+  return n + 'th';
 }
 
-function generateContentTemplates() {
+function buildDataBlock() {
   var arc = S.arcSummary?.arc_display ?? S.combined ?? 32;
   arc = Math.round(Number(arc)) || 32;
-  var riskLabelEl = document.getElementById('hero-risk-label');
-  var risk_label = (riskLabelEl && riskLabelEl.textContent) ? riskLabelEl.textContent.trim() : phaseOf(arc);
+  var zoneKey = arc < 30 ? 'deep_value' : arc < 40 ? 'accumulation' : arc < 60 ? 'expansion' : arc < 70 ? 'risk_rising' : 'euphoria';
+  var zone = S.historicalReturns && S.historicalReturns.zones ? S.historicalReturns.zones[zoneKey] : null;
+  var zoneName = getZoneLabelByArc(arc);
   var phase = S.arcSummary?.phase_context || '—';
-  var btc_price = formatPrice(S.btcMarket?.price || S.btcPrices.at(-1));
-  var fg = S.fgCurrent != null ? Number(S.fgCurrent) : 50;
-  var fgLabel = S.fgLabel || 'Neutral';
+  var btcPrice = S.btcMarket?.price ?? (S.btcPrices && S.btcPrices.length ? S.btcPrices[S.btcPrices.length - 1] : null);
+  var fg = S.fgCurrent != null ? Number(S.fgCurrent) : null;
+  var percentile = S.arcSummary?.arc_percentile ?? S.arcPercentile ?? null;
   var position = S.arcSummary?.position || '—';
   var allocation = S.arcSummary?.allocation || '—';
-  var hist_return = getHistReturnForArc(arc);
-  var zone_label = getZoneLabelByArc(arc);
+  var avg12m = zone && zone.avg_12m != null ? zone.avg_12m + '%' : '—';
+  var winRate = zone && zone.win_rate_12m != null ? zone.win_rate_12m + '%' : '—';
+  var daysSinceTop = S.arcSummary?.days_since_top ?? (S.shortTermContext && S.shortTermContext.days_since_top != null ? S.shortTermContext.days_since_top : null);
+  var nextBottom = new Date('2026-10-01');
+  var dtb = Math.round((nextBottom - new Date()) / 86400000);
+  var estBottom = dtb > 0 ? 'in ' + dtb + 'd' : dtb === 0 ? 'today' : Math.abs(dtb) + 'd past';
 
-  var daily_update = '🔴 AlphaCycle Daily Update\n\nARC Index: ' + arc + '/100 — ' + risk_label + '\nPhase: ' + phase + ' | BTC: ' + btc_price + '\nFear & Greed: ' + fg + ' (' + fgLabel + ')\n\n📊 Position: ' + position + '\n💼 Allocation: ' + allocation + '\n📈 12M Historical Return (this zone): ' + hist_return + '\n\n#Bitcoin #BTC #Crypto #AlphaCycle';
-
-  var compact = 'ARC ' + arc + '/100 | ' + phase + ' | ' + position + '\nBTC ' + btc_price + ' | F&G ' + fg + '\n→ ' + allocation + ' allocation\n\n#Bitcoin #AlphaCycle';
-
-  var educational = '📚 What does ARC ' + arc + '/100 mean?\n\nThe AlphaCycle Risk Index measures structural\nmarket risk from 0 (max opportunity) to 100 (max risk).\n\nAt ' + arc + '/100 we are in the ' + zone_label + ' zone.\nHistorically this zone produced ' + hist_return + ' avg returns.\n\nNot financial advice. DYOR.\n#Bitcoin #AlphaCycle';
-
-  return { daily_update: daily_update, compact: compact, educational: educational };
+  var lines = [
+    '--- AlphaCycle Data Export ---',
+    'Date: ' + new Date().toISOString().slice(0, 10),
+    'ARC Index: ' + arc + '/100',
+    'Zone: ' + zoneName,
+    'Phase: ' + phase,
+    'BTC Price: ' + formatPrice(btcPrice),
+    'Fear & Greed: ' + (fg != null ? fg : '—'),
+    'Percentile: ' + ordinal(percentile),
+    'Position: ' + position,
+    'Allocation: ' + allocation,
+    '12M Return (this zone): ' + avg12m,
+    'Win Rate: ' + winRate,
+    'Days Since Top: ' + (daysSinceTop != null ? daysSinceTop : '—'),
+    'Est. Cycle Bottom: ' + estBottom,
+    '------------------------------'
+  ];
+  return lines.join('\n');
 }
 
-function copyTemplate(type) {
-  var t = generateContentTemplates();
-  var text = type === 'daily_update' ? t.daily_update : type === 'compact' ? t.compact : t.educational;
+function copyDataBlock() {
+  var text = buildDataBlock();
   if (!text) return;
-  var btnId = type === 'daily_update' ? 'ce-copy-daily' : type === 'compact' ? 'ce-copy-compact' : 'ce-copy-edu';
-  var btn = document.getElementById(btnId);
-  var labels = { daily_update: 'Copy Daily Update', compact: 'Copy Compact Post', educational: 'Copy Educational' };
+  var btn = document.getElementById('ce-copy-data');
   navigator.clipboard.writeText(text).then(function() {
     if (btn) {
-      btn.textContent = 'Copied!';
+      btn.textContent = 'COPIED ✓';
       btn.classList.add('copied');
       setTimeout(function() {
-        btn.textContent = labels[type] || btn.textContent;
+        btn.textContent = 'COPY DATA';
         btn.classList.remove('copied');
       }, 2000);
     }
@@ -4587,9 +4595,9 @@ function copyTemplate(type) {
     document.execCommand('copy');
     document.body.removeChild(ta);
     if (btn) {
-      btn.textContent = 'Copied!';
+      btn.textContent = 'COPIED ✓';
       btn.classList.add('copied');
-      setTimeout(function() { btn.textContent = labels[type]; btn.classList.remove('copied'); }, 2000);
+      setTimeout(function() { btn.textContent = 'COPY DATA'; btn.classList.remove('copied'); }, 2000);
     }
   });
 }
