@@ -1125,34 +1125,6 @@ async def subscribe(req: SubscribeRequest):
         }
         supabase.table("email_captures").upsert(payload).execute()
 
-        beehiiv_pub_id = os.environ.get("BEEHIIV_PUBLICATION_ID", "YOUR_BEEHIIV_PUBLICATION_ID")
-        beehiiv_api_key = os.environ.get("BEEHIIV_API_KEY", "")
-
-        if beehiiv_api_key:
-            try:
-                import httpx
-
-                async with httpx.AsyncClient() as client:
-                    await client.post(
-                        f"https://api.beehiiv.com/v2/publications/{beehiiv_pub_id}/subscriptions",
-                        headers={
-                            "Authorization": f"Bearer {beehiiv_api_key}",
-                            "Content-Type": "application/json",
-                        },
-                        json={
-                            "email": req.email.lower().strip(),
-                            "reactivate_existing": False,
-                            "send_welcome_email": True,
-                            "utm_source": req.source,
-                            "utm_medium": "dashboard",
-                        },
-                    )
-                supabase.table("email_captures").update(
-                    {"beehiiv_synced": True}
-                ).eq("email", req.email.lower().strip()).execute()
-            except Exception as e:
-                logger.warning("Beehiiv sync failed: %s", e)
-
         return {"success": True, "message": "Successfully subscribed"}
     except HTTPException:
         raise
