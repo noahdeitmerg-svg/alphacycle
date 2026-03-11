@@ -2128,6 +2128,7 @@ canvas.sparkline {
       <div class="decision-item">
         <div class="decision-label">Suggested Position</div>
         <div class="decision-value" id="dec-position">—</div>
+        <div class="decision-value decision-value-sub" id="dec-bottom-formation" style="display:none;font-size:0.85em;margin-top:4px;color:#00B4D8"></div>
       </div>
       <div class="decision-item">
         <div class="decision-label">Spot Allocation</div>
@@ -2157,7 +2158,7 @@ canvas.sparkline {
       <div class="hr-zone hr-dv" data-hr-zone="dv">
         <span class="hr-zone-badge" aria-hidden="true">YOU ARE HERE</span>
         <div class="hr-zone-context">Historically strongest entry zone</div>
-        <div class="hr-zone-range">0–30</div>
+        <div class="hr-zone-range">0–29</div>
         <div class="hr-zone-label">DEEP VALUE</div>
         <div class="hr-zone-return" id="hr-dv-12m">—</div>
         <div class="hr-zone-wr" id="hr-dv-wr">— win rate</div>
@@ -2166,7 +2167,7 @@ canvas.sparkline {
       <div class="hr-zone hr-ac" data-hr-zone="ac">
         <span class="hr-zone-badge" aria-hidden="true">YOU ARE HERE</span>
         <div class="hr-zone-context">High probability long-term returns</div>
-        <div class="hr-zone-range">30–40</div>
+        <div class="hr-zone-range">30–39</div>
         <div class="hr-zone-label">ACCUMULATION</div>
         <div class="hr-zone-return" id="hr-ac-12m">—</div>
         <div class="hr-zone-wr" id="hr-ac-wr">— win rate</div>
@@ -2175,7 +2176,7 @@ canvas.sparkline {
       <div class="hr-zone hr-ex" data-hr-zone="ex">
         <span class="hr-zone-badge" aria-hidden="true">YOU ARE HERE</span>
         <div class="hr-zone-context">Moderate upside, increasing risk</div>
-        <div class="hr-zone-range">40–60</div>
+        <div class="hr-zone-range">40–59</div>
         <div class="hr-zone-label">EXPANSION</div>
         <div class="hr-zone-return" id="hr-ex-12m">—</div>
         <div class="hr-zone-wr" id="hr-ex-wr">— win rate</div>
@@ -2184,7 +2185,7 @@ canvas.sparkline {
       <div class="hr-zone hr-rr" data-hr-zone="rr">
         <span class="hr-zone-badge" aria-hidden="true">YOU ARE HERE</span>
         <div class="hr-zone-context">Reduce exposure — late cycle</div>
-        <div class="hr-zone-range">60–70</div>
+        <div class="hr-zone-range">60–69</div>
         <div class="hr-zone-label">RISK RISING</div>
         <div class="hr-zone-return" id="hr-rr-12m">—</div>
         <div class="hr-zone-wr" id="hr-rr-wr">— win rate</div>
@@ -2245,6 +2246,12 @@ canvas.sparkline {
           <div class="cp-phase-item">
             <div class="cp-eyebrow">Tactical</div>
             <div class="cp-phase-val" id="cp-tactical">—</div>
+          </div>
+        </div>
+        <div class="cp-phase-row">
+          <div class="cp-phase-item">
+            <div class="cp-eyebrow">SEASONALITY</div>
+            <div class="cp-phase-val" id="cp-seasonality">—</div>
           </div>
         </div>
         <div class="cp-scenario-row">
@@ -2541,17 +2548,17 @@ const fmtT    = n => '$'+safeNum(n/1e12).toFixed(2)+'T';
 
 function scoreColor(s) {
   s = clamp(s);
-  if (s < 30)  return '#00DC78';
-  if (s < 40)  return '#00B4D8';
-  if (s < 60)  return '#58A6FF';
-  if (s < 70)  return '#FF9500';
+  if (s <= 29) return '#00D4AA';
+  if (s <= 39) return '#00B4D8';
+  if (s <= 59) return '#58A6FF';
+  if (s <= 69) return '#FF9500';
   return '#FF3B3B';
 }
 function phaseOf(score) {
-  if (score < 30) return 'Deep Value';
-  if (score < 40) return 'Accumulation';
-  if (score < 60) return 'Expansion';
-  if (score < 70) return 'Risk Rising';
+  if (score <= 29) return 'Deep Value';
+  if (score <= 39) return 'Accumulation';
+  if (score <= 59) return 'Expansion';
+  if (score <= 69) return 'Risk Rising';
   return 'Euphoria';
 }
 function phaseIcon(phase) {
@@ -3221,6 +3228,17 @@ function updateUI() {
     setText('dec-allocation', allocation);
     if (!arcSum || arcSum.position == null || arcSum.position === '') setText('dec-range', range, (score < 50 ? '#22c55e' : undefined));
     setText('dec-confidence', confidence);
+    var bfEl = document.getElementById('dec-bottom-formation');
+    if (bfEl) {
+      if (arcSum && arcSum.bottom_formation === true) {
+        bfEl.textContent = '\u2691 Bottom Formation Signal';
+        bfEl.style.display = 'block';
+        bfEl.style.color = '#00B4D8';
+      } else {
+        bfEl.style.display = 'none';
+        bfEl.textContent = '';
+      }
+    }
     setText('dec-index-val',  Math.round(combinedScore), scoreColor(combinedScore));
   })();
 
@@ -3494,6 +3512,15 @@ function updateShortTermContext() {
     ? S.arcSummary.phase_context
     : (ctx ? (ctx.phase || ctx.phase_label) : null);
   _setCyclePhaseTag(canonicalPhase || 'Unknown', ctx);
+
+  var sea = S.arcSummary && S.arcSummary.seasonality;
+  if (sea) {
+    var seaEl = document.getElementById('cp-seasonality');
+    if (seaEl) {
+      seaEl.textContent = sea.month_name + ' — ' + sea.label + ' (' + (sea.avg_return > 0 ? '+' : '') + sea.avg_return + '% avg)';
+      seaEl.style.color = sea.color || '#6b7280';
+    }
+  }
 
   if (S.shortTerm && S.shortTerm.signal) return;
 
@@ -3934,10 +3961,10 @@ function renderArcChart(period) {
   var liveData = [];
   for (var i = 0; i < n; i++) liveData.push(i === n - 1 ? arcData[n - 1] : null);
   var datasets = [
-    { label: '0-30 Deep Value (#10B981)', data: [], borderColor: 'transparent', backgroundColor: '#10B981', fill: false, pointRadius: 0, borderWidth: 0, yAxisID: 'yArc', order: 1 },
-    { label: '30-40 Accumulation (#047857)', data: [], borderColor: 'transparent', backgroundColor: '#047857', fill: false, pointRadius: 0, borderWidth: 0, yAxisID: 'yArc', order: 1 },
-    { label: '40-60 Expansion (#58A6FF)', data: [], borderColor: 'transparent', backgroundColor: '#58A6FF', fill: false, pointRadius: 0, borderWidth: 0, yAxisID: 'yArc', order: 1 },
-    { label: '60-70 Risk Rising (#FF9500)', data: [], borderColor: 'transparent', backgroundColor: '#FF9500', fill: false, pointRadius: 0, borderWidth: 0, yAxisID: 'yArc', order: 1 },
+    { label: '0-29 Deep Value (#00D4AA)', data: [], borderColor: 'transparent', backgroundColor: '#00D4AA', fill: false, pointRadius: 0, borderWidth: 0, yAxisID: 'yArc', order: 1 },
+    { label: '30-39 Accumulation (#00B4D8)', data: [], borderColor: 'transparent', backgroundColor: '#00B4D8', fill: false, pointRadius: 0, borderWidth: 0, yAxisID: 'yArc', order: 1 },
+    { label: '40-59 Expansion (#58A6FF)', data: [], borderColor: 'transparent', backgroundColor: '#58A6FF', fill: false, pointRadius: 0, borderWidth: 0, yAxisID: 'yArc', order: 1 },
+    { label: '60-69 Risk Rising (#FF9500)', data: [], borderColor: 'transparent', backgroundColor: '#FF9500', fill: false, pointRadius: 0, borderWidth: 0, yAxisID: 'yArc', order: 1 },
     { label: '70-100 Euphoria (#FF3B3B)', data: [], borderColor: 'transparent', backgroundColor: '#FF3B3B', fill: false, pointRadius: 0, borderWidth: 0, yAxisID: 'yArc', order: 1 },
     { label: 'ARC Index', data: arcData, borderColor: 'rgba(255,255,255,0.92)', borderWidth: 2.5, pointRadius: 0, yAxisID: 'yArc', tension: 0.4, order: 2 },
     { label: 'BTC Price', data: priceData, borderColor: 'rgba(251,191,36,0.55)', borderWidth: 1.5, pointRadius: 0, yAxisID: 'yPrice', tension: 0.4, order: 3 },
@@ -4028,11 +4055,11 @@ function renderArcChart(period) {
         if (!yArc || !ca) return;
         var left = ca.left, right = ca.right;
         var zones = [
-          { y0: 0, y1: 30, fill: 'rgba(16, 185, 129, 0.50)' },
-          { y0: 30, y1: 40, fill: 'rgba(4, 120, 87, 0.45)' },
-          { y0: 40, y1: 60, fill: 'rgba(88, 166, 255, 0.28)' },
-          { y0: 60, y1: 70, fill: 'rgba(255, 149, 0, 0.42)' },
-          { y0: 70, y1: 100, fill: 'rgba(255, 59, 59, 0.50)' }
+          { y0: 0, y1: 29.5, fill: 'rgba(0, 212, 170, 0.42)' },
+          { y0: 29.5, y1: 39.5, fill: 'rgba(0, 180, 216, 0.38)' },
+          { y0: 39.5, y1: 59.5, fill: 'rgba(88, 166, 255, 0.28)' },
+          { y0: 59.5, y1: 69.5, fill: 'rgba(255, 149, 0, 0.42)' },
+          { y0: 69.5, y1: 100, fill: 'rgba(255, 59, 59, 0.50)' }
         ];
         zones.forEach(function(z) {
           var py0 = yArc.getPixelForValue(z.y1);
@@ -4043,7 +4070,7 @@ function renderArcChart(period) {
           ctx.fillRect(left, py0, right - left, h);
           ctx.restore();
         });
-        [30, 40, 60, 70].forEach(function(y) {
+        [29.5, 39.5, 59.5, 69.5].forEach(function(y) {
           var py = yArc.getPixelForValue(y);
           ctx.save();
           ctx.strokeStyle = 'rgba(255,255,255,0.15)';
@@ -4594,8 +4621,8 @@ function applyHistoricalReturnsCurrentZone() {
     ? (S.arcSummary.arc_display ?? S.arcSummary.arc_score)
     : (S.combined != null ? S.combined : 50);
   arc = Number(arc);
-  var key = arc < 30 ? 'dv' : arc < 40 ? 'ac' : arc < 60 ? 'ex' : arc < 70 ? 'rr' : 'eu';
-  var colors = { dv: '#00DC78', ac: '#00B4D8', ex: '#58A6FF', rr: '#FF9500', eu: '#FF3B3B' };
+  var key = arc <= 29 ? 'dv' : arc <= 39 ? 'ac' : arc <= 59 ? 'ex' : arc <= 69 ? 'rr' : 'eu';
+  var colors = { dv: '#00D4AA', ac: '#00B4D8', ex: '#58A6FF', rr: '#FF9500', eu: '#FF3B3B' };
   document.querySelectorAll('.hr-zone').forEach(function(el) {
     el.classList.remove('hr-current-zone');
     el.style.borderColor = '';
@@ -4619,10 +4646,10 @@ function formatPrice(n) {
 
 function getZoneLabelByArc(arc) {
   var s = Number(arc);
-  if (s < 30) return 'Deep Value';
-  if (s < 40) return 'Accumulation';
-  if (s < 60) return 'Expansion';
-  if (s < 70) return 'Risk Rising';
+  if (s <= 29) return 'Deep Value';
+  if (s <= 39) return 'Accumulation';
+  if (s <= 59) return 'Expansion';
+  if (s <= 69) return 'Risk Rising';
   return 'Euphoria';
 }
 
@@ -4639,7 +4666,7 @@ function ordinal(n) {
 function buildDataBlock() {
   var arc = S.arcSummary?.arc_display ?? S.combined ?? 32;
   arc = Math.round(Number(arc)) || 32;
-  var zoneKey = arc < 30 ? 'deep_value' : arc < 40 ? 'accumulation' : arc < 60 ? 'expansion' : arc < 70 ? 'risk_rising' : 'euphoria';
+  var zoneKey = arc <= 29 ? 'deep_value' : arc <= 39 ? 'accumulation' : arc <= 59 ? 'expansion' : arc <= 69 ? 'risk_rising' : 'euphoria';
   var zone = S.historicalReturns && S.historicalReturns.zones ? S.historicalReturns.zones[zoneKey] : null;
   var zoneName = getZoneLabelByArc(arc);
   var phase = S.arcSummary?.phase_context || '—';

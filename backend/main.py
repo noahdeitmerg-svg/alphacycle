@@ -78,6 +78,12 @@ try:
 except ImportError:
     from snapshot import build_snapshot
 
+try:
+    from seasonality import get_seasonal_context
+except ImportError:
+    def get_seasonal_context():
+        return {"month": 1, "month_name": "January", "avg_return": 0, "label": "N/A", "color": "#6b7280", "next_month_return": 0}
+
 # -- LOGGING --------------------------------------------------------------------
 logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
@@ -605,13 +611,13 @@ def _phase_group(ph):
 
 
 def get_zone_name(arc_score):
-    if arc_score < 30:
+    if arc_score <= 29:
         return "Deep Value"
-    if arc_score < 40:
+    if arc_score <= 39:
         return "Accumulation"
-    if arc_score < 60:
+    if arc_score <= 59:
         return "Expansion"
-    if arc_score < 70:
+    if arc_score <= 69:
         return "Risk Rising"
     return "Euphoria"
 
@@ -622,16 +628,16 @@ def _get_expected_range(arc: float, hist_returns: dict = None, high_risk_drawdow
     independent of phase. Uses hist_returns["zones"] (deep_value, accumulation, expansion, risk_rising, euphoria).
     """
     arc = float(arc)
-    if arc < 30:
+    if arc <= 29:
         zone_key = "deep_value"
         zone_name = "Deep Value"
-    elif arc < 40:
+    elif arc <= 39:
         zone_key = "accumulation"
         zone_name = "Accumulation"
-    elif arc < 60:
+    elif arc <= 59:
         zone_key = "expansion"
         zone_name = "Expansion"
-    elif arc < 70:
+    elif arc <= 69:
         zone_key = "risk_rising"
         zone_name = "Risk Rising"
     else:
@@ -769,6 +775,7 @@ async def get_arc_summary():
         pass
     out["phase_context"] = phase
     out["phase_group"] = _phase_group(phase)
+    out["seasonality"] = get_seasonal_context()
     try:
         from analyzer import compute_arc_momentum
         results = CACHE.get("backtest_results")
@@ -835,36 +842,82 @@ async def get_arc_summary():
         out["allocation"] = _alloc.get(out["position"], "40-60%")
 
         # Phase-coherent overrides (phase takes priority over ARC-only)
+        days_since_top = out.get("days_since_top") or 0
+        btc_prices = raw.get("btc_prices", [])
+        btc_price = float(btc_prices[-1]) if btc_prices else 0.0
+        ath_price = max(btc_prices) if btc_prices else btc_price
+        ath_price = safe_float(raw.get("btc_market", {}).get("ath", ath_price)) or ath_price
+        drawdown_from_top = 0.0
+        if btc_prices and ath_price and ath_price > 0:
+            drawdown_from_top = (btc_price - ath_price) / ath_price
+        bottom_formation = (
+            phase in BEAR_PHASES
+            and (days_since_top >= 300 or (days_since_top >= 150 and drawdown_from_top <= -0.40))
+        )
+        out["bottom_formation"] = bottom_formation
+        out["bottom_formation_note"] = (
+            "150+ days since top + 40%+ drawdown — bottom formation possible" if bottom_formation else None
+        )
         if phase in BEAR_PHASES:
             arc_raw = current_arc
-            if arc_raw > 40:
-                out["position"] = "WAIT — Bear Market"
-                out["decision"] = out["position"]
-                out["allocation"] = "0-20%"
-                out["confidence_label"] = "Low"
-                out["tactical_label"] = "Bear Market — Wait for lower ARC"
-                out["tactical_color"] = "#6b7280"
-            elif arc_raw > 30:
-                out["position"] = "LOW ACCUMULATION"
-                out["decision"] = out["position"]
-                out["allocation"] = "20-35%"
-                out["confidence_label"] = "Low-Moderate"
-                out["tactical_label"] = "Low Accumulation Zone"
-                out["tactical_color"] = "#10b981"
-            elif arc_raw > 25:
-                out["position"] = "ACCUMULATION"
-                out["decision"] = out["position"]
-                out["allocation"] = "35-50%"
-                out["confidence_label"] = "Moderate"
-                out["tactical_label"] = "Accumulation Zone"
-                out["tactical_color"] = "#10b981"
+            if bottom_formation:
+                if arc_raw > 39:
+                    out["position"] = "LOW ACCUMULATION"
+                    out["decision"] = out["position"]
+                    out["allocation"] = "20-35%"
+                    out["confidence_label"] = "Low-Moderate"
+                    out["tactical_label"] = "Low Accumulation Zone"
+                    out["tactical_color"] = "#10b981"
+                elif arc_raw > 29:
+                    out["position"] = "ACCUMULATION"
+                    out["decision"] = out["position"]
+                    out["allocation"] = "35-50%"
+                    out["confidence_label"] = "Moderate"
+                    out["tactical_label"] = "Accumulation Zone"
+                    out["tactical_color"] = "#10b981"
+                elif arc_raw > 24:
+                    out["position"] = "STRONG ACCUMULATION"
+                    out["decision"] = out["position"]
+                    out["allocation"] = "50-70%"
+                    out["confidence_label"] = "Moderate-High"
+                    out["tactical_label"] = "Strong Accumulation Zone"
+                    out["tactical_color"] = "#10b981"
+                else:
+                    out["position"] = "STRONG ACCUMULATION"
+                    out["decision"] = out["position"]
+                    out["allocation"] = "50-70%"
+                    out["confidence_label"] = "Moderate-High"
+                    out["tactical_label"] = "Strong Accumulation Zone"
+                    out["tactical_color"] = "#10b981"
             else:
-                out["position"] = "STRONG ACCUMULATION"
-                out["decision"] = out["position"]
-                out["allocation"] = "50-70%"
-                out["confidence_label"] = "Moderate-High"
-                out["tactical_label"] = "Strong Accumulation Zone"
-                out["tactical_color"] = "#10b981"
+                if arc_raw > 39:
+                    out["position"] = "WAIT — Bear Market"
+                    out["decision"] = out["position"]
+                    out["allocation"] = "0-20%"
+                    out["confidence_label"] = "Low"
+                    out["tactical_label"] = "Bear Market — Wait for lower ARC"
+                    out["tactical_color"] = "#6b7280"
+                elif arc_raw > 29:
+                    out["position"] = "LOW ACCUMULATION"
+                    out["decision"] = out["position"]
+                    out["allocation"] = "20-35%"
+                    out["confidence_label"] = "Low-Moderate"
+                    out["tactical_label"] = "Low Accumulation Zone"
+                    out["tactical_color"] = "#10b981"
+                elif arc_raw > 24:
+                    out["position"] = "ACCUMULATION"
+                    out["decision"] = out["position"]
+                    out["allocation"] = "35-50%"
+                    out["confidence_label"] = "Moderate"
+                    out["tactical_label"] = "Accumulation Zone"
+                    out["tactical_color"] = "#10b981"
+                else:
+                    out["position"] = "STRONG ACCUMULATION"
+                    out["decision"] = out["position"]
+                    out["allocation"] = "50-70%"
+                    out["confidence_label"] = "Moderate-High"
+                    out["tactical_label"] = "Strong Accumulation Zone"
+                    out["tactical_color"] = "#10b981"
         elif phase in LATE_BULL_PHASES:
             out["position"] = "REDUCE"
             out["decision"] = out["position"]

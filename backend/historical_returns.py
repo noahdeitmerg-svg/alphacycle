@@ -49,13 +49,13 @@ def compute_historical_returns(backtest_data: list) -> dict:
     def in_zone(arc: float, zone: str) -> bool:
         a = float(arc)
         if zone == "deep_value":
-            return 0 <= a < 30
+            return 0 <= a <= 29
         if zone == "accumulation":
-            return 30 <= a < 40
+            return 30 <= a <= 39
         if zone == "expansion":
-            return 40 <= a < 60
+            return 40 <= a <= 59
         if zone == "risk_rising":
-            return 60 <= a < 70
+            return 60 <= a <= 69
         if zone == "euphoria":
             return 70 <= a <= 100
         return False
@@ -100,10 +100,10 @@ def compute_historical_returns(backtest_data: list) -> dict:
             })
 
     zone_meta = {
-        "deep_value": ("0-30", "Deep Value"),
-        "accumulation": ("30-40", "Accumulation"),
-        "expansion": ("40-60", "Expansion"),
-        "risk_rising": ("60-70", "Risk Rising"),
+        "deep_value": ("0-29", "Deep Value"),
+        "accumulation": ("30-39", "Accumulation"),
+        "expansion": ("40-59", "Expansion"),
+        "risk_rising": ("60-69", "Risk Rising"),
         "euphoria": ("70-100", "Euphoria"),
     }
 
@@ -302,10 +302,10 @@ def _empty_returns() -> dict:
     }
     return {
         "zones": {
-            "deep_value": {**empty_zone, "range": "0-30", "zone_name": "Deep Value"},
-            "accumulation": {**empty_zone, "range": "30-40", "zone_name": "Accumulation"},
-            "expansion": {**empty_zone, "range": "40-60", "zone_name": "Expansion"},
-            "risk_rising": {**empty_zone, "range": "60-70", "zone_name": "Risk Rising"},
+            "deep_value": {**empty_zone, "range": "0-29", "zone_name": "Deep Value"},
+            "accumulation": {**empty_zone, "range": "30-39", "zone_name": "Accumulation"},
+            "expansion": {**empty_zone, "range": "40-59", "zone_name": "Expansion"},
+            "risk_rising": {**empty_zone, "range": "60-69", "zone_name": "Risk Rising"},
             "euphoria": {**empty_zone, "range": "70-100", "zone_name": "Euphoria"},
         },
         "best_entry_zone": None,
