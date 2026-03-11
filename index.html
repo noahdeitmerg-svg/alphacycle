@@ -2255,6 +2255,13 @@ canvas.sparkline {
             <div class="cp-phase-val" id="cp-seasonality">—</div>
           </div>
         </div>
+        <div class="cp-phase-row">
+          <div class="cp-phase-item">
+            <div class="cp-eyebrow">ETH/BTC RATIO</div>
+            <div class="cp-phase-val" id="cp-ethbtc-main">—</div>
+            <div class="cp-phase-sub" id="cp-ethbtc-note" style="font-size:11px;color:#6b7280;margin-top:2px;">&nbsp;</div>
+          </div>
+        </div>
         <div class="cp-scenario-row">
           <div class="cp-scenario-item">
             <div class="cp-eyebrow">30–90d Upside</div>
@@ -3428,6 +3435,25 @@ function updateUI() {
   updateTickerChange('tk-btc-c', S.btcMarket?.change24h||0);
   updateTickerChange('tk-eth-c', S.ethMarket?.change24h||0);
 
+  // ETH/BTC ratio color based on eth_btc_signal.strength
+  var ethSig = S.arcSummary && S.arcSummary.eth_btc_signal;
+  if (ethSig) {
+    var color = null;
+    if (ethSig.strength === 'strong' || ethSig.strength === 'moderate') {
+      color = '#00B4D8';
+    } else if (ethSig.strength === 'caution') {
+      color = '#FF9500';
+    } else if (ethSig.strength === 'avoid') {
+      color = '#FF3B3B';
+    }
+    if (color) {
+      var r1 = document.getElementById('tk-ratio');
+      var r2 = document.getElementById('tk-ratio2');
+      if (r1) r1.style.color = color;
+      if (r2) r2.style.color = color;
+    }
+  }
+
   // Chart stats
   if(S.btcPrices.length>=100){
     const w=S.btcPrices.filter((_,i)=>i%7===0);
@@ -3540,6 +3566,20 @@ function updateShortTermContext() {
     if (seaEl) {
       seaEl.textContent = sea.month_name + ' — ' + sea.label + ' (' + (sea.avg_return > 0 ? '+' : '') + sea.avg_return + '% avg)';
       seaEl.style.color = sea.color || '#6b7280';
+    }
+  }
+
+  var ethSig = S.arcSummary && S.arcSummary.eth_btc_signal;
+  if (ethSig) {
+    var mainEl = document.getElementById('cp-ethbtc-main');
+    var noteEl = document.getElementById('cp-ethbtc-note');
+    var ratioTxt = (typeof ethSig.ratio === 'number') ? ethSig.ratio.toFixed(5) : '—';
+    if (mainEl) {
+      mainEl.textContent = ratioTxt + ' — ' + (ethSig.label || '');
+      mainEl.style.color = ethSig.color || '#6b7280';
+    }
+    if (noteEl) {
+      noteEl.textContent = ethSig.note || '';
     }
   }
 

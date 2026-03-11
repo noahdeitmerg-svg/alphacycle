@@ -339,6 +339,48 @@ def _build_ratio_series(btc_prices, eth_prices, days) -> list:
             for i in range(n)]
 
 
+def get_eth_btc_signal(ratio):
+    if ratio < 0.020:
+        return {
+            "ratio": ratio,
+            "label": "ETH Extreme Undervaluation",
+            "note": "Historically strongest ETH accumulation zone",
+            "color": "#00D4AA",
+            "strength": "strong",
+        }
+    if ratio < 0.030:
+        return {
+            "ratio": ratio,
+            "label": "ETH Undervalued vs BTC",
+            "note": "ETH historically outperforms in recovery from this level",
+            "color": "#00B4D8",
+            "strength": "moderate",
+        }
+    if ratio < 0.040:
+        return {
+            "ratio": ratio,
+            "label": "ETH Neutral vs BTC",
+            "note": "No clear directional edge",
+            "color": "#6b7280",
+            "strength": "neutral",
+        }
+    if ratio < 0.060:
+        return {
+            "ratio": ratio,
+            "label": "ETH Elevated vs BTC",
+            "note": "BTC dominance likely - reduce ETH exposure",
+            "color": "#FF9500",
+            "strength": "caution",
+        }
+    return {
+        "ratio": ratio,
+        "label": "ETH Overvalued vs BTC",
+        "note": "Altseason peak territory historically",
+        "color": "#FF3B3B",
+        "strength": "avoid",
+    }
+
+
 # -- ENDPOINTS -------------------------------------------------------------------
 
 @app.get("/health")
@@ -724,6 +766,11 @@ async def get_arc_summary():
         ),
         1,
     )
+    btc_prices = raw.get("btc_prices", [])
+    eth_prices = raw.get("eth_prices", [])
+    btc_price = float(btc_prices[-1]) if btc_prices else 0.0
+    eth_price = float(eth_prices[-1]) if eth_prices else 0.0
+    eth_btc_ratio = eth_price / btc_price if btc_price > 0 else None
     out = {
         "arc_score":   current_arc,
         "arc_display": round(arc_display_score(current_arc), 1),
@@ -735,6 +782,7 @@ async def get_arc_summary():
         "decision":    com.get("signal", "HOLD") or "HOLD",
         "confidence":  round(com.get("confidence", 50.0), 1),
         "fear_greed":  raw["fear_greed"]["current"],
+        "eth_btc_signal": get_eth_btc_signal(eth_btc_ratio) if eth_btc_ratio is not None else None,
         "components": {
             "ma_200w":    round(btc.get("ma_200w", 50.0), 1),
             "drawdown":   round(btc.get("drawdown", 50.0), 1),
