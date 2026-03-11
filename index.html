@@ -1222,10 +1222,11 @@ body::before {
   color: var(--tx-ter);
 }
 .zone-history-row-current {
-  background: rgba(0,212,170,0.10);
+  background: rgba(0,200,150,0.08);
+  border-left: 2px solid #00C896;
 }
 .zone-history-zone {
-  font-weight: 600;
+  font-weight: 700;
 }
 .zone-history-return-pos {
   color: #22c55e;
@@ -2277,10 +2278,21 @@ canvas.sparkline {
 <nav class="nav">
   <a class="nav-logo" href="#">
     <div class="logo-text">
-      <span style="color: var(--brand); font-weight: 700;
-                   font-size: 18px; letter-spacing: 0.05em;">
-        AlphaCycle
-      </span>
+      <div class="nav-logo-area">
+        <span class="nav-logo-name"
+              style="color:var(--brand); font-weight:700;
+                     font-size:18px; font-family:var(--f-mono);
+                     letter-spacing:0.05em; display:block;">
+          AlphaCycle
+        </span>
+        <span class="nav-logo-tagline"
+              style="color:rgba(255,255,255,0.35); font-size:9px;
+                     font-family:var(--f-mono); letter-spacing:0.12em;
+                     text-transform:uppercase; display:block;
+                     margin-top:1px;">
+          Crypto Cycle Intelligence
+        </span>
+      </div>
     </div>
   </a>
   <div class="nav-right">
@@ -2393,13 +2405,18 @@ canvas.sparkline {
         <circle id="btc-dot" cx="100" cy="40" r="5" fill="var(--btc)" opacity="0"
                 style="transition:all 1.4s cubic-bezier(0.16,1,0.3,1)"/>
       </svg>
-      <div class="gauge-center">
-        <div class="gauge-val" id="btc-score-val" style="color:var(--btc)">—</div>
-        <div class="gauge-denom">/100</div>
-      </div>
+        <div class="gauge-center">
+          <div class="gauge-denom" style="font-size:10px;font-family:var(--f-mono);letter-spacing:0.1em;color:rgba(255,255,255,0.4);margin-bottom:2px;">
+            ARC RISK
+          </div>
+          <div class="gauge-val" id="btc-score-val" style="color:var(--btc)">—</div>
+          <div class="gauge-denom">/100</div>
+          <div class="score-phase" id="btc-phase" style="color:var(--btc);font-family:var(--f-mono);font-size:11px;letter-spacing:0.08em;text-transform:uppercase;margin-top:4px;">
+            —
+          </div>
+        </div>
     </div>
     <div class="score-footer">
-      <div class="score-phase" id="btc-phase" style="color:var(--btc)">—</div>
       <div class="score-price" id="btc-price-sm">—</div>
       <div class="hero-subscores">
         <div class="hero-subscore">
@@ -3099,11 +3116,11 @@ const fmtT    = n => '$'+safeNum(n/1e12).toFixed(2)+'T';
 
 function scoreColor(s) {
   s = clamp(s);
-  if (s <= 29) return '#00D4AA';
+  if (s <= 29) return '#00C896';
   if (s <= 39) return '#00B4D8';
-  if (s <= 59) return '#58A6FF';
-  if (s <= 69) return '#FF9500';
-  return '#FF3B3B';
+  if (s <= 59) return '#3B82F6';
+  if (s <= 69) return '#F97316';
+  return '#EF4444';
 }
 function phaseOf(score) {
   var v = Number(score);
@@ -4137,11 +4154,11 @@ function renderZoneHistory() {
 function scoreColorForZone(zoneName) {
   if (!zoneName) return null;
   var z = String(zoneName).toLowerCase();
-  if (z.indexOf('deep value') !== -1) return '#00D4AA';
+  if (z.indexOf('deep value') !== -1) return '#00C896';
   if (z.indexOf('accumulation') !== -1) return '#00B4D8';
-  if (z.indexOf('expansion') !== -1) return '#58A6FF';
-  if (z.indexOf('risk rising') !== -1) return '#FF9500';
-  if (z.indexOf('euphoria') !== -1) return '#FF3B3B';
+  if (z.indexOf('expansion') !== -1) return '#3B82F6';
+  if (z.indexOf('risk rising') !== -1) return '#F97316';
+  if (z.indexOf('euphoria') !== -1) return '#EF4444';
   return null;
 }
 
@@ -5109,14 +5126,14 @@ function renderArcChart(period) {
   var liveData = [];
   for (var i = 0; i < n; i++) liveData.push(i === n - 1 ? arcData[n - 1] : null);
   var datasets = [
-    { label: '0-29 Deep Value (#00D4AA)', data: [], borderColor: 'transparent', backgroundColor: '#00D4AA', fill: false, pointRadius: 0, borderWidth: 0, yAxisID: 'yArc', order: 1 },
+    { label: '0-29 Deep Value (#00C896)', data: [], borderColor: 'transparent', backgroundColor: '#00C896', fill: false, pointRadius: 0, borderWidth: 0, yAxisID: 'yArc', order: 1 },
     { label: '30-39 Accumulation (#00B4D8)', data: [], borderColor: 'transparent', backgroundColor: '#00B4D8', fill: false, pointRadius: 0, borderWidth: 0, yAxisID: 'yArc', order: 1 },
-    { label: '40-59 Expansion (#58A6FF)', data: [], borderColor: 'transparent', backgroundColor: '#58A6FF', fill: false, pointRadius: 0, borderWidth: 0, yAxisID: 'yArc', order: 1 },
-    { label: '60-69 Risk Rising (#FF9500)', data: [], borderColor: 'transparent', backgroundColor: '#FF9500', fill: false, pointRadius: 0, borderWidth: 0, yAxisID: 'yArc', order: 1 },
-    { label: '70-100 Euphoria (#FF3B3B)', data: [], borderColor: 'transparent', backgroundColor: '#FF3B3B', fill: false, pointRadius: 0, borderWidth: 0, yAxisID: 'yArc', order: 1 },
+    { label: '40-59 Expansion (#3B82F6)', data: [], borderColor: 'transparent', backgroundColor: '#3B82F6', fill: false, pointRadius: 0, borderWidth: 0, yAxisID: 'yArc', order: 1 },
+    { label: '60-69 Risk Rising (#F97316)', data: [], borderColor: 'transparent', backgroundColor: '#F97316', fill: false, pointRadius: 0, borderWidth: 0, yAxisID: 'yArc', order: 1 },
+    { label: '70-100 Euphoria (#EF4444)', data: [], borderColor: 'transparent', backgroundColor: '#EF4444', fill: false, pointRadius: 0, borderWidth: 0, yAxisID: 'yArc', order: 1 },
     { label: 'ARC Index', data: arcData, borderColor: 'rgba(255,255,255,0.92)', borderWidth: 2.5, pointRadius: 0, yAxisID: 'yArc', tension: 0.4, order: 2 },
-    { label: 'BTC Price', data: priceData, borderColor: 'rgba(251,191,36,0.55)', borderWidth: 1.5, pointRadius: 0, yAxisID: 'yPrice', tension: 0.4, order: 3 },
-    { label: 'BTC High-Low', data: highData, fill: 9, backgroundColor: 'rgba(234,179,8,0.15)', borderWidth: 0, pointRadius: 0, yAxisID: 'yPrice', tension: 0.4, order: 4 },
+    { label: 'BTC Price', data: priceData, borderColor: '#F97316', borderWidth: 1.5, pointRadius: 0, yAxisID: 'yPrice', tension: 0.4, order: 3 },
+    { label: 'BTC High-Low', data: highData, fill: 9, backgroundColor: 'rgba(249,115,22,0.40)', borderWidth: 0, pointRadius: 0, yAxisID: 'yPrice', tension: 0.4, order: 4 },
     { label: 'BTC Low', data: lowData, borderColor: 'transparent', pointRadius: 0, yAxisID: 'yPrice', tension: 0.4, order: 5 },
     { label: 'Live', data: liveData, pointRadius: 0, pointHoverRadius: 14, pointHoverBackgroundColor: 'transparent', borderWidth: 0, backgroundColor: 'transparent', borderColor: 'transparent', fill: false, yAxisID: 'yArc', order: 10 }
   ];
