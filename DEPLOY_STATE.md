@@ -166,14 +166,16 @@ DO NOT modify weights. DO NOT add scoring components.
 /api/arc-summary /api/cycle/combined /api/history /api/fear-greed
 /api/short-term /api/cycle-anchor /api/analyzer /api/backtest /api/liquidity-regime /api/decision
 
-## Frontend Sections (in order)
+## Frontend Sections (in order) & Layout
 1. Hero: ARC Index (btc-card with hero-card class)
 2. Decision Engine card
 3. Short Term Tactical Layer card
 4. Cycle Anchor card
 5. Sub-Analysis: ETH Relative Strength + Liquidity Regime
 6. Phase Banner, Key Indicators, Live Prices, Cycle Phase Guide
-7. Data Inspector (collapsed by default, SHOW/HIDE toggle)
+7. Data Inspector (collapsed by default, SHOW/HIDE toggle; auf Mobile max-height ~60vh mit Scroll)
+
+**Mobile & Tablet Layout**: index.html ist für Mobile (<=768px) und Tablet (<=1024px) optimiert. Ticker-Bar auf Mobile zeigt nur BTC/USD, ETH/USD, F&G und BTC CYCLE (ETH/BTC, ETH CYCLE, MACRO via .tick--mobile-hide ausgeblendet). REFRESH-Button hat auf kleinen Screens kompakteres Padding. Hero-Card (AlphaCycle Index) stapelt auf Mobile Gauge und Info untereinander; Factor-Subscores umbrechen in mehrere Zeilen. Decision Engine nutzt auf Mobile ein 2x2-Grid für Position/Allocation/Expected Range/Confidence. Historical ARC Returns (5 Zonen) sind horizontal scrollbar mit „← scroll →“-Hinweis; jede Zone hat eine Mindestbreite, damit die Inhalte lesbar bleiben. Cycle Overview Card stapelt die linke Phase-Spalte und die rechte Timeline-Spalte untereinander. Live Prices (3 Cards) werden auf Mobile vertikal gestapelt. Near-Term-Outlook-Card reduziert auf Mobile Abstände und stapelt Score-Block und Banner untereinander. ARC History Chart-Container: Desktop-Höhe 420px, Mobile 280px; ARC Momentum Chart auf Mobile ~120px hoch. Content-Export „COPY DATA“-Button ist auf Mobile full-width. Data Inspector bleibt standardmäßig eingeklappt, hat aber auf Mobile eine begrenzte Höhe mit Scroll, um Vollbild-Übernahme zu vermeiden.
 
 ## Data Sources
 Prices: Kraken (primary). CoinGecko fetch_market_data entfernt (429 auf Railway); btc_cg/eth_cg = leere Fallbacks.
