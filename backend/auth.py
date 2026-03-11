@@ -9,7 +9,13 @@ security = HTTPBearer(auto_error=False)
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://epcvkgtneeafgpjjrfiq.supabase.co")
 SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
 
-supabase_admin = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+supabase_admin = None
+if SUPABASE_SERVICE_KEY:
+    try:
+        supabase_admin = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+    except Exception as e:
+        import logging
+        logging.warning(f"Supabase admin init failed: {e}")
 
 
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Security(security)):
@@ -17,6 +23,8 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Security(
         return None
     try:
         token = credentials.credentials
+        if not supabase_admin:
+            return None
         user = supabase_admin.auth.get_user(token)
         return user.user
     except Exception:
@@ -32,6 +40,8 @@ async def require_auth(credentials: HTTPAuthorizationCredentials = Security(secu
 
 async def require_paid(credentials: HTTPAuthorizationCredentials = Security(security)):
     user = await require_auth(credentials)
+    if not supabase_admin:
+        raise HTTPException(status_code=503, detail="Supabase not configured")
     profile = (
         supabase_admin.table("user_profiles")
         .select("plan")

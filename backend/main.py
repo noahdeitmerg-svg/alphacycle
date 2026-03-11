@@ -1117,13 +1117,16 @@ async def subscribe(req: SubscribeRequest):
         if not isinstance(arc_data, dict):
             arc_data = {}
 
-        payload = {
-            "email": req.email.lower().strip(),
-            "source": req.source,
-            "arc_score": arc_data.get("arc_display", 0),
-            "zone": arc_data.get("zone_name", ""),
-        }
-        supabase.table("email_captures").upsert(payload).execute()
+        if supabase:
+            payload = {
+                "email": req.email.lower().strip(),
+                "source": req.source,
+                "arc_score": arc_data.get("arc_display", 0),
+                "zone": arc_data.get("zone_name", ""),
+            }
+            supabase.table("email_captures").upsert(payload).execute()
+        else:
+            logger.warning("Supabase not configured; skipping email_captures upsert")
 
         return {"success": True, "message": "Successfully subscribed"}
     except HTTPException:
@@ -1137,6 +1140,10 @@ async def subscribe(req: SubscribeRequest):
 async def get_profile(user=Security(get_current_user)):
     if not user:
         return {"authenticated": False, "plan": "anonymous"}
+
+    if not supabase:
+        logger.warning("Supabase not configured; returning anonymous profile fallback")
+        return {"authenticated": True, "plan": "free", "email": user.email}
 
     profile = (
         supabase.table("user_profiles")
