@@ -21,6 +21,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pathlib import Path
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
 
 try:
     from fetcher import fetch_all, _synthetic_walcl
@@ -1087,6 +1088,72 @@ async def get_arc_summary():
         logger.warning("arc-summary net_liquidity_data: %s", e2)
         out["net_liquidity_data"] = None
     return api_response(out)
+
+
+class SubscribeRequest(BaseModel):
+    email: str
+    source: str = "dashboard"
+
+
+@app.post("/api/subscribe")
+async def subscribe(req: SubscribeRequest):
+    try:
+        if "@" not in req.email or "." not in req.email:
+            raise HTTPException(status_code=400, detail="Invalid email")
+
+        # Reuse live ARC summary for metadata
+        arc_resp = await get_arc_summary()
+        arc_data = arc_resp if isinstance(arc_resp, dict) else getattr(arc_resp, "body", None)
+        try:
+            if not isinstance(arc_data, dict) and arc_data is not None:
+                arc_data = json.loads(arc_data)
+        except Exception:
+            arc_data = {}
+        if not isinstance(arc_data, dict):
+            arc_data = {}
+
+        payload = {
+            "email": req.email.lower().strip(),
+            "source": req.source,
+            "arc_score": arc_data.get("arc_display", 0),
+            "zone": arc_data.get("zone_name", ""),
+        }
+        supabase.table("email_captures").upsert(payload).execute()
+
+        beehiiv_pub_id = os.environ.get("BEEHIIV_PUBLICATION_ID", "YOUR_BEEHIIV_PUBLICATION_ID")
+        beehiiv_api_key = os.environ.get("BEEHIIV_API_KEY", "")
+
+        if beehiiv_api_key:
+            try:
+                import httpx
+
+                async with httpx.AsyncClient() as client:
+                    await client.post(
+                        f"https://api.beehiiv.com/v2/publications/{beehiiv_pub_id}/subscriptions",
+                        headers={
+                            "Authorization": f"Bearer {beehiiv_api_key}",
+                            "Content-Type": "application/json",
+                        },
+                        json={
+                            "email": req.email.lower().strip(),
+                            "reactivate_existing": False,
+                            "send_welcome_email": True,
+                            "utm_source": req.source,
+                            "utm_medium": "dashboard",
+                        },
+                    )
+                supabase.table("email_captures").update(
+                    {"beehiiv_synced": True}
+                ).eq("email", req.email.lower().strip()).execute()
+            except Exception as e:
+                logger.warning("Beehiiv sync failed: %s", e)
+
+        return {"success": True, "message": "Successfully subscribed"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Subscribe error: %s", e)
+        raise HTTPException(status_code=500, detail="Subscription failed")
 
 
 @app.get("/api/snapshot/today")
