@@ -10,6 +10,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <title>Alpha Cycle Intelligence</title>
 <link rel="icon" id="favicon-link" href="data:image/jpeg;base64,"/>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%2300D4AA'/%3E%3Ctext x='16' y='21' text-anchor='middle' font-size='14' font-weight='bold' fill='%230d1117'%3EA%3C/text%3E%3C/svg%3E"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
 <script>
@@ -1970,11 +1971,11 @@ canvas.sparkline {
 <!-- NAV -->
 <nav class="nav">
   <a class="nav-logo" href="#">
-    <img src="" class="logo-img" alt="Alpha Cycle"
-         style="width:32px;height:32px;border-radius:6px;object-fit:cover;display:block;image-rendering:auto;"/>
-    <div>
-      <div class="nav-logo-text">Alpha Cycle</div>
-      <div class="nav-logo-badge">CRYPTO MARKET INTELLIGENCE</div>
+    <div class="logo-text">
+      <span style="color: var(--brand); font-weight: 700;
+                   font-size: 18px; letter-spacing: 0.05em;">
+        AlphaCycle
+      </span>
     </div>
   </a>
   <div class="nav-right">
@@ -2095,19 +2096,19 @@ canvas.sparkline {
     <div class="components-grid" id="btc-components"></div>
     <div class="hero-zones">
       <div class="hero-zone zone-dv">
-        <div class="hz-range">0–30</div>
+        <div class="hz-range">0–29</div>
         <div class="hz-label">DEEP VALUE</div>
       </div>
       <div class="hero-zone zone-ac">
-        <div class="hz-range">30–40</div>
+        <div class="hz-range">30–39</div>
         <div class="hz-label">ACCUMULATION</div>
       </div>
       <div class="hero-zone zone-ex">
-        <div class="hz-range">40–60</div>
+        <div class="hz-range">40–59</div>
         <div class="hz-label">EXPANSION</div>
       </div>
       <div class="hero-zone zone-rr">
-        <div class="hz-range">60–70</div>
+        <div class="hz-range">60–69</div>
         <div class="hz-label">RISK RISING</div>
       </div>
       <div class="hero-zone zone-eu">
@@ -2555,10 +2556,11 @@ function scoreColor(s) {
   return '#FF3B3B';
 }
 function phaseOf(score) {
-  if (score <= 29) return 'Deep Value';
-  if (score <= 39) return 'Accumulation';
-  if (score <= 59) return 'Expansion';
-  if (score <= 69) return 'Risk Rising';
+  var v = Number(score);
+  if (v <= 29) return 'Deep Value';
+  if (v <= 39) return 'Accumulation';
+  if (v <= 59) return 'Expansion';
+  if (v <= 69) return 'Risk Rising';
   return 'Euphoria';
 }
 function phaseIcon(phase) {
@@ -2978,17 +2980,36 @@ function animateGauge(arcId, score) {
 function renderComponents(containerId, components) {
   const el = $(containerId);
   if (!el) return;
-  el.innerHTML = components.map(({ label, score, raw }) => {
-    const s = clamp(score);
-    const col = scoreColor(s);
-    const valText =
-      raw != null && !isNaN(raw)
-        ? `${Math.round(s)} (raw: ${Math.round(raw)})`
-        : `${Math.round(s)}`;
+  el.innerHTML = components.map(({ label, score }) => {
+    const v = clamp(score);
+    const col = scoreColor(v);
+    const radius = 28;
+    const circumference = Math.PI * radius;
+    const offset = circumference * (1 - v / 100);
     return `<div class="comp-row">
       <div class="comp-label">${label}</div>
-      <div class="comp-bar"><div class="comp-fill" style="width:${s}%;background:${col}"></div></div>
-      <div class="comp-val" style="color:${col}">${valText}</div>
+      <div class="comp-gauge">
+        <svg width="80" height="46" viewBox="0 0 80 46">
+          <defs>
+            <linearGradient id="comp-grad-${label.replace(/[^a-z0-9]/gi,'_')}" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="${col}" stop-opacity="0.3"/>
+              <stop offset="100%" stop-color="${col}" stop-opacity="1"/>
+            </linearGradient>
+          </defs>
+          <g transform="translate(40,42) rotate(180)">
+            <circle cx="0" cy="0" r="${radius}" fill="none"
+                    stroke="rgba(255,255,255,0.08)" stroke-width="6"
+                    stroke-dasharray="${circumference}" stroke-dashoffset="0"
+                    stroke-linecap="round"/>
+            <circle cx="0" cy="0" r="${radius}" fill="none"
+                    stroke="${col}" stroke-width="6"
+                    stroke-dasharray="${circumference}"
+                    stroke-dashoffset="${offset}"
+                    stroke-linecap="round"/>
+          </g>
+        </svg>
+        <div class="comp-val" style="color:${col}">${Math.round(v)}</div>
+      </div>
     </div>`;
   }).join('');
 }
