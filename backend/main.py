@@ -28,6 +28,11 @@ except ImportError:
     from fetcher import fetch_all, _synthetic_walcl
 
 try:
+    from database import supabase
+except ImportError:
+    from database import supabase
+
+try:
     from scoring import (
         compute_btc_score, compute_eth_score,
         compute_macro_score, compute_combined,
