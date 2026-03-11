@@ -3913,7 +3913,6 @@ function showTourStep() {
   }
   target.scrollIntoView({behavior:'smooth', block:'center'});
 
-  var rect = target.getBoundingClientRect();
   var overlay = document.getElementById('tour-overlay');
   if (!overlay) {
     overlay = document.createElement('div');
@@ -3938,6 +3937,7 @@ function showTourStep() {
     isNewTooltip = true;
   }
 
+  var rect = target.getBoundingClientRect();
   var pad = 8;
   highlight.style.left   = (rect.left - pad) + 'px';
   highlight.style.top    = (rect.top - pad) + 'px';
@@ -3971,26 +3971,6 @@ function showTourStep() {
   tooltip.appendChild(textEl);
   tooltip.appendChild(actions);
 
-  // Position tooltip (flip if needed)
-  var viewportH = window.innerHeight || document.documentElement.clientHeight;
-  var above = rect.top > viewportH / 2;
-  var ttRect = tooltip.getBoundingClientRect();
-  var top;
-  if (above) {
-    top = rect.top - (ttRect.height || 120) - 16;
-    if (top < 8) top = rect.bottom + 16;
-  } else {
-    top = rect.bottom + 16;
-    if (top + (ttRect.height || 120) > viewportH - 8) top = rect.top - (ttRect.height || 120) - 16;
-  }
-  var centerX = rect.left + rect.width / 2;
-  var left = centerX - 160;
-  var viewportW = window.innerWidth || document.documentElement.clientWidth;
-  if (left + 320 > viewportW - 16) left = viewportW - 16 - 320;
-  if (left < 16) left = 16;
-  tooltip.style.left = left + 'px';
-  tooltip.style.top = top + 'px';
-
   if (isNewTooltip) {
     requestAnimationFrame(function(){
       tooltip.classList.add('visible');
@@ -3998,6 +3978,44 @@ function showTourStep() {
   } else {
     tooltip.classList.add('visible');
   }
+
+  // Position tooltip after scroll has settled
+  setTimeout(function() {
+    positionTooltip(target);
+  }, 350);
+}
+
+function positionTooltip(targetEl) {
+  var tooltip = document.getElementById('tour-tooltip');
+  if (!tooltip || !targetEl) return;
+  var rect = targetEl.getBoundingClientRect();
+  var tooltipHeight = tooltip.offsetHeight || 0;
+  var tooltipWidth = tooltip.offsetWidth || 0;
+  var viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+  var viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+  var margin = 16;
+
+  var top = rect.bottom + margin;
+  var left = rect.left;
+
+  if (top + tooltipHeight > viewportHeight - margin) {
+    top = rect.top - tooltipHeight - margin;
+  }
+
+  if (top < margin) {
+    top = viewportHeight / 2 - tooltipHeight / 2;
+  }
+
+  if (left + tooltipWidth > viewportWidth - margin) {
+    left = viewportWidth - tooltipWidth - margin;
+  }
+  if (left < margin) {
+    left = margin;
+  }
+
+  tooltip.style.position = 'fixed';
+  tooltip.style.top = top + 'px';
+  tooltip.style.left = left + 'px';
 }
 
 function _setCyclePhaseTag(phase, ctx) {
