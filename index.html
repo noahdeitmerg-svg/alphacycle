@@ -2396,7 +2396,7 @@ canvas.sparkline {
           <button class="arc-toggle" id="arc-toggle-10y" type="button" onclick="setArcPeriod('10y')">10Y</button>
         </div>
         <button class="ce-btn" id="export-arc-btn" type="button" onclick="exportArcChart()">↓ Export PNG</button>
-        <button class="ce-btn arc-chart-btn" id="reset-zoom-arc-btn" type="button" onclick="if(window._arcHistoryChart) window._arcHistoryChart.resetZoom();">RESET ZOOM</button>
+        <button class="ce-btn arc-chart-btn" id="reset-zoom-arc-btn" type="button" onclick="if(window._arcHistoryChart) window._arcHistoryChart.resetZoom();">↺ RESET</button>
       </div>
     </div>
     <div id="arc-chart-placeholder" class="arc-chart-placeholder">Historische Daten werden geladen (kann bis zu 15 Sek. dauern)...</div>
@@ -2454,7 +2454,7 @@ canvas.sparkline {
 </main>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.2.1/dist/chartjs-plugin-zoom.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
 </body>
 <script>
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -3916,6 +3916,9 @@ function setArcPeriod(period) {
   if (title) {
     title.textContent = period === '1y' ? 'BTC Price + ARC Score (1Y)' : 'BTC Price + ARC Score (10Y)';
   }
+  if (window._arcHistoryChart && typeof window._arcHistoryChart.resetZoom === 'function') {
+    window._arcHistoryChart.resetZoom();
+  }
   renderArcChart(period);
   renderMomentumChart();
 }
@@ -3997,8 +4000,24 @@ function renderArcChart(period) {
           filter: function(item, ch) { return item.text !== 'Live'; }
         },
         zoom: {
-          zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' },
-          pan: { enabled: true, mode: 'x' }
+          limits: {
+            x: { min: 'original', max: 'original', minRange: 7 * 24 * 60 * 60 * 1000 * 4 }
+          },
+          zoom: {
+            wheel: {
+              enabled: true,
+              speed: 0.1
+            },
+            pinch: {
+              enabled: true
+            },
+            mode: 'x'
+          },
+          pan: {
+            enabled: true,
+            mode: 'x',
+            threshold: 5
+          }
         },
         tooltip: {
           filter: function(tooltipItem) {
@@ -4296,8 +4315,24 @@ function renderArcChart(period) {
           filter: function(item, ch) { return item.text !== 'Live'; }
         },
         zoom: {
-          zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' },
-          pan: { enabled: true, mode: 'x' }
+          limits: {
+            x: { min: 'original', max: 'original', minRange: 7 * 24 * 60 * 60 * 1000 * 4 }
+          },
+          zoom: {
+            wheel: {
+              enabled: true,
+              speed: 0.1
+            },
+            pinch: {
+              enabled: true
+            },
+            mode: 'x'
+          },
+          pan: {
+            enabled: true,
+            mode: 'x',
+            threshold: 5
+          }
         },
         tooltip: {
           filter: function(tooltipItem) {
@@ -4346,6 +4381,24 @@ function renderArcChart(period) {
       }
     }
   });
+  canvas.style.cursor = 'crosshair';
+  if (!canvas._arcCursorBound) {
+    canvas.addEventListener('mousedown', function() {
+      canvas.style.cursor = 'grabbing';
+    });
+    canvas.addEventListener('mouseup', function() {
+      canvas.style.cursor = 'crosshair';
+    });
+    canvas.addEventListener('mouseleave', function() {
+      canvas.style.cursor = 'crosshair';
+    });
+    canvas.addEventListener('dblclick', function() {
+      if (window._arcHistoryChart && typeof window._arcHistoryChart.resetZoom === 'function') {
+        window._arcHistoryChart.resetZoom();
+      }
+    });
+    canvas._arcCursorBound = true;
+  }
   if (window._arcHistoryChart) {
     window._arcHistoryChart._backtestData = data;
     window._arcLiveDotInterval = setInterval(function() {
