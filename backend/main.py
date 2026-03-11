@@ -16,7 +16,7 @@ Endpoints:
 """
 import os, time, math, logging, asyncio, json
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Security
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pathlib import Path
@@ -32,6 +32,11 @@ try:
     from database import supabase
 except ImportError:
     from database import supabase
+
+try:
+    from auth import get_current_user, require_auth, require_paid
+except ImportError:
+    from auth import get_current_user, require_auth, require_paid
 
 try:
     from scoring import (
@@ -1154,6 +1159,37 @@ async def subscribe(req: SubscribeRequest):
     except Exception as e:
         logger.error("Subscribe error: %s", e)
         raise HTTPException(status_code=500, detail="Subscription failed")
+
+
+@app.get("/api/auth/profile")
+async def get_profile(user=Security(get_current_user)):
+    if not user:
+        return {"authenticated": False, "plan": "anonymous"}
+
+    profile = (
+        supabase.table("user_profiles")
+        .select("*")
+        .eq("id", str(user.id))
+        .single()
+        .execute()
+    )
+
+    if not profile.data:
+        supabase.table("user_profiles").insert(
+            {
+                "id": str(user.id),
+                "email": user.email,
+                "plan": "free",
+            }
+        ).execute()
+        return {"authenticated": True, "plan": "free", "email": user.email}
+
+    return {
+        "authenticated": True,
+        "plan": profile.data.get("plan", "free"),
+        "email": user.email,
+        "subscription_status": profile.data.get("subscription_status", "inactive"),
+    }
 
 
 @app.get("/api/snapshot/today")
