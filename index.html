@@ -2545,7 +2545,8 @@ canvas.sparkline {
           <button class="arc-toggle active" id="arc-toggle-1y" type="button" onclick="setArcPeriod('1y')">1Y</button>
           <button class="arc-toggle" id="arc-toggle-10y" type="button" onclick="setArcPeriod('10y')">10Y</button>
         </div>
-        <button class="ce-btn" id="export-arc-btn" type="button" onclick="exportArcChart()">↓ Export PNG</button>
+        <button class="ce-btn" id="export-arc-btn" type="button" onclick="exportArcChart()">↓ EXPORT PNG</button>
+        <button class="ce-btn" id="share-arc-btn" type="button" onclick="shareArcChart()">SHARE</button>
         <button class="ce-btn arc-chart-btn" id="reset-zoom-arc-btn" type="button" onclick="if(window._arcHistoryChart) window._arcHistoryChart.resetZoom();">↺ RESET</button>
       </div>
     </div>
@@ -4819,6 +4820,76 @@ function exportArcChart() {
   link.download = 'alphacycle-arc-' + new Date().toISOString().split('T')[0] + '.png';
   link.href = offscreen.toDataURL('image/png');
   link.click();
+}
+
+function shareArcChart() {
+  const btn = document.getElementById('share-arc-btn');
+  if (btn) btn.textContent = 'EXPORTING...';
+  try {
+    const chartCanvas = $('arc-history-chart');
+    if (!chartCanvas || !window._arcHistoryChart) {
+      if (btn) btn.textContent = 'SHARE';
+      return;
+    }
+    const imgSrc = chartCanvas.toDataURL('image/png');
+    const shareCanvas = document.createElement('canvas');
+    shareCanvas.width = 1200;
+    shareCanvas.height = 800;
+    const ctx = shareCanvas.getContext('2d');
+    ctx.fillStyle = '#0d1117';
+    ctx.fillRect(0, 0, shareCanvas.width, shareCanvas.height);
+
+    const chartImg = new Image();
+    chartImg.onload = function() {
+      ctx.drawImage(chartImg, 0, 0, 1200, 650);
+      ctx.fillStyle = 'rgba(255,255,255,0.1)';
+      ctx.fillRect(0, 649, 1200, 1);
+
+      const arcSum = S.arcSummary || {};
+      const arcScore = arcSum.arc_display != null ? arcSum.arc_display : (arcSum.arc_score != null ? arcSum.arc_score : (S.combined || S.btcScore || 0));
+      const zone = arcSum.zone_name || getZoneLabelByArc(arcScore || 0);
+      const phase = arcSum.phase_context || S.analyzerPhase || '';
+      const dateStr = new Date().toISOString().split('T')[0];
+
+      // Left: Brand
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#00D4AA';
+      ctx.font = '700 24px Outfit, system-ui, sans-serif';
+      ctx.fillText('AlphaCycle', 36, 700);
+      ctx.fillStyle = '#6b7280';
+      ctx.font = '400 14px DM Mono, monospace';
+      ctx.fillText('alphacycle.app', 36, 724);
+
+      // Center: ARC summary
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#e5e7eb';
+      ctx.font = '500 18px DM Mono, monospace';
+      const scoreText = 'ARC ' + Math.round(arcScore || 0) + '/100';
+      const midLine = scoreText + ' · ' + (zone || 'Unknown Zone') + (phase ? ' · ' + phase : '');
+      ctx.fillText(midLine, 600, 710);
+
+      // Right: Date + disclaimer
+      ctx.textAlign = 'right';
+      ctx.fillStyle = '#e5e7eb';
+      ctx.font = '400 14px DM Mono, monospace';
+      ctx.fillText(dateStr, 1164, 700);
+      ctx.fillStyle = '#9ca3af';
+      ctx.font = '400 11px DM Mono, monospace';
+      ctx.fillText('Not financial advice', 1164, 722);
+
+      const link = document.createElement('a');
+      link.download = 'alphacycle-' + dateStr + '.png';
+      link.href = shareCanvas.toDataURL('image/png');
+      link.click();
+      if (btn) btn.textContent = 'SHARE';
+    };
+    chartImg.onerror = function() {
+      if (btn) btn.textContent = 'SHARE';
+    };
+    chartImg.src = imgSrc;
+  } catch (e) {
+    if (btn) btn.textContent = 'SHARE';
+  }
 }
 
 function showSkeletons() {
