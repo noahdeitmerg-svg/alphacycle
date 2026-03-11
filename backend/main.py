@@ -381,6 +381,62 @@ def get_eth_btc_signal(ratio):
     }
 
 
+def compute_zone_history(arc_history):
+    results = []
+    current_zone = None
+    start_date = None
+    start_price = None
+    count = 0
+    for entry in arc_history or []:
+        date = entry.get("date")
+        arc_val = entry.get("arc_score", entry.get("score"))
+        btc_price = entry.get("btc_price", entry.get("price"))
+        if date is None or arc_val is None or btc_price is None:
+            continue
+        zone = get_zone_name(float(arc_val))
+        if zone != current_zone:
+            if current_zone is not None and start_date is not None and start_price:
+                weeks = max(count, 1)
+                rtn = 0.0
+                if start_price:
+                    rtn = round((btc_price - start_price) / start_price * 100.0, 1)
+                results.append(
+                    {
+                        "zone": current_zone,
+                        "from": start_date,
+                        "to": date,
+                        "weeks": weeks,
+                        "btc_entry": start_price,
+                        "btc_exit": btc_price,
+                        "return_pct": rtn,
+                    }
+                )
+            current_zone = zone
+            start_date = date
+            start_price = btc_price
+            count = 1
+        else:
+            count += 1
+    if current_zone is not None and start_date is not None and start_price:
+        last_price = btc_price
+        weeks = max(count, 1)
+        rtn = 0.0
+        if start_price:
+            rtn = round((last_price - start_price) / start_price * 100.0, 1)
+        results.append(
+            {
+                "zone": current_zone,
+                "from": start_date,
+                "to": None,
+                "weeks": weeks,
+                "btc_entry": start_price,
+                "btc_exit": last_price,
+                "return_pct": rtn,
+            }
+        )
+    return results[-20:]
+
+
 # -- ENDPOINTS -------------------------------------------------------------------
 
 @app.get("/health")
@@ -1061,6 +1117,45 @@ async def get_backtest():
     except Exception as e:
         logger.exception("Backtest endpoint failed")
         return api_response({"results": [], "error": str(e)})
+
+
+@app.get("/api/zone-history")
+async def get_zone_history():
+    c = _require_cache()
+    results = CACHE.get("backtest_results") or []
+    arc_history = []
+    for r in results:
+        if not r:
+            continue
+        date = r.get("date")
+        arc_val = r.get("arc_score", r.get("score"))
+        price = r.get("btc_price", r.get("price"))
+        if not (date and arc_val is not None and price is not None):
+            continue
+        arc_history.append(
+            {
+                "date": date,
+                "arc_score": float(arc_val),
+                "btc_price": float(price),
+            }
+        )
+    zone_periods = compute_zone_history(arc_history)
+    current_zone = None
+    current_since = None
+    current_weeks = 0
+    if zone_periods:
+        last = zone_periods[-1]
+        current_zone = last.get("zone")
+        current_since = last.get("from")
+        current_weeks = int(last.get("weeks") or 0)
+    return api_response(
+        {
+            "zone_history": zone_periods,
+            "current_zone": current_zone,
+            "current_zone_since": current_since,
+            "current_zone_weeks": current_weeks,
+        }
+    )
 
 
 @app.get("/api/historical-returns")

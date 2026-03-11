@@ -1128,11 +1128,74 @@ body::before {
   color: #6b7280;
   flex-shrink: 0;
 }
-.st-scenario {
-  display: flex;
-  align-items: stretch;
-  padding: 1rem 1.75rem;
-  border-bottom: 1px solid var(--border);
+/* Zone history table */
+.zone-history-card {
+  font-family: var(--f-mono);
+  font-size: 11px;
+}
+.zone-history-header {
+  margin-bottom: 0.75rem;
+}
+.zone-history-title {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tx-sec);
+}
+.zone-history-sub {
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--tx-sec);
+}
+.zone-history-table-wrap {
+  max-height: 400px;
+  overflow-y: auto;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+.zone-history-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.zone-history-table th,
+.zone-history-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid rgba(148,163,184,0.2);
+}
+.zone-history-table th {
+  position: sticky;
+  top: 0;
+  background: rgba(15,23,42,0.98);
+  font-weight: 600;
+  font-size: 10px;
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--tx-ter);
+}
+.zone-history-row-current {
+  background: rgba(0,212,170,0.10);
+}
+.zone-history-zone {
+  font-weight: 600;
+}
+.zone-history-return-pos {
+  color: #22c55e;
+}
+.zone-history-return-neg {
+  color: #ef4444;
+}
+@media (max-width: 1024px) {
+  .score-card {
+    min-width: unset;
+  }
+  .decision-item {
+    padding: 1.25rem 1.25rem;
+  }
+  .cycle-phase-side,
+  .cycle-timeline-side {
+    padding: 1.5rem 1.75rem;
+  }
 }
 @media (max-width: 1024px) {
   .score-card {
@@ -2498,6 +2561,35 @@ canvas.sparkline {
     </div>
   </div>
 
+  <!-- ── ZONE HISTORY ── -->
+  <div class="sec-header anim d6">
+    <div class="sec-title">Zone History</div>
+    <div class="sec-line"></div>
+  </div>
+  <div class="card anim zone-history-card" id="zone-history-card" style="padding:1rem 1.5rem;display:none">
+    <div class="zone-history-header">
+      <div class="zone-history-title">ZONE HISTORY — How long BTC spent in each zone</div>
+      <div class="zone-history-sub" id="zone-history-sub">Loading zone history…</div>
+    </div>
+    <div class="zone-history-table-wrap">
+      <table class="zone-history-table">
+        <thead>
+          <tr>
+            <th>Zone</th>
+            <th>From</th>
+            <th>To</th>
+            <th>Weeks</th>
+            <th>BTC Entry</th>
+            <th>BTC Exit</th>
+            <th>Return</th>
+          </tr>
+        </thead>
+        <tbody id="zone-history-body">
+        </tbody>
+      </table>
+    </div>
+  </div>
+
   <!-- ── DATA SOURCES ── -->
   <div class="sec-header anim d6">
     <div class="sec-title">Data Sources</div>
@@ -2881,8 +2973,9 @@ async function loadAllData() {
         apiFetch(`${BACKEND_URL}/api/liquidity-regime`),
         apiFetch(`${BACKEND_URL}/api/arc-summary`),
         apiFetch(`${BACKEND_URL}/api/short-term`),
+        apiFetch(`${BACKEND_URL}/api/zone-history`),
       ]);
-      const [prices, btcC, ethC, macC, hist, analyzer, anchor, backtest, liquidity, arcSummary, shortTermData] =
+      const [prices, btcC, ethC, macC, hist, analyzer, anchor, backtest, liquidity, arcSummary, shortTermData, zoneHistory] =
         results.map(r => r.status === 'fulfilled' ? r.value : null);
 
       if(prices) {
@@ -2915,6 +3008,7 @@ async function loadAllData() {
       S.backtestHistory = backtest?.results ?? [];
       S.liquidityRegime = liquidity ?? null;
       S.arcSummary = arcSummary ?? null;
+      S.zoneHistory = zoneHistory ?? null;
       if (arcSummary) {
         S.arcMomentum = arcSummary.arc_momentum_30d ?? null;
         S.momentumLabel = arcSummary.arc_momentum_label ?? null;
@@ -3272,6 +3366,7 @@ function updateUI() {
   ]);
 
   updatePhaseBanner();
+  renderZoneHistory();
 
   // Decision Engine — from arc-summary when available, else local fallback
   (function renderDecision() {
@@ -3556,6 +3651,82 @@ function updateUI() {
   renderSparklines();
   if ($('di-body')) renderDataInspector();
   updateContentPreview();
+  renderZoneHistory();
+}
+
+function renderZoneHistory() {
+  var zh = S.zoneHistory;
+  var card = document.getElementById('zone-history-card');
+  if (!card || !zh) return;
+  var body = document.getElementById('zone-history-body');
+  var sub = document.getElementById('zone-history-sub');
+  if (!body) return;
+  var periods = Array.isArray(zh.zone_history) ? zh.zone_history.slice() : [];
+  if (!periods.length) {
+    card.style.display = 'none';
+    return;
+  }
+  card.style.display = 'block';
+  body.innerHTML = '';
+  var currentZone = zh.current_zone || '';
+  var currentWeeks = zh.current_zone_weeks || 0;
+  var since = zh.current_zone_since || '';
+  if (sub && currentZone && currentWeeks) {
+    var col = scoreColorForZone(currentZone);
+    sub.textContent = 'Current: ' + currentZone.toUpperCase() + ' for ' + currentWeeks + ' weeks (since ' + since + ')';
+    sub.style.color = col || sub.style.color;
+  }
+  periods.slice().reverse().forEach(function(p) {
+    var tr = document.createElement('tr');
+    var isCurrent = !p.to;
+    if (isCurrent) {
+      tr.classList.add('zone-history-row-current');
+      var colBg = scoreColorForZone(p.zone);
+      if (colBg) {
+        tr.style.backgroundColor = colBg + '26';
+      }
+    }
+    var zoneTd = document.createElement('td');
+    zoneTd.textContent = p.zone || '';
+    zoneTd.className = 'zone-history-zone';
+    var zCol = scoreColorForZone(p.zone);
+    if (zCol) zoneTd.style.color = zCol;
+    var fromTd = document.createElement('td');
+    fromTd.textContent = p.from || '';
+    var toTd = document.createElement('td');
+    toTd.textContent = p.to || (isCurrent ? 'ongoing' : '');
+    var weeksTd = document.createElement('td');
+    weeksTd.textContent = p.weeks != null ? String(p.weeks) : '';
+    var entryTd = document.createElement('td');
+    entryTd.textContent = p.btc_entry != null ? '$' + fmt(p.btc_entry) : '';
+    var exitTd = document.createElement('td');
+    exitTd.textContent = p.btc_exit != null ? '$' + fmt(p.btc_exit) : '';
+    var retTd = document.createElement('td');
+    var rp = p.return_pct;
+    if (rp != null) {
+      var sign = rp > 0 ? '+' : '';
+      retTd.textContent = sign + rp.toFixed(1) + '%';
+      if (rp > 0) retTd.className = 'zone-history-return-pos';
+      else if (rp < 0) retTd.className = 'zone-history-return-neg';
+    } else {
+      retTd.textContent = '';
+    }
+    [zoneTd, fromTd, toTd, weeksTd, entryTd, exitTd, retTd].forEach(function(td) {
+      tr.appendChild(td);
+    });
+    body.appendChild(tr);
+  });
+}
+
+function scoreColorForZone(zoneName) {
+  if (!zoneName) return null;
+  var z = String(zoneName).toLowerCase();
+  if (z.indexOf('deep value') !== -1) return '#00D4AA';
+  if (z.indexOf('accumulation') !== -1) return '#00B4D8';
+  if (z.indexOf('expansion') !== -1) return '#58A6FF';
+  if (z.indexOf('risk rising') !== -1) return '#FF9500';
+  if (z.indexOf('euphoria') !== -1) return '#FF3B3B';
+  return null;
 }
 
 function _setCyclePhaseTag(phase, ctx) {
