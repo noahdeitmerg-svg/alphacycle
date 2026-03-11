@@ -2223,6 +2223,31 @@ canvas.sparkline {
     <button class="refresh-btn" id="tour-btn" type="button" onclick="restartTour()" title="Start tour" style="padding:4px 8px;font-size:10px;letter-spacing:0.14em;">
       ?
     </button>
+    <div id="nav-auth">
+      <button id="nav-login-btn" onclick="openAuthModal('signup')"
+              style="padding:6px 14px; background:#00D4AA; color:#0d1117;
+                     border:none; border-radius:4px; font-family:var(--f-mono);
+                     font-size:11px; font-weight:700; cursor:pointer;
+                     letter-spacing:0.05em;">
+        FREE ACCESS
+      </button>
+      <div id="nav-user-info" style="display:none; align-items:center; gap:8px;">
+        <span id="nav-plan-badge"
+              style="padding:3px 8px; border-radius:4px;
+                     font-family:var(--f-mono); font-size:10px; font-weight:700;">
+        </span>
+        <span id="nav-user-email"
+              style="color:#6b7280; font-family:var(--f-mono); font-size:11px;">
+        </span>
+        <button onclick="handleSignOut()"
+                style="padding:4px 10px; background:transparent;
+                       border:1px solid #2a3a4a; color:#6b7280;
+                       border-radius:4px; font-family:var(--f-mono);
+                       font-size:10px; cursor:pointer;">
+          SIGN OUT
+        </button>
+      </div>
+    </div>
     <button class="refresh-btn" id="refresh-btn" onclick="manualRefresh()">
       <span class="r-icon">⟳</span><span>REFRESH</span>
     </button>
@@ -2732,6 +2757,73 @@ canvas.sparkline {
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<div id="auth-modal" style="display:none; position:fixed; inset:0;
+     background:rgba(0,0,0,0.8); z-index:9999;
+     align-items:center; justify-content:center;">
+  <div style="background:#1a2233; border:1px solid #00D4AA; border-radius:12px;
+              padding:40px; width:100%; max-width:420px; position:relative;">
+
+    <button onclick="closeAuthModal()"
+            style="position:absolute; top:16px; right:16px;
+                   background:none; border:none; color:#6b7280;
+                   font-size:20px; cursor:pointer;">✕</button>
+
+    <div style="display:flex; gap:8px; margin-bottom:24px;">
+      <button id="tab-signup" onclick="switchTab('signup')"
+              style="flex:1; padding:8px; background:#00D4AA;
+                     color:#0d1117; border:none; border-radius:6px;
+                     font-family:var(--f-mono); font-size:12px; cursor:pointer;">
+        CREATE ACCOUNT
+      </button>
+      <button id="tab-login" onclick="switchTab('login')"
+              style="flex:1; padding:8px; background:transparent;
+                     color:#6b7280; border:1px solid #2a3a4a;
+                     border-radius:6px; font-family:var(--f-mono);
+                     font-size:12px; cursor:pointer;">
+        LOG IN
+      </button>
+    </div>
+
+    <p id="auth-modal-title"
+       style="color:white; font-size:18px; font-weight:700; margin-bottom:8px;">
+      Get Free Access
+    </p>
+    <p id="auth-modal-subtitle"
+       style="color:#6b7280; font-size:13px; margin-bottom:24px;">
+      See Decision Engine, Near-Term Outlook, Zone History and more.
+    </p>
+
+    <input id="auth-email" type="email" placeholder="you@example.com"
+           style="width:100%; padding:12px; background:#0d1117;
+                  border:1px solid #2a3a4a; border-radius:6px;
+                  color:white; font-family:var(--f-mono);
+                  font-size:13px; margin-bottom:12px; box-sizing:border-box;">
+
+    <input id="auth-password" type="password" placeholder="Password"
+           style="width:100%; padding:12px; background:#0d1117;
+                  border:1px solid #2a3a4a; border-radius:6px;
+                  color:white; font-family:var(--f-mono);
+                  font-size:13px; margin-bottom:20px; box-sizing:border-box;">
+
+    <button id="auth-submit-btn" onclick="handleAuthSubmit()"
+            style="width:100%; padding:14px; background:#00D4AA;
+                   color:#0d1117; border:none; border-radius:6px;
+                   font-family:var(--f-mono); font-size:13px;
+                   font-weight:700; cursor:pointer; letter-spacing:0.05em;">
+      CREATE FREE ACCOUNT
+    </button>
+
+    <p id="auth-error" style="color:#FF3B3B; font-size:12px;
+                               margin-top:12px; display:none;"></p>
+
+    <p style="color:#6b7280; font-size:11px; margin-top:16px; text-align:center;">
+      No credit card required. Free forever.
+    </p>
+  </div>
+</div>
+
 </body>
 <script>
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -2794,6 +2886,17 @@ const S = {
   tourStep: 0,
   tourActive: false,
 };
+
+// ── AUTH STATE (Supabase) ───────────────────────────────────────────────
+const SUPABASE_URL = 'https://epcvkgtneeafgpjjrfiq.supabase.co';
+const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+const supabaseClient = window.supabase
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  : null;
+
+let currentUser = null;
+let currentPlan = 'anonymous'; // anonymous / free / paid
+let authMode = 'signup';
 
 let countdown = REFRESH_INTERVAL;
 let cdTimer;
@@ -4013,6 +4116,185 @@ function positionTooltip(targetEl) {
   tooltip.style.position = 'fixed';
   tooltip.style.top = top + 'px';
   tooltip.style.left = left + 'px';
+}
+
+// ── AUTH HELPERS ────────────────────────────────────────────────────────
+async function initAuth() {
+  if (!supabaseClient) {
+    return;
+  }
+  try {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (session) {
+      currentUser = session.user;
+      await fetchUserPlan();
+    }
+    updateAuthUI();
+    // applyBlurGates(); // placeholder for future gating
+    supabaseClient.auth.onAuthStateChange(async function(event, session) {
+      if (session) {
+        currentUser = session.user;
+        await fetchUserPlan();
+      } else {
+        currentUser = null;
+        currentPlan = 'anonymous';
+      }
+      updateAuthUI();
+      // applyBlurGates();
+    });
+  } catch (e) {
+    currentUser = null;
+    currentPlan = 'anonymous';
+  }
+}
+
+async function fetchUserPlan() {
+  if (!supabaseClient || !BACKEND_URL) return;
+  try {
+    const sessionRes = await supabaseClient.auth.getSession();
+    const token = sessionRes && sessionRes.data && sessionRes.data.session
+      ? sessionRes.data.session.access_token
+      : null;
+    if (!token) return;
+    const res = await fetch(BACKEND_URL + '/api/auth/profile', {
+      headers: { Authorization: 'Bearer ' + token },
+    });
+    const data = await res.json();
+    currentPlan = data && data.plan ? data.plan : 'free';
+  } catch (e) {
+    currentPlan = 'free';
+  }
+}
+
+function switchTab(mode) {
+  authMode = mode;
+  var isSignup = mode === 'signup';
+  var title = document.getElementById('auth-modal-title');
+  var sub = document.getElementById('auth-modal-subtitle');
+  var btn = document.getElementById('auth-submit-btn');
+  var tabSignup = document.getElementById('tab-signup');
+  var tabLogin = document.getElementById('tab-login');
+  if (!title || !sub || !btn || !tabSignup || !tabLogin) return;
+  title.textContent = isSignup ? 'Get Free Access' : 'Welcome Back';
+  sub.textContent = isSignup
+    ? 'See Decision Engine, Near-Term Outlook and more.'
+    : 'Log in to your AlphaCycle account.';
+  btn.textContent = isSignup ? 'CREATE FREE ACCOUNT' : 'LOG IN';
+  tabSignup.style.background = isSignup ? '#00D4AA' : 'transparent';
+  tabSignup.style.color = isSignup ? '#0d1117' : '#6b7280';
+  tabLogin.style.background = !isSignup ? '#00D4AA' : 'transparent';
+  tabLogin.style.color = !isSignup ? '#0d1117' : '#6b7280';
+}
+
+async function handleAuthSubmit() {
+  if (!supabaseClient) return;
+  var emailEl = document.getElementById('auth-email');
+  var passEl = document.getElementById('auth-password');
+  var btn = document.getElementById('auth-submit-btn');
+  var errEl = document.getElementById('auth-error');
+  if (!emailEl || !passEl || !btn || !errEl) return;
+  var email = (emailEl.value || '').trim();
+  var password = passEl.value || '';
+  if (!email || !password) {
+    errEl.textContent = 'Please enter email and password.';
+    errEl.style.display = 'block';
+    errEl.style.color = '#FF3B3B';
+    return;
+  }
+  btn.textContent = 'LOADING...';
+  btn.disabled = true;
+  errEl.style.display = 'none';
+  try {
+    var result;
+    if (authMode === 'signup') {
+      result = await supabaseClient.auth.signUp({ email: email, password: password });
+      if (!result.error && BACKEND_URL) {
+        try {
+          await fetch(BACKEND_URL + '/api/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email, source: 'signup' }),
+          });
+        } catch (e2) {
+          // ignore subscribe failure
+        }
+      }
+    } else {
+      result = await supabaseClient.auth.signInWithPassword({ email: email, password: password });
+    }
+    if (result && result.error) {
+      errEl.textContent = result.error.message || 'Authentication failed.';
+      errEl.style.display = 'block';
+      errEl.style.color = '#FF3B3B';
+    } else {
+      if (authMode === 'signup') {
+        errEl.style.color = '#00D4AA';
+        errEl.textContent = 'Check your email to confirm your account!';
+        errEl.style.display = 'block';
+      } else {
+        closeAuthModal();
+      }
+    }
+  } catch (e) {
+    errEl.textContent = 'Something went wrong. Try again.';
+    errEl.style.display = 'block';
+    errEl.style.color = '#FF3B3B';
+  } finally {
+    btn.textContent = authMode === 'signup' ? 'CREATE FREE ACCOUNT' : 'LOG IN';
+    btn.disabled = false;
+  }
+}
+
+function openAuthModal(mode) {
+  if (typeof mode === 'undefined') mode = 'signup';
+  var modal = document.getElementById('auth-modal');
+  if (!modal) return;
+  switchTab(mode);
+  modal.style.display = 'flex';
+}
+
+function closeAuthModal() {
+  var modal = document.getElementById('auth-modal');
+  if (!modal) return;
+  modal.style.display = 'none';
+}
+
+function updateAuthUI() {
+  var loginBtn = document.getElementById('nav-login-btn');
+  var userInfo = document.getElementById('nav-user-info');
+  var planBadge = document.getElementById('nav-plan-badge');
+  var userEmail = document.getElementById('nav-user-email');
+  if (!loginBtn || !userInfo || !planBadge || !userEmail) return;
+  if (currentUser) {
+    loginBtn.style.display = 'none';
+    userInfo.style.display = 'flex';
+    userEmail.textContent = currentUser.email || '';
+    if (currentPlan === 'paid') {
+      planBadge.textContent = 'PRO';
+      planBadge.style.background = '#00D4AA';
+      planBadge.style.color = '#0d1117';
+    } else {
+      planBadge.textContent = 'FREE';
+      planBadge.style.background = '#2a3a4a';
+      planBadge.style.color = '#6b7280';
+    }
+  } else {
+    loginBtn.style.display = 'block';
+    userInfo.style.display = 'none';
+  }
+}
+
+async function handleSignOut() {
+  if (!supabaseClient) return;
+  try {
+    await supabaseClient.auth.signOut();
+  } catch (e) {
+    // ignore
+  }
+  currentUser = null;
+  currentPlan = 'anonymous';
+  updateAuthUI();
+  // applyBlurGates();
 }
 
 function _setCyclePhaseTag(phase, ctx) {
@@ -5504,6 +5786,8 @@ async function boot() {
         var ce = document.getElementById('content-export-section');
         if (ce) ce.style.display = 'block';
       }
+      // Auth initialisieren
+      initAuth();
       // Onboarding-Tour nur einmalig starten
       if (!localStorage.getItem('alphacycle_onboarded')) {
         setTimeout(function(){ startTour(); }, 1500);
