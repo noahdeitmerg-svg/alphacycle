@@ -3934,8 +3934,8 @@ function renderArcChart(period) {
   var liveData = [];
   for (var i = 0; i < n; i++) liveData.push(i === n - 1 ? arcData[n - 1] : null);
   var datasets = [
-    { label: '0-30 Deep Value (#00DC78)', data: [], borderColor: 'transparent', backgroundColor: '#00DC78', fill: false, pointRadius: 0, borderWidth: 0, yAxisID: 'yArc', order: 1 },
-    { label: '30-40 Accumulation (#00B4D8)', data: [], borderColor: 'transparent', backgroundColor: '#00B4D8', fill: false, pointRadius: 0, borderWidth: 0, yAxisID: 'yArc', order: 1 },
+    { label: '0-30 Deep Value (#10B981)', data: [], borderColor: 'transparent', backgroundColor: '#10B981', fill: false, pointRadius: 0, borderWidth: 0, yAxisID: 'yArc', order: 1 },
+    { label: '30-40 Accumulation (#047857)', data: [], borderColor: 'transparent', backgroundColor: '#047857', fill: false, pointRadius: 0, borderWidth: 0, yAxisID: 'yArc', order: 1 },
     { label: '40-60 Expansion (#58A6FF)', data: [], borderColor: 'transparent', backgroundColor: '#58A6FF', fill: false, pointRadius: 0, borderWidth: 0, yAxisID: 'yArc', order: 1 },
     { label: '60-70 Risk Rising (#FF9500)', data: [], borderColor: 'transparent', backgroundColor: '#FF9500', fill: false, pointRadius: 0, borderWidth: 0, yAxisID: 'yArc', order: 1 },
     { label: '70-100 Euphoria (#FF3B3B)', data: [], borderColor: 'transparent', backgroundColor: '#FF3B3B', fill: false, pointRadius: 0, borderWidth: 0, yAxisID: 'yArc', order: 1 },
@@ -4028,8 +4028,8 @@ function renderArcChart(period) {
         if (!yArc || !ca) return;
         var left = ca.left, right = ca.right;
         var zones = [
-          { y0: 0, y1: 30, fill: 'rgba(0, 220, 120, 0.42)' },
-          { y0: 30, y1: 40, fill: 'rgba(0, 180, 216, 0.38)' },
+          { y0: 0, y1: 30, fill: 'rgba(16, 185, 129, 0.50)' },
+          { y0: 30, y1: 40, fill: 'rgba(4, 120, 87, 0.45)' },
           { y0: 40, y1: 60, fill: 'rgba(88, 166, 255, 0.28)' },
           { y0: 60, y1: 70, fill: 'rgba(255, 149, 0, 0.42)' },
           { y0: 70, y1: 100, fill: 'rgba(255, 59, 59, 0.50)' }
