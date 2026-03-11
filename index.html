@@ -266,6 +266,9 @@ body::before {
   font-family: var(--f-mono);
   font-size: 11px;
 }
+.tick--mobile-hide {
+  display: inline-flex;
+}
 .tick-sym { color: var(--tx-ter); font-size: 10px; letter-spacing:0.06em; }
 .tick-val { color: var(--tx-pri); font-weight: 500; }
 .tick-chg.pos { color: var(--green); }
@@ -1130,6 +1133,24 @@ body::before {
   align-items: stretch;
   padding: 1rem 1.75rem;
   border-bottom: 1px solid var(--border);
+}
+@media (max-width: 1024px) {
+  .score-card {
+    min-width: unset;
+  }
+  .decision-item {
+    padding: 1.25rem 1.25rem;
+  }
+  .cycle-phase-side,
+  .cycle-timeline-side {
+    padding: 1.5rem 1.75rem;
+  }
+}
+.st-scenario {
+  display: flex;
+  align-items: stretch;
+  padding: 1rem 1.75rem;
+  border-bottom: 1px solid var(--border);
   gap: 0;
 }
 .st-scenario-item {
@@ -1935,17 +1956,75 @@ canvas.sparkline {
   .data-inspector {
     font-size: 11px !important;
   }
-  .ticker-bar {
-    display: none !important;
-  }
   body {
     overflow-x: hidden !important;
   }
-  .nav-bar {
-    padding: 8px 12px !important;
+  .tick--mobile-hide {
+    display: none !important;
   }
-  .score-card {
-    min-width: unset !important;
+  .hero-card {
+    display: flex;
+    flex-direction: column;
+  }
+  #btc-card.hero-card .gauge-wrap {
+    max-width: 220px !important;
+    min-width: 0 !important;
+    margin: 0 auto 8px;
+  }
+  #btc-card.hero-card .score-footer {
+    align-items: flex-start;
+  }
+  .hero-subscores {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+  .decision-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .hr-grid {
+    display: flex;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .hist-returns-card {
+    overflow-x: hidden;
+  }
+  .hr-zone {
+    min-width: 220px;
+  }
+  .hr-eyebrow::after {
+    content: ' ← scroll →';
+    font-size: 9px;
+    color: var(--tx-ter);
+    margin-left: 6px;
+  }
+  .cycle-overview-inner {
+    grid-template-columns: 1fr;
+  }
+  .cycle-phase-side,
+  .cycle-timeline-side {
+    padding: 1.25rem 1.5rem;
+    border-right: none;
+  }
+  .short-term-card .st-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .short-term-card .st-banner-wrap {
+    max-width: 100%;
+    margin-top: 0.75rem;
+  }
+  .ce-btn {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+  .data-inspector {
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+  #arc-momentum-chart {
+    height: 120px !important;
   }
 }
 </style>
@@ -1995,30 +2074,30 @@ canvas.sparkline {
     <span class="tick-sep">·</span>
     <span class="tick"><span class="tick-sym">ETH/USD</span><span class="tick-val" id="tk-eth">—</span><span class="tick-chg" id="tk-eth-c">—</span></span>
     <span class="tick-sep">·</span>
-    <span class="tick"><span class="tick-sym">ETH/BTC</span><span class="tick-val" id="tk-ratio">—</span></span>
-    <span class="tick-sep">·</span>
+    <span class="tick tick--mobile-hide"><span class="tick-sym">ETH/BTC</span><span class="tick-val" id="tk-ratio">—</span></span>
+    <span class="tick-sep tick--mobile-hide">·</span>
     <span class="tick"><span class="tick-sym">FEAR &amp; GREED</span><span class="tick-val" id="tk-fg">—</span></span>
     <span class="tick-sep">·</span>
     <span class="tick"><span class="tick-sym">BTC CYCLE</span><span class="tick-val" id="tk-btc-score">—</span></span>
-    <span class="tick-sep">·</span>
-    <span class="tick"><span class="tick-sym">ETH CYCLE</span><span class="tick-val" id="tk-eth-score">—</span></span>
-    <span class="tick-sep">·</span>
-    <span class="tick"><span class="tick-sym">MACRO</span><span class="tick-val" id="tk-mac-score">—</span></span>
+    <span class="tick-sep tick--mobile-hide">·</span>
+    <span class="tick tick--mobile-hide"><span class="tick-sym">ETH CYCLE</span><span class="tick-val" id="tk-eth-score">—</span></span>
+    <span class="tick-sep tick--mobile-hide">·</span>
+    <span class="tick tick--mobile-hide"><span class="tick-sym">MACRO</span><span class="tick-val" id="tk-mac-score">—</span></span>
     <span class="tick-sep">·</span>
     <!-- Duplicate for seamless loop -->
     <span class="tick"><span class="tick-sym">BTC/USD</span><span class="tick-val" id="tk-btc2">—</span></span>
     <span class="tick-sep">·</span>
     <span class="tick"><span class="tick-sym">ETH/USD</span><span class="tick-val" id="tk-eth2">—</span></span>
-    <span class="tick-sep">·</span>
-    <span class="tick"><span class="tick-sym">ETH/BTC</span><span class="tick-val" id="tk-ratio2">—</span></span>
+    <span class="tick-sep tick--mobile-hide">·</span>
+    <span class="tick tick--mobile-hide"><span class="tick-sym">ETH/BTC</span><span class="tick-val" id="tk-ratio2">—</span></span>
     <span class="tick-sep">·</span>
     <span class="tick"><span class="tick-sym">FEAR &amp; GREED</span><span class="tick-val" id="tk-fg2">—</span></span>
     <span class="tick-sep">·</span>
     <span class="tick"><span class="tick-sym">BTC CYCLE</span><span class="tick-val" id="tk-btc-score2">—</span></span>
-    <span class="tick-sep">·</span>
-    <span class="tick"><span class="tick-sym">ETH CYCLE</span><span class="tick-val" id="tk-eth-score2">—</span></span>
-    <span class="tick-sep">·</span>
-    <span class="tick"><span class="tick-sym">MACRO</span><span class="tick-val" id="tk-mac-score2">—</span></span>
+    <span class="tick-sep tick--mobile-hide">·</span>
+    <span class="tick tick--mobile-hide"><span class="tick-sym">ETH CYCLE</span><span class="tick-val" id="tk-eth-score2">—</span></span>
+    <span class="tick-sep tick--mobile-hide">·</span>
+    <span class="tick tick--mobile-hide"><span class="tick-sym">MACRO</span><span class="tick-val" id="tk-mac-score2">—</span></span>
   </div>
 </div>
 
