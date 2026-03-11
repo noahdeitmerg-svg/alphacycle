@@ -9,13 +9,13 @@
 <meta property="og:description" content="Proprietary BTC, ETH & Macro cycle scoring. Institutional-grade market intelligence."/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <title>Alpha Cycle Intelligence</title>
-<link rel="icon" id="favicon-link" href="data:image/jpeg;base64,"/>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='14' fill='%2300D4AA'/><text x='16' y='21' text-anchor='middle' font-size='14' font-weight='bold' fill='%230d1117'>A</text></svg>">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%2300D4AA'/%3E%3Ctext x='16' y='21' text-anchor='middle' font-size='14' font-weight='bold' fill='%230d1117'%3EA%3C/text%3E%3C/svg%3E"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
 <script>
 const LOGO_DATA_URL = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAYGBgYHBgcICAcKCwoLCg8ODAwODxYQERAREBYiFRkVFRkVIh4kHhweJB42KiYmKjY+NDI0PkxERExfWl98fKcBBgYGBgcGBwgIBwoLCgsKDw4MDA4PFhAREBEQFiIVGRUVGRUiHiQeHB4kHjYqJiYqNj40MjQ+TERETF9aX3x8p//CABEIBAAEAAMBIgACEQEDEQH/xAAyAAEAAwEBAQEAAAAAAAAAAAAAAQIDBgUEBwEBAAMBAQAAAAAAAAAAAAAAAAECAwQF/9oADAMBAAIQAxAAAALmBaoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAkAAAAAAAAAAAAAAAAAAAAEJAAAAAAAAAAAAAAAAAAACAEgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAlEgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgkAAAAAAAAAAAAAAAAAAAAABEgAAAAAAESAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAkAAAAAAAAAAAAAAAAAAAAAAAAAAAglEgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"; 
-(function(){ var L=document.getElementById("favicon-link"); if(L) L.href=window.LOGO_DATA_URL; var M=document.getElementById("load-logo-img"); if(M) M.src=window.LOGO_DATA_URL; })();
+(function(){ var M=document.getElementById("load-logo-img"); if(M) M.src=window.LOGO_DATA_URL; })();
 </script>
 <style>
 /* ════════════════════════════════════════════════════════════════
@@ -2909,9 +2909,10 @@ canvas.sparkline {
   <!-- ── FOOTER ── -->
   <footer class="footer anim d6">
     <div class="footer-brand">
-      <img src="" class="logo-img" alt="Alpha Cycle"
-           style="width:32px;height:32px;border-radius:6px;object-fit:contain;display:block;"/>
-      Alpha Cycle
+      <span style="color:#00D4AA; font-weight:700; font-size:16px;
+                   font-family:var(--f-mono); letter-spacing:0.05em;">
+        AlphaCycle
+      </span>
     </div>
     <div class="footer-meta">Auto-refresh every 60s · <span id="countdown">60</span>s next sync</div>
     <div class="footer-disclaimer">
@@ -3006,7 +3007,7 @@ const BACKEND_URL = window.BACKEND_URL || 'https://alphacycle-production.up.rail
 const REFRESH_INTERVAL = 60; // seconds
 
 document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('img.logo-img').forEach(function(img){ img.src = window.LOGO_DATA_URL; });
+document.querySelectorAll('img.logo-img').forEach(function(img){ img.src = window.LOGO_DATA_URL; });
 });
 
 // ── GLOBAL STATE ─────────────────────────────────────────────────────────
