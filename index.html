@@ -823,6 +823,9 @@ body::before {
 .content-export-card {
   padding: 1.25rem 1.5rem;
 }
+#content-export-section {
+  display: none;
+}
 .ce-row {
   display: flex;
   gap: 10px;
@@ -2700,7 +2703,7 @@ canvas.sparkline {
   </div>
 
   <!-- ── CONTENT EXPORT ── -->
-  <div class="sec-header anim d6">
+  <div id="content-export-section" class="sec-header anim d6">
     <div class="sec-title">Content Export</div>
     <div class="sec-line"></div>
   </div>
@@ -3854,12 +3857,6 @@ function getTourSteps() {
       selector: '#arc-chart-card',
       title: 'ARC History Chart',
       text: '10 years of ARC data overlaid with BTC price. Scroll to zoom, drag to pan. Green markers = cycle bottoms. Red markers = cycle tops.'
-    },
-    {
-      id: 'content',
-      selector: '.content-export-card',
-      title: 'Data Export',
-      text: "Copy today's data for your own analysis or content creation."
     }
   ];
 }
@@ -5501,6 +5498,13 @@ async function boot() {
     fetchHistoricalReturns();
     if (!_snapshotInterval) _snapshotInterval = setInterval(fetchSnapshot, 5 * 60 * 1000);
     try {
+      // Content Export nur für Admin-Query-Param sichtbar
+      var params = new URLSearchParams(window.location.search || '');
+      if (params.get('admin') === 'ac_internal_2026') {
+        var ce = document.getElementById('content-export-section');
+        if (ce) ce.style.display = 'block';
+      }
+      // Onboarding-Tour nur einmalig starten
       if (!localStorage.getItem('alphacycle_onboarded')) {
         setTimeout(function(){ startTour(); }, 1500);
       }
