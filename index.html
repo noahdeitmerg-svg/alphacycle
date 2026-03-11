@@ -3035,7 +3035,7 @@ function updateUI() {
   const ethP = S.ethMarket?.price || S.ethPrices.at(-1) || 0;
   const ratio = btcP>0 ? ethP/btcP : 0;
 
-  // Score colors (use arc_display for UI)
+  // Score colors (use arc_display for Gauge/UI, raw ARC for zones)
   const combinedScore = S.arcSummary?.arc_display ?? S.arcSummary?.arc_score ?? S.combined ?? S.btcScore;
   const bCol=scoreColor(combinedScore), eCol=scoreColor(S.ethScore), mCol=scoreColor(S.macScore);
 
@@ -3051,6 +3051,7 @@ function updateUI() {
     if (!el) return;
     const s = combinedScore != null ? Number(combinedScore) : 50;
     var arcDisplay = S.arcSummary?.arc_display ?? s;
+    var arcRaw = S.arcSummary?.arc_score ?? S.combined ?? S.btcScore ?? s;
     if (getPhaseGroup() === 'bear' && arcDisplay < 50) {
       el.textContent = S.arcSummary?.phase_context || S.analyzerPhase || 'MID BEAR';
       el.style.borderColor = 'rgba(255,149,0,0.4)';
@@ -3058,8 +3059,8 @@ function updateUI() {
       el.style.background = 'rgba(255,149,0,0.07)';
       return;
     }
-    var zoneName = phaseOf(arcDisplay);
-    var col = scoreColor(arcDisplay);
+    var zoneName = phaseOf(arcRaw);
+    var col = scoreColor(arcRaw);
     el.textContent = zoneName;
     el.style.borderColor = col + '99';
     el.style.color = col;
@@ -3131,14 +3132,14 @@ function updateUI() {
     renderComponents('btc-components', [
       {label:'200W MA Dev',  score: S.btcComponents.ma_200w?.score    ?? 50},
       {label:'Drawdown',     score: S.btcComponents.drawdown?.score   ?? 50},
-      {label:'F&G Score',    score: S.btcComponents.fear_greed?.score ?? 50, raw: S.fgCurrent ?? S.arcSummary?.fear_greed},
+      {label:'Fear & Greed', score: clamp(S.fgCurrent ?? S.arcSummary?.fear_greed ?? 50)},
       {label:'Liquidity',    score: liqScore},
     ]);
   } else {
     renderComponents('btc-components', [
       {label:'200W MA Dev',  score: ma200Score(S.btcPrices)},
       {label:'Drawdown',     score: drawdownScore(S.btcPrices)},
-      {label:'F&G Score',    score: clamp(S.fgCurrent), raw: S.fgCurrent},
+      {label:'Fear & Greed', score: clamp(S.fgCurrent)},
       {label:'Liquidity',    score: 50},
     ]);
   }
