@@ -234,9 +234,17 @@ async def _refresh_loop():
 async def lifespan(app: FastAPI):
     logger.info("Alpha Cycle Intelligence API starting…")
     try:
-        Path("/tmp/backtest_cache.json").unlink(missing_ok=True)
-    except Exception:
-        pass
+        import os as _os_mod
+        from pathlib import Path as _Path
+        CACHE_FILE = _Path("/tmp/backtest_cache.json")
+        if CACHE_FILE.exists():
+            try:
+                CACHE_FILE.unlink()
+                logger.info("Backtest cache cleared on startup")
+            except Exception as e:
+                logger.warning(f"Could not clear backtest cache: {e}")
+    except Exception as e:
+        logger.warning("Backtest cache clear init failed: %s", e)
     await refresh_cache(force=True)
     task = asyncio.create_task(_refresh_loop())
     yield
