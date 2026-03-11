@@ -1990,6 +1990,99 @@ canvas.sparkline {
     transform: scale(0.97);
   }
 
+  /* Onboarding tour */
+  .tour-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 1100;
+    pointer-events: auto;
+  }
+  .tour-highlight {
+    position: fixed;
+    border-radius: 8px;
+    box-shadow:
+      0 0 0 2px rgba(0,212,170,0.8),
+      0 0 0 9999px rgba(0,0,0,0.5);
+    pointer-events: none;
+    z-index: 1101;
+  }
+  .tour-tooltip {
+    position: fixed;
+    max-width: 320px;
+    background: #1a2233;
+    border: 1px solid #00D4AA;
+    border-radius: 8px;
+    padding: 16px 20px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    z-index: 1102;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+  }
+  .tour-tooltip.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .tour-step-indicator {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    font-family: var(--f-mono);
+    font-size: 10px;
+    color: #9ca3af;
+  }
+  .tour-title {
+    font-family: var(--f-mono);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #e5e7eb;
+    margin-bottom: 6px;
+    padding-right: 56px;
+  }
+  .tour-text {
+    font-size: 13px;
+    color: rgba(255,255,255,0.7);
+    line-height: 1.5;
+    margin-bottom: 12px;
+  }
+  .tour-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-top: 4px;
+  }
+  .tour-btn-skip,
+  .tour-btn-next {
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-family: var(--f-mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border: 1px solid transparent;
+    cursor: pointer;
+  }
+  .tour-btn-skip {
+    background: transparent;
+    border-color: rgba(148,163,184,0.4);
+    color: #9ca3af;
+  }
+  .tour-btn-next {
+    background: #00D4AA;
+    color: #020617;
+    border-color: #00D4AA;
+  }
+  .tour-btn-skip:hover {
+    border-color: rgba(148,163,184,0.7);
+    color: #e5e7eb;
+  }
+  .tour-btn-next:hover {
+    filter: brightness(1.05);
+  }
+
 /* ARC chart container to prevent infinite growth on resize */
 #arc-chart-wrap {
   position: relative;
@@ -2124,6 +2217,9 @@ canvas.sparkline {
     <div class="nav-time" id="nav-clock"></div>
     <span class="nav-loading" id="nav-loading" style="display:none;margin-right:8px;font-size:11px;color:var(--tx-sec);">Loading…</span>
     <div class="nav-pill live"><div class="live-dot"></div>LIVE</div>
+    <button class="refresh-btn" id="tour-btn" type="button" onclick="restartTour()" title="Start tour" style="padding:4px 8px;font-size:10px;letter-spacing:0.14em;">
+      ?
+    </button>
     <button class="refresh-btn" id="refresh-btn" onclick="manualRefresh()">
       <span class="r-icon">⟳</span><span>REFRESH</span>
     </button>
@@ -2693,6 +2789,9 @@ const S = {
   walclCurrent: 0,
   funding:      null,
   historicalReturns: null,
+  zoneHistory: null,
+  tourStep: 0,
+  tourActive: false,
 };
 
 let countdown = REFRESH_INTERVAL;
@@ -3728,6 +3827,179 @@ function scoreColorForZone(zoneName) {
   if (z.indexOf('risk rising') !== -1) return '#FF9500';
   if (z.indexOf('euphoria') !== -1) return '#FF3B3B';
   return null;
+}
+
+// ── ONBOARDING TOUR ─────────────────────────────────────────────────────────
+
+function getTourSteps() {
+  return [
+    {
+      id: 'hero',
+      selector: '#btc-card',
+      title: 'The ARC Index',
+      text: "AlphaCycle's core signal. 0-100 — lower means better entry opportunity. Below 30 is historically the strongest buying zone."
+    },
+    {
+      id: 'decision',
+      selector: '#decision-card',
+      title: 'Decision Engine',
+      text: 'Translates the ARC score into actionable position sizing. Not financial advice — a structured framework for thinking about allocation.'
+    },
+    {
+      id: 'hist',
+      selector: '.hist-returns-card',
+      title: 'Historical Backtest',
+      text: 'How BTC performed in the 12 months after ARC entered each zone since 2017. Past performance does not guarantee future results.'
+    },
+    {
+      id: 'arc-chart',
+      selector: '#arc-chart-card',
+      title: 'ARC History Chart',
+      text: '10 years of ARC data overlaid with BTC price. Scroll to zoom, drag to pan. Green markers = cycle bottoms. Red markers = cycle tops.'
+    },
+    {
+      id: 'content',
+      selector: '.content-export-card',
+      title: 'Data Export',
+      text: "Copy today's data for your own analysis or content creation."
+    }
+  ];
+}
+
+function startTour() {
+  S.tourStep = 0;
+  S.tourActive = true;
+  showTourStep();
+}
+
+function restartTour() {
+  try { localStorage.removeItem('alphacycle_onboarded'); } catch(e) {}
+  startTour();
+}
+
+function endTour() {
+  S.tourActive = false;
+  try { localStorage.setItem('alphacycle_onboarded','true'); } catch(e) {}
+  removeTourElements();
+}
+
+function skipTour() {
+  endTour();
+}
+
+function nextTourStep() {
+  var steps = getTourSteps();
+  if (S.tourStep >= steps.length - 1) {
+    endTour();
+    return;
+  }
+  S.tourStep += 1;
+  showTourStep();
+}
+
+function removeTourElements() {
+  ['tour-overlay','tour-highlight','tour-tooltip'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el && el.parentNode) el.parentNode.removeChild(el);
+  });
+}
+
+function showTourStep() {
+  var steps = getTourSteps();
+  if (!S.tourActive || !steps.length) return;
+  var step = steps[Math.min(S.tourStep, steps.length - 1)];
+  var target = document.querySelector(step.selector);
+  if (!target) {
+    endTour();
+    return;
+  }
+  target.scrollIntoView({behavior:'smooth', block:'center'});
+
+  var rect = target.getBoundingClientRect();
+  var overlay = document.getElementById('tour-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'tour-overlay';
+    overlay.className = 'tour-overlay';
+    document.body.appendChild(overlay);
+  }
+  var highlight = document.getElementById('tour-highlight');
+  if (!highlight) {
+    highlight = document.createElement('div');
+    highlight.id = 'tour-highlight';
+    highlight.className = 'tour-highlight';
+    document.body.appendChild(highlight);
+  }
+  var tooltip = document.getElementById('tour-tooltip');
+  var isNewTooltip = false;
+  if (!tooltip) {
+    tooltip = document.createElement('div');
+    tooltip.id = 'tour-tooltip';
+    tooltip.className = 'tour-tooltip';
+    document.body.appendChild(tooltip);
+    isNewTooltip = true;
+  }
+
+  var pad = 8;
+  highlight.style.left   = (rect.left - pad) + 'px';
+  highlight.style.top    = (rect.top - pad) + 'px';
+  highlight.style.width  = (rect.width + pad*2) + 'px';
+  highlight.style.height = (rect.height + pad*2) + 'px';
+
+  tooltip.innerHTML = '';
+  var stepIndicator = document.createElement('div');
+  stepIndicator.className = 'tour-step-indicator';
+  stepIndicator.textContent = (S.tourStep + 1) + ' / ' + steps.length;
+  var titleEl = document.createElement('div');
+  titleEl.className = 'tour-title';
+  titleEl.textContent = step.title;
+  var textEl = document.createElement('div');
+  textEl.className = 'tour-text';
+  textEl.textContent = step.text;
+  var actions = document.createElement('div');
+  actions.className = 'tour-actions';
+  var skipBtn = document.createElement('button');
+  skipBtn.className = 'tour-btn-skip';
+  skipBtn.textContent = 'SKIP TOUR';
+  skipBtn.onclick = skipTour;
+  var nextBtn = document.createElement('button');
+  nextBtn.className = 'tour-btn-next';
+  nextBtn.textContent = (S.tourStep === steps.length - 1) ? 'GOT IT ✓' : 'NEXT →';
+  nextBtn.onclick = nextTourStep;
+  actions.appendChild(skipBtn);
+  actions.appendChild(nextBtn);
+  tooltip.appendChild(stepIndicator);
+  tooltip.appendChild(titleEl);
+  tooltip.appendChild(textEl);
+  tooltip.appendChild(actions);
+
+  // Position tooltip (flip if needed)
+  var viewportH = window.innerHeight || document.documentElement.clientHeight;
+  var above = rect.top > viewportH / 2;
+  var ttRect = tooltip.getBoundingClientRect();
+  var top;
+  if (above) {
+    top = rect.top - (ttRect.height || 120) - 16;
+    if (top < 8) top = rect.bottom + 16;
+  } else {
+    top = rect.bottom + 16;
+    if (top + (ttRect.height || 120) > viewportH - 8) top = rect.top - (ttRect.height || 120) - 16;
+  }
+  var centerX = rect.left + rect.width / 2;
+  var left = centerX - 160;
+  var viewportW = window.innerWidth || document.documentElement.clientWidth;
+  if (left + 320 > viewportW - 16) left = viewportW - 16 - 320;
+  if (left < 16) left = 16;
+  tooltip.style.left = left + 'px';
+  tooltip.style.top = top + 'px';
+
+  if (isNewTooltip) {
+    requestAnimationFrame(function(){
+      tooltip.classList.add('visible');
+    });
+  } else {
+    tooltip.classList.add('visible');
+  }
 }
 
 function _setCyclePhaseTag(phase, ctx) {
@@ -5212,6 +5484,11 @@ async function boot() {
     fetchSnapshot();
     fetchHistoricalReturns();
     if (!_snapshotInterval) _snapshotInterval = setInterval(fetchSnapshot, 5 * 60 * 1000);
+    try {
+      if (!localStorage.getItem('alphacycle_onboarded')) {
+        setTimeout(function(){ startTour(); }, 1500);
+      }
+    } catch(e) {}
   }
 }
 
