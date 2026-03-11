@@ -2969,22 +2969,26 @@ function animateGauge(arcId, score) {
 
 // ── COMPONENT BARS ──────────────────────────────────────────────────────────
 function renderComponents(containerId, components) {
-  const el=$(containerId);
-  if(!el) return;
-  el.innerHTML = components.map(({label, score}) => {
-    const s=clamp(score);
-    const col=scoreColor(s);
+  const el = $(containerId);
+  if (!el) return;
+  el.innerHTML = components.map(({ label, score, raw }) => {
+    const s = clamp(score);
+    const col = scoreColor(s);
+    const valText =
+      raw != null && !isNaN(raw)
+        ? `${Math.round(s)} (raw: ${Math.round(raw)})`
+        : `${Math.round(s)}`;
     return `<div class="comp-row">
       <div class="comp-label">${label}</div>
       <div class="comp-bar"><div class="comp-fill" style="width:${s}%;background:${col}"></div></div>
-      <div class="comp-val" style="color:${col}">${Math.round(s)}</div>
+      <div class="comp-val" style="color:${col}">${valText}</div>
     </div>`;
   }).join('');
 }
 
 // ── PHASE BANNER ────────────────────────────────────────────────────────────
 function updatePhaseBanner() {
-  const score = S.arcSummary?.arc_display ?? S.arcSummary?.arc_score ?? S.combined ?? S.btcScore ?? 50;
+  const score = S.arcSummary?.arc_score ?? S.combined ?? S.btcScore ?? 50;
   const phase = phaseOf(score);
   const col   = scoreColor(score);
   const banner = $('phase-banner');
@@ -3127,14 +3131,14 @@ function updateUI() {
     renderComponents('btc-components', [
       {label:'200W MA Dev',  score: S.btcComponents.ma_200w?.score    ?? 50},
       {label:'Drawdown',     score: S.btcComponents.drawdown?.score   ?? 50},
-      {label:'Fear & Greed', score: S.btcComponents.fear_greed?.score ?? 50},
+      {label:'F&G Score',    score: S.btcComponents.fear_greed?.score ?? 50, raw: S.fgCurrent ?? S.arcSummary?.fear_greed},
       {label:'Liquidity',    score: liqScore},
     ]);
   } else {
     renderComponents('btc-components', [
       {label:'200W MA Dev',  score: ma200Score(S.btcPrices)},
       {label:'Drawdown',     score: drawdownScore(S.btcPrices)},
-      {label:'Fear & Greed', score: clamp(S.fgCurrent)},
+      {label:'F&G Score',    score: clamp(S.fgCurrent), raw: S.fgCurrent},
       {label:'Liquidity',    score: 50},
     ]);
   }
