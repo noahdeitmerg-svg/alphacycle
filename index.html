@@ -5120,6 +5120,11 @@ function renderArcChart(period) {
     { label: 'BTC Low', data: lowData, borderColor: 'transparent', pointRadius: 0, yAxisID: 'yPrice', tension: 0.4, order: 5 },
     { label: 'Live', data: liveData, pointRadius: 0, pointHoverRadius: 14, pointHoverBackgroundColor: 'transparent', borderWidth: 0, backgroundColor: 'transparent', borderColor: 'transparent', fill: false, yAxisID: 'yArc', order: 10 }
   ];
+  if (typeof ChartZoom !== 'undefined') {
+    Chart.register(ChartZoom);
+  } else if (window['chartjs-plugin-zoom']) {
+    Chart.register(window['chartjs-plugin-zoom']);
+  }
   window._arcHistoryChart = new Chart(canvas, {
     type: 'line',
     data: { labels: labels, datasets: datasets },
@@ -5146,7 +5151,10 @@ function renderArcChart(period) {
         },
         zoom: {
           limits: {
-            x: { min: 'original', max: 'original', minRange: 7 * 24 * 60 * 60 * 1000 * 4 }
+            x: {
+              min: 'original',
+              max: 'original'
+            }
           },
           zoom: {
             wheel: {
