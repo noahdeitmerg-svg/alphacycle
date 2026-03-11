@@ -3011,6 +3011,12 @@ canvas.sparkline {
 
 </body>
 <script>
+// Register Chart.js zoom plugin once, after scripts are loaded
+if (window.ChartZoom) {
+  Chart.register(window.ChartZoom);
+} else if (window['chartjs-plugin-zoom']) {
+  Chart.register(window['chartjs-plugin-zoom']);
+}
 /* ═══════════════════════════════════════════════════════════════════════════
    ALPHA CYCLE INTELLIGENCE ENGINE v2.0
    Zero NaN · Auto-refresh · Direct API calls + optional backend
@@ -5137,11 +5143,6 @@ function renderArcChart(period) {
     { label: 'BTC Low', data: lowData, borderColor: 'transparent', pointRadius: 0, yAxisID: 'yPrice', tension: 0.4, order: 5 },
     { label: 'Live', data: liveData, pointRadius: 0, pointHoverRadius: 14, pointHoverBackgroundColor: 'transparent', borderWidth: 0, backgroundColor: 'transparent', borderColor: 'transparent', fill: false, yAxisID: 'yArc', order: 10 }
   ];
-  if (typeof ChartZoom !== 'undefined') {
-    Chart.register(ChartZoom);
-  } else if (window['chartjs-plugin-zoom']) {
-    Chart.register(window['chartjs-plugin-zoom']);
-  }
   window._arcHistoryChart = new Chart(canvas, {
     type: 'line',
     data: { labels: labels, datasets: datasets },
@@ -5551,6 +5552,8 @@ function renderArcChart(period) {
       }
     }
   });
+  // Expose ARC chart globally for external handlers
+  window.arcChart = window._arcHistoryChart;
   canvas.style.cursor = 'crosshair';
   if (!canvas._arcCursorBound) {
     canvas.addEventListener('mousedown', function() {
@@ -5563,11 +5566,21 @@ function renderArcChart(period) {
       canvas.style.cursor = 'crosshair';
     });
     canvas.addEventListener('dblclick', function() {
-      if (window._arcHistoryChart && typeof window._arcHistoryChart.resetZoom === 'function') {
-        window._arcHistoryChart.resetZoom();
+      if (window.arcChart && typeof window.arcChart.resetZoom === 'function') {
+        window.arcChart.resetZoom();
       }
     });
     canvas._arcCursorBound = true;
+  }
+  // Ensure reset button also resets zoom via global chart reference
+  var resetBtn = document.getElementById('arc-reset-zoom') || document.getElementById('reset-zoom-arc-btn');
+  if (resetBtn && !resetBtn._arcBound) {
+    resetBtn.addEventListener('click', function() {
+      if (window.arcChart && typeof window.arcChart.resetZoom === 'function') {
+        window.arcChart.resetZoom();
+      }
+    });
+    resetBtn._arcBound = true;
   }
   if (window._arcHistoryChart) {
     window._arcHistoryChart._backtestData = data;
