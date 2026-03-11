@@ -1423,8 +1423,8 @@ body::before {
 .components-grid {
   margin-top: 16px;
   display: flex;
-  flex-direction: column;
-  gap: 5px;
+  flex-wrap: wrap;
+  gap: 8px 16px;
 }
 .comp-row {
   display: flex;
@@ -1462,6 +1462,28 @@ body::before {
   width: 24px;
   text-align: right;
   flex-shrink: 0;
+}
+
+.factor-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 2px;
+  min-width: 90px;
+}
+.factor-label {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  color: rgba(255,255,255,0.4);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.factor-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: #ffffff;
+  font-family: var(--f-mono);
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -2404,7 +2426,28 @@ canvas.sparkline {
         </div>
       </div>
     </div>
-    <div class="components-grid" id="btc-components"></div>
+    <div class="components-grid" id="btc-components">
+      <div class="factor-card">
+        <div class="factor-label">200W MA DEV</div>
+        <div id="gauge-ma" style="display:flex;justify-content:center;margin:4px 0;"></div>
+        <div id="val-ma" class="factor-value">—</div>
+      </div>
+      <div class="factor-card">
+        <div class="factor-label">DRAWDOWN</div>
+        <div id="gauge-dd" style="display:flex;justify-content:center;margin:4px 0;"></div>
+        <div id="val-dd" class="factor-value">—</div>
+      </div>
+      <div class="factor-card">
+        <div class="factor-label">FEAR &amp; GREED</div>
+        <div id="gauge-fg" style="display:flex;justify-content:center;margin:4px 0;"></div>
+        <div id="val-fg" class="factor-value">—</div>
+      </div>
+      <div class="factor-card">
+        <div class="factor-label">LIQUIDITY</div>
+        <div id="gauge-liq" style="display:flex;justify-content:center;margin:4px 0;"></div>
+        <div id="val-liq" class="factor-value">—</div>
+      </div>
+    </div>
     <div class="hero-zones">
       <div class="hero-zone zone-dv">
         <div class="hz-range">0–29</div>
@@ -3484,7 +3527,55 @@ function animateGauge(arcId, score) {
   arc.style.strokeDashoffset = total - (clamp(score)/100)*total;
 }
 
-// ── COMPONENT BARS ──────────────────────────────────────────────────────────
+function buildGaugeSVG(value, color) {
+  const r = 28;
+  const cx = 36;
+  const cy = 36;
+  const strokeWidth = 7;
+  const circumference = Math.PI * r;
+  const fill = Math.max(0, Math.min(100, value));
+  const dashoffset = circumference * (1 - fill / 100);
+  return `
+    <svg width="72" height="40" viewBox="0 0 72 40">
+      <path
+        d="M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}"
+        fill="none"
+        stroke="rgba(255,255,255,0.08)"
+        stroke-width="${strokeWidth}"
+        stroke-linecap="round"
+      />
+      <path
+        d="M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}"
+        fill="none"
+        stroke="${color}"
+        stroke-width="${strokeWidth}"
+        stroke-linecap="round"
+        stroke-dasharray="${circumference}"
+        stroke-dashoffset="${dashoffset}"
+        style="transition: stroke-dashoffset 0.6s ease"
+      />
+    </svg>`;
+}
+
+function getGaugeColor(value) {
+  const v = Number(value) || 0;
+  if (v <= 29) return '#00D4AA';
+  if (v <= 39) return '#00B4D8';
+  if (v <= 59) return '#58A6FF';
+  if (v <= 69) return '#FF9500';
+  return '#FF3B3B';
+}
+
+function updateGauge(gaugeId, valueId, value) {
+  const v = Math.round(Number(value) || 0);
+  const color = getGaugeColor(v);
+  const el = document.getElementById(gaugeId);
+  if (el) el.innerHTML = buildGaugeSVG(v, color);
+  const valEl = document.getElementById(valueId);
+  if (valEl) valEl.textContent = String(v);
+}
+
+// ── COMPONENT BARS / RADIALS ───────────────────────────────────────────────
 function renderComponents(containerId, components) {
   const el = $(containerId);
   if (!el) return;
@@ -3665,19 +3756,15 @@ function updateUI() {
       S.btcComponents.macro_liq ??
       S.btcComponents.liquidity?.score ??
       50;
-    renderComponents('btc-components', [
-      {label:'200W MA Dev',  score: S.btcComponents.ma_200w?.score    ?? 50},
-      {label:'Drawdown',     score: S.btcComponents.drawdown?.score   ?? 50},
-      {label:'Fear & Greed', score: clamp(S.fgCurrent ?? S.arcSummary?.fear_greed ?? 50)},
-      {label:'Liquidity',    score: liqScore},
-    ]);
+    updateGauge('gauge-ma',  'val-ma',  S.btcComponents.ma_200w?.score    ?? 50);
+    updateGauge('gauge-dd',  'val-dd',  S.btcComponents.drawdown?.score   ?? 50);
+    updateGauge('gauge-fg',  'val-fg',  clamp(S.fgCurrent ?? S.arcSummary?.fear_greed ?? 50));
+    updateGauge('gauge-liq', 'val-liq', liqScore);
   } else {
-    renderComponents('btc-components', [
-      {label:'200W MA Dev',  score: ma200Score(S.btcPrices)},
-      {label:'Drawdown',     score: drawdownScore(S.btcPrices)},
-      {label:'Fear & Greed', score: clamp(S.fgCurrent)},
-      {label:'Liquidity',    score: 50},
-    ]);
+    updateGauge('gauge-ma',  'val-ma',  ma200Score(S.btcPrices));
+    updateGauge('gauge-dd',  'val-dd',  drawdownScore(S.btcPrices));
+    updateGauge('gauge-fg',  'val-fg',  clamp(S.fgCurrent));
+    updateGauge('gauge-liq', 'val-liq', 50);
   }
   renderComponents('eth-components', [
     {label:'ETH/BTC Ratio', score: S.ethComponents?.eth_btc_ratio?.score ?? 50},
