@@ -2379,6 +2379,7 @@ canvas.sparkline {
         AlphaCycle Index
         <div class="hero-subtitle">STRUCTURAL RISK INDEX (0–100)</div>
         <div class="hero-risk-label" id="hero-risk-label">—</div>
+        <div id="hero-signal-badge" style="display:none;font-size:0.75em;margin-top:4px;letter-spacing:0.08em;font-weight:500"></div>
       </div>
     </div>
     <div class="gauge-wrap">
@@ -3713,19 +3714,21 @@ function updateUI() {
     el.textContent = zoneName;
     el.style.color = col;
   })();
-  // Cycle Signal Badge im Hero (ueberschreibt hero-risk-label bei aktivem Signal)
+  // Cycle Signal: separater Hinweis unterhalb des Zonenlabels, Zone selbst bleibt unverändert
   const cs = S.cycleSignal;
   if (cs && cs.signal_type && cs.signal_type !== 'NONE') {
-    const heroRisk = document.getElementById('hero-risk-label');
-    if (heroRisk) {
+    var sigEl = document.getElementById('hero-signal-badge');
+    if (sigEl) {
       const isBottom = cs.signal_type.indexOf('BOTTOM') !== -1;
       const isTop = cs.signal_type.indexOf('TOP') !== -1;
       const col = isBottom ? 'rgba(34,197,94,0.9)' : isTop ? 'rgba(239,68,68,0.9)' : 'rgba(59,130,246,0.9)';
-      heroRisk.textContent = cs.signal_type.replace(/_/g, ' ');
-      heroRisk.style.color = col;
-      heroRisk.style.borderColor = col.replace('0.9', '0.4');
-      heroRisk.style.background = col.replace('0.9', '0.08');
+      sigEl.textContent = cs.signal_type.replace(/_/g, ' ');
+      sigEl.style.color = col;
+      sigEl.style.display = '';
     }
+  } else {
+    var sigEl = document.getElementById('hero-signal-badge');
+    if (sigEl) sigEl.style.display = 'none';
   }
   setText('hs-btc', S.btcScore != null ? String(Math.round(S.btcScore)) : '—');
   setText('hs-eth', S.ethScore != null ? String(Math.round(S.ethScore)) : '—');
@@ -4106,9 +4109,27 @@ function renderZoneHistory() {
   var currentZone = zh.current_zone || '';
   var currentWeeks = zh.current_zone_weeks || 0;
   var since = zh.current_zone_since || '';
-  if (sub && currentZone && currentWeeks) {
+
+  // Live-ARC Override: wenn Live-ARC eine andere Zone ergibt als der Backtest-Cache,
+  // zeige die Live-Zone als "Current" (Backtest ist woechentlich und kann hinterherhinken)
+  var liveArc = S.arcSummary && S.arcSummary.arc_score != null ? Number(S.arcSummary.arc_score) : null;
+  if (liveArc != null) {
+    var liveZone = getZoneLabelByArc(liveArc);
+    if (liveZone && liveZone !== currentZone) {
+      currentZone = liveZone;
+      // Weeks/since nicht überschreiben — wir kennen den genauen Wechselzeitpunkt nicht
+      currentWeeks = 0;
+      since = '';
+    }
+  }
+
+  if (sub && currentZone) {
     var col = scoreColorForZone(currentZone);
-    sub.textContent = 'Current: ' + currentZone.toUpperCase() + ' for ' + currentWeeks + ' weeks (since ' + since + ')';
+    if (currentWeeks && since) {
+      sub.textContent = 'Current: ' + currentZone.toUpperCase() + ' for ' + currentWeeks + ' weeks (since ' + since + ')';
+    } else {
+      sub.textContent = 'Current: ' + currentZone.toUpperCase();
+    }
     sub.style.color = col || sub.style.color;
   }
   periods.slice().reverse().forEach(function(p) {
@@ -5919,8 +5940,8 @@ async function fetchHistoricalReturns() {
 }
 
 function applyHistoricalReturnsCurrentZone() {
-  var arc = S.arcSummary && (S.arcSummary.arc_display != null || S.arcSummary.arc_score != null)
-    ? (S.arcSummary.arc_display ?? S.arcSummary.arc_score)
+  var arc = S.arcSummary && S.arcSummary.arc_score != null
+    ? S.arcSummary.arc_score
     : (S.combined != null ? S.combined : 50);
   arc = Number(arc);
   var key = arc <= 29 ? 'dv' : arc <= 39 ? 'ac' : arc <= 59 ? 'ex' : arc <= 69 ? 'rr' : 'eu';
