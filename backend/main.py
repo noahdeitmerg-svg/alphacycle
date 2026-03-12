@@ -16,12 +16,18 @@ Endpoints:
 """
 import os, time, math, logging, asyncio, json
 from contextlib import asynccontextmanager
+from typing import Optional, Any
+
 from fastapi import FastAPI, HTTPException, Security
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pathlib import Path
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from starlette.requests import Request
 
 try:
     from fetcher import fetch_all, _synthetic_walcl
@@ -107,6 +113,13 @@ _cache_lock = asyncio.Lock()
 SNAPSHOT_FILE = Path("/tmp/arc_snapshots.json")
 _last_refresh = 0.0
 
+# -- RATE LIMITING --------------------------------------------------------------
+limiter = Limiter(
+    key_func=get_remote_address,
+    default_limits=["100/minute"],
+    storage_uri="memory://",
+)
+
 
 async def refresh_cache(force: bool = False):
     global _last_refresh
@@ -188,6 +201,9 @@ async def refresh_cache(force: bool = False):
                 "refreshed_at": ts,
             })
             _last_refresh = now
+            # Invalidate heavy endpoint response cache and derived histories after fresh data
+            _response_cache.clear()
+            CACHE.pop("daily_history", None)
             logger.info(
                 f"Cache OK — BTC:{btc_scores['btc_score']:.1f} "
                 f"ETH:{eth_scores['eth_score']:.1f} "
@@ -264,6 +280,9 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 import pathlib
 _static_dir = pathlib.Path(__file__).parent / "static"
 if _static_dir.exists():
@@ -280,7 +299,7 @@ app.add_middleware(
 
 # -- HELPERS --------------------------------------------------------------------
 
-def _require_cache():
+def _require_cache() -> dict:
     if not CACHE:
         raise HTTPException(503, "Data not yet available. Retry in 10s.")
     return CACHE
@@ -333,7 +352,24 @@ def _save_today_snapshot() -> dict:
         logger.warning("Snapshot save failed: %s", e)
         return {"error": "snapshot_failed"}
 
-def _clean(obj):
+# -- RESPONSE CACHE (heavy computation endpoints) ------------------------------
+_response_cache: dict = {}
+_RESPONSE_TTL = 15.0
+
+def _get_cached_response(key: str) -> Optional[dict]:
+    entry = _response_cache.get(key)
+    if entry is None:
+        return None
+    cached_at, data = entry
+    if time.time() - cached_at > _RESPONSE_TTL:
+        return None
+    return data
+
+def _set_cached_response(key: str, data: dict) -> None:
+    _response_cache[key] = (time.time(), data)
+
+
+def _clean(obj: Any) -> Any:
     if isinstance(obj, dict):  return {k: _clean(v) for k, v in obj.items()}
     if isinstance(obj, list):  return [_clean(v) for v in obj]
     if isinstance(obj, float):
@@ -352,7 +388,7 @@ def _prices_to_series(prices: list, days: int) -> list:
     return [{"t": now_ms - (len(subset)-1-i)*86_400_000, "v": safe_float(p)}
             for i, p in enumerate(subset)]
 
-def _build_ratio_series(btc_prices, eth_prices, days) -> list:
+def _build_ratio_series(btc_prices: list, eth_prices: list, days: int) -> list:
     btc = btc_prices[-days:] if btc_prices else []
     eth = eth_prices[-days:] if eth_prices else []
     n   = min(len(btc), len(eth))
@@ -363,7 +399,7 @@ def _build_ratio_series(btc_prices, eth_prices, days) -> list:
             for i in range(n)]
 
 
-def get_eth_btc_signal(ratio):
+def get_eth_btc_signal(ratio: float) -> dict:
     if ratio < 0.020:
         return {
             "ratio": ratio,
@@ -417,7 +453,7 @@ def _calc_weeks(date_from: str, date_to: str) -> int:
         return 1
 
 
-def compute_zone_history(arc_history):
+def compute_zone_history(arc_history: list) -> list:
     """
     Build contiguous zone periods from backtest history.
     Uses raw ARC score and get_zone_name() as single source of truth.
@@ -498,7 +534,8 @@ def compute_zone_history(arc_history):
 # -- ENDPOINTS -------------------------------------------------------------------
 
 @app.get("/health")
-async def health():
+@limiter.exempt
+async def health(request: Request):
     return {
         "status":    "ok",
         "service":   "Alpha Cycle Intelligence API",
@@ -509,7 +546,7 @@ async def health():
 
 
 @app.get("/api/prices")
-async def get_prices():
+async def get_prices(request: Request):
     c = _require_cache()
     raw = c["raw"]
     btc_market = raw.get("btc_market", {})
@@ -564,7 +601,7 @@ async def get_prices():
 
 
 @app.get("/api/cycle/btc")
-async def get_btc_cycle():
+async def get_btc_cycle(request: Request):
     c = _require_cache()
     s = c["btc_scores"]
     return api_response({
@@ -602,7 +639,7 @@ async def get_btc_cycle():
 
 
 @app.get("/api/short-term")
-async def get_short_term():
+async def get_short_term(request: Request):
     c = _require_cache()
     st = c.get("short_term_scores", {})
     return api_response({
@@ -627,7 +664,7 @@ async def get_short_term():
 
 
 @app.get("/api/cycle/eth")
-async def get_eth_cycle():
+async def get_eth_cycle(request: Request):
     c = _require_cache()
     s = c["eth_scores"]
     return api_response({
@@ -655,7 +692,7 @@ async def get_eth_cycle():
 
 
 @app.get("/api/cycle/macro")
-async def get_macro_cycle():
+async def get_macro_cycle(request: Request):
     c = _require_cache()
     s = c["macro_scores"]
     walcl_hist  = [{"t": i["t"], "v": safe_float(i["v"])}
@@ -687,7 +724,7 @@ async def get_macro_cycle():
 
 
 @app.get("/api/cycle/combined")
-async def get_combined():
+async def get_combined(request: Request):
     c = _require_cache()
     raw_combined = c["combined"].get("combined_score", 50.0)
     return api_response({
@@ -704,7 +741,7 @@ async def get_combined():
 
 
 @app.get("/api/history")
-async def get_history():
+async def get_history(request: Request):
     c       = _require_cache()
     hist    = c.get("score_history", {"btc": [], "eth": [], "macro": [], "combined": []})
     tvl_raw = c["raw"].get("tvl_series", [])
@@ -724,13 +761,13 @@ async def get_history():
 
 
 @app.get("/api/fear-greed")
-async def get_fear_greed():
+async def get_fear_greed(request: Request):
     c = _require_cache()
     return api_response(c["raw"]["fear_greed"])
 
 
 @app.get("/api/cycle-anchor")
-async def get_cycle_anchor():
+async def get_cycle_anchor(request: Request):
     """Cycle Anchor Engine: objective cycle timing from historical Bitcoin structure."""
     try:
         result = compute_cycle_anchor()
@@ -766,7 +803,7 @@ def _phase_group(ph):
     return "unknown"
 
 
-def get_zone_name(arc_score):
+def get_zone_name(arc_score: float) -> str:
     if arc_score <= 29:
         return "Deep Value"
     if arc_score <= 39:
@@ -855,7 +892,7 @@ def _get_expected_range(arc: float, hist_returns: dict = None, high_risk_drawdow
 
 
 @app.get("/api/arc-summary")
-async def get_arc_summary():
+async def get_arc_summary(request: Request):
     """ARC Index consolidated summary. arc_score from unified compute_arc_score(). Phase-coherent position/allocation."""
     c = _require_cache()
     raw = c["raw"]
@@ -1148,7 +1185,8 @@ class SubscribeRequest(BaseModel):
 
 
 @app.post("/api/subscribe")
-async def subscribe(req: SubscribeRequest):
+@limiter.limit("10/minute")
+async def subscribe(request: Request, req: SubscribeRequest):
     try:
         if "@" not in req.email or "." not in req.email:
             raise HTTPException(status_code=400, detail="Invalid email")
@@ -1184,7 +1222,8 @@ async def subscribe(req: SubscribeRequest):
 
 
 @app.get("/api/auth/profile")
-async def get_profile(user=Security(get_current_user)):
+@limiter.limit("20/minute")
+async def get_profile(request: Request, user=Security(get_current_user)):
     if not user:
         return {"authenticated": False, "plan": "anonymous"}
 
@@ -1219,14 +1258,14 @@ async def get_profile(user=Security(get_current_user)):
 
 
 @app.get("/api/snapshot/today")
-async def get_today_snapshot():
+async def get_today_snapshot(request: Request):
     """Save and return today's ARC snapshot."""
     snap = _save_today_snapshot()
     return api_response(snap)
 
 
 @app.get("/api/snapshots")
-async def get_snapshots():
+async def get_snapshots(request: Request):
     """Return all saved daily snapshots."""
     if not SNAPSHOT_FILE.exists():
         return api_response({"snapshots": []})
@@ -1238,7 +1277,7 @@ async def get_snapshots():
 
 
 @app.get("/api/backtest")
-async def get_backtest():
+async def get_backtest(request: Request):
     """
     Historical AlphaCycle backtest endpoint.
     Returns BTC price+score history from cache when available (fast); else runs backtest once.
@@ -1254,7 +1293,7 @@ async def get_backtest():
 
 
 @app.get("/api/zone-history")
-async def get_zone_history():
+async def get_zone_history(request: Request):
     c = _require_cache()
     results = CACHE.get("backtest_results") or []
     arc_history = []
@@ -1293,7 +1332,7 @@ async def get_zone_history():
 
 
 @app.get("/api/historical-returns")
-async def get_historical_returns():
+async def get_historical_returns(request: Request):
     """
     Average forward returns by ARC zone from backtest data.
     Served from cache when available (fast).
@@ -1365,7 +1404,7 @@ async def get_historical_returns():
 
 
 @app.get("/api/arc-forward-returns")
-async def get_arc_forward_returns():
+async def get_arc_forward_returns(request: Request):
     """Forward returns by finer ARC buckets (0-25, 25-35, ...). From cache when available."""
     try:
         if CACHE.get("fwd_returns"):
@@ -1380,86 +1419,135 @@ async def get_arc_forward_returns():
         return api_response({"buckets": [], "error": str(e)})
 
 
-def _find_nearest_arc(date_str: str, bt_sorted: list) -> float:
-    """For a daily date, return ARC score from nearest weekly backtest date (latest <= date_str)."""
+def _interpolate_arc(date_str: str, bt_sorted: list) -> float:
+    """
+    Linearly interpolate ARC score for a daily date between weekly backtest points.
+    Falls back to nearest value when outside the weekly range.
+    """
     if not bt_sorted:
         return 50.0
-    best = None
+
+    from datetime import datetime
+
+    try:
+        target = datetime.strptime(date_str, "%Y-%m-%d")
+    except Exception:
+        return 50.0
+
+    before = None
+    after = None
     for b in bt_sorted:
-        bdate = b.get("date") or ""
-        if bdate <= date_str:
-            best = b
-        else:
+        bdate_str = b.get("date") or ""
+        try:
+            bdate = datetime.strptime(bdate_str, "%Y-%m-%d")
+        except Exception:
+            continue
+        score_val = float(b.get("score_display", b.get("score", 50.0)))
+        if bdate <= target:
+            before = (bdate, score_val)
+        elif after is None:
+            after = (bdate, score_val)
             break
-    if best is None:
-        return float(bt_sorted[0].get("score", 50.0))
-    return float(best.get("score", 50.0))
+
+    if before is None and after is None:
+        return 50.0
+    if before is None:
+        return after[1]
+    if after is None:
+        return before[1]
+
+    total_days = (after[0] - before[0]).days
+    if total_days <= 0:
+        return before[1]
+    elapsed = (target - before[0]).days
+    t = elapsed / float(total_days)
+    return before[1] + t * (after[1] - before[1])
 
 
 @app.get("/api/history-daily")
-async def get_history_daily():
+async def get_history_daily(request: Request):
     """
-    Daily BTC prices + ARC score for the last 365 days.
-    Uses Kraken daily candles (interval=1440). ARC from weekly backtest interpolation.
+    Daily BTC prices and ARC score for last 365 days.
+    ARC is linearly interpolated from weekly backtest and passed through arc_display_score().
+    The last point is overridden with the live ARC score from the cache.
     """
+    # Fast path: return cached daily history when available
+    if CACHE.get("daily_history"):
+        return api_response(CACHE["daily_history"])
+
     try:
         from datetime import datetime, timezone, timedelta
-        import httpx
 
-        cutoff = datetime.now(timezone.utc) - timedelta(days=365)
-        since_ts = int(cutoff.timestamp())
-
-        async with httpx.AsyncClient(timeout=15.0) as client:
-            resp = await client.get(
-                "https://api.kraken.com/0/public/OHLC",
-                params={"pair": "XBTUSD", "interval": 1440, "since": since_ts},
+        c = _require_cache()
+        raw = c.get("raw", {})
+        btc_prices = raw.get("btc_prices", [])
+        if len(btc_prices) < 30:
+            return api_response(
+                {
+                    "results": [],
+                    "count": 0,
+                    "interval": "daily",
+                    "error": "insufficient price data",
+                }
             )
-            raw = resp.json()
 
-        if raw.get("error"):
-            logger.warning("history-daily Kraken error: %s", raw.get("error"))
-            return api_response({"results": [], "count": 0, "interval": "daily", "error": str(raw.get("error"))})
+        # Use last 365 daily prices (or all available if less)
+        daily_prices = btc_prices[-365:]
+        n_days = len(daily_prices)
 
-        result = raw.get("result") or {}
-        keys = [k for k in result if k != "last"]
-        candles = result.get(keys[0], []) if keys else []
+        # Weekly backtest ARC history for interpolation
+        bt_results = CACHE.get("backtest_results") or []
+        bt_sorted = sorted(
+            [r for r in bt_results if r.get("date") and r.get("score") is not None],
+            key=lambda x: x["date"],
+        )
 
-        bt_data = await run_backtest()
-        bt_results = bt_data.get("results") or []
-        bt_sorted = sorted(bt_results, key=lambda x: x.get("date") or "")
-
+        now = datetime.now(timezone.utc)
         results = []
-        for c in candles:
-            if len(c) < 5:
-                continue
-            ts = int(c[0])
-            price = float(c[4])
-            dt = datetime.fromtimestamp(ts, tz=timezone.utc)
-            if dt < cutoff:
-                continue
-            date_str = dt.strftime("%Y-%m-%d")
-            arc = _find_nearest_arc(date_str, bt_sorted)
-            arc_disp = arc_display_score(arc)
-            results.append({
-                "date": date_str,
-                "timestamp": ts,
-                "btc_price": round(price, 2),
-                "arc_score": round(arc_disp, 2),
-                "score_display": round(arc_disp, 2),
-            })
 
-        return api_response({
+        for i in range(n_days):
+            day_offset = n_days - 1 - i
+            dt = now - timedelta(days=day_offset)
+            date_str = dt.strftime("%Y-%m-%d")
+            price = float(daily_prices[i])
+
+            arc_val = _interpolate_arc(date_str, bt_sorted)
+            arc_display_val = round(arc_display_score(arc_val), 2)
+
+            results.append(
+                {
+                    "date": date_str,
+                    "price": round(price, 2),
+                    "score": round(arc_val, 2),
+                    "score_display": arc_display_val,
+                }
+            )
+
+        # Override last point with live ARC score from combined cache
+        if results:
+            live_arc = c.get("combined", {}).get("combined_score", 50.0)
+            live_display = round(arc_display_score(live_arc), 2)
+            live_price = float(btc_prices[-1]) if btc_prices else results[-1]["price"]
+            results[-1]["score"] = round(live_arc, 2)
+            results[-1]["score_display"] = live_display
+            results[-1]["price"] = round(live_price, 2)
+
+        payload = {
             "results": results,
             "count": len(results),
             "interval": "daily",
-        })
+        }
+        CACHE["daily_history"] = payload
+        return api_response(payload)
     except Exception as e:
         logger.error("history-daily error: %s", e)
-        return api_response({"results": [], "count": 0, "interval": "daily", "error": str(e)})
+        return api_response(
+            {"results": [], "count": 0, "interval": "daily", "error": str(e)}
+        )
 
 
 @app.get("/api/liquidity-regime")
-async def get_liquidity_regime():
+async def get_liquidity_regime(request: Request):
     """
     Global Liquidity Regime Engine™ endpoint.
     Uses WALCL, stablecoins, BTC and macro proxies from cache.
@@ -1486,7 +1574,11 @@ async def get_liquidity_regime():
 
 
 @app.get("/api/analyzer")
-async def get_analyzer():
+@limiter.limit("30/minute")
+async def get_analyzer(request: Request):
+    cached = _get_cached_response("analyzer")
+    if cached is not None:
+        return api_response(cached)
     c = _require_cache()
     raw = c["raw"]
     try:
@@ -1546,6 +1638,7 @@ async def get_analyzer():
                 "tactical_color": "blue",
                 "days_since_bottom": 0,
             }
+        _set_cached_response("analyzer", result)
         return api_response(result)
     except Exception as e:
         logger.exception("Analyzer endpoint failed")
@@ -1560,7 +1653,8 @@ def _phase_label(arc: float) -> str:
 
 
 @app.get("/api/snapshot")
-async def get_snapshot():
+@limiter.limit("30/minute")
+async def get_snapshot(request: Request):
     """
     Aggregates all relevant data and returns ready-to-use post templates.
     """
@@ -1737,6 +1831,7 @@ async def get_snapshot():
             arc_percentile=result.get("arc_percentile"),
             arc_percentile_label=result.get("arc_percentile_label"),
         )
+        _set_cached_response("snapshot", snapshot)
         return api_response(snapshot)
     except Exception as e:
         logger.error("snapshot error: %s", e)
@@ -1750,8 +1845,12 @@ async def get_snapshot():
 
 
 @app.get("/api/decision")
-async def get_decision():
+@limiter.limit("30/minute")
+async def get_decision(request: Request):
     from datetime import datetime
+    cached = _get_cached_response("decision")
+    if cached is not None:
+        return api_response(cached)
     c   = _require_cache()
     raw = c["raw"]
 
@@ -1811,4 +1910,5 @@ async def get_decision():
         result["position"] = decision_override
         if "suggested_position" in result:
             result["suggested_position"] = decision_override
+    _set_cached_response("decision", result)
     return api_response(result)
