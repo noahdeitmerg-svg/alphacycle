@@ -4873,11 +4873,6 @@ function applyBlurGates() {
       title: 'Near-Term Outlook',
       desc: '30-90 day tactical analysis with upside/downside targets.'
     },
-    'gate-live-prices': {
-      tier: 'free',
-      title: 'Live Market Data',
-      desc: 'Real-time BTC & ETH prices, volume, Fear & Greed and funding rates.'
-    },
     'gate-arc-momentum': {
       tier: 'free',
       title: 'ARC Momentum',
@@ -4948,6 +4943,10 @@ function applyBlurGates() {
       descEl.textContent = info.desc;
     }
   });
+
+  // Live Prices sollen immer sichtbar sein (niemals geblurrt)
+  var lp = document.getElementById('gate-live-prices');
+  if (lp) lp.classList.remove('locked');
 }
 
 function openUpgradeModal() {
