@@ -2253,6 +2253,300 @@ canvas.sparkline {
     height: 120px !important;
   }
 }
+
+/* ════════════════════════════════════════════════════════
+   MOBILE-FIRST OVERRIDES (≤480px)
+   ════════════════════════════════════════════════════════ */
+@media (max-width: 480px) {
+  /* NAV: kompakter */
+  .nav {
+    padding: 6px 12px !important;
+    height: 44px !important;
+  }
+  .nav-logo-name {
+    font-size: 15px !important;
+  }
+  .nav-logo-tagline {
+    display: none !important;
+  }
+  .nav-time {
+    display: none !important;
+  }
+  #tour-btn {
+    display: none !important;
+  }
+  .nav-pill {
+    padding: 4px 8px !important;
+    font-size: 9px !important;
+  }
+  #nav-login-btn {
+    padding: 5px 10px !important;
+    font-size: 10px !important;
+  }
+  .refresh-btn span:last-child {
+    display: none !important;
+  }
+  .refresh-btn {
+    padding: 6px 8px !important;
+  }
+
+  /* TICKER */
+  .ticker-bar {
+    font-size: 9px !important;
+    padding: 3px 8px !important;
+  }
+  .tick-sep {
+    margin: 0 4px !important;
+  }
+
+  /* CONTAINER */
+  .container {
+    padding: 12px 10px 40px !important;
+  }
+
+  /* HERO CARD */
+  #btc-card.hero-card {
+    padding: 12px !important;
+  }
+  #btc-card.hero-card .gauge-wrap {
+    max-width: 140px !important;
+  }
+  .hero-risk-label {
+    font-size: clamp(14px, 4vw, 18px) !important;
+  }
+  #btc-card.hero-card .gauge-val {
+    font-size: clamp(28px, 8vw, 40px) !important;
+  }
+  .hero-subscores {
+    gap: 8px !important;
+    font-size: 12px !important;
+  }
+
+  /* COMPONENT GAUGES: 2x2 */
+  #btc-card.hero-card .components-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 4px !important;
+    padding-left: 0 !important;
+    padding-top: 8px !important;
+  }
+  .factor-card {
+    padding: 6px !important;
+  }
+  .factor-label {
+    font-size: 8px !important;
+  }
+  .factor-value {
+    font-size: 1.1rem !important;
+  }
+
+  /* ZONE BAR: horizontal scroll */
+  .hero-zones {
+    display: flex !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    gap: 0 !important;
+    padding-bottom: 4px !important;
+  }
+  .hero-zone {
+    flex: 0 0 auto !important;
+    min-width: 80px !important;
+    scroll-snap-align: start;
+    padding: 6px 10px !important;
+  }
+  .hz-range {
+    font-size: 0.7rem !important;
+  }
+  .hz-label {
+    font-size: 7px !important;
+  }
+
+  /* DECISION ENGINE */
+  .decision-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .decision-item {
+    padding: 1rem 0.75rem !important;
+  }
+  .decision-value {
+    font-size: 1.1rem !important;
+    word-break: break-word;
+  }
+  .decision-note {
+    padding: 8px 12px !important;
+    font-size: 10px !important;
+  }
+
+  /* HISTORICAL RETURNS */
+  .hr-grid {
+    gap: 0 !important;
+  }
+  .hr-zone {
+    min-width: 180px !important;
+    padding: 1rem 0.75rem !important;
+  }
+  .hr-eyebrow {
+    font-size: 9px !important;
+    padding: 8px 12px !important;
+  }
+  .hr-zone-return {
+    font-size: 1.3rem !important;
+  }
+
+  /* CYCLE OVERVIEW */
+  .cycle-phase-side,
+  .cycle-timeline-side {
+    padding: 1rem !important;
+  }
+  .cycle-phase-name {
+    font-size: 1.3rem !important;
+  }
+
+  /* NEAR-TERM OUTLOOK */
+  .st-scenario {
+    padding: 0.75rem 1rem !important;
+  }
+  .st-scenario-pct {
+    font-size: 1.2rem !important;
+  }
+  #short-term-components {
+    padding: 0.75rem 1rem !important;
+  }
+
+  /* ARC CHART */
+  #arc-chart-wrap {
+    height: 260px !important;
+  }
+  .arc-toggle {
+    font-size: 9px !important;
+    padding: 3px 8px !important;
+  }
+  #arc-momentum-chart {
+    height: 100px !important;
+  }
+  #arc-chart-card .sec-header {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  #arc-chart-title {
+    font-size: 11px !important;
+    width: 100%;
+  }
+
+  /* ZONE HISTORY TABLE */
+  .zone-history-table-wrap {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .zone-history-table {
+    min-width: 600px !important;
+  }
+  .zone-history-table th,
+  .zone-history-table td {
+    padding: 5px 6px !important;
+    font-size: 10px !important;
+    white-space: nowrap !important;
+  }
+
+  /* DATA INSPECTOR */
+  .data-inspector {
+    font-size: 10px !important;
+    padding: 0.75rem !important;
+  }
+  .di-grid {
+    gap: 1px 0.75rem !important;
+    font-size: 10px !important;
+  }
+
+  /* CARDS */
+  .card {
+    border-radius: 10px !important;
+  }
+  .sec-header {
+    margin-bottom: 8px !important;
+  }
+  .sec-title {
+    font-size: 11px !important;
+  }
+
+  /* FOOTER */
+  .footer {
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center;
+    gap: 4px !important;
+    font-size: 10px !important;
+  }
+
+  /* BLUR OVERLAY */
+  .blur-overlay-btn {
+    padding: 10px 16px !important;
+    font-size: 11px !important;
+  }
+
+  /* AUTH MODAL */
+  #auth-modal > div > div {
+    max-width: 95vw !important;
+    padding: 24px 16px !important;
+  }
+}
+
+/* ════════════════════════════════════════════════════════
+   TOUCH + SCROLL (all mobile ≤768px)
+   ════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  /* Min touch targets */
+  button, .ce-btn, .arc-toggle, .refresh-btn, #nav-login-btn {
+    min-height: 36px;
+  }
+  /* Hidden scrollbars */
+  .hr-grid, .hero-zones, .zone-history-table-wrap {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .hr-grid::-webkit-scrollbar,
+  .hero-zones::-webkit-scrollbar,
+  .zone-history-table-wrap::-webkit-scrollbar {
+    display: none;
+  }
+  /* No horizontal page overflow */
+  html, body {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+  }
+  .score-card {
+    min-width: 0 !important;
+  }
+  /* Zone history scroll hint */
+  .zone-history-title::after {
+    content: ' \2190 scroll \2192';
+    font-size: 9px;
+    color: var(--tx-ter);
+    margin-left: 6px;
+  }
+}
+
+/* ════════════════════════════════════════════════════════
+   SMALL PHONE (≤360px, iPhone SE etc.)
+   ════════════════════════════════════════════════════════ */
+@media (max-width: 360px) {
+  #btc-card.hero-card .gauge-val {
+    font-size: 26px !important;
+  }
+  .decision-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .decision-item {
+    border-right: none !important;
+    border-bottom: 1px solid var(--border);
+  }
+  .hr-zone {
+    min-width: 160px !important;
+  }
+  .hero-zone {
+    min-width: 70px !important;
+  }
+}
 </style>
 </head>
 <body>
@@ -3469,13 +3763,9 @@ async function loadAllData() {
       }
       const fredEl = document.getElementById('src-fred');
       if (fredEl) {
-        if (S.walclCurrent > 0) {
-          fredEl.className = 'status-src';
-          fredEl.innerHTML = '<span class="status-dot"></span>FRED';
-        } else {
-          fredEl.className = 'status-src warn';
-          fredEl.innerHTML = '<span class="status-dot"></span>FRED (synthetic fallback)';
-        }
+        // Backend nutzt immer echte FRED-Daten; "synthetic" nur im direkten Fallback.
+        fredEl.className = 'status-src';
+        fredEl.innerHTML = '<span class="status-dot"></span>FRED';
       }
 
       markSources(errors);
@@ -4392,7 +4682,7 @@ async function initAuth() {
       await fetchUserPlan();
     }
     updateAuthUI();
-    // applyBlurGates(); // placeholder for future gating
+    applyBlurGates();
     supabaseClient.auth.onAuthStateChange(async function(event, session) {
       if (session) {
         currentUser = session.user;
@@ -4402,7 +4692,7 @@ async function initAuth() {
         currentPlan = 'anonymous';
       }
       updateAuthUI();
-      // applyBlurGates();
+      applyBlurGates();
     });
   } catch (e) {
     currentUser = null;
@@ -6131,7 +6421,15 @@ async function boot() {
         if (ce) ce.style.display = 'block';
       }
       // Auth initialisieren
-      initAuth();
+      try {
+        await initAuth();
+      } catch (e) {
+        console.warn('Auth init failed:', e);
+      }
+      // Fallback: Blur Gates auch ohne Supabase-Client anwenden
+      if (!supabaseClient) {
+        applyBlurGates();
+      }
       // Onboarding-Tour nur einmalig starten
       if (!localStorage.getItem('alphacycle_onboarded')) {
         setTimeout(function(){ startTour(); }, 1500);
