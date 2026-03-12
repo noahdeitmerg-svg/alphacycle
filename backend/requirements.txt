@@ -5,3 +5,4 @@ httpx>=0.25.0
 python-dotenv==1.0.1
 supabase>=2.4.0
 pydantic[email]
+slowapi>=0.1.9
