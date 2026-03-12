@@ -199,6 +199,11 @@ async def refresh_cache(force: bool = False):
             try:
                 bt_data = await run_backtest()
                 bt_results = bt_data.get("results", []) if isinstance(bt_data, dict) else []
+                # Normalize: all downstream zone lookups use display score
+                for _r in bt_results:
+                    if _r.get("score_display") is not None:
+                        _r["score"] = _r["score_display"]
+                        _r["arc_score"] = _r["score_display"]
                 if bt_results:
                     from historical_returns import (
                         compute_historical_returns,
@@ -883,7 +888,7 @@ async def get_arc_summary():
     out = {
         "arc_score":   current_arc,
         "arc_display": round(arc_display_score(current_arc), 1),
-        "zone_name":   get_zone_name(current_arc),
+        "zone_name":   get_zone_name(arc_display_score(current_arc)),
         "btc_score":   round(btc.get("btc_score", 50.0), 1),
         "eth_score":   round(c["eth_scores"].get("eth_score", 50.0), 1),
         "macro_score": round(mac.get("macro_score", 50.0), 1),
@@ -971,7 +976,7 @@ async def get_arc_summary():
         if dd_data is None:
             dd_data = {}
         hist_returns = CACHE.get("hist_returns") or {}
-        expected = _get_expected_range(current_arc, hist_returns=hist_returns, high_risk_drawdown=dd_data)
+        expected = _get_expected_range(arc_display_score(current_arc), hist_returns=hist_returns, high_risk_drawdown=dd_data)
         out["expected_range"] = expected
         out["expected_range_label"] = expected.get("label", "N/A")
 
@@ -1257,7 +1262,7 @@ async def get_zone_history():
         if not r:
             continue
         date = r.get("date")
-        arc_val = r.get("arc_score", r.get("score"))
+        arc_val = r.get("score_display", r.get("arc_score", r.get("score")))
         price = r.get("btc_price", r.get("price"))
         if not (date and arc_val is not None and price is not None):
             continue
@@ -1697,17 +1702,18 @@ async def get_snapshot():
             if hist_returns is None and bt_results:
                 from historical_returns import compute_historical_returns
                 hist_returns = compute_historical_returns(bt_results)
-            expected = _get_expected_range(arc_score, hist_returns=hist_returns or {}, high_risk_drawdown=dd_data)
+            expected = _get_expected_range(arc_display_val, hist_returns=hist_returns or {}, high_risk_drawdown=dd_data)
             expected_range_label = expected.get("label", "N/A")
         except Exception:
             pass
 
+        arc_display_val = arc_display_score(arc_score)
         snapshot = build_snapshot(
-            arc_score=arc_score,
+            arc_score=arc_display_val,
             btc_price=btc_price,
             eth_price=eth_price,
             fear_greed=raw["fear_greed"]["current"],
-            phase_label=_phase_label(arc_score),
+            phase_label=_phase_label(arc_display_val),
             position=position,
             allocation=allocation,
             upside_pct=st_ctx.get("upside_pct", 0),

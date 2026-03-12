@@ -3640,7 +3640,7 @@ function renderComponents(containerId, components) {
 
 // ── PHASE BANNER ────────────────────────────────────────────────────────────
 function updatePhaseBanner() {
-  const score = S.arcSummary?.arc_score ?? S.combined ?? S.btcScore ?? 50;
+  const score = S.arcSummary?.arc_display ?? S.arcSummary?.arc_score ?? S.combined ?? S.btcScore ?? 50;
   const phase = phaseOf(score);
   const col   = scoreColor(score);
   const banner = $('phase-banner');
@@ -3701,7 +3701,8 @@ function updateUI() {
   (function updateHeroRisk() {
     const el = document.getElementById('hero-risk-label');
     if (!el) return;
-    var arcRaw = S.arcSummary?.arc_score
+    var arcRaw = S.arcSummary?.arc_display
+                 ?? S.arcSummary?.arc_score
                  ?? S.combined
                  ?? S.btcScore
                  ?? 50;
@@ -4667,9 +4668,11 @@ function _setCyclePhaseTag(phase, ctx) {
 
 function updateShortTermContext() {
   var ctx = S.shortTermContext;
-  var arc = S.arcSummary && S.arcSummary.arc_score != null
-    ? S.arcSummary.arc_score
-    : (S.combined != null ? S.combined : (S.btcScore != null ? S.btcScore : 50));
+  var arc = S.arcSummary && S.arcSummary.arc_display != null
+    ? S.arcSummary.arc_display
+    : (S.arcSummary && S.arcSummary.arc_score != null
+      ? S.arcSummary.arc_score
+      : (S.combined != null ? S.combined : (S.btcScore != null ? S.btcScore : 50)));
 
   if (!ctx) {
     var fallbackPhase = (S.arcSummary && S.arcSummary.phase_context)
