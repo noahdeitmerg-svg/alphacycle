@@ -234,15 +234,15 @@ async def _refresh_loop():
 async def lifespan(app: FastAPI):
     logger.info("Alpha Cycle Intelligence API starting…")
     try:
-        import os as _os_mod
         from pathlib import Path as _Path
-        CACHE_FILE = _Path("/tmp/backtest_cache.json")
-        if CACHE_FILE.exists():
-            try:
-                CACHE_FILE.unlink()
-                logger.info("Backtest cache cleared on startup")
-            except Exception as e:
-                logger.warning(f"Could not clear backtest cache: {e}")
+        for _cache_path in ("/tmp/backtest_cache.json", "/tmp/zone_history_cache.json"):
+            cache_file = _Path(_cache_path)
+            if cache_file.exists():
+                try:
+                    cache_file.unlink()
+                    logger.info("Cache cleared on startup: %s", _cache_path)
+                except Exception as e:
+                    logger.warning("Could not clear cache %s: %s", _cache_path, e)
     except Exception as e:
         logger.warning("Backtest cache clear init failed: %s", e)
     await refresh_cache(force=True)
@@ -400,60 +400,94 @@ def get_eth_btc_signal(ratio):
     }
 
 
+def _calc_weeks(date_from: str, date_to: str) -> int:
+    try:
+        from datetime import datetime
+
+        d1 = datetime.fromisoformat(str(date_from))
+        d2 = datetime.fromisoformat(str(date_to))
+        days = abs((d2 - d1).days)
+        return max(1, days // 7)
+    except Exception:
+        return 1
+
+
 def compute_zone_history(arc_history):
-    results = []
+    """
+    Build contiguous zone periods from backtest history.
+    Uses raw ARC score and get_zone_name() as single source of truth.
+    """
+    if not arc_history:
+        return []
+
+    history = []
     current_zone = None
-    start_date = None
-    start_price = None
-    count = 0
-    for entry in arc_history or []:
+    zone_start_date = None
+    zone_start_price = None
+    last_price = None
+    last_date = None
+
+    for entry in arc_history:
         date = entry.get("date")
-        arc_val = entry.get("arc_score", entry.get("score"))
-        btc_price = entry.get("btc_price", entry.get("price"))
-        if date is None or arc_val is None or btc_price is None:
+        score_val = entry.get("arc_score", entry.get("score"))
+        price = entry.get("btc_price", entry.get("price"))
+        if date is None or score_val is None or price is None:
             continue
-        zone = get_zone_name(float(arc_val))
+
+        zone = get_zone_name(float(score_val))
+
         if zone != current_zone:
-            if current_zone is not None and start_date is not None and start_price:
-                weeks = max(count, 1)
+            # close previous zone period
+            if current_zone is not None and zone_start_date is not None and last_date is not None and zone_start_price:
+                weeks = _calc_weeks(zone_start_date, last_date)
                 rtn = 0.0
-                if start_price:
-                    rtn = round((btc_price - start_price) / start_price * 100.0, 1)
-                results.append(
+                try:
+                    rtn = round((last_price - zone_start_price) / zone_start_price * 100.0, 1)
+                except Exception:
+                    rtn = 0.0
+                history.append(
                     {
                         "zone": current_zone,
-                        "from": start_date,
-                        "to": date,
+                        "from": zone_start_date,
+                        "to": last_date,
                         "weeks": weeks,
-                        "btc_entry": start_price,
-                        "btc_exit": btc_price,
+                        "btc_entry": round(zone_start_price),
+                        "btc_exit": round(last_price),
                         "return_pct": rtn,
                     }
                 )
+
+            # start new zone period
             current_zone = zone
-            start_date = date
-            start_price = btc_price
-            count = 1
-        else:
-            count += 1
-    if current_zone is not None and start_date is not None and start_price:
-        last_price = btc_price
-        weeks = max(count, 1)
+            zone_start_date = date
+            zone_start_price = float(price)
+
+        last_price = float(price)
+        last_date = date
+
+    # close final ongoing zone
+    if current_zone is not None and zone_start_date is not None and last_date is not None and zone_start_price:
+        weeks = _calc_weeks(zone_start_date, last_date)
         rtn = 0.0
-        if start_price:
-            rtn = round((last_price - start_price) / start_price * 100.0, 1)
-        results.append(
+        try:
+            rtn = round((last_price - zone_start_price) / zone_start_price * 100.0, 1)
+        except Exception:
+            rtn = 0.0
+        history.append(
             {
                 "zone": current_zone,
-                "from": start_date,
+                "from": zone_start_date,
                 "to": None,
-                "weeks": weeks,
-                "btc_entry": start_price,
-                "btc_exit": last_price,
+                "weeks": max(1, weeks),
+                "btc_entry": round(zone_start_price),
+                "btc_exit": round(last_price),
                 "return_pct": rtn,
             }
         )
-    return results[-20:]
+
+    # newest periods first, at most 20
+    history = list(reversed(history))
+    return history[:20]
 
 
 # -- ENDPOINTS -------------------------------------------------------------------
@@ -1239,10 +1273,10 @@ async def get_zone_history():
     current_since = None
     current_weeks = 0
     if zone_periods:
-        last = zone_periods[-1]
-        current_zone = last.get("zone")
-        current_since = last.get("from")
-        current_weeks = int(last.get("weeks") or 0)
+        current = zone_periods[0]
+        current_zone = current.get("zone")
+        current_since = current.get("from")
+        current_weeks = int(current.get("weeks") or 0)
     return api_response(
         {
             "zone_history": zone_periods,
