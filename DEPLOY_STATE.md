@@ -87,7 +87,7 @@ ARC Formula (unified, research-validated): ma_200w*0.35 + drawdown*0.25 + liquid
 Use fg_to_score(fear_greed) for F&G input. Same formula in scoring.compute_arc_score(), backtest_engine, and /api/arc-summary.
 DO NOT modify weights. DO NOT add scoring components.
 **ARC output**: compute_arc_score() returns clamp(arc) — raw ARC range (empirical ~22-78). No rescaling. Momentum from backtest via scoring.compute_arc_momentum(arc_history, days=30).
-**ARC display (UI only)**: arc_display_score(arc_raw, k=1.2) in scoring.py — k=1.2 optimal (verhindert 0-Werte bei Extrempunkten). Only at API response and chart. Raw 25->~15.6, 50->50, 75->~84.4. NEVER in compute_arc_score() or compute_btc_score(); only at API response and chart. Internal logic (phase, decision, expected range) uses arc_raw. UI 5-zone system: Deep Value <30, Accumulation 30-40, Expansion 40-60, Risk Rising 60-70, Euphoria >=70.
+**ARC display (UI only)**: arc_display_score(arc_raw, k=1.2) in scoring.py — k=1.2 optimal (verhindert 0-Werte bei Extrempunkten). Intern (compute_arc_score/Backtest-Formel/Momentum) wird weiter mit dem **rohen ARC** gearbeitet; alle sichtbaren Zonen/Labels im UI (Hero, Phase Banner, Historical Returns, Zone History, Expected Range, Snapshots) nutzen jedoch konsequent den **Display-Score**. Raw 25->~15.6, 50->50, 75->~84.4. Zone-Grenzen im UI: Deep Value 0–29, Accumulation 30–39, Expansion 40–59, Risk Rising 60–69, Euphoria 70–100 (Display-Skala).
 
 ## Permanent Fixes (never revert)
 1. main.py: All Unicode removed from comments AND string literals
