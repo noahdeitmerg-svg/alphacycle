@@ -4850,51 +4850,102 @@ async function handleSignOut() {
 }
 
 function applyBlurGates() {
-  var freeGates = [
-    'gate-historical-returns',
-    'gate-cycle-overview',
-    'gate-arc-history',
-    'gate-near-term',
-    'gate-live-prices',
-    'gate-arc-momentum'
-  ];
-  var paidGates = [
-    'gate-decision-engine',
-    'gate-zone-history',
-    'gate-content-export'
-  ];
-
-  freeGates.forEach(function(id) {
-    var el = document.getElementById(id);
-    if (!el) return;
-    var isLocked = currentPlan === 'anonymous';
-    el.classList.toggle('locked', isLocked);
-    var btn = document.getElementById(id + '-btn');
-    var title = document.getElementById(id + '-title');
-    if (btn && title) {
-      btn.textContent = 'CREATE FREE ACCOUNT';
-      title.textContent = '🔒 FREE FEATURE';
-      btn.onclick = function() { openAuthModal('signup'); };
+  // Gate descriptions — was jede Section bietet
+  var gateInfo = {
+    // FREE gates (unlock with free account)
+    'gate-historical-returns': {
+      tier: 'free',
+      title: 'Historical ARC Returns',
+      desc: 'See average 12-month forward returns for each ARC zone based on 8+ years of data.'
+    },
+    'gate-cycle-overview': {
+      tier: 'free',
+      title: 'Cycle Overview',
+      desc: 'Full cycle phase analysis with timing estimates and bottom/top probabilities.'
+    },
+    'gate-arc-history': {
+      tier: 'free',
+      title: 'ARC History Chart',
+      desc: '10-year BTC price overlay with ARC zones — see where we are in the cycle.'
+    },
+    'gate-near-term': {
+      tier: 'free',
+      title: 'Near-Term Outlook',
+      desc: '30-90 day tactical analysis with upside/downside targets.'
+    },
+    'gate-live-prices': {
+      tier: 'free',
+      title: 'Live Market Data',
+      desc: 'Real-time BTC & ETH prices, volume, Fear & Greed and funding rates.'
+    },
+    'gate-arc-momentum': {
+      tier: 'free',
+      title: 'ARC Momentum',
+      desc: '30-day ARC trend direction — is risk accelerating or decelerating?'
+    },
+    // PAID gates (unlock with $19/mo)
+    'gate-decision-engine': {
+      tier: 'paid',
+      title: 'Decision Engine',
+      desc: 'Suggested position, spot allocation, 12M expected range and confidence level.'
+    },
+    'gate-zone-history': {
+      tier: 'paid',
+      title: 'Zone History',
+      desc: 'Complete history of how long BTC spent in each zone with entry/exit prices.'
+    },
+    'gate-content-export': {
+      tier: 'paid',
+      title: 'Data Export',
+      desc: 'Export ARC data blocks for research and content creation.'
     }
-  });
+  };
 
-  paidGates.forEach(function(id) {
+  Object.keys(gateInfo).forEach(function(id) {
+    var info = gateInfo[id];
     var el = document.getElementById(id);
     if (!el) return;
-    var isLocked = currentPlan !== 'paid';
+
+    var isLocked;
+    if (info.tier === 'free') {
+      isLocked = currentPlan === 'anonymous';
+    } else {
+      isLocked = currentPlan !== 'paid';
+    }
     el.classList.toggle('locked', isLocked);
+
     var btn = document.getElementById(id + '-btn');
     var title = document.getElementById(id + '-title');
-    if (btn && title) {
-      if (currentPlan === 'anonymous') {
-        btn.textContent = 'CREATE FREE ACCOUNT';
-        title.textContent = '🔒 FREE FEATURE';
-        btn.onclick = function() { openAuthModal('signup'); };
-      } else {
-        btn.textContent = 'UPGRADE TO PRO — $19/mo';
-        title.textContent = '⚡ PRO FEATURE';
-        btn.onclick = function() { openUpgradeModal(); };
+    if (!btn || !title) return;
+
+    if (!isLocked) return; // unlocked, no overlay needed
+
+    if (info.tier === 'free' || currentPlan === 'anonymous') {
+      title.innerHTML = '🔒 ' + info.title;
+      btn.textContent = 'UNLOCK FREE';
+      btn.onclick = function() { openAuthModal('signup'); };
+      // Add description if not already present
+      var descEl = el.querySelector('.blur-overlay-desc');
+      if (!descEl) {
+        descEl = document.createElement('div');
+        descEl.className = 'blur-overlay-desc';
+        descEl.style.cssText = 'color:rgba(255,255,255,0.6);font-family:var(--f-mono);font-size:11px;max-width:300px;text-align:center;line-height:1.5;margin-top:-4px;';
+        btn.parentNode.insertBefore(descEl, btn);
       }
+      descEl.textContent = info.desc;
+    } else {
+      // Logged in but not paid
+      title.innerHTML = '⚡ ' + info.title;
+      btn.textContent = 'UPGRADE TO PRO — $19/mo';
+      btn.onclick = function() { openUpgradeModal(); };
+      var descEl = el.querySelector('.blur-overlay-desc');
+      if (!descEl) {
+        descEl = document.createElement('div');
+        descEl.className = 'blur-overlay-desc';
+        descEl.style.cssText = 'color:rgba(255,255,255,0.6);font-family:var(--f-mono);font-size:11px;max-width:300px;text-align:center;line-height:1.5;margin-top:-4px;';
+        btn.parentNode.insertBefore(descEl, btn);
+      }
+      descEl.textContent = info.desc;
     }
   });
 }
