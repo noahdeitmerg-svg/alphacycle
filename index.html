@@ -3130,7 +3130,7 @@ function scoreColor(s) {
 }
 function phaseOf(score) {
   var v = Number(score);
-  if (v <= 29) return 'Deep Value';
+  if (v < 30) return 'Deep Value';
   if (v <= 39) return 'Accumulation';
   if (v <= 59) return 'Expansion';
   if (v <= 69) return 'Risk Rising';
