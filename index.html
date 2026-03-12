@@ -3366,12 +3366,13 @@ async function loadAllData() {
         apiFetch(`${BACKEND_URL}/api/analyzer`),
         apiFetch(`${BACKEND_URL}/api/cycle-anchor`),
         apiFetch(`${BACKEND_URL}/api/backtest`),
+        apiFetch(`${BACKEND_URL}/api/history-daily`),
         apiFetch(`${BACKEND_URL}/api/liquidity-regime`),
         apiFetch(`${BACKEND_URL}/api/arc-summary`),
         apiFetch(`${BACKEND_URL}/api/short-term`),
         apiFetch(`${BACKEND_URL}/api/zone-history`),
       ]);
-      const [prices, btcC, ethC, macC, hist, analyzer, anchor, backtest, liquidity, arcSummary, shortTermData, zoneHistory] =
+      const [prices, btcC, ethC, macC, hist, analyzer, anchor, backtest, historyDaily, liquidity, arcSummary, shortTermData, zoneHistory] =
         results.map(r => r.status === 'fulfilled' ? r.value : null);
 
       if(prices) {
@@ -3402,6 +3403,9 @@ async function loadAllData() {
       }
       S.backtest = backtest?.results ?? [];
       S.backtestHistory = backtest?.results ?? [];
+      if (historyDaily) {
+        S.backtestDaily = historyDaily.results ?? historyDaily ?? [];
+      }
       S.liquidityRegime = liquidity ?? null;
       S.arcSummary = arcSummary ?? null;
       S.zoneHistory = zoneHistory ?? null;
@@ -5113,15 +5117,20 @@ function setArcPeriod(period) {
 
 function renderArcChart(period) {
   period = period || _arcPeriod;
-  if (!S.backtest || !S.backtest.length) return;
-  var data = S.backtest;
-  if (period === '1y') {
-    var cutoff = new Date();
-    cutoff.setFullYear(cutoff.getFullYear() - 1);
-    data = S.backtest.filter(function(r) {
-      var d = r.date || r.d;
-      return d && new Date(d) >= cutoff;
-    });
+  if ((!S.backtest || !S.backtest.length) && (!S.backtestDaily || !S.backtestDaily.length)) return;
+  var data;
+  if (period === '1y' && S.backtestDaily && S.backtestDaily.length) {
+    data = S.backtestDaily;
+  } else {
+    data = S.backtest || [];
+    if (period === '1y') {
+      var cutoff = new Date();
+      cutoff.setFullYear(cutoff.getFullYear() - 1);
+      data = data.filter(function(r) {
+        var d = r.date || r.d;
+        return d && new Date(d) >= cutoff;
+      });
+    }
   }
   var ph = $('arc-chart-placeholder');
   var wrap = $('arc-chart-wrap');

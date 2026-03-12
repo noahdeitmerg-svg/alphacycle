@@ -1439,11 +1439,13 @@ async def get_history_daily():
                 continue
             date_str = dt.strftime("%Y-%m-%d")
             arc = _find_nearest_arc(date_str, bt_sorted)
+            arc_disp = arc_display_score(arc)
             results.append({
                 "date": date_str,
                 "timestamp": ts,
                 "btc_price": round(price, 2),
-                "arc_score": round(arc, 2),
+                "arc_score": round(arc_disp, 2),
+                "score_display": round(arc_disp, 2),
             })
 
         return api_response({
