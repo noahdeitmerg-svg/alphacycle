@@ -3700,22 +3700,18 @@ function updateUI() {
   (function updateHeroRisk() {
     const el = document.getElementById('hero-risk-label');
     if (!el) return;
-    const s = combinedScore != null ? Number(combinedScore) : 50;
-    var arcDisplay = S.arcSummary?.arc_display ?? s;
-    var arcRaw = S.arcSummary?.arc_score ?? S.combined ?? S.btcScore ?? s;
-    if (getPhaseGroup() === 'bear' && arcDisplay < 50) {
-      el.textContent = S.arcSummary?.phase_context || S.analyzerPhase || 'MID BEAR';
-      el.style.borderColor = 'rgba(255,149,0,0.4)';
-      el.style.color = '#FF9500';
-      el.style.background = 'rgba(255,149,0,0.07)';
-      return;
-    }
+    var arcRaw = S.arcSummary?.arc_score
+                 ?? S.combined
+                 ?? S.btcScore
+                 ?? 50;
+    arcRaw = Number(arcRaw);
+
+    // Zone-Name IMMER aus phaseOf() — keine Ausnahmen
     var zoneName = phaseOf(arcRaw);
     var col = scoreColor(arcRaw);
+
     el.textContent = zoneName;
-    el.style.borderColor = col + '99';
     el.style.color = col;
-    el.style.background = col + '12';
   })();
   // Cycle Signal Badge im Hero (ueberschreibt hero-risk-label bei aktivem Signal)
   const cs = S.cycleSignal;
