@@ -4910,11 +4910,11 @@ function applyBlurGates() {
 
     if (!isLocked) return; // unlocked, no overlay needed
 
-    if (info.tier === 'free' || currentPlan === 'anonymous') {
-      title.innerHTML = '🔒 ' + info.title;
-      btn.textContent = 'UNLOCK FREE';
-      btn.onclick = function() { openAuthModal('signup'); };
-      // Add description if not already present
+    // Paid gates: anonymous und free sehen Paid-Overlay (⚡ UPGRADE TO PRO)
+    if (info.tier === 'paid' && isLocked) {
+      title.innerHTML = '⚡ ' + info.title;
+      btn.textContent = 'UPGRADE TO PRO — $19/mo';
+      btn.onclick = function() { openUpgradeModal(); };
       var descEl = el.querySelector('.blur-overlay-desc');
       if (!descEl) {
         descEl = document.createElement('div');
@@ -4923,11 +4923,11 @@ function applyBlurGates() {
         btn.parentNode.insertBefore(descEl, btn);
       }
       descEl.textContent = info.desc;
-    } else {
-      // Logged in but not paid
-      title.innerHTML = '⚡ ' + info.title;
-      btn.textContent = 'UPGRADE TO PRO — $19/mo';
-      btn.onclick = function() { openUpgradeModal(); };
+    } else if (isLocked) {
+      // Free gates: nur anonymous sieht Overlay (🔒 UNLOCK FREE)
+      title.innerHTML = '🔒 ' + info.title;
+      btn.textContent = 'UNLOCK FREE';
+      btn.onclick = function() { openAuthModal('signup'); };
       var descEl = el.querySelector('.blur-overlay-desc');
       if (!descEl) {
         descEl = document.createElement('div');
