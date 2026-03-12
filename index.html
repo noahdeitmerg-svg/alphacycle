@@ -3060,6 +3060,7 @@ const S = {
   ethComponents:       null,
   backtest:            [],
   backtestHistory:     [],
+  dailyHistory:        [],
   liquidityRegime:     null,
   arcSummary:          null,
   snapshot:            null,
@@ -3406,7 +3407,7 @@ async function loadAllData() {
       S.backtest = backtest?.results ?? [];
       S.backtestHistory = backtest?.results ?? [];
       if (historyDaily) {
-        S.backtestDaily = historyDaily.results ?? historyDaily ?? [];
+        S.dailyHistory = historyDaily.results ?? [];
       }
       S.liquidityRegime = liquidity ?? null;
       S.arcSummary = arcSummary ?? null;
@@ -4116,28 +4117,30 @@ function renderZoneHistory() {
   var currentZone = zh.current_zone || '';
   var currentWeeks = zh.current_zone_weeks || 0;
   var since = zh.current_zone_since || '';
+  var liveZone = zh.live_zone || currentZone;
+  var liveConfirmed = zh.live_zone_confirmed !== false;
 
-  // Live-ARC Override: wenn Live-ARC eine andere Zone ergibt als der Backtest-Cache,
-  // zeige die Live-Zone als "Current" (Backtest ist woechentlich und kann hinterherhinken)
-  var liveArc = S.arcSummary && S.arcSummary.arc_score != null ? Number(S.arcSummary.arc_score) : null;
-  if (liveArc != null) {
-    var liveZone = getZoneLabelByArc(liveArc);
-    if (liveZone && liveZone !== currentZone) {
-      currentZone = liveZone;
-      // Weeks/since nicht überschreiben — wir kennen den genauen Wechselzeitpunkt nicht
-      currentWeeks = 0;
-      since = '';
-    }
-  }
-
-  if (sub && currentZone) {
-    var col = scoreColorForZone(currentZone);
-    if (currentWeeks && since) {
+  if (sub) {
+    if (liveConfirmed && currentZone && currentWeeks) {
+      // Live ARC matches confirmed backtest zone
+      var col = scoreColorForZone(currentZone);
       sub.textContent = 'Current: ' + currentZone.toUpperCase() + ' for ' + currentWeeks + ' weeks (since ' + since + ')';
-    } else {
+      sub.style.color = col || sub.style.color;
+    } else if (!liveConfirmed && liveZone && currentZone) {
+      // Live ARC in different zone than confirmed (transitioning)
+      var colLive = scoreColorForZone(liveZone);
+      var colConf = scoreColorForZone(currentZone);
+      sub.innerHTML =
+        'Confirmed: <span style="color:' + (colConf || 'inherit') + '">' + currentZone.toUpperCase() + '</span>' +
+        (currentWeeks ? ' for ' + currentWeeks + ' weeks' : '') +
+        (since ? ' (since ' + since + ')' : '') +
+        ' — Live ARC entering <span style="color:' + (colLive || 'inherit') + '">' + liveZone.toUpperCase() + '</span>';
+      sub.style.color = 'var(--tx-sec)';
+    } else if (currentZone) {
+      var col2 = scoreColorForZone(currentZone);
       sub.textContent = 'Current: ' + currentZone.toUpperCase();
+      sub.style.color = col2 || sub.style.color;
     }
-    sub.style.color = col || sub.style.color;
   }
   periods.slice().reverse().forEach(function(p) {
     var tr = document.createElement('tr');
@@ -5119,20 +5122,26 @@ function setArcPeriod(period) {
 
 function renderArcChart(period) {
   period = period || _arcPeriod;
-  if ((!S.backtest || !S.backtest.length) && (!S.backtestDaily || !S.backtestDaily.length)) return;
+  if ((!S.backtest || !S.backtest.length) && (!S.dailyHistory || !S.dailyHistory.length)) return;
   var data;
-  if (period === '1y' && S.backtestDaily && S.backtestDaily.length) {
-    data = S.backtestDaily;
-  } else {
-    data = S.backtest || [];
-    if (period === '1y') {
+  if (period === '1y') {
+    // 1Y: echte tägliche ARC-Daten (vollständige ARC-Formel, keine Interpolation)
+    if (S.dailyHistory && S.dailyHistory.length) {
+      data = S.dailyHistory;
+    } else {
+      // Fallback auf Weekly, falls Daily noch nicht geladen
+      if (!S.backtest || !S.backtest.length) return;
       var cutoff = new Date();
       cutoff.setFullYear(cutoff.getFullYear() - 1);
-      data = data.filter(function(r) {
+      data = (S.backtest || []).filter(function(r) {
         var d = r.date || r.d;
         return d && new Date(d) >= cutoff;
       });
     }
+  } else {
+    // 10Y: Weekly-Backtestdaten
+    if (!S.backtest || !S.backtest.length) return;
+    data = S.backtest || [];
   }
   var ph = $('arc-chart-placeholder');
   var wrap = $('arc-chart-wrap');

@@ -341,4 +341,193 @@ async def run_backtest() -> Dict[str, Any]:
     return {"results": results}
 
 
-__all__ = ["run_backtest"]
+async def run_daily_backtest(days: int = 400) -> Dict[str, Any]:
+    """
+    Compute REAL daily ARC scores for the last `days` days.
+    Uses daily Kraken candles (interval=1440), weekly MA200w from backtest,
+    daily Fear & Greed, and forward-filled FRED net liquidity. No interpolation.
+    """
+    try:
+        import time as _time
+
+        # 1. Fetch daily candles from Kraken (interval=1440 = daily)
+        since_ts = int(_time.time()) - (days + 30) * 86400  # buffer for MA/drawdown
+        daily_candles: List[Dict[str, Any]] = []
+
+        async with httpx.AsyncClient(timeout=HTTP_TIMEOUT, follow_redirects=True) as client:
+            resp = await client.get(
+                "https://api.kraken.com/0/public/OHLC",
+                params={"pair": "XBTUSD", "interval": 1440, "since": since_ts},
+            )
+            data = resp.json()
+            if not data.get("error") and "result" in data:
+                keys = [k for k in data["result"] if k != "last"]
+                if keys:
+                    for c in data["result"][keys[0]]:
+                        try:
+                            ts = int(c[0])
+                            close = float(c[4])
+                            if close > 0:
+                                dt = datetime.utcfromtimestamp(ts).date().isoformat()
+                                daily_candles.append({"date": dt, "price": close})
+                        except (IndexError, TypeError, ValueError):
+                            continue
+
+        if len(daily_candles) < 30:
+            return {"results": [], "error": "insufficient daily candles"}
+
+        # Sort and dedupe by date
+        seen_dates = set()
+        deduped: List[Dict[str, Any]] = []
+        for c in daily_candles:
+            d = c["date"]
+            if d in seen_dates:
+                continue
+            seen_dates.add(d)
+            deduped.append(c)
+        daily_candles = sorted(deduped, key=lambda x: x["date"])
+
+        # 2. Get weekly backtest history for MA200w values
+        weekly_history = await _load_or_build_cache()
+        if not weekly_history or len(weekly_history) < WINDOW_200W:
+            return {"results": [], "error": "insufficient weekly history for MA200w"}
+
+        # Build MA200w lookup by weekly date
+        weekly_prices = [safe_float(w["price"], 0.0) for w in weekly_history]
+        ma200w_by_date: Dict[str, float] = {}
+        for idx, item in enumerate(weekly_history):
+            if idx + 1 < WINDOW_200W:
+                continue
+            window = weekly_prices[idx + 1 - WINDOW_200W : idx + 1]
+            ma = sum(window) / len(window) if window else 0.0
+            if ma > 0:
+                ma200w_by_date[item["date"]] = ma
+
+        # Build combined price history (weekly + daily) for drawdown
+        all_prices_by_date: Dict[str, float] = {}
+        for w in weekly_history:
+            all_prices_by_date[w["date"]] = safe_float(w["price"], 0.0)
+        for d in daily_candles:
+            all_prices_by_date[d["date"]] = d["price"]
+
+        # 3. Fetch FRED data (net liquidity) and Fear & Greed history
+        walcl_raw, tga_raw, rrp_raw, fg_history = await asyncio.gather(
+            _fetch_fred("WALCL"),
+            _fetch_fred("WTREGEN"),
+            _fetch_fred("RRPONTSYD"),
+            _fetch_fg_history(),
+        )
+
+        # Build Net Liquidity per date
+        tga_dict = {item["t"]: item["v"] for item in tga_raw}
+        rrp_dict = {item["t"]: item["v"] for item in rrp_raw}
+        net_liq_by_date: Dict[str, float] = {}
+        for item in walcl_raw:
+            t = item["t"]
+            w = float(item.get("v", 0))
+            if w <= 0:
+                continue
+            tga_val = 0.0
+            rrp_val = 0.0
+            for delta in [0, 86400000, -86400000, 172800000, -172800000, 604800000, -604800000]:
+                if t + delta in tga_dict:
+                    tga_val = float(tga_dict[t + delta])
+                    break
+            for delta in [0, 86400000, -86400000, 172800000, -172800000, 604800000, -604800000]:
+                if t + delta in rrp_dict:
+                    # RRP is in billions; WALCL/TGA in millions
+                    rrp_val = float(rrp_dict[t + delta]) * 1000.0
+                    break
+            net = w - tga_val - rrp_val
+            date_str = datetime.utcfromtimestamp(t // 1000).date().isoformat()
+            net_liq_by_date[date_str] = net
+
+        # Helper: last known value <= date_str (forward-fill)
+        def _last_known(lookup: Dict[str, float], target_date: str, fallback: float = 50.0) -> float:
+            best = None
+            for d, v in sorted(lookup.items()):
+                if d <= target_date:
+                    best = v
+                elif best is not None:
+                    break
+            return best if best is not None else fallback
+
+        def _last_known_ma200w(target_date: str) -> float:
+            best = None
+            for d in sorted(ma200w_by_date.keys()):
+                if d <= target_date:
+                    best = ma200w_by_date[d]
+                elif best is not None:
+                    break
+            return best if best is not None else 0.0
+
+        # Build sorted all-price series for drawdown
+        all_dates_sorted = sorted(all_prices_by_date.keys())
+        all_prices_list = [all_prices_by_date[d] for d in all_dates_sorted]
+
+        results: List[Dict[str, Any]] = []
+
+        for dc in daily_candles:
+            date_str = dc["date"]
+            price = float(dc["price"])
+
+            # MA200w: last known weekly MA200w value
+            ma200w_val = _last_known_ma200w(date_str)
+            if ma200w_val <= 0:
+                continue
+
+            ma_200w_score = ma_deviation_score(price, ma200w_val)
+
+            # Drawdown score: based on all prices up to this date
+            idx_in_all = None
+            for i, d in enumerate(all_dates_sorted):
+                if d == date_str:
+                    idx_in_all = i
+                    break
+            if idx_in_all is not None and idx_in_all >= 10:
+                prices_up_to = all_prices_list[: idx_in_all + 1]
+                dd_score = drawdown_score(prices_up_to)
+            else:
+                dd_score = 50.0
+
+            # Fear & Greed: real daily value, forward-filled
+            if date_str in fg_history:
+                fg_raw = fg_history[date_str]
+            else:
+                fg_raw = _last_known(fg_history, date_str, 50.0)
+            fg_score = fg_to_score(fg_raw)
+
+            # Net liquidity score via existing helper
+            history_slice = prices_up_to if (idx_in_all is not None and idx_in_all >= 0) else []
+            macro_liq = _get_net_liq_score(date_str, net_liq_by_date, history_slice)
+
+            # ARC formula (locked weights)
+            arc = (
+                ma_200w_score * 0.35
+                + dd_score * 0.25
+                + macro_liq * 0.25
+                + fg_score * 0.15
+            )
+            arc = max(0.0, min(100.0, arc))
+
+            results.append(
+                {
+                    "date": date_str,
+                    "price": round(price, 2),
+                    "score": round(arc, 2),
+                    "score_display": round(arc_display_score(arc), 2),
+                }
+            )
+
+        # Only keep requested window
+        results = sorted(results, key=lambda x: x["date"])[-days:]
+        last_arc = results[-1]["score"] if results else 0.0
+        logger.info("Daily backtest: %s points, last ARC=%.1f", len(results), last_arc)
+        return {"results": results}
+
+    except Exception as e:
+        logger.error("Daily backtest error: %s", e, exc_info=True)
+        return {"results": [], "error": str(e)}
+
+
+__all__ = ["run_backtest", "run_daily_backtest"]

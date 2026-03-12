@@ -86,9 +86,9 @@ except ImportError:
 _analyzer = CycleAnalyzer()
 
 try:
-    from services.backtest_engine import run_backtest
+    from services.backtest_engine import run_backtest, run_daily_backtest
 except ImportError:
-    from services.backtest_engine import run_backtest
+    from services.backtest_engine import run_backtest, run_daily_backtest
 
 try:
     from snapshot import build_snapshot
@@ -453,20 +453,60 @@ def _calc_weeks(date_from: str, date_to: str) -> int:
         return 1
 
 
-def compute_zone_history(arc_history: list) -> list:
+def compute_zone_history(arc_history: list, min_weeks: int = 4) -> list:
     """
     Build contiguous zone periods from backtest history.
-    Uses raw ARC score and get_zone_name() as single source of truth.
+    A zone transition is only confirmed after min_weeks consecutive weeks
+    in the new zone. Shorter excursions are absorbed into the previous zone.
+    This prevents flickering at zone boundaries and gives a true cycle overview.
     """
     if not arc_history:
         return []
 
-    history = []
-    current_zone = None
+    from datetime import datetime
+
+    def _weeks(d1_str, d2_str) -> int:
+        try:
+            d1 = datetime.fromisoformat(str(d1_str))
+            d2 = datetime.fromisoformat(str(d2_str))
+            return max(1, abs((d2 - d1).days) // 7)
+        except Exception:
+            return 1
+
+    def _close_period(zone, start_date, start_price, end_date, end_price, ongoing: bool = False) -> dict:
+        rtn = 0.0
+        if start_price and start_price > 0:
+            try:
+                rtn = round((end_price - start_price) / start_price * 100.0, 1)
+            except Exception:
+                rtn = 0.0
+        return {
+            "zone": zone,
+            "from": start_date,
+            "to": None if ongoing else end_date,
+            "weeks": max(1, _weeks(start_date, end_date)),
+            "btc_entry": round(start_price),
+            "btc_exit": round(end_price),
+            "return_pct": rtn,
+        }
+
+    history: list[dict] = []
+
+    # Confirmed zone state
+    confirmed_zone = None
     zone_start_date = None
     zone_start_price = None
-    last_price = None
+    last_confirmed_date = None
+    last_confirmed_price = None
+
+    # Pending transition state
+    pending_zone = None
+    pending_count = 0
+    pending_start_date = None
+    pending_start_price = None
+
     last_date = None
+    last_price = None
 
     for entry in arc_history:
         date = entry.get("date")
@@ -475,58 +515,77 @@ def compute_zone_history(arc_history: list) -> list:
         if date is None or score_val is None or price is None:
             continue
 
+        price = float(price)
         zone = get_zone_name(float(score_val))
 
-        if zone != current_zone:
-            # close previous zone period
-            if current_zone is not None and zone_start_date is not None and last_date is not None and zone_start_price:
-                weeks = _calc_weeks(zone_start_date, last_date)
-                rtn = 0.0
-                try:
-                    rtn = round((last_price - zone_start_price) / zone_start_price * 100.0, 1)
-                except Exception:
-                    rtn = 0.0
-                history.append(
-                    {
-                        "zone": current_zone,
-                        "from": zone_start_date,
-                        "to": last_date,
-                        "weeks": weeks,
-                        "btc_entry": round(zone_start_price),
-                        "btc_exit": round(last_price),
-                        "return_pct": rtn,
-                    }
-                )
-
-            # start new zone period
-            current_zone = zone
+        # First data point: set confirmed zone directly (no minimum needed)
+        if confirmed_zone is None:
+            confirmed_zone = zone
             zone_start_date = date
-            zone_start_price = float(price)
+            zone_start_price = price
+            last_confirmed_date = date
+            last_confirmed_price = price
+            last_date = date
+            last_price = price
+            continue
 
-        last_price = float(price)
+        if zone == confirmed_zone:
+            # Still in confirmed zone — reset any pending transition
+            pending_zone = None
+            pending_count = 0
+            last_confirmed_date = date
+            last_confirmed_price = price
+
+        elif zone == pending_zone:
+            # Continue counting in pending zone
+            pending_count += 1
+            if pending_count >= min_weeks:
+                # TRANSITION CONFIRMED
+                # Close the old zone period (exit at last confirmed data point)
+                history.append(
+                    _close_period(
+                        confirmed_zone,
+                        zone_start_date,
+                        zone_start_price,
+                        last_confirmed_date,
+                        last_confirmed_price,
+                    )
+                )
+                # Start new confirmed zone from when pending began
+                confirmed_zone = pending_zone
+                zone_start_date = pending_start_date
+                zone_start_price = pending_start_price
+                last_confirmed_date = date
+                last_confirmed_price = price
+                # Reset pending
+                pending_zone = None
+                pending_count = 0
+
+        else:
+            # A different zone than both confirmed and pending
+            # Start new pending (discard old pending if any)
+            pending_zone = zone
+            pending_count = 1
+            pending_start_date = date
+            pending_start_price = price
+
         last_date = date
+        last_price = price
 
-    # close final ongoing zone
-    if current_zone is not None and zone_start_date is not None and last_date is not None and zone_start_price:
-        weeks = _calc_weeks(zone_start_date, last_date)
-        rtn = 0.0
-        try:
-            rtn = round((last_price - zone_start_price) / zone_start_price * 100.0, 1)
-        except Exception:
-            rtn = 0.0
+    # Close final ongoing zone period based on confirmed_zone
+    if confirmed_zone and zone_start_date and last_date and zone_start_price:
         history.append(
-            {
-                "zone": current_zone,
-                "from": zone_start_date,
-                "to": None,
-                "weeks": max(1, weeks),
-                "btc_entry": round(zone_start_price),
-                "btc_exit": round(last_price),
-                "return_pct": rtn,
-            }
+            _close_period(
+                confirmed_zone,
+                zone_start_date,
+                zone_start_price,
+                last_date,
+                last_price or zone_start_price,
+                ongoing=True,
+            )
         )
 
-    # newest periods first, at most 20
+    # Newest periods first, max 20 periods
     history = list(reversed(history))
     return history[:20]
 
@@ -1321,12 +1380,39 @@ async def get_zone_history(request: Request):
         current_zone = current.get("zone")
         current_since = current.get("from")
         current_weeks = int(current.get("weeks") or 0)
+
+    # Override context with live ARC if available (weekly backtest can lag)
+    live_arc = None
+    try:
+        combined = CACHE.get("combined", {})
+        live_arc = combined.get("combined_score")
+    except Exception:
+        live_arc = None
+
+    if live_arc is not None:
+        live_zone = get_zone_name(float(live_arc))
+        if live_zone != current_zone:
+            # Live ARC is in a different zone than the confirmed backtest zone.
+            # Do not override the confirmed zone yet; mark live as transitioning.
+            return api_response(
+                {
+                    "zone_history": zone_periods,
+                    "current_zone": current_zone,
+                    "current_zone_since": current_since,
+                    "current_zone_weeks": current_weeks,
+                    "live_zone": live_zone,
+                    "live_zone_confirmed": False,
+                }
+            )
+
     return api_response(
         {
             "zone_history": zone_periods,
             "current_zone": current_zone,
             "current_zone_since": current_since,
             "current_zone_weeks": current_weeks,
+            "live_zone": current_zone,
+            "live_zone_confirmed": True,
         }
     )
 
@@ -1419,117 +1505,39 @@ async def get_arc_forward_returns(request: Request):
         return api_response({"buckets": [], "error": str(e)})
 
 
-def _interpolate_arc(date_str: str, bt_sorted: list) -> float:
-    """
-    Linearly interpolate ARC score for a daily date between weekly backtest points.
-    Falls back to nearest value when outside the weekly range.
-    """
-    if not bt_sorted:
-        return 50.0
-
-    from datetime import datetime
-
-    try:
-        target = datetime.strptime(date_str, "%Y-%m-%d")
-    except Exception:
-        return 50.0
-
-    before = None
-    after = None
-    for b in bt_sorted:
-        bdate_str = b.get("date") or ""
-        try:
-            bdate = datetime.strptime(bdate_str, "%Y-%m-%d")
-        except Exception:
-            continue
-        score_val = float(b.get("score_display", b.get("score", 50.0)))
-        if bdate <= target:
-            before = (bdate, score_val)
-        elif after is None:
-            after = (bdate, score_val)
-            break
-
-    if before is None and after is None:
-        return 50.0
-    if before is None:
-        return after[1]
-    if after is None:
-        return before[1]
-
-    total_days = (after[0] - before[0]).days
-    if total_days <= 0:
-        return before[1]
-    elapsed = (target - before[0]).days
-    t = elapsed / float(total_days)
-    return before[1] + t * (after[1] - before[1])
-
-
 @app.get("/api/history-daily")
 async def get_history_daily(request: Request):
     """
-    Daily BTC prices and ARC score for last 365 days.
-    ARC is linearly interpolated from weekly backtest and passed through arc_display_score().
-    The last point is overridden with the live ARC score from the cache.
+    Real daily ARC scores for last 365 days.
+    Each point is computed with the full ARC formula on real data.
+    Cached after first computation, invalidated on 60s refresh.
     """
-    # Fast path: return cached daily history when available
+    # Return from cache if available
     if CACHE.get("daily_history"):
         return api_response(CACHE["daily_history"])
 
     try:
-        from datetime import datetime, timezone, timedelta
+        bt = await run_daily_backtest(days=365)
+        results = bt.get("results", [])
 
-        c = _require_cache()
-        raw = c.get("raw", {})
-        btc_prices = raw.get("btc_prices", [])
-        if len(btc_prices) < 30:
+        if not results:
             return api_response(
                 {
                     "results": [],
                     "count": 0,
                     "interval": "daily",
-                    "error": "insufficient price data",
+                    "error": bt.get("error", "no data"),
                 }
             )
 
-        # Use last 365 daily prices (or all available if less)
-        daily_prices = btc_prices[-365:]
-        n_days = len(daily_prices)
-
-        # Weekly backtest ARC history for interpolation
-        bt_results = CACHE.get("backtest_results") or []
-        bt_sorted = sorted(
-            [r for r in bt_results if r.get("date") and r.get("score") is not None],
-            key=lambda x: x["date"],
-        )
-
-        now = datetime.now(timezone.utc)
-        results = []
-
-        for i in range(n_days):
-            day_offset = n_days - 1 - i
-            dt = now - timedelta(days=day_offset)
-            date_str = dt.strftime("%Y-%m-%d")
-            price = float(daily_prices[i])
-
-            arc_val = _interpolate_arc(date_str, bt_sorted)
-            arc_display_val = round(arc_display_score(arc_val), 2)
-
-            results.append(
-                {
-                    "date": date_str,
-                    "price": round(price, 2),
-                    "score": round(arc_val, 2),
-                    "score_display": arc_display_val,
-                }
-            )
-
-        # Override last point with live ARC score from combined cache
-        if results:
-            live_arc = c.get("combined", {}).get("combined_score", 50.0)
-            live_display = round(arc_display_score(live_arc), 2)
+        # Override last point with live ARC from cache to match dashboard
+        c = CACHE
+        if c and c.get("combined"):
+            live_arc = c["combined"].get("combined_score", 50.0)
+            btc_prices = c.get("raw", {}).get("btc_prices", [])
             live_price = float(btc_prices[-1]) if btc_prices else results[-1]["price"]
             results[-1]["score"] = round(live_arc, 2)
-            results[-1]["score_display"] = live_display
+            results[-1]["score_display"] = round(arc_display_score(live_arc), 2)
             results[-1]["price"] = round(live_price, 2)
 
         payload = {
