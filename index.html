@@ -2786,41 +2786,47 @@ canvas.sparkline {
     </div>
   </div>
 
-  <!-- DECISION ENGINE -->
-  <div id="gate-decision-engine" class="blur-gate">
+  <!-- ── PRICES ── -->
+  <div id="gate-live-prices" class="blur-gate">
     <div class="blur-content">
-      <div class="sec-header anim d2">
-        <div class="sec-title">Decision Engine</div>
+      <div class="sec-header anim d3">
+        <div class="sec-title">Live Prices</div>
         <div class="sec-line"></div>
       </div>
-      <div class="card decision-card anim d2" id="decision-card">
-        <div class="card-accent accent-btc"></div>
-        <div class="decision-grid">
-          <div class="decision-item">
-        <div class="decision-label">Suggested Position</div>
-        <div class="decision-value" id="dec-position">—</div>
-        <div class="decision-value decision-value-sub" id="dec-bottom-formation" style="display:none;font-size:0.85em;margin-top:4px;color:#00B4D8"></div>
-      </div>
-          <div class="decision-item">
-        <div class="decision-label">Spot Allocation</div>
-        <div class="decision-value" id="dec-allocation">—</div>
-      </div>
-          <div class="decision-item">
-        <div class="decision-label">12M Expected Range</div>
-        <div class="decision-value" id="dec-range">—</div>
-        <div class="decision-value decision-value-sub" id="dec-range-worst" style="display:none;font-size:0.85em;color:#6b7280;margin-top:2px"></div>
-      </div>
-          <div class="decision-item">
-        <div class="decision-label">Confidence</div>
-        <div class="decision-value" id="dec-confidence">—</div>
-        </div>
-        <div class="decision-note">ARC RISK LEVEL <span id="dec-index-val" style="color:var(--btc);font-weight:600">—</span> / 100</div>
+      <div class="prices-grid anim d4">
+    <div class="card price-card card-glow-btc">
+      <div class="card-accent accent-btc"></div>
+      <div class="pc-sym"><div class="pc-dot" style="background:var(--btc)"></div>BITCOIN</div>
+      <div class="pc-price" id="pc-btc-price" style="color:var(--btc)">—</div>
+      <div class="pc-change" id="pc-btc-chg">—</div>
+      <canvas class="sparkline" id="spark-btc" height="40"></canvas>
+      <div class="pc-stat">
+        <span class="pc-stat-lbl">24h Vol</span>
+        <span class="pc-stat-val" id="pc-btc-vol">—</span>
       </div>
     </div>
-    <div class="blur-overlay">
-      <div class="blur-overlay-icon">🔒</div>
-      <div class="blur-overlay-title" id="gate-decision-engine-title">🔒 FREE FEATURE</div>
-      <button class="blur-overlay-btn" id="gate-decision-engine-btn">CREATE FREE ACCOUNT</button>
+    <div class="card price-card card-glow-eth">
+      <div class="card-accent accent-eth"></div>
+      <div class="pc-sym"><div class="pc-dot" style="background:var(--eth)"></div>ETHEREUM</div>
+      <div class="pc-price" id="pc-eth-price" style="color:var(--eth)">—</div>
+      <div class="pc-change" id="pc-eth-chg">—</div>
+      <canvas class="sparkline" id="spark-eth" height="40"></canvas>
+      <div class="pc-stat">
+        <span class="pc-stat-lbl">ETH/BTC</span>
+        <span class="pc-stat-val" id="pc-ratio">—</span>
+      </div>
+    </div>
+        <div class="card price-card">
+      <div class="pc-sym"><div class="pc-dot" style="background:var(--yellow)"></div>FEAR &amp; GREED</div>
+      <div class="pc-price" id="pc-fg-val" style="color:var(--yellow)">—</div>
+      <div class="pc-change" id="pc-fg-lbl" style="color:var(--tx-sec)">—</div>
+          <canvas class="sparkline" id="spark-fg" height="40"></canvas>
+          <div class="pc-stat">
+            <span class="pc-stat-lbl">Signal</span>
+            <span class="pc-stat-val" id="pc-fg-signal">—</span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -2991,50 +2997,7 @@ canvas.sparkline {
     <span id="chip-btc-ath"></span>
   </div>
 
-  <!-- ── PRICES ── -->
-  <div id="gate-live-prices" class="blur-gate">
-    <div class="blur-content">
-      <div class="sec-header anim d3">
-        <div class="sec-title">Live Prices</div>
-        <div class="sec-line"></div>
-      </div>
-      <div class="prices-grid anim d4">
-    <div class="card price-card card-glow-btc">
-      <div class="card-accent accent-btc"></div>
-      <div class="pc-sym"><div class="pc-dot" style="background:var(--btc)"></div>BITCOIN</div>
-      <div class="pc-price" id="pc-btc-price" style="color:var(--btc)">—</div>
-      <div class="pc-change" id="pc-btc-chg">—</div>
-      <canvas class="sparkline" id="spark-btc" height="40"></canvas>
-      <div class="pc-stat">
-        <span class="pc-stat-lbl">24h Vol</span>
-        <span class="pc-stat-val" id="pc-btc-vol">—</span>
-      </div>
-    </div>
-    <div class="card price-card card-glow-eth">
-      <div class="card-accent accent-eth"></div>
-      <div class="pc-sym"><div class="pc-dot" style="background:var(--eth)"></div>ETHEREUM</div>
-      <div class="pc-price" id="pc-eth-price" style="color:var(--eth)">—</div>
-      <div class="pc-change" id="pc-eth-chg">—</div>
-      <canvas class="sparkline" id="spark-eth" height="40"></canvas>
-      <div class="pc-stat">
-        <span class="pc-stat-lbl">ETH/BTC</span>
-        <span class="pc-stat-val" id="pc-ratio">—</span>
-      </div>
-    </div>
-        <div class="card price-card">
-      <div class="pc-sym"><div class="pc-dot" style="background:var(--yellow)"></div>FEAR &amp; GREED</div>
-      <div class="pc-price" id="pc-fg-val" style="color:var(--yellow)">—</div>
-      <div class="pc-change" id="pc-fg-lbl" style="color:var(--tx-sec)">—</div>
-          <canvas class="sparkline" id="spark-fg" height="40"></canvas>
-          <div class="pc-stat">
-            <span class="pc-stat-lbl">Signal</span>
-            <span class="pc-stat-val" id="pc-fg-signal">—</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-    <div class="blur-overlay">
+  <div class="blur-overlay">
       <div class="blur-overlay-icon">🔒</div>
       <div class="blur-overlay-title" id="gate-cycle-overview-title">🔒 FREE FEATURE</div>
       <button class="blur-overlay-btn" id="gate-cycle-overview-btn">CREATE FREE ACCOUNT</button>
@@ -3142,6 +3105,44 @@ canvas.sparkline {
     </div>
   </div>
 
+  <!-- DECISION ENGINE -->
+  <div id="gate-decision-engine" class="blur-gate">
+    <div class="blur-content">
+      <div class="sec-header anim d2">
+        <div class="sec-title">Decision Engine</div>
+        <div class="sec-line"></div>
+      </div>
+      <div class="card decision-card anim d2" id="decision-card">
+        <div class="card-accent accent-btc"></div>
+        <div class="decision-grid">
+          <div class="decision-item">
+        <div class="decision-label">Suggested Position</div>
+        <div class="decision-value" id="dec-position">—</div>
+        <div class="decision-value decision-value-sub" id="dec-bottom-formation" style="display:none;font-size:0.85em;margin-top:4px;color:#00B4D8"></div>
+      </div>
+          <div class="decision-item">
+        <div class="decision-label">Spot Allocation</div>
+        <div class="decision-value" id="dec-allocation">—</div>
+      </div>
+          <div class="decision-item">
+        <div class="decision-label">12M Expected Range</div>
+        <div class="decision-value" id="dec-range">—</div>
+        <div class="decision-value decision-value-sub" id="dec-range-worst" style="display:none;font-size:0.85em;color:#6b7280;margin-top:2px"></div>
+      </div>
+          <div class="decision-item">
+        <div class="decision-label">Confidence</div>
+        <div class="decision-value" id="dec-confidence">—</div>
+        </div>
+        <div class="decision-note">ARC RISK LEVEL <span id="dec-index-val" style="color:var(--btc);font-weight:600">—</span> / 100</div>
+      </div>
+    </div>
+    <div class="blur-overlay">
+      <div class="blur-overlay-icon">🔒</div>
+      <div class="blur-overlay-title" id="gate-decision-engine-title">🔒 FREE FEATURE</div>
+      <button class="blur-overlay-btn" id="gate-decision-engine-btn">CREATE FREE ACCOUNT</button>
+    </div>
+  </div>
+
   <!-- ── ZONE HISTORY ── -->
   <div id="gate-zone-history" class="blur-gate">
     <div class="blur-content">
@@ -3180,20 +3181,6 @@ canvas.sparkline {
     </div>
   </div>
 
-  <!-- ── DATA SOURCES ── -->
-  <div class="sec-header anim d6">
-    <div class="sec-title">Data Sources</div>
-    <div class="sec-line"></div>
-  </div>
-  <div class="status-row anim d6">
-    <div class="status-src" id="src-cg"><span class="status-dot"></span>Kraken</div>
-    <div class="status-src" id="src-fg"><span class="status-dot"></span>Alt.me Fear&amp;Greed</div>
-    <div class="status-src" id="src-dl"><span class="status-dot"></span>DeFiLlama TVL</div>
-    <div class="status-src" id="src-stable"><span class="status-dot"></span>DeFiLlama Stablecoins</div>
-    <div class="status-src" id="src-fred"><span class="status-dot"></span>FRED</div>
-    <div class="status-src" id="src-ts"><span class="status-dot"></span><span id="src-ts-lbl">—</span></div>
-  </div>
-
   <!-- ── CONTENT EXPORT ── -->
   <div id="gate-content-export" class="blur-gate">
     <div class="blur-content">
@@ -3213,6 +3200,20 @@ canvas.sparkline {
       <div class="blur-overlay-title" id="gate-content-export-title">🔒 FREE FEATURE</div>
       <button class="blur-overlay-btn" id="gate-content-export-btn">CREATE FREE ACCOUNT</button>
     </div>
+  </div>
+
+  <!-- ── DATA SOURCES ── -->
+  <div class="sec-header anim d6">
+    <div class="sec-title">Data Sources</div>
+    <div class="sec-line"></div>
+  </div>
+  <div class="status-row anim d6">
+    <div class="status-src" id="src-cg"><span class="status-dot"></span>Kraken</div>
+    <div class="status-src" id="src-fg"><span class="status-dot"></span>Alt.me Fear&amp;Greed</div>
+    <div class="status-src" id="src-dl"><span class="status-dot"></span>DeFiLlama TVL</div>
+    <div class="status-src" id="src-stable"><span class="status-dot"></span>DeFiLlama Stablecoins</div>
+    <div class="status-src" id="src-fred"><span class="status-dot"></span>FRED</div>
+    <div class="status-src" id="src-ts"><span class="status-dot"></span><span id="src-ts-lbl">—</span></div>
   </div>
 
   <!-- ── FOOTER ── -->
