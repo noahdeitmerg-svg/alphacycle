@@ -1530,15 +1530,27 @@ async def get_history_daily(request: Request):
                 }
             )
 
-        # Override last point with live ARC from cache to match dashboard
+        # Override last point with live ARC (gleiche Formel wie rest of chart)
         c = CACHE
-        if c and c.get("combined"):
-            live_arc = c["combined"].get("combined_score", 50.0)
-            btc_prices = c.get("raw", {}).get("btc_prices", [])
-            live_price = float(btc_prices[-1]) if btc_prices else results[-1]["price"]
-            results[-1]["score"] = round(live_arc, 2)
-            results[-1]["score_display"] = round(arc_display_score(live_arc), 2)
-            results[-1]["price"] = round(live_price, 2)
+        if c and c.get("raw"):
+            raw = c["raw"]
+            walcl = [item["v"] for item in raw.get("walcl_series", [])]
+            stable = [item["v"] for item in raw.get("stable_series", [])]
+            try:
+                live_arc = compute_arc_score(
+                    raw.get("btc_prices", []),
+                    raw.get("fear_greed", {}).get("current", 50.0),
+                    walcl,
+                    stable,
+                    raw.get("net_liq_series"),
+                )
+                btc_prices = raw.get("btc_prices", [])
+                live_price = float(btc_prices[-1]) if btc_prices else results[-1]["price"]
+                results[-1]["score"] = round(live_arc, 2)
+                results[-1]["score_display"] = round(arc_display_score(live_arc), 2)
+                results[-1]["price"] = round(live_price, 2)
+            except Exception as e:
+                logger.warning("history-daily live override failed: %s", e)
 
         payload = {
             "results": results,
