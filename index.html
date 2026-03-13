@@ -829,9 +829,10 @@ body::before {
   position: relative;
 }
 .blur-gate.locked .blur-content {
-  filter: blur(6px);
+  filter: blur(8px);
   pointer-events: none;
   user-select: none;
+  opacity: 0.4;
 }
 .blur-overlay {
   display: none;
@@ -841,25 +842,35 @@ body::before {
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  gap: 12px;
-  background: rgba(13, 17, 23, 0.5);
+  gap: 10px;
+  background: rgba(13, 17, 23, 0.7);
   border-radius: inherit;
+  backdrop-filter: none;
 }
 .blur-gate.locked .blur-overlay {
   display: flex;
 }
 .blur-overlay-icon {
-  font-size: 24px;
+  font-size: 28px;
 }
 .blur-overlay-title {
   color: #ffffff;
   font-family: var(--f-mono);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.05em;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+.blur-overlay-desc {
+  color: rgba(255,255,255,0.7);
+  font-family: var(--f-mono);
+  font-size: 11px;
+  max-width: 300px;
+  text-align: center;
+  line-height: 1.5;
 }
 .blur-overlay-btn {
-  padding: 10px 20px;
+  padding: 12px 24px;
   border: none;
   border-radius: 6px;
   font-family: var(--f-mono);
@@ -869,6 +880,10 @@ body::before {
   letter-spacing: 0.05em;
   background: #00D4AA;
   color: #0d1117;
+  transition: transform 0.15s;
+}
+.blur-overlay-btn:hover {
+  transform: scale(1.03);
 }
 .ce-row {
   display: flex;
