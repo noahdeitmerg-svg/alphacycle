@@ -4669,20 +4669,22 @@ function positionTooltip(targetEl) {
 // ── AUTH HELPERS ────────────────────────────────────────────────────────
 async function initAuth() {
   if (!supabaseClient) {
+    applyBlurGates();
     return;
   }
   try {
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (session) {
       currentUser = session.user;
-      currentPlan = 'free';  // Default für eingeloggte User
-      await fetchUserPlan(); // kann zu 'paid' upgraden
+      currentPlan = 'free';
+      await fetchUserPlan();
     }
     updateAuthUI();
     applyBlurGates();
     supabaseClient.auth.onAuthStateChange(async function(event, session) {
       if (session) {
         currentUser = session.user;
+        currentPlan = 'free';
         await fetchUserPlan();
       } else {
         currentUser = null;
@@ -4694,6 +4696,7 @@ async function initAuth() {
   } catch (e) {
     currentUser = null;
     currentPlan = 'anonymous';
+    applyBlurGates();
   }
 }
 
