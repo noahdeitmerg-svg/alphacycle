@@ -825,14 +825,22 @@ body::before {
 #content-export-section {
   display: none;
 }
+#gate-decision-engine {
+  margin-top: 64px;
+}
 .blur-gate {
   position: relative;
   overflow: hidden;
+}
+.blur-gate.locked {
+  min-height: 220px;
+  margin-bottom: 16px;
 }
 .blur-gate.locked .blur-content {
   filter: blur(6px);
   pointer-events: none;
   user-select: none;
+  min-height: 200px;
 }
 .blur-overlay {
   display: none;
