@@ -4711,6 +4711,7 @@ async function fetchUserPlan() {
   } catch (e) {
     currentPlan = 'free';
   }
+  applyBlurGates();
 }
 
 function switchTab(mode) {
@@ -4829,6 +4830,7 @@ function updateAuthUI() {
     loginBtn.style.display = 'block';
     userInfo.style.display = 'none';
   }
+  applyBlurGates();
 }
 
 async function handleSignOut() {
