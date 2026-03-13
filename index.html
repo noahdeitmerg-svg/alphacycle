@@ -827,6 +827,7 @@ body::before {
 }
 .blur-gate {
   position: relative;
+  overflow: hidden;
 }
 .blur-gate.locked .blur-content {
   filter: blur(6px);
@@ -836,55 +837,60 @@ body::before {
 .blur-overlay {
   display: none;
   position: absolute;
-  inset: 0;
-  z-index: 100;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 200;
+  background: rgba(2, 5, 16, 0.82);
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  flex-direction: column;
   gap: 12px;
-  background: rgba(13, 17, 23, 0.75);
+  padding: 24px;
   border-radius: inherit;
 }
 .blur-gate.locked .blur-overlay {
   display: flex;
 }
 .blur-overlay-icon {
-  font-size: 32px;
-  filter: none;
+  font-size: 36px;
+  line-height: 1;
 }
 .blur-overlay-title {
   color: #ffffff;
   font-family: var(--f-mono);
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
-  letter-spacing: 0.05em;
-  filter: none;
+  letter-spacing: 0.06em;
+  text-align: center;
 }
 .blur-overlay-desc {
-  color: rgba(255,255,255,0.75);
+  color: rgba(255, 255, 255, 0.8);
   font-family: var(--f-mono);
   font-size: 12px;
-  max-width: 320px;
+  max-width: 340px;
   text-align: center;
-  line-height: 1.5;
-  filter: none;
+  line-height: 1.6;
 }
 .blur-overlay-btn {
-  padding: 12px 24px;
+  margin-top: 4px;
+  padding: 14px 28px;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   font-family: var(--f-mono);
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   background: #00D4AA;
   color: #0d1117;
-  filter: none;
-  transition: transform 0.15s;
+  transition: transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 0 20px rgba(0, 212, 170, 0.25);
 }
 .blur-overlay-btn:hover {
-  transform: scale(1.03);
+  transform: scale(1.04);
+  box-shadow: 0 0 30px rgba(0, 212, 170, 0.4);
 }
 .ce-row {
   display: flex;
