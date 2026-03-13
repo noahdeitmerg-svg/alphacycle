@@ -4674,7 +4674,8 @@ async function initAuth() {
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (session) {
       currentUser = session.user;
-      await fetchUserPlan();
+      currentPlan = 'free';  // Default für eingeloggte User
+      await fetchUserPlan(); // kann zu 'paid' upgraden
     }
     updateAuthUI();
     applyBlurGates();
@@ -4847,6 +4848,7 @@ async function handleSignOut() {
 }
 
 function applyBlurGates() {
+  console.log('applyBlurGates called, currentPlan:', currentPlan, 'currentUser:', currentUser);
   // Gate descriptions — was jede Section bietet
   var gateInfo = {
     // FREE gates (unlock with free account)
@@ -4912,11 +4914,12 @@ function applyBlurGates() {
 
     if (!isLocked) return; // unlocked, no overlay needed
 
-    // Paid gates: anonymous und free sehen Paid-Overlay (⚡ UPGRADE TO PRO)
+    // Paid gates: anonymous und free sehen Paid-Overlay (⚡, PRO — COMING SOON)
     if (info.tier === 'paid' && isLocked) {
       title.innerHTML = '⚡ ' + info.title;
-      btn.textContent = 'UPGRADE TO PRO — $19/mo';
-      btn.onclick = function() { openUpgradeModal(); };
+      btn.textContent = 'PRO — COMING SOON';
+      btn.onclick = function() {};
+      btn.style.cssText = 'padding:10px 20px;border:1px solid rgba(255,255,255,0.2);border-radius:6px;font-family:var(--f-mono);font-size:12px;font-weight:700;cursor:default;letter-spacing:0.05em;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.5);';
       var descEl = el.querySelector('.blur-overlay-desc');
       if (!descEl) {
         descEl = document.createElement('div');
