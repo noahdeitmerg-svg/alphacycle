@@ -4852,7 +4852,7 @@ async function handleSignOut() {
   try {
     await supabaseClient.auth.signOut();
   } catch (e) {
-    // ignore
+    console.warn('Sign out error:', e);
   }
   currentUser = null;
   currentPlan = 'anonymous';
