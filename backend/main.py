@@ -16,6 +16,7 @@ Endpoints:
 """
 import os, time, math, logging, asyncio, json
 from contextlib import asynccontextmanager
+from datetime import datetime, timedelta
 from typing import Optional, Any
 
 import stripe
@@ -1455,7 +1456,7 @@ async def get_profile(request: Request, user=Security(get_current_user)):
         return {"authenticated": False, "plan": "anonymous"}
 
     if not supabase:
-        logger.warning("Supabase not configured; returning anonymous profile fallback")
+        logger.warning("Supabase not configured; returning fallback")
         return {"authenticated": True, "plan": "free", "email": user.email}
 
     profile = (
@@ -1467,20 +1468,46 @@ async def get_profile(request: Request, user=Security(get_current_user)):
     )
 
     if not profile.data:
-        supabase.table("user_profiles").insert(
-            {
-                "id": str(user.id),
-                "email": user.email,
-                "plan": "free",
-            }
-        ).execute()
-        return {"authenticated": True, "plan": "free", "email": user.email}
+        supabase.table("user_profiles").insert({
+            "id": str(user.id),
+            "email": user.email,
+            "plan": "free",
+        }).execute()
+        return {
+            "authenticated": True,
+            "plan": "trial",
+            "email": user.email,
+            "trial_active": True,
+            "trial_ends_at": (datetime.utcnow() + timedelta(days=7)).isoformat(),
+            "subscription_status": "inactive",
+        }
+
+    plan = profile.data.get("plan", "free")
+    sub_status = profile.data.get("subscription_status", "inactive")
+    created_at = profile.data.get("created_at", "")
+
+    trial_active = False
+    trial_ends_at = None
+    if plan == "free" and created_at:
+        try:
+            created = datetime.fromisoformat(str(created_at).replace("Z", "+00:00").replace("+00:00", ""))
+            trial_end = created + timedelta(days=7)
+            trial_active = datetime.utcnow() < trial_end
+            trial_ends_at = trial_end.isoformat()
+        except Exception:
+            trial_active = False
+
+    effective_plan = plan
+    if plan == "free" and trial_active:
+        effective_plan = "trial"
 
     return {
         "authenticated": True,
-        "plan": profile.data.get("plan", "free"),
+        "plan": effective_plan,
         "email": user.email,
-        "subscription_status": profile.data.get("subscription_status", "inactive"),
+        "trial_active": trial_active,
+        "trial_ends_at": trial_ends_at,
+        "subscription_status": sub_status,
     }
 
 

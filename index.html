@@ -3491,7 +3491,9 @@ const supabaseClient = window.supabase
   : null;
 
 let currentUser = null;
-let currentPlan = 'anonymous'; // anonymous / free / paid
+let currentPlan = 'anonymous'; // anonymous / free / trial / paid
+let trialActive = false;
+let trialEndsAt = null;
 let authMode = 'signup';
 
 let countdown = REFRESH_INTERVAL;
@@ -4838,6 +4840,8 @@ async function fetchUserPlan() {
     });
     const data = await res.json();
     currentPlan = data && data.plan ? data.plan : 'free';
+    trialActive = data.trial_active || false;
+    trialEndsAt = data.trial_ends_at || null;
   } catch (e) {
     currentPlan = 'free';
   }
@@ -4951,10 +4955,24 @@ function updateAuthUI() {
       planBadge.textContent = 'PRO';
       planBadge.style.background = '#00D4AA';
       planBadge.style.color = '#0d1117';
+      planBadge.style.border = 'none';
+    } else if (currentPlan === 'trial') {
+      var daysLeft = 7;
+      if (trialEndsAt) {
+        try {
+          var end = new Date(trialEndsAt);
+          daysLeft = Math.max(0, Math.ceil((end - new Date()) / 86400000));
+        } catch (e) {}
+      }
+      planBadge.textContent = 'TRIAL \u00B7 ' + daysLeft + 'd left';
+      planBadge.style.background = 'rgba(0,212,170,0.15)';
+      planBadge.style.color = '#00D4AA';
+      planBadge.style.border = '1px solid rgba(0,212,170,0.3)';
     } else {
       planBadge.textContent = 'FREE';
       planBadge.style.background = '#2a3a4a';
       planBadge.style.color = '#6b7280';
+      planBadge.style.border = 'none';
     }
   } else {
     loginBtn.style.display = 'block';
@@ -4978,6 +4996,10 @@ async function handleSignOut() {
 
 function applyBlurGates() {
   console.log('applyBlurGates called, currentPlan:', currentPlan, 'currentUser:', currentUser);
+  var effectivePlan = currentPlan;
+  if (currentPlan === 'trial') {
+    effectivePlan = 'paid';
+  }
   // Gate descriptions — was jede Section bietet
   var gateInfo = {
     // FREE gates (unlock mit kostenlosem Account)
@@ -5036,9 +5058,9 @@ function applyBlurGates() {
 
     var isLocked;
     if (info.tier === 'free') {
-      isLocked = currentPlan === 'anonymous';
+      isLocked = effectivePlan === 'anonymous';
     } else {
-      isLocked = currentPlan !== 'paid';
+      isLocked = effectivePlan !== 'paid';
     }
     el.classList.toggle('locked', isLocked);
 
@@ -5048,10 +5070,16 @@ function applyBlurGates() {
 
     if (!isLocked) return; // unlocked, no overlay needed
 
+    // Trial user: paid gate unlocked, hide overlay (no upgrade button)
+    if (info.tier === 'paid' && !isLocked && currentPlan === 'trial') {
+      var overlay = el.querySelector('.blur-overlay');
+      if (overlay) overlay.style.display = 'none';
+    }
+
     // Paid gates: anonymous und free sehen Paid-Overlay (Upgrade / Start Trial)
     if (info.tier === 'paid' && isLocked) {
       title.innerHTML = '\u26A1 ' + info.title;
-      if (currentPlan === 'anonymous') {
+      if (effectivePlan === 'anonymous') {
         btn.textContent = 'START 7-DAY FREE TRIAL';
         btn.onclick = function() { openAuthModal('signup'); };
         btn.style.cssText = 'padding:12px 24px;border:none;border-radius:8px;font-family:var(--f-mono);font-size:13px;font-weight:700;cursor:pointer;letter-spacing:0.06em;background:#00D4AA;color:#0d1117;transition:transform 0.15s;box-shadow:0 0 20px rgba(0,212,170,0.25);';
