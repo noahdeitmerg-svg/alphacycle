@@ -928,6 +928,22 @@ body::before {
   border-color: #22c55e;
   color: #22c55e;
 }
+#hero-share-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: var(--tx-sec);
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+#hero-share-btn:hover {
+  background: rgba(14,165,233,0.1);
+  border-color: rgba(14,165,233,0.3);
+  color: var(--tx-pri);
+}
 .arc-toggle-group {
   display: flex;
   gap: 2px;
@@ -2305,6 +2321,17 @@ canvas.sparkline {
   #tour-btn {
     display: none !important;
   }
+  #nav-user-email {
+    display: none !important;
+  }
+  #nav-plan-badge {
+    font-size: 9px !important;
+    padding: 2px 6px !important;
+  }
+  .nav-logo img {
+    width: 28px !important;
+    height: 28px !important;
+  }
   .nav-pill {
     padding: 4px 8px !important;
     font-size: 9px !important;
@@ -2368,15 +2395,26 @@ canvas.sparkline {
   .factor-value {
     font-size: 1.1rem !important;
   }
+  .hero-subtitle {
+    font-size: 8px !important;
+    letter-spacing: 0.05em !important;
+  }
+  .score-card-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 4px !important;
+  }
+  .score-label {
+    font-size: 11px !important;
+  }
 
   /* ZONE BAR: horizontal scroll */
   .hero-zones {
     display: flex !important;
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch;
-    scroll-snap-type: x mandatory;
     gap: 0 !important;
-    padding-bottom: 4px !important;
+    position: relative;
   }
   .hero-zone {
     flex: 0 0 auto !important;
@@ -2445,7 +2483,17 @@ canvas.sparkline {
 
   /* ARC CHART */
   #arc-chart-wrap {
-    height: 260px !important;
+    height: 300px !important;
+  }
+  #arc-chart-card .card {
+    padding: 8px !important;
+  }
+  .chartjs-legend, [class*="chartjs"] + div {
+    font-size: 7px !important;
+  }
+  #arc-chart-card canvas + div,
+  .arc-chart-canvas + div {
+    display: none !important;
   }
   .arc-toggle {
     font-size: 9px !important;
@@ -2512,6 +2560,26 @@ canvas.sparkline {
   #auth-modal > div > div {
     max-width: 95vw !important;
     padding: 24px 16px !important;
+  }
+  .scroll-hint {
+    display: block !important;
+  }
+  .scroll-hint-hr {
+    display: block !important;
+  }
+  #hero-share-btn {
+    font-size: 8px !important;
+    padding: 3px 8px !important;
+    top: 8px !important;
+    right: 8px !important;
+  }
+  .blur-gate.locked {
+    min-height: 200px;
+    margin-bottom: 12px;
+  }
+  html, body {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
   }
 }
 
@@ -2747,6 +2815,7 @@ canvas.sparkline {
             <div class="hero-risk-label" id="hero-risk-label">—</div>
             <div id="hero-signal-badge" style="display:none;font-size:0.75em;margin-top:4px;letter-spacing:0.08em;font-weight:500"></div>
           </div>
+          <button class="ce-btn" id="hero-share-btn" type="button" onclick="exportHeroAsPNG()" style="font-size:9px;padding:4px 10px;white-space:nowrap;">↓ SHARE PNG</button>
         </div>
         <div class="gauge-wrap">
       <svg viewBox="0 0 200 130" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -2854,6 +2923,7 @@ canvas.sparkline {
         <div class="hz-label">EUPHORIA</div>
       </div>
     </div>
+    <div class="scroll-hint" style="display:none;text-align:center;font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);padding:4px 0;letter-spacing:0.1em;">SWIPE FOR MORE ZONES →</div>
       </div>
     </div>
     <div class="blur-overlay">
@@ -2901,14 +2971,12 @@ canvas.sparkline {
         <div class="hr-zone-wr" id="hr-ex-wr">— win rate</div>
         <div class="hr-zone-count" id="hr-ex-count">— entries</div>
       </div>
-      <div class="hr-zone hr-rr" data-hr-zone="rr">
-        <span class="hr-zone-badge" aria-hidden="true">YOU ARE HERE</span>
-        <div class="hr-zone-context">Reduce exposure — late cycle</div>
-        <div class="hr-zone-range">60–69</div>
+      <div class="hr-zone hr-rr" data-hr-zone="rr" style="opacity:0.5;">
+        <div class="hr-zone-range" style="color:#FF9500">60–69</div>
         <div class="hr-zone-label">RISK RISING</div>
-        <div class="hr-zone-return" id="hr-rr-12m">—</div>
-        <div class="hr-zone-wr" id="hr-rr-wr">— win rate</div>
-        <div class="hr-zone-count" id="hr-rr-count">— entries</div>
+        <div class="hr-zone-return" id="hr-rr-12m" style="color:#FF9500;font-size:1rem;">⚠️ NO ENTRY ZONE</div>
+        <div class="hr-zone-wr" id="hr-rr-wr" style="font-size:10px;color:rgba(255,255,255,0.4);">Historically unfavorable entry point</div>
+        <div class="hr-zone-count" id="hr-rr-count" style="color:rgba(255,255,255,0.3);">— entries</div>
       </div>
       <div class="hr-zone hr-eu" data-hr-zone="eu">
         <span class="hr-zone-badge" aria-hidden="true">YOU ARE HERE</span>
@@ -2920,6 +2988,7 @@ canvas.sparkline {
         <div class="hr-zone-count" id="hr-eu-count">— entries</div>
       </div>
     </div>
+    <div class="scroll-hint-hr" style="display:none;text-align:center;font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);padding:4px 0;letter-spacing:0.1em;">SWIPE FOR MORE ZONES →</div>
         <div class="hr-total-entries" id="hr-total-entries"></div>
         <div class="hr-disclaimer">Based on weekly backtest data. Past performance does not guarantee future results. Not financial advice.</div>
       </div>
@@ -3197,6 +3266,7 @@ canvas.sparkline {
             <thead>
               <tr>
                 <th>Zone</th>
+                <th>Entry</th>
                 <th>From</th>
                 <th>To</th>
                 <th>Weeks</th>
@@ -4480,6 +4550,19 @@ function renderZoneHistory() {
     zoneTd.className = 'zone-history-zone';
     var zCol = scoreColorForZone(p.zone);
     if (zCol) zoneTd.style.color = zCol;
+    var dirTd = document.createElement('td');
+    var dir = p.direction || '';
+    if (dir === 'up') {
+      dirTd.textContent = '\u2191 Long Entry';
+      dirTd.style.color = '#22c55e';
+    } else if (dir === 'down') {
+      dirTd.textContent = '\u2193 Cycle Down';
+      dirTd.style.color = '#ef4444';
+    } else {
+      dirTd.textContent = '\u2014';
+      dirTd.style.color = 'var(--tx-ter)';
+    }
+    dirTd.style.fontSize = '10px';
     var fromTd = document.createElement('td');
     fromTd.textContent = p.from || '';
     var toTd = document.createElement('td');
@@ -4500,7 +4583,7 @@ function renderZoneHistory() {
     } else {
       retTd.textContent = '';
     }
-    [zoneTd, fromTd, toTd, weeksTd, entryTd, exitTd, retTd].forEach(function(td) {
+    [zoneTd, dirTd, fromTd, toTd, weeksTd, entryTd, exitTd, retTd].forEach(function(td) {
       tr.appendChild(td);
     });
     body.appendChild(tr);
@@ -5580,7 +5663,7 @@ function renderArcChart(period) {
       interaction: { mode: 'index', intersect: false },
       plugins: {
         legend: {
-          display: true,
+          display: window.innerWidth > 600,
           position: 'top',
           align: 'center',
           labels: {
@@ -6189,6 +6272,65 @@ function shareArcChart() {
   }
 }
 
+function exportHeroAsPNG() {
+  var btn = document.getElementById('hero-share-btn');
+  if (btn) { btn.textContent = 'GENERATING...'; btn.disabled = true; }
+
+  var heroCard = document.getElementById('btc-card');
+  if (!heroCard) { if (btn) { btn.textContent = '\u2193 SHARE PNG'; btn.disabled = false; } return; }
+
+  function doCapture() {
+    html2canvas(heroCard, {
+      backgroundColor: '#0d1117',
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      width: heroCard.scrollWidth,
+      height: heroCard.scrollHeight,
+    }).then(function(canvas) {
+      var finalCanvas = document.createElement('canvas');
+      var padding = 40;
+      var footerHeight = 36;
+      finalCanvas.width = canvas.width + padding * 2;
+      finalCanvas.height = canvas.height + padding * 2 + footerHeight;
+      var ctx = finalCanvas.getContext('2d');
+
+      ctx.fillStyle = '#0d1117';
+      ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+      ctx.drawImage(canvas, padding, padding);
+
+      ctx.fillStyle = 'rgba(255,255,255,0.3)';
+      ctx.font = '500 ' + Math.round(finalCanvas.width * 0.018) + 'px "DM Mono", monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('alphacycle.app \u2014 Crypto Cycle Intelligence', finalCanvas.width / 2, finalCanvas.height - 12);
+
+      var link = document.createElement('a');
+      link.download = 'alphacycle-index-' + new Date().toISOString().split('T')[0] + '.png';
+      link.href = finalCanvas.toDataURL('image/png');
+      link.click();
+
+      if (btn) { btn.textContent = '\u2713 SAVED'; btn.disabled = false; }
+      setTimeout(function() { if (btn) btn.textContent = '\u2193 SHARE PNG'; }, 2000);
+    }).catch(function(err) {
+      console.error('Hero export failed:', err);
+      if (btn) { btn.textContent = '\u2193 SHARE PNG'; btn.disabled = false; }
+    });
+  }
+
+  if (typeof html2canvas !== 'undefined') {
+    doCapture();
+  } else {
+    var script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    script.onload = doCapture;
+    script.onerror = function() {
+      console.error('html2canvas load failed');
+      if (btn) { btn.textContent = '\u2193 SHARE PNG'; btn.disabled = false; }
+    };
+    document.head.appendChild(script);
+  }
+}
+
 function showSkeletons() {
   document.querySelectorAll('.score-value, .gauge-val').forEach(el => {
     el.classList.add('skeleton');
@@ -6311,6 +6453,17 @@ async function fetchHistoricalReturns() {
     setZone('accumulation', 'ac');
     setZone('expansion', 'ex');
     setZone('risk_rising', 'rr');
+    var rrRet = document.getElementById('hr-rr-12m');
+    if (rrRet) {
+      rrRet.textContent = '\u26A0\uFE0F NO ENTRY ZONE';
+      rrRet.style.color = '#FF9500';
+      rrRet.style.fontSize = '1rem';
+    }
+    var rrWr = document.getElementById('hr-rr-wr');
+    if (rrWr) {
+      rrWr.textContent = 'Historically unfavorable entry point';
+      rrWr.style.color = 'rgba(255,255,255,0.4)';
+    }
     setZone('euphoria', 'eu');
 
     var total = 0;
@@ -6354,6 +6507,7 @@ function applyHistoricalReturnsCurrentZone() {
     : (S.combined != null ? S.combined : 50);
   arc = Number(arc);
   var key = arc <= 29 ? 'dv' : arc <= 39 ? 'ac' : arc <= 59 ? 'ex' : arc <= 69 ? 'rr' : 'eu';
+  if (key === 'rr') return;
   var colors = { dv: '#00D4AA', ac: '#00B4D8', ex: '#58A6FF', rr: '#FF9500', eu: '#FF3B3B' };
   document.querySelectorAll('.hr-zone').forEach(function(el) {
     el.classList.remove('hr-current-zone');
