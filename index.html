@@ -5048,12 +5048,18 @@ function applyBlurGates() {
 
     if (!isLocked) return; // unlocked, no overlay needed
 
-    // Paid gates: anonymous und free sehen Paid-Overlay (⚡, PRO — COMING SOON)
+    // Paid gates: anonymous und free sehen Paid-Overlay (Upgrade / Start Trial)
     if (info.tier === 'paid' && isLocked) {
-      title.innerHTML = '⚡ ' + info.title;
-      btn.textContent = 'PRO — COMING SOON';
-      btn.onclick = function() {};
-      btn.style.cssText = 'padding:10px 20px;border:1px solid rgba(255,255,255,0.2);border-radius:6px;font-family:var(--f-mono);font-size:12px;font-weight:700;cursor:default;letter-spacing:0.05em;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.5);';
+      title.innerHTML = '\u26A1 ' + info.title;
+      if (currentPlan === 'anonymous') {
+        btn.textContent = 'START 7-DAY FREE TRIAL';
+        btn.onclick = function() { openAuthModal('signup'); };
+        btn.style.cssText = 'padding:12px 24px;border:none;border-radius:8px;font-family:var(--f-mono);font-size:13px;font-weight:700;cursor:pointer;letter-spacing:0.06em;background:#00D4AA;color:#0d1117;transition:transform 0.15s;box-shadow:0 0 20px rgba(0,212,170,0.25);';
+      } else {
+        btn.textContent = 'UPGRADE TO PRO — $49/mo';
+        btn.onclick = function() { openUpgradeModal(); };
+        btn.style.cssText = 'padding:12px 24px;border:none;border-radius:8px;font-family:var(--f-mono);font-size:13px;font-weight:700;cursor:pointer;letter-spacing:0.06em;background:#00D4AA;color:#0d1117;transition:transform 0.15s;box-shadow:0 0 20px rgba(0,212,170,0.25);';
+      }
       var descEl = el.querySelector('.blur-overlay-desc');
       if (!descEl) {
         descEl = document.createElement('div');
@@ -5065,7 +5071,7 @@ function applyBlurGates() {
     } else if (isLocked) {
       // Free gates: nur anonymous sieht Overlay (🔒 UNLOCK FREE)
       title.innerHTML = '🔒 ' + info.title;
-      btn.textContent = 'UNLOCK FREE';
+      btn.textContent = 'START FREE — NO CARD NEEDED';
       btn.onclick = function() { openAuthModal('signup'); };
       var descEl = el.querySelector('.blur-overlay-desc');
       if (!descEl) {
@@ -5083,8 +5089,58 @@ function applyBlurGates() {
   if (lp) lp.classList.remove('locked');
 }
 
-function openUpgradeModal() {
-  alert('Stripe coming soon! Email upgrade@alphacycle.app to get early access.');
+async function openUpgradeModal() {
+  if (!currentUser) {
+    openAuthModal('signup');
+    return;
+  }
+  var session = null;
+  try {
+    var res = await supabaseClient.auth.getSession();
+    session = res.data.session;
+  } catch (e) {}
+
+  if (!session) {
+    openAuthModal('login');
+    return;
+  }
+
+  var btns = document.querySelectorAll('.blur-overlay-btn');
+  btns.forEach(function(b) {
+    if (b.textContent.indexOf('UPGRADE') !== -1 || b.textContent.indexOf('START') !== -1) {
+      b.textContent = 'REDIRECTING...';
+      b.disabled = true;
+    }
+  });
+
+  try {
+    var resp = await fetch(BACKEND_URL + '/api/checkout', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + session.access_token,
+      },
+      body: JSON.stringify({
+        user_id: currentUser.id,
+        email: currentUser.email,
+      }),
+    });
+    var data = await resp.json();
+    if (data.checkout_url) {
+      window.location.href = data.checkout_url;
+    } else {
+      throw new Error(data.detail || 'Checkout failed');
+    }
+  } catch (e) {
+    console.error('Checkout error:', e);
+    alert('Checkout temporarily unavailable. Please try again.');
+    btns.forEach(function(b) {
+      if (b.textContent === 'REDIRECTING...') {
+        b.textContent = 'UPGRADE TO PRO — $49/mo';
+        b.disabled = false;
+      }
+    });
+  }
 }
 
 function _setCyclePhaseTag(phase, ctx) {
@@ -6674,6 +6730,20 @@ async function boot() {
       if (params.get('admin') === 'ac_internal_2026') {
         var ce = document.getElementById('content-export-section');
         if (ce) ce.style.display = 'block';
+      }
+      // Handle Stripe redirect
+      if (window.location.hash === '#upgrade-success') {
+        setTimeout(async function() {
+          await fetchUserPlan();
+          updateAuthUI();
+          applyBlurGates();
+          var banner = document.createElement('div');
+          banner.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:9999;background:#00D4AA;color:#0d1117;padding:12px 24px;border-radius:8px;font-family:var(--f-mono);font-size:13px;font-weight:700;letter-spacing:0.05em;box-shadow:0 4px 20px rgba(0,212,170,0.3);';
+          banner.textContent = '\u2713 WELCOME TO ALPHACYCLE PRO';
+          document.body.appendChild(banner);
+          setTimeout(function() { banner.remove(); }, 5000);
+          window.location.hash = '';
+        }, 2000);
       }
       // Auth initialisieren
       try {
