@@ -2721,6 +2721,109 @@ canvas.sparkline {
   </div>
 </nav>
 
+<div id="landing-view" style="display:none;">
+  <div style="min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:40px 20px;max-width:720px;margin:0 auto;text-align:center;">
+
+    <!-- Hero -->
+    <div style="margin-bottom:12px;font-size:11px;color:#00D4AA;font-family:var(--f-mono);letter-spacing:0.15em;font-weight:600;">CRYPTO CYCLE INTELLIGENCE</div>
+    <h1 style="font-family:'Outfit',sans-serif;font-size:clamp(28px,5vw,48px);font-weight:700;color:#fff;line-height:1.15;margin:0 0 16px;">Know exactly where<br>Bitcoin is in the cycle.</h1>
+    <p style="font-family:var(--f-mono);font-size:14px;color:var(--tx-sec);line-height:1.7;max-width:500px;margin:0 0 32px;">The AlphaCycle Risk Index combines trend, drawdown, sentiment & liquidity into one score. 0-100. Updated live.</p>
+
+    <!-- Live ARC Preview -->
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px 32px;margin-bottom:32px;min-width:280px;">
+      <div style="font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);letter-spacing:0.12em;margin-bottom:8px;">LIVE ARC INDEX</div>
+      <div id="landing-arc-score" style="font-size:48px;font-weight:700;color:#00D4AA;font-family:var(--f-mono);line-height:1;">—</div>
+      <div style="font-size:11px;color:var(--tx-ter);font-family:var(--f-mono);margin-top:2px;">/100</div>
+      <div id="landing-arc-zone" style="font-size:14px;font-weight:600;font-family:var(--f-mono);letter-spacing:0.08em;margin-top:8px;color:#00D4AA;">—</div>
+      <div style="margin-top:12px;font-size:11px;color:var(--tx-ter);font-family:var(--f-mono);">
+        BTC <span id="landing-btc-price" style="color:var(--tx-pri);">—</span>
+        &nbsp;·&nbsp;
+        Fear &amp; Greed <span id="landing-fg" style="color:var(--tx-pri);">—</span>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <button onclick="openAuthModal('signup')" style="padding:16px 40px;background:#00D4AA;color:#0d1117;border:none;border-radius:8px;font-family:var(--f-mono);font-size:15px;font-weight:700;cursor:pointer;letter-spacing:0.06em;transition:transform 0.15s;box-shadow:0 0 30px rgba(0,212,170,0.25);margin-bottom:12px;">START 7-DAY FREE TRIAL</button>
+    <div style="font-size:11px;color:var(--tx-ter);font-family:var(--f-mono);">No credit card required · Cancel anytime</div>
+
+    <!-- Track Record Teaser -->
+    <div style="margin-top:48px;width:100%;">
+      <div style="font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);letter-spacing:0.15em;margin-bottom:16px;">WHAT ARC TOLD US BEFORE THE MARKET MOVED</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:16px;text-align:left;">
+          <div style="font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);">DEC 2022 — DEEP VALUE</div>
+          <div style="font-size:11px;color:var(--tx-sec);font-family:var(--f-mono);margin-top:4px;">ARC at 12 · BTC $16,500</div>
+          <div style="font-size:16px;font-weight:700;color:#22c55e;font-family:var(--f-mono);margin-top:4px;">→ +170% in 12 months</div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:16px;text-align:left;">
+          <div style="font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);">OCT 2024 — RISK RISING</div>
+          <div style="font-size:11px;color:var(--tx-sec);font-family:var(--f-mono);margin-top:4px;">ARC at 65 · BTC $65,000</div>
+          <div style="font-size:16px;font-weight:700;color:#f59e0b;font-family:var(--f-mono);margin-top:4px;">→ Peak at $108k, then -45%</div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:16px;text-align:left;">
+          <div style="font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);">NOW — ACCUMULATION</div>
+          <div style="font-size:11px;color:var(--tx-sec);font-family:var(--f-mono);margin-top:4px;" id="landing-now-detail">ARC at 33 · BTC $71k</div>
+          <div style="font-size:16px;font-weight:700;color:#00B4D8;font-family:var(--f-mono);margin-top:4px;">Historically +134% avg 12M</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- How it works -->
+    <div style="margin-top:48px;width:100%;">
+      <div style="font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);letter-spacing:0.15em;margin-bottom:16px;">4 COMPONENTS. 1 SCORE. 0-100.</div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">
+          <div style="font-size:20px;margin-bottom:4px;">&#128200;</div>
+          <div style="font-size:10px;color:var(--tx-pri);font-family:var(--f-mono);font-weight:600;">TREND</div>
+          <div style="font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);">200-week MA deviation</div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">
+          <div style="font-size:20px;margin-bottom:4px;">&#128201;</div>
+          <div style="font-size:10px;color:var(--tx-pri);font-family:var(--f-mono);font-weight:600;">DRAWDOWN</div>
+          <div style="font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);">Distance from all-time high</div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">
+          <div style="font-size:20px;margin-bottom:4px;">&#128561;</div>
+          <div style="font-size:10px;color:var(--tx-pri);font-family:var(--f-mono);font-weight:600;">SENTIMENT</div>
+          <div style="font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);">Fear & Greed Index</div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">
+          <div style="font-size:20px;margin-bottom:4px;">&#128176;</div>
+          <div style="font-size:10px;color:var(--tx-pri);font-family:var(--f-mono);font-weight:600;">LIQUIDITY</div>
+          <div style="font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);">Fed balance sheet + stablecoins</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pricing -->
+    <div style="margin-top:48px;width:100%;" id="pricing">
+      <div style="font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);letter-spacing:0.15em;margin-bottom:16px;">PRICING</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:500px;margin:0 auto;">
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px 16px;text-align:center;">
+          <div style="font-size:10px;color:var(--tx-ter);font-family:var(--f-mono);letter-spacing:0.1em;margin-bottom:8px;">FREE</div>
+          <div style="font-size:28px;font-weight:700;color:var(--tx-pri);font-family:var(--f-mono);">$0</div>
+          <div style="font-size:10px;color:var(--tx-ter);font-family:var(--f-mono);margin-top:8px;line-height:1.6;">Live Prices<br>ARC Index<br>Historical Returns</div>
+          <button onclick="openAuthModal('signup')" style="margin-top:16px;padding:10px 20px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--tx-sec);font-family:var(--f-mono);font-size:11px;font-weight:600;cursor:pointer;">GET STARTED</button>
+        </div>
+        <div style="background:var(--bg-card);border:2px solid #00D4AA;border-radius:12px;padding:24px 16px;text-align:center;position:relative;">
+          <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:#00D4AA;color:#0d1117;font-size:8px;font-weight:700;font-family:var(--f-mono);padding:3px 10px;border-radius:4px;letter-spacing:0.1em;">7 DAYS FREE</div>
+          <div style="font-size:10px;color:#00D4AA;font-family:var(--f-mono);letter-spacing:0.1em;margin-bottom:8px;">PRO</div>
+          <div style="font-size:28px;font-weight:700;color:var(--tx-pri);font-family:var(--f-mono);">$49<span style="font-size:14px;color:var(--tx-ter);">/mo</span></div>
+          <div style="font-size:10px;color:var(--tx-ter);font-family:var(--f-mono);margin-top:8px;line-height:1.6;">Everything in Free +<br>Decision Engine<br>Cycle Analysis<br>ARC History<br>Zone History<br>Email Alerts</div>
+          <button onclick="openAuthModal('signup')" style="margin-top:16px;padding:10px 20px;background:#00D4AA;color:#0d1117;border:none;border-radius:6px;font-family:var(--f-mono);font-size:11px;font-weight:700;cursor:pointer;">START FREE TRIAL</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="margin-top:48px;font-size:10px;color:var(--tx-ter);font-family:var(--f-mono);">
+      <a href="#" onclick="showDashboard();return false;" style="color:var(--tx-sec);text-decoration:none;">View Dashboard &#8594;</a>
+    </div>
+
+  </div>
+</div>
+
+<div id="dashboard-view">
 <!-- TICKER -->
 <div class="ticker-bar">
   <div class="ticker-scroll" id="ticker">
@@ -3343,6 +3446,7 @@ canvas.sparkline {
   </footer>
 
 </main>
+</div>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
@@ -3499,6 +3603,20 @@ let authMode = 'signup';
 let countdown = REFRESH_INTERVAL;
 let cdTimer;
 let isRefreshing = false;
+
+function showLanding() {
+  var lv = document.getElementById('landing-view');
+  var dv = document.getElementById('dashboard-view');
+  if (lv) lv.style.display = 'block';
+  if (dv) dv.style.display = 'none';
+}
+
+function showDashboard() {
+  var lv = document.getElementById('landing-view');
+  var dv = document.getElementById('dashboard-view');
+  if (lv) lv.style.display = 'none';
+  if (dv) dv.style.display = 'block';
+}
 
 function getPhaseGroup() {
   var pg = S.arcSummary?.phase_group;
@@ -4498,6 +4616,24 @@ function updateUI() {
   if ($('di-body')) renderDataInspector();
   updateContentPreview();
   renderZoneHistory();
+
+  // Update landing page live preview
+  var arcScore = S.arcSummary ? Math.round(S.arcSummary.arc_display || S.arcSummary.arc_score || 0) : null;
+  var zoneName = S.arcSummary ? (S.arcSummary.zone_name || '') : '';
+  var btcP = S.btcMarket ? '$' + Math.round(S.btcMarket.price).toLocaleString() : '';
+  var fgV = S.fgCurrent || '';
+
+  var ls = document.getElementById('landing-arc-score');
+  var lz = document.getElementById('landing-arc-zone');
+  var lb = document.getElementById('landing-btc-price');
+  var lf = document.getElementById('landing-fg');
+  var ld = document.getElementById('landing-now-detail');
+
+  if (ls && arcScore != null) ls.textContent = arcScore;
+  if (lz && zoneName) { lz.textContent = zoneName.toUpperCase(); lz.style.color = scoreColor(arcScore) || '#00D4AA'; }
+  if (lb && btcP) lb.textContent = btcP;
+  if (lf && fgV) lf.textContent = fgV;
+  if (ld && arcScore != null && btcP) ld.textContent = 'ARC at ' + arcScore + ' · BTC ' + btcP;
 }
 
 function renderZoneHistory() {
@@ -4797,6 +4933,7 @@ function positionTooltip(targetEl) {
 async function initAuth() {
   if (!supabaseClient) {
     applyBlurGates();
+    showLanding();
     return;
   }
   try {
@@ -4808,14 +4945,21 @@ async function initAuth() {
     }
     updateAuthUI();
     applyBlurGates();
+    if (currentUser) {
+      showDashboard();
+    } else {
+      showLanding();
+    }
     supabaseClient.auth.onAuthStateChange(async function(event, session) {
       if (session) {
         currentUser = session.user;
         currentPlan = 'free';
         await fetchUserPlan();
+        showDashboard();
       } else {
         currentUser = null;
         currentPlan = 'anonymous';
+        showLanding();
       }
       updateAuthUI();
       applyBlurGates();
@@ -4824,6 +4968,7 @@ async function initAuth() {
     currentUser = null;
     currentPlan = 'anonymous';
     applyBlurGates();
+    showLanding();
   }
 }
 
@@ -4977,6 +5122,14 @@ function updateAuthUI() {
   } else {
     loginBtn.style.display = 'block';
     userInfo.style.display = 'none';
+    var lv = document.getElementById('landing-view');
+    if (lv && lv.style.display !== 'none') {
+      loginBtn.textContent = 'LOG IN';
+      loginBtn.onclick = function() { openAuthModal('login'); };
+    } else {
+      loginBtn.textContent = 'FREE ACCESS';
+      loginBtn.onclick = function() { openAuthModal('signup'); };
+    }
   }
   applyBlurGates();
 }
