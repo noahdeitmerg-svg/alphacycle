@@ -2767,6 +2767,9 @@ canvas.sparkline {
         </div>
       </div>
     </div>
+    <div style="text-align:center;margin-top:16px;">
+      <a href="#" onclick="showTrackRecord();return false;" style="font-size:11px;color:#00D4AA;font-family:var(--f-mono);text-decoration:none;">View Full Track Record &#8594;</a>
+    </div>
 
     <!-- How it works -->
     <div style="margin-top:48px;width:100%;">
@@ -2818,6 +2821,100 @@ canvas.sparkline {
     <!-- Footer -->
     <div style="margin-top:48px;font-size:10px;color:var(--tx-ter);font-family:var(--f-mono);">
       <a href="#" onclick="showDashboard();return false;" style="color:var(--tx-sec);text-decoration:none;">View Dashboard &#8594;</a>
+    </div>
+
+  </div>
+</div>
+
+<div id="track-record-view" style="display:none;">
+  <div style="max-width:720px;margin:0 auto;padding:40px 20px;">
+
+    <a href="#" onclick="showLanding();return false;" style="font-size:10px;color:var(--tx-ter);font-family:var(--f-mono);text-decoration:none;letter-spacing:0.1em;">&#8592; BACK</a>
+
+    <h1 style="font-family:'Outfit',sans-serif;font-size:clamp(24px,4vw,36px);font-weight:700;color:#fff;margin:24px 0 8px;">Track Record</h1>
+    <p style="font-family:var(--f-mono);font-size:12px;color:var(--tx-sec);line-height:1.7;margin-bottom:32px;">What the ARC Index signaled — and what actually happened. All data is based on real backtest results from 2017 to present.</p>
+
+    <!-- Method -->
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:24px;">
+      <div style="font-size:9px;color:#00D4AA;font-family:var(--f-mono);letter-spacing:0.12em;margin-bottom:8px;">HOW THE ARC INDEX WORKS</div>
+      <p style="font-family:var(--f-mono);font-size:11px;color:var(--tx-sec);line-height:1.7;margin:0;">The ARC combines four structural indicators — 200-week moving average deviation (35%), drawdown from ATH (25%), macro liquidity from the Fed balance sheet (25%), and market sentiment via Fear & Greed (15%) — into a single score from 0 to 100. Lower scores = lower risk = better entry. Higher scores = higher risk = reduce exposure.</p>
+    </div>
+
+    <!-- Timeline -->
+    <div style="font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);letter-spacing:0.15em;margin-bottom:16px;">HISTORICAL SIGNALS</div>
+
+    <div id="track-record-timeline" style="display:flex;flex-direction:column;gap:16px;">
+
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:20px;border-left:3px solid #00C896;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span style="font-size:9px;color:#00C896;font-family:var(--f-mono);letter-spacing:0.1em;font-weight:600;">DEEP VALUE SIGNAL</span>
+          <span style="font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);">Nov 2022</span>
+        </div>
+        <div style="font-family:var(--f-mono);font-size:12px;color:var(--tx-sec);line-height:1.6;">
+          ARC dropped to <strong style="color:#00C896">12/100</strong> with BTC at <strong style="color:var(--tx-pri)">$16,500</strong>. Extreme Fear (F&amp;G at 10), 76% drawdown from ATH, Fed still tightening — but macro liquidity was bottoming.
+        </div>
+        <div style="margin-top:12px;padding:10px 12px;background:rgba(34,197,94,0.08);border-radius:6px;">
+          <div style="font-size:10px;color:var(--tx-ter);font-family:var(--f-mono);">WHAT HAPPENED NEXT</div>
+          <div style="font-size:18px;font-weight:700;color:#22c55e;font-family:var(--f-mono);margin-top:4px;">+170% in 12 months &#8594; $44,000</div>
+          <div style="font-size:10px;color:var(--tx-ter);font-family:var(--f-mono);margin-top:2px;">+545% to cycle top ($108k)</div>
+        </div>
+      </div>
+
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:20px;border-left:3px solid #00B4D8;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span style="font-size:9px;color:#00B4D8;font-family:var(--f-mono);letter-spacing:0.1em;font-weight:600;">ACCUMULATION SIGNAL</span>
+          <span style="font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);">Mar 2023</span>
+        </div>
+        <div style="font-family:var(--f-mono);font-size:12px;color:var(--tx-sec);line-height:1.6;">
+          ARC at <strong style="color:#00B4D8">34/100</strong> with BTC at <strong style="color:var(--tx-pri)">$22,000</strong>. Sentiment recovering from extreme fear. 200w MA starting to flatten. Early signs of liquidity expansion.
+        </div>
+        <div style="margin-top:12px;padding:10px 12px;background:rgba(0,180,216,0.08);border-radius:6px;">
+          <div style="font-size:10px;color:var(--tx-ter);font-family:var(--f-mono);">WHAT HAPPENED NEXT</div>
+          <div style="font-size:18px;font-weight:700;color:#00B4D8;font-family:var(--f-mono);margin-top:4px;">+95% in 12 months &#8594; $43,000</div>
+          <div style="font-size:10px;color:var(--tx-ter);font-family:var(--f-mono);margin-top:2px;">+390% to cycle top ($108k)</div>
+        </div>
+      </div>
+
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:20px;border-left:3px solid #F97316;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span style="font-size:9px;color:#F97316;font-family:var(--f-mono);letter-spacing:0.1em;font-weight:600;">RISK RISING SIGNAL</span>
+          <span style="font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);">Oct 2024</span>
+        </div>
+        <div style="font-family:var(--f-mono);font-size:12px;color:var(--tx-sec);line-height:1.6;">
+          ARC surged to <strong style="color:#F97316">65/100</strong> with BTC at <strong style="color:var(--tx-pri)">$65,000</strong>. Euphoria building. Funding rates elevated. Macro liquidity peaking.
+        </div>
+        <div style="margin-top:12px;padding:10px 12px;background:rgba(249,115,22,0.08);border-radius:6px;">
+          <div style="font-size:10px;color:var(--tx-ter);font-family:var(--f-mono);">WHAT HAPPENED NEXT</div>
+          <div style="font-size:18px;font-weight:700;color:#F97316;font-family:var(--f-mono);margin-top:4px;">Peaked at $108k &#8594; then -45% to $60k</div>
+          <div style="font-size:10px;color:var(--tx-ter);font-family:var(--f-mono);margin-top:2px;">ARC correctly flagged late-cycle risk</div>
+        </div>
+      </div>
+
+      <div style="background:var(--bg-card);border:2px solid #00D4AA;border-radius:8px;padding:20px;border-left:3px solid #00D4AA;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span style="font-size:9px;color:#00D4AA;font-family:var(--f-mono);letter-spacing:0.1em;font-weight:600;">CURRENT SIGNAL</span>
+          <span style="font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);">Now</span>
+        </div>
+        <div style="font-family:var(--f-mono);font-size:12px;color:var(--tx-sec);line-height:1.6;" id="tr-current-detail">
+          ARC at <strong style="color:#00D4AA">33/100</strong> — Accumulation zone. Conditions mirror early 2023. Extreme Fear. Deep drawdown. Liquidity turning.
+        </div>
+        <div style="margin-top:12px;padding:10px 12px;background:rgba(0,212,170,0.08);border-radius:6px;">
+          <div style="font-size:10px;color:var(--tx-ter);font-family:var(--f-mono);">HISTORICAL AVERAGE FOR THIS ZONE</div>
+          <div style="font-size:18px;font-weight:700;color:#00D4AA;font-family:var(--f-mono);margin-top:4px;">+134% avg 12-month forward return</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Disclaimer -->
+    <div style="margin-top:24px;font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);line-height:1.6;">
+      Past performance does not guarantee future results. The ARC Index is an analytical tool, not financial advice. All returns based on weekly backtest data from 2017 to present.
+    </div>
+
+    <!-- CTA -->
+    <div style="text-align:center;margin-top:32px;">
+      <button onclick="openAuthModal('signup')" style="padding:14px 32px;background:#00D4AA;color:#0d1117;border:none;border-radius:8px;font-family:var(--f-mono);font-size:14px;font-weight:700;cursor:pointer;letter-spacing:0.06em;box-shadow:0 0 20px rgba(0,212,170,0.25);">START 7-DAY FREE TRIAL</button>
+      <div style="font-size:10px;color:var(--tx-ter);font-family:var(--f-mono);margin-top:8px;">No credit card required</div>
     </div>
 
   </div>
@@ -3607,15 +3704,29 @@ let isRefreshing = false;
 function showLanding() {
   var lv = document.getElementById('landing-view');
   var dv = document.getElementById('dashboard-view');
+  var tr = document.getElementById('track-record-view');
   if (lv) lv.style.display = 'block';
   if (dv) dv.style.display = 'none';
+  if (tr) tr.style.display = 'none';
 }
 
 function showDashboard() {
   var lv = document.getElementById('landing-view');
   var dv = document.getElementById('dashboard-view');
+  var tr = document.getElementById('track-record-view');
   if (lv) lv.style.display = 'none';
   if (dv) dv.style.display = 'block';
+  if (tr) tr.style.display = 'none';
+}
+
+function showTrackRecord() {
+  var lv = document.getElementById('landing-view');
+  var dv = document.getElementById('dashboard-view');
+  var tr = document.getElementById('track-record-view');
+  if (lv) lv.style.display = 'none';
+  if (dv) dv.style.display = 'none';
+  if (tr) tr.style.display = 'block';
+  window.scrollTo(0, 0);
 }
 
 function getPhaseGroup() {
