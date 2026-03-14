@@ -455,17 +455,27 @@ def _calc_weeks(date_from: str, date_to: str) -> int:
 
 def compute_zone_history(arc_history: list, min_weeks: int = 4) -> list:
     """
-    Build contiguous zone periods from backtest history.
-    A zone transition is only confirmed after min_weeks consecutive weeks
-    in the new zone. Shorter excursions are absorbed into the previous zone.
-    This prevents flickering at zone boundaries and gives a true cycle overview.
+    Build zone periods from backtest history.
+    Rules:
+    1. A zone is only confirmed after min_weeks consecutive weeks in it
+    2. Only entries FROM BELOW count (lower zone -> higher zone = bullish progression)
+    3. Return = entry price until confirmed entry into next HIGHER zone
+    4. If ARC falls back within min_weeks -> not confirmed, absorbed into previous zone
     """
     if not arc_history:
         return []
 
     from datetime import datetime
 
-    def _weeks(d1_str, d2_str) -> int:
+    ZONE_ORDER = {
+        "Deep Value": 0,
+        "Accumulation": 1,
+        "Expansion": 2,
+        "Risk Rising": 3,
+        "Euphoria": 4,
+    }
+
+    def _weeks(d1_str, d2_str):
         try:
             d1 = datetime.fromisoformat(str(d1_str))
             d2 = datetime.fromisoformat(str(d2_str))
@@ -473,7 +483,7 @@ def compute_zone_history(arc_history: list, min_weeks: int = 4) -> list:
         except Exception:
             return 1
 
-    def _close_period(zone, start_date, start_price, end_date, end_price, ongoing: bool = False) -> dict:
+    def _close_period(zone, start_date, start_price, end_date, end_price, direction, ongoing=False):
         rtn = 0.0
         if start_price and start_price > 0:
             try:
@@ -488,19 +498,21 @@ def compute_zone_history(arc_history: list, min_weeks: int = 4) -> list:
             "btc_entry": round(start_price),
             "btc_exit": round(end_price),
             "return_pct": rtn,
+            "direction": direction,
         }
 
-    history: list[dict] = []
+    history = []
 
-    # Confirmed zone state
     confirmed_zone = None
+    confirmed_order = -1
     zone_start_date = None
     zone_start_price = None
     last_confirmed_date = None
     last_confirmed_price = None
+    entry_direction = "initial"
 
-    # Pending transition state
     pending_zone = None
+    pending_order = -1
     pending_count = 0
     pending_start_date = None
     pending_start_price = None
@@ -517,10 +529,11 @@ def compute_zone_history(arc_history: list, min_weeks: int = 4) -> list:
 
         price = float(price)
         zone = get_zone_name(float(score_val))
+        order = ZONE_ORDER.get(zone, 2)
 
-        # First data point: set confirmed zone directly (no minimum needed)
         if confirmed_zone is None:
             confirmed_zone = zone
+            confirmed_order = order
             zone_start_date = date
             zone_start_price = price
             last_confirmed_date = date
@@ -530,18 +543,17 @@ def compute_zone_history(arc_history: list, min_weeks: int = 4) -> list:
             continue
 
         if zone == confirmed_zone:
-            # Still in confirmed zone — reset any pending transition
             pending_zone = None
             pending_count = 0
             last_confirmed_date = date
             last_confirmed_price = price
 
         elif zone == pending_zone:
-            # Continue counting in pending zone
             pending_count += 1
             if pending_count >= min_weeks:
-                # TRANSITION CONFIRMED
-                # Close the old zone period (exit at last confirmed data point)
+                new_order = ZONE_ORDER.get(pending_zone, 2)
+                direction = "up" if new_order > confirmed_order else "down"
+
                 history.append(
                     _close_period(
                         confirmed_zone,
@@ -549,22 +561,23 @@ def compute_zone_history(arc_history: list, min_weeks: int = 4) -> list:
                         zone_start_price,
                         last_confirmed_date,
                         last_confirmed_price,
+                        entry_direction,
                     )
                 )
-                # Start new confirmed zone from when pending began
+
                 confirmed_zone = pending_zone
+                confirmed_order = new_order
                 zone_start_date = pending_start_date
                 zone_start_price = pending_start_price
                 last_confirmed_date = date
                 last_confirmed_price = price
-                # Reset pending
+                entry_direction = direction
+
                 pending_zone = None
                 pending_count = 0
-
         else:
-            # A different zone than both confirmed and pending
-            # Start new pending (discard old pending if any)
             pending_zone = zone
+            pending_order = ZONE_ORDER.get(zone, 2)
             pending_count = 1
             pending_start_date = date
             pending_start_price = price
@@ -572,7 +585,6 @@ def compute_zone_history(arc_history: list, min_weeks: int = 4) -> list:
         last_date = date
         last_price = price
 
-    # Close final ongoing zone period based on confirmed_zone
     if confirmed_zone and zone_start_date and last_date and zone_start_price:
         history.append(
             _close_period(
@@ -581,11 +593,11 @@ def compute_zone_history(arc_history: list, min_weeks: int = 4) -> list:
                 zone_start_price,
                 last_date,
                 last_price or zone_start_price,
+                entry_direction,
                 ongoing=True,
             )
         )
 
-    # Newest periods first, max 20 periods
     history = list(reversed(history))
     return history[:20]
 
