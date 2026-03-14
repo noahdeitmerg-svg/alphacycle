@@ -4318,7 +4318,7 @@ function updatePhaseBanner() {
 
 // ── TICKER & SCORES UPDATE ──────────────────────────────────────────────────
 function updateUI() {
-  const btcP = S.btcMarket?.price || S.btcPrices.at(-1) || 0;
+  var btcP = S.btcMarket?.price || S.btcPrices.at(-1) || 0;
   const ethP = S.ethMarket?.price || S.ethPrices.at(-1) || 0;
   const ratio = btcP>0 ? ethP/btcP : 0;
 
