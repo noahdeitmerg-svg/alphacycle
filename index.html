@@ -3616,6 +3616,8 @@ canvas.sparkline {
 
 </body>
 <script>
+// HOTFIX: Tour als erledigt setzen (entfernen wenn Tour nur auf Dashboard startet)
+localStorage.setItem('alphacycle_onboarded', '1');
 // Register Chart.js zoom plugin once, after scripts are loaded
 if (window.ChartZoom) {
   Chart.register(window.ChartZoom);
@@ -7047,8 +7049,9 @@ async function boot() {
       if (!supabaseClient) {
         applyBlurGates();
       }
-      // Onboarding-Tour nur einmalig starten
-      if (!localStorage.getItem('alphacycle_onboarded')) {
+      // Onboarding-Tour nur einmalig starten, nur wenn eingeloggt und Dashboard sichtbar
+      var dv = document.getElementById('dashboard-view');
+      if (!localStorage.getItem('alphacycle_onboarded') && currentUser && dv && dv.style.display !== 'none') {
         setTimeout(function(){ startTour(); }, 1500);
       }
     } catch(e) {}
