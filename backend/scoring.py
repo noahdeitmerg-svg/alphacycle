@@ -3,24 +3,26 @@ scoring.py — Alpha Cycle Intelligence v3.0
 Zero NaN guarantee. All outputs [0,100].
 """
 import math, logging
+from typing import Optional, Any
+
 logger = logging.getLogger(__name__)
 
-def safe_div(a,b,fb=1.0):
+def safe_div(a: float, b: float, fb: float = 1.0) -> float:
     try:
         if b==0 or math.isnan(b) or math.isinf(b): return fb
         r=a/b; return fb if (math.isnan(r) or math.isinf(r)) else r
     except: return fb
 
-def safe_float(v,fb=0.0):
+def safe_float(v: Any, fb: float = 0.0) -> float:
     try:
         if v is None: return fb
         f=float(v); return fb if (math.isnan(f) or math.isinf(f)) else f
     except: return fb
 
-def clamp(v,lo=0.0,hi=100.0):
+def clamp(v: Any, lo: float = 0.0, hi: float = 100.0) -> float:
     return max(lo,min(hi,safe_float(v,(lo+hi)/2)))
 
-def arc_display_score(arc_raw, k=1.2):
+def arc_display_score(arc_raw: float, k: float = 1.2) -> float:
     """Nur fuer UI-Output. Interne Berechnungen nutzen arc_raw.
     k=1.2 optimal (verhindert 0-Werte bei echten Extrempunkten).
     Sigmoid-style stretch: Raw 25->~15.6, 50->50, 75->~84.4."""
@@ -28,15 +30,15 @@ def arc_display_score(arc_raw, k=1.2):
     stretched = x * (1.0 + k * x * x)
     return clamp(50.0 + stretched * 50.0)
 
-def safe_mean(values,fb=50.0):
+def safe_mean(values: list, fb: float = 50.0) -> float:
     clean=[safe_float(v) for v in values if v is not None]
     clean=[v for v in clean if not math.isnan(v)]
     return sum(clean)/len(clean) if clean else fb
 
-def pct_change(cur,prev,fb=0.0):
+def pct_change(cur: float, prev: float, fb: float = 0.0) -> float:
     return safe_div((cur-prev),abs(prev)+1e-10,fb)*100
 
-def compute_rsi(prices,period=14):
+def compute_rsi(prices: list[float], period: int = 14) -> float:
     if len(prices)<period+1: return 50.0
     deltas=[prices[i]-prices[i-1] for i in range(1,len(prices))]
     gains=[max(0.0,d) for d in deltas[-period:]]
@@ -46,7 +48,7 @@ def compute_rsi(prices,period=14):
     rsi=100-safe_div(100,1+safe_div(ag,al,1.0),50.0)
     return clamp(rsi)
 
-def rsi_to_score(rsi):
+def rsi_to_score(rsi: float) -> float:
     rsi=clamp(rsi)
     if rsi<=20: return clamp(5+rsi*0.25)
     if rsi<=30: return clamp(10+(rsi-20)*0.5)
@@ -55,11 +57,11 @@ def rsi_to_score(rsi):
     if rsi<=80: return clamp(70+(rsi-70)*1.5)
     return clamp(85+(rsi-80)*0.5)
 
-def moving_average(prices,window):
+def moving_average(prices: list[float], window: int) -> Optional[float]:
     if len(prices)<window: return None
     return safe_mean(prices[-window:])
 
-def ma_deviation_score(price,ma):
+def ma_deviation_score(price: float, ma: float) -> float:
     if ma<=0: return 50.0
     dev=pct_change(price,ma)
     if dev<=-60:  return 2.0
@@ -69,7 +71,7 @@ def ma_deviation_score(price,ma):
     if dev<=500:  return clamp(82+(dev-200)*0.043)
     return 95.0
 
-def trend_score(values,window=30,neutral=50.0):
+def trend_score(values: list[float], window: int = 30, neutral: float = 50.0) -> float:
     if len(values)<max(2,window): return neutral
     clean=[safe_float(v) for v in values if v is not None and safe_float(v)>0]
     if len(clean)<2: return neutral
@@ -77,7 +79,7 @@ def trend_score(values,window=30,neutral=50.0):
     if prev<=0: return neutral
     return clamp(50+clamp(pct_change(cur,prev),-50,50))
 
-def drawdown_score(prices):
+def drawdown_score(prices: list[float]) -> float:
     if not prices: return 50.0
     clean=[p for p in prices if p and p>0]
     if not clean: return 50.0
@@ -89,7 +91,7 @@ def drawdown_score(prices):
     if dd>=-70: return clamp(15+(dd+70)*1.0)
     return 5.0
 
-def drawdown_score_hl(prices, price_override=None):
+def drawdown_score_hl(prices: list[float], price_override: Optional[float] = None) -> float:
     """Drawdown-Score mit optionalem price_override fuer Hi/Lo Berechnung.
     Identisch zu drawdown_score() aber price_override ersetzt clean[-1]."""
     clean = [p for p in prices if p and p > 0]
@@ -104,7 +106,7 @@ def drawdown_score_hl(prices, price_override=None):
     if dd >= -70:  return clamp(15 + (dd + 70) * 1.0)
     return 5.0
 
-def fg_to_score(v):
+def fg_to_score(v: Any) -> float:
     """
     Non-linear Fear & Greed -> ARC component score.
     Amplifies extremes: historic F&G <15 and >85 occur <5% of time
@@ -170,7 +172,14 @@ def compute_arc_momentum(arc_history: list, days: int = 30) -> dict:
     return {"value": momentum, "label": label, "direction": direction}
 
 
-def compute_short_term_score(prices_daily, fear_greed, funding_data=None, indicators=None, walcl_values=None, net_liq_values=None):
+def compute_short_term_score(
+    prices_daily: list[float],
+    fear_greed: float,
+    funding_data: Optional[dict] = None,
+    indicators: Optional[dict] = None,
+    walcl_values: Optional[list] = None,
+    net_liq_values: Optional[list] = None,
+) -> dict:
     """
     Short Term Tactical Score (30-90D horizon).
     Separate from ARC (macro) and compute_btc_score (combined).
@@ -257,7 +266,7 @@ def compute_short_term_score(prices_daily, fear_greed, funding_data=None, indica
     return s
 
 
-def funding_rate_to_score(rate_pct):
+def funding_rate_to_score(rate_pct: float) -> float:
     r=safe_float(rate_pct,0.0)
     if r<=-0.05: return 10.0
     if r<=-0.01: return 20.0
@@ -267,7 +276,7 @@ def funding_rate_to_score(rate_pct):
     if r<=0.10:  return 78.0
     return 90.0
 
-def btc_dominance_to_score(dom_pct):
+def btc_dominance_to_score(dom_pct: float) -> float:
     d=clamp(safe_float(dom_pct,50.0),30,70)
     if d>=65:  return clamp(75+(d-65)*2)
     if d>=55:  return clamp(55+(d-55)*2)
@@ -275,7 +284,7 @@ def btc_dominance_to_score(dom_pct):
     if d>=35:  return clamp(65+(45-d)*2)
     return 85.0
 
-def _power_law_score(prices):
+def _power_law_score(prices: list[float]) -> float:
     if len(prices)<30: return 50.0
     try:
         n=len(prices)
@@ -294,9 +303,16 @@ def _power_law_score(prices):
         return 95.0
     except: return 50.0
 
-def compute_btc_score(prices_daily, fear_greed, walcl_values, stablecoin_supply,
-                      indicators=None, funding_data=None, btc_dominance=None,
-                      net_liq_values=None):
+def compute_btc_score(
+    prices_daily: list[float],
+    fear_greed: float,
+    walcl_values: list,
+    stablecoin_supply: list,
+    indicators: Optional[dict] = None,
+    funding_data: Optional[dict] = None,
+    btc_dominance: Optional[float] = None,
+    net_liq_values: Optional[list] = None,
+) -> dict:
     s={}
     prices=[safe_float(p) for p in prices_daily if p and safe_float(p)>0]
     if not prices: prices=[50000.0]
@@ -375,7 +391,15 @@ def compute_btc_score(prices_daily, fear_greed, walcl_values, stablecoin_supply,
     return s
 
 
-def compute_arc_score(prices_daily, fear_greed, walcl_values, stablecoin_supply, net_liq_values=None, weekly_high=None, weekly_low=None):
+def compute_arc_score(
+    prices_daily: list[float],
+    fear_greed: float,
+    walcl_values: list,
+    stablecoin_supply: list,
+    net_liq_values: Optional[list] = None,
+    weekly_high: Optional[float] = None,
+    weekly_low: Optional[float] = None,
+) -> float:
     """
     Unified ARC formula (research-validated): ma_200w*0.35 + drawdown*0.25 + liquidity*0.25 + fear_greed*0.15.
     Liquidity for ARC uses impulse (30d/90d change of Net Liquidity); fallback to btc macro_liq if insufficient data.
@@ -428,8 +452,14 @@ def compute_arc_score(prices_daily, fear_greed, walcl_values, stablecoin_supply,
     return clamp(arc)
 
 
-def compute_eth_score(eth_prices, btc_prices, tvl_series, stablecoin_supply,
-                      fear_greed, funding_data=None):
+def compute_eth_score(
+    eth_prices: list[float],
+    btc_prices: list[float],
+    tvl_series: list,
+    stablecoin_supply: list,
+    fear_greed: float,
+    funding_data: Optional[dict] = None,
+) -> dict:
     s={}
     eth =[safe_float(p) for p in eth_prices       if p and safe_float(p)>0]
     btc =[safe_float(p) for p in btc_prices        if p and safe_float(p)>0]
@@ -477,9 +507,15 @@ def compute_eth_score(eth_prices, btc_prices, tvl_series, stablecoin_supply,
     s["current_price"]=round(eth[-1],2) if eth else 0.0
     return s
 
-def compute_macro_score(walcl_series, stablecoin_supply, btc_prices,
-                        dxy_series=None, us10y_series=None,
-                        global_data=None, funding_data=None):
+def compute_macro_score(
+    walcl_series: list,
+    stablecoin_supply: list,
+    btc_prices: list[float],
+    dxy_series: Optional[list] = None,
+    us10y_series: Optional[list] = None,
+    global_data: Optional[dict] = None,
+    funding_data: Optional[dict] = None,
+) -> dict:
     s={}
     walcl=[safe_float(v) for v in walcl_series       if v and safe_float(v)>0]
     stbl =[safe_float(v) for v in stablecoin_supply  if v and safe_float(v)>0]
@@ -528,7 +564,7 @@ def compute_macro_score(walcl_series, stablecoin_supply, btc_prices,
     )
     return s
 
-def compute_combined(btc_score,eth_score,macro_score):
+def compute_combined(btc_score: float, eth_score: float, macro_score: float) -> dict:
     btc=clamp(safe_float(btc_score,50.0))
     eth=clamp(safe_float(eth_score,50.0))
     macro=clamp(safe_float(macro_score,50.0))
@@ -560,7 +596,7 @@ def compute_combined(btc_score,eth_score,macro_score):
         "confidence": round(abs(combined - 50) * 2, 1),
     }
 
-def _weighted(scores,weights):
+def _weighted(scores: dict, weights: dict[str, float]) -> float:
     tw=ts=0.0
     for k,w in weights.items():
         v=scores.get(k)

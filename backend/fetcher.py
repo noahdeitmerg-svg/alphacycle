@@ -4,6 +4,7 @@ Sources: Binance, CoinGecko, Alternative.me, DeFiLlama, FRED
 """
 import os, math, asyncio, logging, time
 from datetime import datetime, timedelta
+from typing import Optional, Any
 import httpx
 
 logger = logging.getLogger(__name__)
@@ -13,7 +14,12 @@ COINGECKO_API_KEY = os.getenv("COINGECKO_API_KEY", "")
 HEADERS = {"User-Agent":"AlphaCycle/3.0 (+https://alphacycledashboard.netlify.app)","Accept":"application/json"}
 TIMEOUT = httpx.Timeout(25.0, connect=10.0)
 
-async def _get(url, params=None, headers=None, retries=2):
+async def _get(
+    url: str,
+    params: Optional[dict] = None,
+    headers: Optional[dict] = None,
+    retries: int = 2,
+) -> Optional[Any]:
     h={**HEADERS,**(headers or {})}
     for attempt in range(retries+1):
         try:
@@ -25,7 +31,7 @@ async def _get(url, params=None, headers=None, retries=2):
             else: logger.warning(f"FAILED {url}: {e}")
     return None
 
-def _sf(v,fb=0.0):
+def _sf(v: Any, fb: float = 0.0) -> float:
     try:
         f=float(v); return fb if (math.isnan(f) or math.isinf(f)) else f
     except: return fb
@@ -34,7 +40,7 @@ def _sf(v,fb=0.0):
 _BN="https://api.binance.com/api/v3"
 _SYM={"bitcoin":"BTCUSDT","ethereum":"ETHUSDT"}
 
-async def fetch_binance_prices(coin_id,days=730):
+async def fetch_binance_prices(coin_id: str, days: int = 730) -> list[float]:
     sym=_SYM.get(coin_id)
     if not sym: return []
     data=await _get(f"{_BN}/klines",params={"symbol":sym,"interval":"1d","limit":min(days,1000)})
@@ -42,14 +48,14 @@ async def fetch_binance_prices(coin_id,days=730):
     prices=[_sf(c[4]) for c in data if _sf(c[4])>0]
     logger.info(f"Binance {sym}: {len(prices)}d"); return prices
 
-async def fetch_binance_ticker(coin_id):
+async def fetch_binance_ticker(coin_id: str) -> dict:
     sym=_SYM.get(coin_id)
     if not sym: return {}
     data=await _get(f"{_BN}/ticker/24hr",params={"symbol":sym})
     if not data: return {}
     return {"price":_sf(data.get("lastPrice")),"change_24h":_sf(data.get("priceChangePercent")),"volume_24h":_sf(data.get("quoteVolume"))}
 
-async def fetch_funding_rates():
+async def fetch_funding_rates() -> dict[str, float]:
     """OKX public funding rate - no auth, Railway-compatible."""
     try:
         btc = await _get(
@@ -72,7 +78,7 @@ async def fetch_funding_rates():
         return {"btc_funding_rate": 0.0, "eth_funding_rate": 0.0}
 
 
-async def fetch_kraken_prices(pair="XBTUSD", days=730):
+async def fetch_kraken_prices(pair: str = "XBTUSD", days: int = 730) -> list[float]:
     """Kraken OHLC daily - reliable from Railway US-West."""
     since = int(time.time()) - (days * 86400)
     data = await _get(
@@ -88,7 +94,7 @@ async def fetch_kraken_prices(pair="XBTUSD", days=730):
     logger.info(f"Kraken {pair}: {len(prices)}d")
     return prices
 
-async def fetch_kraken_ticker(pair="XBTUSD"):
+async def fetch_kraken_ticker(pair: str = "XBTUSD") -> dict:
     """Kraken spot ticker."""
     data = await _get(
         "https://api.kraken.com/0/public/Ticker",
@@ -109,12 +115,12 @@ async def fetch_kraken_ticker(pair="XBTUSD"):
 # -- COINGECKO -----------------------------------------------------------------
 _CG="https://api.coingecko.com/api/v3"
 
-def _cgp(extra=None):
+def _cgp(extra: Optional[dict] = None) -> dict:
     p=dict(extra or {})
     if COINGECKO_API_KEY: p["x_cg_demo_api_key"]=COINGECKO_API_KEY
     return p
 
-async def fetch_market_data(coin_id):
+async def fetch_market_data(coin_id: str) -> dict:
     data=await _get(f"{_CG}/coins/{coin_id}",params=_cgp({"localization":"false","tickers":"false","community_data":"false","developer_data":"false"}))
     d={"price":0.0,"change_24h":0.0,"market_cap":0.0,"volume":0.0,"ath":0.0,"ath_date":"","ath_change_pct":0.0}
     if not data or "market_data" not in data: return d
@@ -129,22 +135,51 @@ async def fetch_market_data(coin_id):
         "ath_change_pct": _sf(md.get("ath_change_percentage",{}).get("usd",0)),
     }
 
-async def fetch_coin_prices_cg(coin_id,days=365):
+async def fetch_coin_prices_cg(coin_id: str, days: int = 365) -> list[float]:
     data=await _get(f"{_CG}/coins/{coin_id}/market_chart",params=_cgp({"vs_currency":"usd","days":days,"interval":"daily"}))
     if not data or "prices" not in data: return []
     prices=[_sf(i[1]) for i in data["prices"] if _sf(i[1])>0]
     logger.info(f"CoinGecko {coin_id}: {len(prices)}d"); return prices
 
-async def fetch_global_data():
-    return {
+async def fetch_global_data() -> dict:
+    default = {
         "btc_dominance": 55.0,
         "total_market_cap": 0.0,
         "total_volume_24h": 0.0,
         "market_cap_change_24h": 0.0,
     }
+    try:
+        # CoinCap v2: no API key required, suitable for Railway
+        data = await _get("https://api.coincap.io/v2/assets", params={"limit": "5"})
+        if not data or "data" not in data:
+            return default
+        assets = data["data"]
+        btc = next((a for a in assets if a.get("id") == "bitcoin"), None)
+        if not btc:
+            return default
+
+        btc_mc = _sf(btc.get("marketCapUsd", 0))
+
+        # Approximate total market cap from top 5, assuming they are ~78% of total
+        total_top5 = 0.0
+        for a in assets:
+            total_top5 += _sf(a.get("marketCapUsd", 0))
+        total_mc = total_top5 / 0.78 if total_top5 > 0 else 0.0
+
+        dom = round(btc_mc / total_mc * 100, 1) if total_mc > 0 else 55.0
+
+        return {
+            "btc_dominance": dom,
+            "total_market_cap": total_mc,
+            "total_volume_24h": _sf(btc.get("volumeUsd24Hr", 0)),
+            "market_cap_change_24h": _sf(btc.get("changePercent24Hr", 0)),
+        }
+    except Exception as e:
+        logger.warning("fetch_global_data failed: %s", e)
+        return default
 
 # -- FEAR & GREED -----------------------------------------------------------------
-async def fetch_fear_greed(limit=90):
+async def fetch_fear_greed(limit: int = 90) -> dict:
     default={"current":50,"label":"Neutral","history":[]}
     data=await _get("https://api.alternative.me/fng/",params={"limit":limit,"format":"json"})
     if not data or "data" not in data: return default
@@ -156,7 +191,7 @@ async def fetch_fear_greed(limit=90):
     return {"current":cur["v"],"label":cur.get("label","Neutral"),"history":history}
 
 # -- DEFILLAMA --------------------------------------------------------------------
-async def fetch_eth_tvl():
+async def fetch_eth_tvl() -> list[dict]:
     for chain in ["Ethereum","ethereum"]:
         data=await _get(f"https://api.llama.fi/v2/historicalChainTvl/{chain}")
         if data:
@@ -164,7 +199,7 @@ async def fetch_eth_tvl():
             logger.info(f"DeFiLlama TVL: {len(result)} pts"); return result
     return []
 
-async def fetch_stablecoin_supply():
+async def fetch_stablecoin_supply() -> list[dict]:
     data=await _get("https://stablecoins.llama.fi/stablecoincharts/all")
     if not data: return []
     result=[]
@@ -177,7 +212,7 @@ async def fetch_stablecoin_supply():
     return result
 
 # -- FRED -------------------------------------------------------------------------
-async def fetch_walcl():
+async def fetch_walcl() -> list[dict]:
     if not FRED_API_KEY or FRED_API_KEY in ("","your_key_here"):
         return _synthetic_walcl()
     data=await _get("https://api.stlouisfed.org/fred/series/observations",params={
@@ -187,7 +222,7 @@ async def fetch_walcl():
             for o in data["observations"] if o.get("value",".")!="."]
     return result if result else _synthetic_walcl()
 
-def _synthetic_walcl():
+def _synthetic_walcl() -> list[dict]:
     import random; random.seed(42)
     start=datetime(2018,1,1); weeks=int((datetime.utcnow()-start).days/7); result=[]
     for i in range(weeks):
@@ -199,7 +234,7 @@ def _synthetic_walcl():
         result.append({"t":int(d.timestamp())*1000,"v":max(3_000_000,v+random.uniform(-50_000,50_000))})
     return result
 
-async def fetch_fred_series(series_id,start="2020-01-01"):
+async def fetch_fred_series(series_id: str, start: str = "2020-01-01") -> list[dict]:
     if not FRED_API_KEY or FRED_API_KEY in ("","your_key_here"): return []
     data=await _get("https://api.stlouisfed.org/fred/series/observations",params={
         "series_id":series_id,"api_key":FRED_API_KEY,"file_type":"json","observation_start":start})
@@ -210,7 +245,11 @@ async def fetch_fred_series(series_id,start="2020-01-01"):
     return result
 
 
-def _compute_net_liquidity(walcl, tga, rrp):
+def _compute_net_liquidity(
+    walcl: list[dict],
+    tga: list[dict],
+    rrp: list[dict],
+) -> list[dict]:
     """
     Net Liquidity = WALCL - TGA - RRP
     Alle drei Serien sind weekly/daily FRED Daten {"t":..,"v":..}
@@ -247,7 +286,7 @@ def _compute_net_liquidity(walcl, tga, rrp):
 
 
 # -- ON-CHAIN PROXIES -------------------------------------------------------------
-def _compute_mvrv_zscore(prices):
+def _compute_mvrv_zscore(prices: list[float]) -> float:
     if len(prices)<30: return 50.0
     try:
         clean=[p for p in prices if p>0]; window=min(730,len(clean))
@@ -261,7 +300,7 @@ def _compute_mvrv_zscore(prices):
         return min(95.0,90+(z-4)*2.5)
     except: return 50.0
 
-def _compute_pi_cycle(prices):
+def _compute_pi_cycle(prices: list[float]) -> float:
     if len(prices)<350: return 50.0
     try:
         c=[p for p in prices if p>0]
@@ -276,7 +315,7 @@ def _compute_pi_cycle(prices):
         return 95.0
     except: return 50.0
 
-def _compute_puell_multiple(prices):
+def _compute_puell_multiple(prices: list[float]) -> float:
     if len(prices)<365: return 50.0
     try:
         c=[p for p in prices if p>0]
@@ -291,7 +330,7 @@ def _compute_puell_multiple(prices):
     except: return 50.0
 
 # -- AGGREGATE --------------------------------------------------------------------
-async def fetch_all():
+async def fetch_all() -> dict:
     logger.info("fetch_all v3: starting...")
     results=await asyncio.gather(
         fetch_kraken_prices("XBTUSD", 730),     # 0
