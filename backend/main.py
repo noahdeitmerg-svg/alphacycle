@@ -18,6 +18,7 @@ import os, time, math, logging, asyncio, json
 from contextlib import asynccontextmanager
 from typing import Optional, Any
 
+import stripe
 from fastapi import FastAPI, HTTPException, Security
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -112,6 +113,12 @@ CACHE_TTL   = int(os.getenv("CACHE_TTL_SECONDS", "60"))
 _cache_lock = asyncio.Lock()
 SNAPSHOT_FILE = Path("/tmp/arc_snapshots.json")
 _last_refresh = 0.0
+
+# -- STRIPE CONFIG --------------------------------------------------------------
+STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")
+STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
+STRIPE_PRICE_ID = os.environ.get("STRIPE_PRICE_ID", "")
+stripe.api_key = STRIPE_SECRET_KEY
 
 # -- RATE LIMITING --------------------------------------------------------------
 limiter = Limiter(
@@ -1290,6 +1297,155 @@ async def subscribe(request: Request, req: SubscribeRequest):
     except Exception as e:
         logger.error("Subscribe error: %s", e)
         raise HTTPException(status_code=500, detail="Subscription failed")
+
+
+class CheckoutRequest(BaseModel):
+    user_id: str
+    email: str
+
+
+@app.post("/api/checkout")
+@limiter.limit("10/minute")
+async def create_checkout(request: Request, req: CheckoutRequest):
+    """Create Stripe Checkout Session for subscription upgrade."""
+    if not STRIPE_SECRET_KEY or not STRIPE_PRICE_ID:
+        raise HTTPException(status_code=503, detail="Stripe not configured")
+    try:
+        customer_id: Optional[str] = None
+        if supabase:
+            profile = (
+                supabase.table("user_profiles")
+                .select("stripe_customer_id")
+                .eq("id", req.user_id)
+                .single()
+                .execute()
+            )
+            if profile.data and profile.data.get("stripe_customer_id"):
+                customer_id = profile.data["stripe_customer_id"]
+
+        if not customer_id:
+            customer = stripe.Customer.create(
+                email=req.email,
+                metadata={"supabase_user_id": req.user_id},
+            )
+            customer_id = customer.id
+            if supabase:
+                supabase.table("user_profiles").update(
+                    {"stripe_customer_id": customer_id}
+                ).eq("id", req.user_id).execute()
+
+        session = stripe.checkout.Session.create(
+            customer=customer_id,
+            mode="subscription",
+            line_items=[{"price": STRIPE_PRICE_ID, "quantity": 1}],
+            success_url="https://alphacycle.app/#upgrade-success",
+            cancel_url="https://alphacycle.app/#upgrade-cancelled",
+            subscription_data={
+                "trial_period_days": 7,
+                "metadata": {"supabase_user_id": req.user_id},
+            },
+            metadata={"supabase_user_id": req.user_id},
+        )
+        return {"checkout_url": session.url}
+    except Exception as e:
+        logger.error("Checkout error: %s", e)
+        raise HTTPException(status_code=500, detail="Checkout failed")
+
+
+@app.post("/api/stripe-webhook")
+async def stripe_webhook(request: Request):
+    """Handle Stripe webhook events to update user plan."""
+    if not STRIPE_WEBHOOK_SECRET:
+        raise HTTPException(status_code=503, detail="Webhook not configured")
+    payload = await request.body()
+    sig_header = request.headers.get("stripe-signature", "")
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, STRIPE_WEBHOOK_SECRET
+        )
+    except (ValueError, stripe.error.SignatureVerificationError) as e:
+        logger.warning("Webhook signature failed: %s", e)
+        raise HTTPException(status_code=400, detail="Invalid signature")
+
+    event_type = event.get("type", "")
+    data = event.get("data", {}).get("object", {})
+    logger.info("Stripe webhook: %s", event_type)
+
+    user_id: Optional[str] = None
+    metadata = data.get("metadata") or {}
+    if metadata.get("supabase_user_id"):
+        user_id = metadata["supabase_user_id"]
+    elif data.get("subscription"):
+        try:
+            sub = stripe.Subscription.retrieve(data["subscription"])
+            user_id = (sub.metadata or {}).get("supabase_user_id")
+        except Exception:
+            user_id = None
+
+    if not user_id and data.get("customer") and supabase:
+        try:
+            profile = (
+                supabase.table("user_profiles")
+                .select("id")
+                .eq("stripe_customer_id", data["customer"])
+                .single()
+                .execute()
+            )
+            if profile.data:
+                user_id = profile.data["id"]
+        except Exception:
+            user_id = None
+
+    if not user_id or not supabase:
+        logger.warning("Webhook: no user_id found for event %s", event_type)
+        return {"received": True}
+
+    if event_type == "checkout.session.completed":
+        sub_id = data.get("subscription")
+        supabase.table("user_profiles").update(
+            {
+                "plan": "paid",
+                "stripe_subscription_id": sub_id,
+                "subscription_status": "active",
+                "stripe_customer_id": data.get("customer"),
+            }
+        ).eq("id", user_id).execute()
+        logger.info("User %s upgraded to paid", user_id)
+
+    elif event_type in ("customer.subscription.updated", "customer.subscription.renewed"):
+        status = data.get("status", "")
+        plan = "paid" if status in ("active", "trialing") else "free"
+        update: dict[str, Any] = {
+            "plan": plan,
+            "subscription_status": status,
+        }
+        if data.get("current_period_end"):
+            from datetime import datetime
+
+            update["current_period_end"] = datetime.utcfromtimestamp(
+                data["current_period_end"]
+            ).isoformat()
+        supabase.table("user_profiles").update(update).eq("id", user_id).execute()
+        logger.info("User %s subscription updated: %s -> %s", user_id, status, plan)
+
+    elif event_type in ("customer.subscription.deleted", "customer.subscription.paused"):
+        supabase.table("user_profiles").update(
+            {
+                "plan": "free",
+                "subscription_status": "cancelled",
+            }
+        ).eq("id", user_id).execute()
+        logger.info("User %s subscription cancelled", user_id)
+
+    elif event_type == "invoice.payment_failed":
+        supabase.table("user_profiles").update(
+            {
+                "subscription_status": "past_due",
+            }
+        ).eq("id", user_id).execute()
+        logger.warning("User %s payment failed", user_id)
+
+    return {"received": True}
 
 
 @app.get("/api/auth/profile")

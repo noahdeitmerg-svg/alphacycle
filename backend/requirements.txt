@@ -6,3 +6,4 @@ python-dotenv==1.0.1
 supabase>=2.4.0
 pydantic[email]
 slowapi>=0.1.9
+stripe>=8.0.0
