@@ -88,9 +88,9 @@ except ImportError:
 _analyzer = CycleAnalyzer()
 
 try:
-    from services.backtest_engine import run_backtest, run_daily_backtest
+    from services.backtest_engine import run_backtest, run_daily_backtest, run_daily_backtest_full
 except ImportError:
-    from services.backtest_engine import run_backtest, run_daily_backtest
+    from services.backtest_engine import run_backtest, run_daily_backtest, run_daily_backtest_full
 
 try:
     from snapshot import build_snapshot
@@ -211,7 +211,6 @@ async def refresh_cache(force: bool = False):
             _last_refresh = now
             # Invalidate heavy endpoint response cache and derived histories after fresh data
             _response_cache.clear()
-            CACHE.pop("daily_history", None)
             logger.info(
                 f"Cache OK — BTC:{btc_scores['btc_score']:.1f} "
                 f"ETH:{eth_scores['eth_score']:.1f} "
@@ -221,14 +220,17 @@ async def refresh_cache(force: bool = False):
             _save_today_snapshot()
 
             try:
-                bt_data = await run_backtest()
+                bt_data = await run_daily_backtest_full()
                 bt_results = bt_data.get("results", []) if isinstance(bt_data, dict) else []
-                # Normalize: all downstream zone lookups use display score
-                for _r in bt_results:
-                    if _r.get("score_display") is not None:
-                        _r["score"] = _r["score_display"]
-                        _r["arc_score"] = _r["score_display"]
+                if not bt_results:
+                    logger.warning("Daily full backtest empty in refresh, temporary fallback to weekly")
+                    bt_data = await run_backtest()
+                    bt_results = bt_data.get("results", []) if isinstance(bt_data, dict) else []
                 if bt_results:
+                    for _r in bt_results:
+                        if _r.get("score_display") is not None:
+                            _r["score"] = _r["score_display"]
+                            _r["arc_score"] = _r["score_display"]
                     from historical_returns import (
                         compute_historical_returns,
                         compute_arc_forward_returns,
@@ -264,7 +266,7 @@ async def lifespan(app: FastAPI):
     logger.info("Alpha Cycle Intelligence API starting…")
     try:
         from pathlib import Path as _Path
-        for _cache_path in ("/tmp/backtest_cache.json", "/tmp/zone_history_cache.json"):
+        for _cache_path in ("/tmp/backtest_cache.json", "/tmp/zone_history_cache.json", "/tmp/daily_full_cache.json"):
             cache_file = _Path(_cache_path)
             if cache_file.exists():
                 try:
@@ -1587,12 +1589,14 @@ async def get_snapshots(request: Request):
 async def get_backtest(request: Request):
     """
     Historical AlphaCycle backtest endpoint.
-    Returns BTC price+score history from cache when available (fast); else runs backtest once.
+    Returns BTC price+score history from cache when available (fast); else runs daily full backtest once.
     """
     try:
         if CACHE.get("backtest_results"):
             return api_response({"results": CACHE["backtest_results"]})
-        data = await run_backtest()
+        data = await run_daily_backtest_full()
+        if not data.get("results"):
+            data = await run_backtest()
         return api_response(data)
     except Exception as e:
         logger.exception("Backtest endpoint failed")
@@ -1676,8 +1680,11 @@ async def get_historical_returns(request: Request):
             result = CACHE["hist_returns"]
         else:
             from historical_returns import compute_historical_returns, _empty_returns
-            bt = await run_backtest()
+            bt = await run_daily_backtest_full()
             bt_list = bt.get("results", []) if isinstance(bt, dict) else []
+            if not bt_list:
+                bt = await run_backtest()
+                bt_list = bt.get("results", []) if isinstance(bt, dict) else []
             result = compute_historical_returns(bt_list)
         if result.get("zones", {}).get("risk_rising"):
             result["zones"]["risk_rising"]["display_mode"] = "reduce"
@@ -1744,8 +1751,11 @@ async def get_arc_forward_returns(request: Request):
         if CACHE.get("fwd_returns"):
             return api_response({"buckets": CACHE["fwd_returns"]})
         from historical_returns import compute_arc_forward_returns
-        bt = await run_backtest()
+        bt = await run_daily_backtest_full()
         bt_list = bt.get("results", []) if isinstance(bt, dict) else []
+        if not bt_list:
+            bt = await run_backtest()
+            bt_list = bt.get("results", []) if isinstance(bt, dict) else []
         results = compute_arc_forward_returns(bt_list)
         return api_response({"buckets": results})
     except Exception as e:
@@ -1755,30 +1765,18 @@ async def get_arc_forward_returns(request: Request):
 
 @app.get("/api/history-daily")
 async def get_history_daily(request: Request):
-    """
-    Real daily ARC scores for last 365 days.
-    Each point is computed with the full ARC formula on real data.
-    Cached after first computation, invalidated on 60s refresh.
-    """
-    # Return from cache if available
-    if CACHE.get("daily_history"):
-        return api_response(CACHE["daily_history"])
-
+    """Daily ARC scores for last 365 days — sliced from full daily backtest."""
     try:
-        bt = await run_daily_backtest(days=365)
-        results = bt.get("results", [])
+        all_results = CACHE.get("backtest_results", [])
+        if not all_results:
+            bt = await run_daily_backtest_full()
+            all_results = bt.get("results", [])
+
+        results = list(all_results[-365:]) if len(all_results) > 365 else list(all_results)
 
         if not results:
-            return api_response(
-                {
-                    "results": [],
-                    "count": 0,
-                    "interval": "daily",
-                    "error": bt.get("error", "no data"),
-                }
-            )
+            return api_response({"results": [], "count": 0, "interval": "daily", "error": "no data"})
 
-        # Override last point with live ARC (gleiche Formel wie rest of chart)
         c = CACHE
         if c and c.get("raw"):
             raw = c["raw"]
@@ -1800,18 +1798,14 @@ async def get_history_daily(request: Request):
             except Exception as e:
                 logger.warning("history-daily live override failed: %s", e)
 
-        payload = {
+        return api_response({
             "results": results,
             "count": len(results),
             "interval": "daily",
-        }
-        CACHE["daily_history"] = payload
-        return api_response(payload)
+        })
     except Exception as e:
         logger.error("history-daily error: %s", e)
-        return api_response(
-            {"results": [], "count": 0, "interval": "daily", "error": str(e)}
-        )
+        return api_response({"results": [], "count": 0, "interval": "daily", "error": str(e)})
 
 
 @app.get("/api/liquidity-regime")

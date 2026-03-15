@@ -2,6 +2,13 @@
 **Zuletzt aktualisiert:** 2026-03-13
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
+## Letzter Session-Status (2026-03-13) — ARC Daily Migration (Unified Daily Backtest)
+- **Single source:** Alle ARC-Historie (10Y-Chart, 1Y-Chart, Zone History, Historical Returns, ARC Forward Returns) nutzen eine einheitliche Quelle: `run_daily_backtest_full()` mit taeglichen Kraken-Candles (interval=1440) ab 2013-10-10. MA200w wird aus Daily-Preisen via [::7]-Slice und moving_average(..., 200) berechnet — exakt wie in compute_btc_score() (scoring.py), Methoden-Alignment mit Live-ARC.
+- **backtest_engine.py:** Neue `_fetch_btc_daily_full()` (paginated daily OHLC), `_load_or_build_daily_cache()` (File /tmp/daily_full_cache.json, inkrementelles Update, letzter Eintrag vor Append verworfen), `run_daily_backtest_full()`. Fallback auf `run_backtest()` nur bei zu wenig Daily-Daten (<1400 Punkte) oder Fehler. `run_backtest()` und `run_daily_backtest()` mit Deprecation-Hinweis (temporaerer Rollback).
+- **Dual-Validation-Log:** Drei Referenzdaten (2022-11-21, 2024-03-14, 2025-01-20) werden als ARC VALIDATION daily=... weekly=... delta=... geloggt.
+- **main.py:** Startup loescht zusaetzlich /tmp/daily_full_cache.json. refresh_cache() ruft run_daily_backtest_full() auf, bei leerem Ergebnis Fallback run_backtest(); CACHE.pop("daily_history") entfernt. /api/backtest und /api/history-daily nutzen run_daily_backtest_full() (Fallback weekly). /api/history-daily liefert last 365 aus CACHE["backtest_results"], Live-Override letzter Punkt unveraendert. /api/historical-returns und /api/arc-forward-returns bei Cache-Miss ebenfalls run_daily_backtest_full() mit Fallback.
+- **Frontend:** 10Y-Chart nutzt S.backtest ohne Truncation (unveraendert). 1Y-Chart weiterhin aus dailyHistory (last 365 aus Backend).
+
 ## Letzter Session-Status (2026-03-13) — Auth/Payment Error States (Phase 1 Prompt 2)
 - **Frontend showPlanWarning()**: Leichtes Banner unten (position:fixed; bottom:20px; z-index:9999; amber), auto-dismiss nach 8s; entfernt vorhandenes #plan-warning vor Neu-Anzeige. Wird von fetchUserPlan, openUpgradeModal und ggf. weiteren Auth/Payment-Fehlern genutzt.
 - **fetchUserPlan**: 8s Timeout via AbortController/setTimeout; bei Timeout oder Netzwerk-/Parse-Fehler currentPlan = 'free', showPlanWarning('Could not verify your plan. Some features may be temporarily hidden.'); bei data.error === 'profile_fetch_failed' dieselbe Meldung. applyBlurGates() weiterhin am Ende (auch im catch) aufgerufen.

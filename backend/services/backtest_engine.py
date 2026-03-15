@@ -31,8 +31,9 @@ except ImportError:  # pragma: no cover
 
 
 HTTP_TIMEOUT = httpx.Timeout(60.0, connect=10.0)
-WINDOW_200W = 200  # 200 wöchentliche Datenpunkte = 200-Wochen MA
+WINDOW_200W = 200  # 200 weekly data points = 200-week MA
 CACHE_FILE = Path("/tmp/backtest_cache.json")
+DAILY_CACHE_FILE = Path("/tmp/daily_full_cache.json")
 
 
 async def _fetch_since(since_ts: int) -> List[Dict[str, Any]]:
@@ -156,6 +157,107 @@ async def _fetch_btc_history() -> List[Dict[str, Any]]:
     return sorted(out, key=lambda x: x["date"])
 
 
+async def _fetch_btc_daily_full() -> List[Dict[str, Any]]:
+    """Kraken OHLC daily (interval=1440) paginated from 2013-10-10 to present."""
+    since = 1381363200  # 2013-10-10
+    all_candles: List[list] = []
+
+    async with httpx.AsyncClient(timeout=HTTP_TIMEOUT, follow_redirects=True) as client:
+        while True:
+            resp = await client.get(
+                "https://api.kraken.com/0/public/OHLC",
+                params={"pair": "XBTUSD", "interval": 1440, "since": since},
+            )
+            data = resp.json()
+            if data.get("error") or "result" not in data:
+                logger.warning("Kraken daily OHLC error: %s since=%s", data.get("error"), since)
+                break
+            keys = [k for k in data["result"] if k != "last"]
+            if not keys:
+                break
+            candles = data["result"][keys[0]]
+            if not candles:
+                break
+            all_candles.extend(candles)
+            last = data["result"].get("last", 0)
+            if last <= since or len(candles) < 10:
+                break
+            since = last
+            await asyncio.sleep(1.2)
+
+    out = []
+    seen = set()
+    for c in all_candles:
+        try:
+            ts = int(c[0])
+            if ts in seen:
+                continue
+            seen.add(ts)
+            close = float(c[4])
+            high = float(c[2])
+            low = float(c[3])
+            if close > 0:
+                dt = datetime.utcfromtimestamp(ts).date().isoformat()
+                out.append({"date": dt, "price": close, "high": high, "low": low})
+        except (IndexError, TypeError, ValueError):
+            continue
+    return sorted(out, key=lambda x: x["date"])
+
+
+async def _load_or_build_daily_cache() -> List[Dict[str, Any]]:
+    """Load daily candle cache from file or build from scratch. Incremental update if cache exists."""
+    today = datetime.utcnow().date().isoformat()
+
+    if DAILY_CACHE_FILE.exists():
+        try:
+            cached = json.loads(DAILY_CACHE_FILE.read_text())
+            if cached and isinstance(cached, list) and len(cached) > 1000:
+                last_date = cached[-1]["date"]
+                if last_date >= today:
+                    return cached
+                # Drop last entry — it may be an incomplete daily close
+                cached = cached[:-1]
+                since_ts = int(datetime.fromisoformat(cached[-1]["date"]).timestamp()) if cached else 0
+                async with httpx.AsyncClient(timeout=HTTP_TIMEOUT, follow_redirects=True) as client:
+                    resp = await client.get(
+                        "https://api.kraken.com/0/public/OHLC",
+                        params={"pair": "XBTUSD", "interval": 1440, "since": since_ts},
+                    )
+                    data = resp.json()
+                if not data.get("error") and "result" in data:
+                    keys = [k for k in data["result"] if k != "last"]
+                    if keys:
+                        for c in data["result"][keys[0]]:
+                            try:
+                                close = float(c[4])
+                                high = float(c[2])
+                                low = float(c[3])
+                                if close > 0:
+                                    dt = datetime.utcfromtimestamp(int(c[0])).date().isoformat()
+                                    cached.append({"date": dt, "price": close, "high": high, "low": low})
+                            except (IndexError, TypeError, ValueError):
+                                continue
+                seen = set()
+                deduped = []
+                for item in cached:
+                    if item["date"] not in seen:
+                        seen.add(item["date"])
+                        deduped.append(item)
+                cached = sorted(deduped, key=lambda x: x["date"])
+                DAILY_CACHE_FILE.write_text(json.dumps(cached))
+                return cached
+        except Exception as e:
+            logger.warning("Daily cache load failed: %s", e)
+
+    history = await _fetch_btc_daily_full()
+    if history:
+        try:
+            DAILY_CACHE_FILE.write_text(json.dumps(history))
+        except Exception:
+            pass
+    return history
+
+
 async def _fetch_fred(series_id: str) -> list:
     """Fetch FRED series observations from 2013-01-01. Returns [{"t": ms, "v": float}, ...]."""
     FRED_KEY = os.getenv("FRED_API_KEY", "")
@@ -249,6 +351,11 @@ def _rsi_to_fg(prices_so_far: List[float]) -> float:
 
 async def run_backtest() -> Dict[str, Any]:
     """
+    DEPRECATED — temporary migration/rollback safety path only.
+    Use run_daily_backtest_full() as the authoritative ARC backtest.
+    Uses weekly candles inconsistent with live ARC methodology.
+    Remove after daily migration is validated.
+
     Run historical backtest. Returns {"results": [{"date", "price", "score"}, ...], "error": "..."} on failure.
     """
     try:
@@ -343,6 +450,9 @@ async def run_backtest() -> Dict[str, Any]:
 
 async def run_daily_backtest(days: int = 400) -> Dict[str, Any]:
     """
+    DEPRECATED — replaced by run_daily_backtest_full().
+    Retained temporarily. Remove after daily migration is validated.
+
     Compute REAL daily ARC scores for the last `days` days.
     Uses daily Kraken candles (interval=1440), weekly MA200w from backtest,
     daily Fear & Greed, and forward-filled FRED net liquidity. No interpolation.
@@ -530,4 +640,161 @@ async def run_daily_backtest(days: int = 400) -> Dict[str, Any]:
         return {"results": [], "error": str(e)}
 
 
-__all__ = ["run_backtest", "run_daily_backtest"]
+async def run_daily_backtest_full() -> Dict[str, Any]:
+    """
+    Full-range daily ARC backtest from ~2017 to today.
+
+    METHODOLOGY: MA200w is computed from daily prices via [::7] slicing then
+    moving_average(..., 200), replicating the exact pattern in compute_btc_score()
+    (scoring.py L325-326). This is a deliberate methodology-alignment choice.
+    [::7] daily != true weekly closes, but it ensures backtest and live ARC
+    use identical methodology.
+    """
+    try:
+        history = await _load_or_build_daily_cache()
+    except Exception as e:
+        return {"results": [], "error": f"Daily fetch failed: {e!s}"}
+
+    if not history or len(history) < 1400:
+        logger.warning(
+            "Daily history too short (%s points), temporary fallback to weekly backtest",
+            len(history) if history else 0,
+        )
+        return await run_backtest()
+
+    walcl_raw, tga_raw, rrp_raw, fg_history = await asyncio.gather(
+        _fetch_fred("WALCL"),
+        _fetch_fred("WTREGEN"),
+        _fetch_fred("RRPONTSYD"),
+        _fetch_fg_history(),
+    )
+
+    tga_dict = {item["t"]: item["v"] for item in tga_raw}
+    rrp_dict = {item["t"]: item["v"] for item in rrp_raw}
+    net_liq_by_date: Dict[str, float] = {}
+    for item in walcl_raw:
+        t = item["t"]
+        w = float(item.get("v", 0))
+        if w <= 0:
+            continue
+        tga_val = 0.0
+        rrp_val = 0.0
+        for delta in [0, 86400000, -86400000, 172800000, -172800000, 604800000, -604800000]:
+            if t + delta in tga_dict:
+                tga_val = tga_dict[t + delta]
+                break
+        for delta in [0, 86400000, -86400000, 172800000, -172800000, 604800000, -604800000]:
+            if t + delta in rrp_dict:
+                rrp_val = float(rrp_dict[t + delta]) * 1000
+                break
+        net = w - tga_val - rrp_val
+        date_str = datetime.utcfromtimestamp(t // 1000).date().isoformat()
+        net_liq_by_date[date_str] = net
+
+    prices: List[float] = [safe_float(item["price"], 0.0) for item in history]
+
+    DAILY_PER_WEEK = 7
+    MIN_DAYS_FOR_MA200W = WINDOW_200W * DAILY_PER_WEEK
+
+    fg_dates_sorted = sorted(fg_history.keys())
+
+    def _fg_forward_fill(target_date: str) -> float:
+        best = None
+        for d in fg_dates_sorted:
+            if d <= target_date:
+                best = fg_history[d]
+            else:
+                break
+        return best if best is not None else 50.0
+
+    results: List[Dict[str, Any]] = []
+
+    try:
+        for idx, item in enumerate(history):
+            price = prices[idx]
+            if price <= 0:
+                continue
+            if idx + 1 < MIN_DAYS_FOR_MA200W:
+                continue
+
+            daily_up_to_now = prices[: idx + 1]
+            weekly_sampled = daily_up_to_now[::DAILY_PER_WEEK]
+            if len(weekly_sampled) < WINDOW_200W:
+                continue
+            ma_200w = sum(weekly_sampled[-WINDOW_200W:]) / WINDOW_200W
+            if not math.isfinite(ma_200w) or ma_200w <= 0:
+                continue
+
+            daily_high = safe_float(item.get("high", price), price)
+            daily_low = safe_float(item.get("low", price), price)
+
+            ma_200w_score = ma_deviation_score(price, ma_200w)
+
+            prices_so_far = prices[: idx + 1]
+            dd_score = drawdown_score(prices_so_far) if len(prices_so_far) >= 10 else 50.0
+
+            if item["date"] in fg_history:
+                fear_greed_raw = fg_history[item["date"]]
+            else:
+                fg_raw_ff = _fg_forward_fill(item["date"])
+                fear_greed_raw = fg_raw_ff if fg_raw_ff != 50.0 else _rsi_to_fg(prices_so_far)
+            fg_score = fg_to_score(fear_greed_raw)
+
+            macro_liq = _get_net_liq_score(item["date"], net_liq_by_date, prices_so_far)
+
+            arc = (
+                ma_200w_score * 0.35
+                + dd_score * 0.25
+                + macro_liq * 0.25
+                + fg_score * 0.15
+            )
+            arc = max(0.0, min(100.0, arc))
+
+            results.append({
+                "date": item["date"],
+                "price": round(price, 2),
+                "high": round(daily_high, 2),
+                "low": round(daily_low, 2),
+                "score": round(arc, 2),
+                "score_display": round(arc_display_score(arc), 2),
+            })
+
+    except Exception as e:
+        return {"results": results, "error": f"Daily backtest loop: {e!s}"}
+
+    try:
+        weekly_bt = await run_backtest()
+        weekly_results = weekly_bt.get("results", []) if isinstance(weekly_bt, dict) else []
+        weekly_backtest_scores = {
+            r["date"]: r["score"] for r in weekly_results
+            if r.get("date") and r.get("score") is not None
+        }
+    except Exception:
+        weekly_backtest_scores = {}
+
+    for ref_date in ["2022-11-21", "2024-03-14", "2025-01-20"]:
+        daily_score = None
+        for r in results:
+            if r["date"] == ref_date:
+                daily_score = r["score"]
+                break
+        weekly_score = weekly_backtest_scores.get(ref_date)
+        delta = round(daily_score - weekly_score, 2) if (daily_score is not None and weekly_score is not None) else None
+        logger.info(
+            "ARC VALIDATION: %s -> daily=%.1f weekly=%.1f delta=%s",
+            ref_date,
+            daily_score if daily_score is not None else -1,
+            weekly_score if weekly_score is not None else -1,
+            f"{delta:+.1f}" if delta is not None else "n/a",
+        )
+
+    logger.info(
+        "Daily full backtest: %s points, range %s -> %s",
+        len(results),
+        results[0]["date"] if results else "?",
+        results[-1]["date"] if results else "?",
+    )
+    return {"results": results}
+
+
+__all__ = ["run_backtest", "run_daily_backtest", "run_daily_backtest_full"]
