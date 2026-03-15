@@ -2,6 +2,14 @@
 **Zuletzt aktualisiert:** 2026-03-13
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
+## Letzter Session-Status (2026-03-13) — Auth/Payment Error States (Phase 1 Prompt 2)
+- **Frontend showPlanWarning()**: Leichtes Banner unten (position:fixed; bottom:20px; z-index:9999; amber), auto-dismiss nach 8s; entfernt vorhandenes #plan-warning vor Neu-Anzeige. Wird von fetchUserPlan, openUpgradeModal und ggf. weiteren Auth/Payment-Fehlern genutzt.
+- **fetchUserPlan**: 8s Timeout via AbortController/setTimeout; bei Timeout oder Netzwerk-/Parse-Fehler currentPlan = 'free', showPlanWarning('Could not verify your plan. Some features may be temporarily hidden.'); bei data.error === 'profile_fetch_failed' dieselbe Meldung. applyBlurGates() weiterhin am Ende (auch im catch) aufgerufen.
+- **openUpgradeModal**: Kein alert() mehr. Bei !resp.ok: 401 → showPlanWarning + openAuthModal('login'); 503 → Payment temporarily unavailable; sonst Checkout failed. Im catch (Netzwerk etc.) showPlanWarning('Checkout temporarily unavailable. Please try again in a moment.'). Buttons in allen Fehlerpfaden zurueckgesetzt (REDIRECTING... → UPGRADE TO PRO).
+- **handleAuthSubmit**: Sign-Up-Erfolg nur noch closeAuthModal() (Confirm Email ist in Supabase aus; kein "Check your email"-Text). Bei Fehler: wenn result.error.message "already registered" oder "already exists" enthaelt → Anzeige "This email is already registered. Try logging in instead."
+- **GET /api/auth/profile**: Profil-Abfrage (supabase.table user_profiles select/single/execute) und Insert (neues Profil) in try/except. Bei Exception: logger.error, Rueckgabe {"authenticated": true, "plan": "free", "email": user.email, "subscription_status": "unknown" bzw. "inactive", "error": "profile_fetch_failed"}. Frontend kann data.error nutzen fuer showPlanWarning.
+- **POST /api/checkout**: Unveraendert; liefert bei fehlenden Stripe-Keys 503 mit detail, bei Stripe-Fehler 500 mit detail (JSON parsebar).
+
 ## Letzter Session-Status (2026-03-13) — Stripe Entitlement Hardening (Phase 1)
 - **Webhook:** State-based duplicate protection: vor jedem Update wird aktuelles Profil geladen; bei checkout.session.completed Skip wenn plan bereits paid; bei subscription.updated Skip wenn subscription_status bereits gleich; bei deleted/paused Skip wenn plan bereits free; bei invoice.payment_failed Skip wenn subscription_status bereits past_due. Log: "Webhook skip: user %s already %s for %s". User-Resolution mit Log: "Webhook resolve: event=... resolved_uid=... (meta=..., sub=..., cust=...)". Signaturfehler liefern weiterhin 200 und {"received": True}. Helper _get_profile_by_user_id(user_id) fuer Skip-Logik.
 - **Stripe Status -> Plan:** STRIPE_STATUS_TO_PLAN Dict (AlphaCycle entitlement policy): active, trialing, past_due -> paid; canceled, incomplete, incomplete_expired, paused, unpaid -> free. subscription.updated/renewed nutzen dieses Mapping.

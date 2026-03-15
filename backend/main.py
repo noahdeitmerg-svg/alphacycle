@@ -1492,20 +1492,40 @@ async def get_profile(request: Request, user=Security(get_current_user)):
         logger.warning("Supabase not configured; returning fallback")
         return {"authenticated": True, "plan": "free", "email": user.email, "subscription_status": "inactive"}
 
-    profile = (
-        supabase.table("user_profiles")
-        .select("*")
-        .eq("id", str(user.id))
-        .single()
-        .execute()
-    )
+    try:
+        profile = (
+            supabase.table("user_profiles")
+            .select("*")
+            .eq("id", str(user.id))
+            .single()
+            .execute()
+        )
+    except Exception as e:
+        logger.error("Profile fetch failed for user %s: %s", user.id, e)
+        return {
+            "authenticated": True,
+            "plan": "free",
+            "email": user.email,
+            "subscription_status": "unknown",
+            "error": "profile_fetch_failed",
+        }
 
     if not profile.data:
-        supabase.table("user_profiles").insert({
-            "id": str(user.id),
-            "email": user.email,
-            "plan": "free",
-        }).execute()
+        try:
+            supabase.table("user_profiles").insert({
+                "id": str(user.id),
+                "email": user.email,
+                "plan": "free",
+            }).execute()
+        except Exception as e:
+            logger.error("Profile create failed for user %s: %s", user.id, e)
+            return {
+                "authenticated": True,
+                "plan": "free",
+                "email": user.email,
+                "subscription_status": "inactive",
+                "error": "profile_fetch_failed",
+            }
         return {
             "authenticated": True,
             "plan": "trial",

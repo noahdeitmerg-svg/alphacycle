@@ -5085,23 +5085,50 @@ async function initAuth() {
   }
 }
 
+function showPlanWarning(message, durationMs) {
+  durationMs = durationMs || 8000;
+  var existing = document.getElementById('plan-warning');
+  if (existing) existing.remove();
+  var el = document.createElement('div');
+  el.id = 'plan-warning';
+  el.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:9999;background:rgba(245,158,11,0.95);color:#0d1117;padding:10px 20px;border-radius:8px;font-family:var(--f-mono);font-size:11px;font-weight:600;max-width:400px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.3);';
+  el.textContent = message;
+  document.body.appendChild(el);
+  setTimeout(function() { if (el.parentNode) el.remove(); }, durationMs);
+}
+
 async function fetchUserPlan() {
   if (!supabaseClient || !BACKEND_URL) return;
+  var timeout = null;
   try {
-    const sessionRes = await supabaseClient.auth.getSession();
-    const token = sessionRes && sessionRes.data && sessionRes.data.session
+    var sessionRes = await supabaseClient.auth.getSession();
+    var token = sessionRes && sessionRes.data && sessionRes.data.session
       ? sessionRes.data.session.access_token
       : null;
     if (!token) return;
-    const res = await fetch(BACKEND_URL + '/api/auth/profile', {
+    var controller = new AbortController();
+    timeout = setTimeout(function() { controller.abort(); }, 8000);
+    var res = await fetch(BACKEND_URL + '/api/auth/profile', {
       headers: { Authorization: 'Bearer ' + token },
+      signal: controller.signal,
     });
-    const data = await res.json();
-    currentPlan = data && data.plan ? data.plan : 'free';
-    trialActive = data.trial_active || false;
-    trialEndsAt = data.trial_ends_at || null;
+    clearTimeout(timeout);
+    timeout = null;
+    var data = await res.json();
+    if (data.error === 'profile_fetch_failed') {
+      currentPlan = 'free';
+      trialActive = false;
+      trialEndsAt = null;
+      showPlanWarning('Could not verify your plan. Some features may be temporarily hidden.');
+    } else {
+      currentPlan = data && data.plan ? data.plan : 'free';
+      trialActive = data.trial_active || false;
+      trialEndsAt = data.trial_ends_at || null;
+    }
   } catch (e) {
+    if (timeout) clearTimeout(timeout);
     currentPlan = 'free';
+    showPlanWarning('Could not verify your plan. Some features may be temporarily hidden.');
   }
   applyBlurGates();
 }
@@ -5163,14 +5190,16 @@ async function handleAuthSubmit() {
       result = await supabaseClient.auth.signInWithPassword({ email: email, password: password });
     }
     if (result && result.error) {
-      errEl.textContent = result.error.message || 'Authentication failed.';
+      var msg = result.error.message || 'Authentication failed.';
+      if (msg.toLowerCase().indexOf('already registered') !== -1 || msg.toLowerCase().indexOf('already exists') !== -1) {
+        msg = 'This email is already registered. Try logging in instead.';
+      }
+      errEl.textContent = msg;
       errEl.style.display = 'block';
       errEl.style.color = '#FF3B3B';
     } else {
       if (authMode === 'signup') {
-        errEl.style.color = '#00D4AA';
-        errEl.textContent = 'Check your email to confirm your account!';
-        errEl.style.display = 'block';
+        closeAuthModal();
       } else {
         closeAuthModal();
       }
@@ -5419,6 +5448,25 @@ async function openUpgradeModal() {
         email: currentUser.email,
       }),
     });
+    if (!resp.ok) {
+      var errData = {};
+      try { errData = await resp.json(); } catch (e2) {}
+      if (resp.status === 401) {
+        showPlanWarning('Your session has expired. Please log in again.');
+        openAuthModal('login');
+      } else if (resp.status === 503) {
+        showPlanWarning('Payment system is temporarily unavailable.');
+      } else {
+        showPlanWarning('Checkout failed. Please try again.');
+      }
+      btns.forEach(function(b) {
+        if (b.textContent === 'REDIRECTING...') {
+          b.textContent = 'UPGRADE TO PRO — $49/mo';
+          b.disabled = false;
+        }
+      });
+      return;
+    }
     var data = await resp.json();
     if (data.checkout_url) {
       window.location.href = data.checkout_url;
@@ -5427,7 +5475,7 @@ async function openUpgradeModal() {
     }
   } catch (e) {
     console.error('Checkout error:', e);
-    alert('Checkout temporarily unavailable. Please try again.');
+    showPlanWarning('Checkout temporarily unavailable. Please try again in a moment.');
     btns.forEach(function(b) {
       if (b.textContent === 'REDIRECTING...') {
         b.textContent = 'UPGRADE TO PRO — $49/mo';
