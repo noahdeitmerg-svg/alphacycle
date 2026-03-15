@@ -7025,19 +7025,37 @@ async function boot() {
         var ce = document.getElementById('content-export-section');
         if (ce) ce.style.display = 'block';
       }
-      // Handle Stripe redirect
+      // Handle Stripe redirect: poll until plan is paid (webhook may be delayed)
       if (window.location.hash === '#upgrade-success') {
-        setTimeout(async function() {
-          await fetchUserPlan();
-          updateAuthUI();
-          applyBlurGates();
-          var banner = document.createElement('div');
-          banner.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:9999;background:#00D4AA;color:#0d1117;padding:12px 24px;border-radius:8px;font-family:var(--f-mono);font-size:13px;font-weight:700;letter-spacing:0.05em;box-shadow:0 4px 20px rgba(0,212,170,0.3);';
-          banner.textContent = '\u2713 WELCOME TO ALPHACYCLE PRO';
-          document.body.appendChild(banner);
-          setTimeout(function() { banner.remove(); }, 5000);
-          window.location.hash = '';
-        }, 2000);
+        window.location.hash = '';
+        var attempts = 0;
+        var maxAttempts = 5;
+        var intervalMs = 3000;
+        function tryResolve() {
+          attempts++;
+          fetchUserPlan().then(function() {
+            if (currentPlan === 'paid') {
+              updateAuthUI();
+              applyBlurGates();
+              var banner = document.createElement('div');
+              banner.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:9999;background:#00D4AA;color:#0d1117;padding:12px 24px;border-radius:8px;font-family:var(--f-mono);font-size:13px;font-weight:700;letter-spacing:0.05em;box-shadow:0 4px 20px rgba(0,212,170,0.3);';
+              banner.textContent = '\u2713 WELCOME TO ALPHACYCLE PRO';
+              document.body.appendChild(banner);
+              setTimeout(function() { banner.remove(); }, 5000);
+              return;
+            }
+            if (attempts < maxAttempts) {
+              setTimeout(tryResolve, intervalMs);
+            } else {
+              var fallback = document.createElement('div');
+              fallback.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:9999;background:#2a3a4a;color:#fff;padding:12px 24px;border-radius:8px;font-family:var(--f-mono);font-size:12px;';
+              fallback.textContent = 'Payment received — please refresh to unlock Pro.';
+              document.body.appendChild(fallback);
+              setTimeout(function() { fallback.remove(); }, 8000);
+            }
+          });
+        }
+        setTimeout(tryResolve, 500);
       }
       // Auth initialisieren
       try {

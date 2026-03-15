@@ -2,6 +2,12 @@
 **Zuletzt aktualisiert:** 2026-03-13
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
+## Letzter Session-Status (2026-03-13) — Stripe Entitlement Hardening (Phase 1)
+- **Webhook:** State-based duplicate protection: vor jedem Update wird aktuelles Profil geladen; bei checkout.session.completed Skip wenn plan bereits paid; bei subscription.updated Skip wenn subscription_status bereits gleich; bei deleted/paused Skip wenn plan bereits free; bei invoice.payment_failed Skip wenn subscription_status bereits past_due. Log: "Webhook skip: user %s already %s for %s". User-Resolution mit Log: "Webhook resolve: event=... resolved_uid=... (meta=..., sub=..., cust=...)". Signaturfehler liefern weiterhin 200 und {"received": True}. Helper _get_profile_by_user_id(user_id) fuer Skip-Logik.
+- **Stripe Status -> Plan:** STRIPE_STATUS_TO_PLAN Dict (AlphaCycle entitlement policy): active, trialing, past_due -> paid; canceled, incomplete, incomplete_expired, paused, unpaid -> free. subscription.updated/renewed nutzen dieses Mapping.
+- **GET /api/auth/profile:** subscription_status in allen Pfaden: anonymous und Supabase-Fallback liefern subscription_status "inactive". Resolved plan: nie trial wenn trial abgelaufen (effective_plan = free); bei neuem User nach Insert plan trial, trial_ends_at, trial_active true.
+- **Frontend:** currentPlan nur aus Backend-Response (fetchUserPlan) oder anonymous bei Sign-Out; applyBlurGates nutzt effectivePlan (trial -> paid uncond.). #upgrade-success: Hash sofort leeren, dann Poll fetchUserPlan alle 3s, max 5 Versuche; bei currentPlan === paid: updateAuthUI, applyBlurGates, Banner "WELCOME TO ALPHACYCLE PRO"; bei max Versuchen: Hinweis "Payment received — please refresh to unlock Pro."
+
 ## Letzter Session-Status (2026-03-13) — Track Record Seite (BLOCK2 PROMPT2)
 - **Track Record Seite**: Neue View `track-record-view` zwischen landing-view und dashboard-view. Zeigt "Track Record" mit Erklaerung "How the ARC Index works", Timeline mit 4 historischen Signalen (Deep Value Nov 2022, Accumulation Mar 2023, Risk Rising Oct 2024, Current Signal mit id tr-current-detail), Disclaimer und CTA "START 7-DAY FREE TRIAL". showTrackRecord() blendet nur track-record-view ein und scrollt nach oben; showLanding()/showDashboard() blenden track-record-view aus. Auf der Landing unter dem Track-Record-Teaser (3 Karten) Link "View Full Track Record &#8594;" (showTrackRecord). "&#8592; BACK" auf der Track-Record-Seite fuehrt zu showLanding().
 

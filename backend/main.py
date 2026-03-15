@@ -1353,11 +1353,28 @@ async def create_checkout(request: Request, req: CheckoutRequest):
         raise HTTPException(status_code=500, detail="Checkout failed")
 
 
+def _get_profile_by_user_id(user_id: str) -> dict:
+    """Fetch current user_profiles row for webhook skip logic. Returns {} on error."""
+    if not supabase:
+        return {}
+    try:
+        r = supabase.table("user_profiles").select("plan, subscription_status").eq("id", user_id).single().execute()
+        return r.data if r.data else {}
+    except Exception:
+        return {}
+
+
+# AlphaCycle entitlement policy: Stripe status -> plan
+# active,trialing,past_due -> paid; canceled,incomplete,incomplete_expired,paused,unpaid -> free
+STRIPE_STATUS_TO_PLAN = {"active": "paid", "trialing": "paid", "past_due": "paid", "canceled": "free", "incomplete": "free", "incomplete_expired": "free", "paused": "free", "unpaid": "free"}
+
+
 @app.post("/api/stripe-webhook")
 async def stripe_webhook(request: Request):
-    """Handle Stripe webhook events to update user plan."""
+    """Handle Stripe webhook events to update user plan. Always return 200 to Stripe."""
     if not STRIPE_WEBHOOK_SECRET:
-        raise HTTPException(status_code=503, detail="Webhook not configured")
+        logger.warning("Webhook not configured")
+        return {"received": True}
     payload = await request.body()
     sig_header = request.headers.get("stripe-signature", "")
     try:
@@ -1366,24 +1383,22 @@ async def stripe_webhook(request: Request):
         )
     except (ValueError, stripe.error.SignatureVerificationError) as e:
         logger.warning("Webhook signature failed: %s", e)
-        raise HTTPException(status_code=400, detail="Invalid signature")
+        return {"received": True}
 
     event_type = event.get("type", "")
     data = event.get("data", {}).get("object", {})
     logger.info("Stripe webhook: %s", event_type)
 
-    user_id: Optional[str] = None
-    metadata = data.get("metadata") or {}
-    if metadata.get("supabase_user_id"):
-        user_id = metadata["supabase_user_id"]
-    elif data.get("subscription"):
+    meta_uid = (data.get("metadata") or {}).get("supabase_user_id")
+    sub_uid: Optional[str] = None
+    if data.get("subscription"):
         try:
             sub = stripe.Subscription.retrieve(data["subscription"])
-            user_id = (sub.metadata or {}).get("supabase_user_id")
+            sub_uid = (sub.metadata or {}).get("supabase_user_id")
         except Exception:
-            user_id = None
-
-    if not user_id and data.get("customer") and supabase:
+            pass
+    cust_uid: Optional[str] = None
+    if data.get("customer") and supabase:
         try:
             profile = (
                 supabase.table("user_profiles")
@@ -1393,15 +1408,26 @@ async def stripe_webhook(request: Request):
                 .execute()
             )
             if profile.data:
-                user_id = profile.data["id"]
+                cust_uid = profile.data["id"]
         except Exception:
-            user_id = None
+            pass
+
+    user_id = meta_uid or sub_uid or cust_uid
+    logger.info("Webhook resolve: event=%s resolved_uid=%s (meta=%s, sub=%s, cust=%s)", event_type, user_id, meta_uid, sub_uid, cust_uid)
 
     if not user_id or not supabase:
         logger.warning("Webhook: no user_id found for event %s", event_type)
         return {"received": True}
 
+    try:
+        current = _get_profile_by_user_id(user_id)
+    except Exception:
+        current = {}
+
     if event_type == "checkout.session.completed":
+        if current.get("plan") == "paid":
+            logger.info("Webhook skip: user %s already %s for %s", user_id, "paid", event_type)
+            return {"received": True}
         sub_id = data.get("subscription")
         supabase.table("user_profiles").update(
             {
@@ -1415,14 +1441,15 @@ async def stripe_webhook(request: Request):
 
     elif event_type in ("customer.subscription.updated", "customer.subscription.renewed"):
         status = data.get("status", "")
-        plan = "paid" if status in ("active", "trialing") else "free"
+        plan = STRIPE_STATUS_TO_PLAN.get(status, "free" if status else "free")
+        if current.get("subscription_status") == status:
+            logger.info("Webhook skip: user %s already %s for %s", user_id, status, event_type)
+            return {"received": True}
         update: dict[str, Any] = {
             "plan": plan,
             "subscription_status": status,
         }
         if data.get("current_period_end"):
-            from datetime import datetime
-
             update["current_period_end"] = datetime.utcfromtimestamp(
                 data["current_period_end"]
             ).isoformat()
@@ -1430,6 +1457,9 @@ async def stripe_webhook(request: Request):
         logger.info("User %s subscription updated: %s -> %s", user_id, status, plan)
 
     elif event_type in ("customer.subscription.deleted", "customer.subscription.paused"):
+        if current.get("plan") == "free":
+            logger.info("Webhook skip: user %s already %s for %s", user_id, "free", event_type)
+            return {"received": True}
         supabase.table("user_profiles").update(
             {
                 "plan": "free",
@@ -1439,6 +1469,9 @@ async def stripe_webhook(request: Request):
         logger.info("User %s subscription cancelled", user_id)
 
     elif event_type == "invoice.payment_failed":
+        if current.get("subscription_status") == "past_due":
+            logger.info("Webhook skip: user %s already %s for %s", user_id, "past_due", event_type)
+            return {"received": True}
         supabase.table("user_profiles").update(
             {
                 "subscription_status": "past_due",
@@ -1453,11 +1486,11 @@ async def stripe_webhook(request: Request):
 @limiter.limit("20/minute")
 async def get_profile(request: Request, user=Security(get_current_user)):
     if not user:
-        return {"authenticated": False, "plan": "anonymous"}
+        return {"authenticated": False, "plan": "anonymous", "subscription_status": "inactive"}
 
     if not supabase:
         logger.warning("Supabase not configured; returning fallback")
-        return {"authenticated": True, "plan": "free", "email": user.email}
+        return {"authenticated": True, "plan": "free", "email": user.email, "subscription_status": "inactive"}
 
     profile = (
         supabase.table("user_profiles")
