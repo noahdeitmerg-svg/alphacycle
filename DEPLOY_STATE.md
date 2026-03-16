@@ -4,6 +4,10 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-03-13) — ARC Chart: Legend Cleanup + 1Y Price Axis Fix
+- **Legend Cleanup:** Chart.js Legend-Filter in renderArcChart() zeigt nur noch zwei Einträge: „ARC Index“ und „BTC Price“. Alle Zonen-Datasets, High/Low-Range und Live bleiben in datasets erhalten, werden aber aus der Legende gefiltert (Zonen weiter über farbige Bänder + Labels sichtbar).
+- **1Y Price Axis Fix:** yPrice-Skala (logarithmisch) erhält `ticks.maxTicksLimit = (period === '1y' ? 6 : 10)`, so dass auf 1Y maximal ca. 6 Preislabels angezeigt werden und Überlappungen auf engen Preisbereichen vermieden werden. 10Y behält bis zu 10 Ticks für das volle Log-Intervall. Keine Änderung der x-Achse, yArc, priceMin/priceMax oder Zoom/Pan.
+
 ## Letzter Session-Status (2026-03-13) — Premium UI Phase B: Visual Weight System + Spacing
 - **3-Stufen-Hierarchie:** module-secondary (Decision Engine, Historical Returns): hellere Karte (rgba 0.025), Border 0.07, border-radius 12px, sec-title 11px, sec-line dezenter. module-tertiary (Cycle Overview, Near-Term, ARC History, Momentum, Zone History, Content Export): kompakter (rgba 0.015), Border 0.04, border-radius 10px, card-accent ausgeblendet, sec-title 9px.
 - **Spacing-Variablen:** --space-section-primary 32px, --space-section-secondary 24px, --space-section-tertiary 14px, --space-group-break 40px. #gate-historical-returns margin-top group-break; #gate-cycle-overview margin-top group-break. .module-tertiary + .module-tertiary margin-top tertiary; .module-secondary + .module-secondary margin-top secondary.

@@ -6662,7 +6662,10 @@ function renderArcChart(period) {
             boxHeight: 6,
             padding: 12
           },
-          filter: function(item, ch) { return item.text !== 'Live'; }
+          filter: function(item, ch) {
+            var keep = ['ARC Index', 'BTC Price'];
+            return keep.indexOf(item.text) !== -1;
+          }
         },
         zoom: {
           limits: {
@@ -6762,7 +6765,20 @@ function renderArcChart(period) {
       scales: {
         x: { ticks: { color: '#64748b', maxTicksLimit: 12 }, grid: { color: 'rgba(255,255,255,0.05)' } },
         yArc: { type: 'linear', position: 'left', min: 0, max: 100, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-        yPrice: { type: 'logarithmic', position: 'right', min: priceMin, max: priceMax, ticks: { color: 'rgba(251,146,60,0.7)', callback: function(v) { return '$' + (typeof v === 'number' ? Math.round(v).toLocaleString() : v); } }, grid: { display: false } }
+        yPrice: {
+          type: 'logarithmic',
+          position: 'right',
+          min: priceMin,
+          max: priceMax,
+          ticks: {
+            color: 'rgba(251,146,60,0.7)',
+            maxTicksLimit: period === '1y' ? 6 : 10,
+            callback: function(v) {
+              return '$' + (typeof v === 'number' ? Math.round(v).toLocaleString() : v);
+            }
+          },
+          grid: { display: false }
+        }
       }
     }
   });
