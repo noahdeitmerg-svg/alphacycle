@@ -826,7 +826,7 @@ body::before {
   display: none;
 }
 #gate-decision-engine {
-  margin-top: 64px;
+  margin-top: 0;
 }
 .blur-gate {
   position: relative;
@@ -3136,6 +3136,22 @@ canvas.sparkline {
     </div>
   </div>
 
+  <!-- SIGNAL SUMMARY — translates current ARC into one-glance interpretation -->
+  <div id="signal-summary" class="card anim" style="padding:16px 20px;margin-bottom:10px;border-left:3px solid var(--btc);display:none;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <div style="font-family:var(--f-mono);font-size:9px;letter-spacing:0.12em;color:var(--tx-ter);">WHAT THIS MEANS</div>
+      <div id="signal-summary-live-tag" style="font-family:var(--f-mono);font-size:8px;letter-spacing:0.08em;padding:2px 8px;border-radius:4px;background:rgba(0,212,170,0.12);color:#00D4AA;">LIVE</div>
+    </div>
+    <div id="signal-summary-zone" style="font-family:var(--f-mono);font-size:14px;font-weight:700;margin-bottom:6px;">—</div>
+    <div id="signal-summary-context" style="font-family:var(--f-mono);font-size:11px;color:var(--tx-sec);line-height:1.6;">—</div>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:12px;margin:24px 0 16px;padding:0 4px;">
+    <div style="flex:1;height:1px;background:var(--border);"></div>
+    <div style="font-family:var(--f-mono);font-size:8px;letter-spacing:0.15em;color:var(--tx-ter);white-space:nowrap;">HISTORICAL CONTEXT</div>
+    <div style="flex:1;height:1px;background:var(--border);"></div>
+  </div>
+
   <!-- Historical ARC Returns -->
   <div id="gate-historical-returns" class="blur-gate">
     <div class="blur-content">
@@ -3365,6 +3381,54 @@ canvas.sparkline {
     </div>
   </div>
 
+  <!-- DECISION ENGINE -->
+  <div id="gate-decision-engine" class="blur-gate">
+    <div class="blur-content">
+      <div class="sec-header anim d2">
+        <div class="sec-title">
+          Decision Engine
+          <span id="dec-live-tag" style="font-size:8px;letter-spacing:0.08em;padding:2px 8px;border-radius:4px;background:rgba(0,212,170,0.12);color:#00D4AA;margin-left:8px;vertical-align:middle;">LIVE · ARC —</span>
+        </div>
+        <div class="sec-line"></div>
+      </div>
+      <div class="card decision-card anim d2" id="decision-card">
+        <div class="card-accent accent-btc"></div>
+        <div class="decision-grid">
+          <div class="decision-item">
+            <div class="decision-label">Suggested Position</div>
+            <div class="decision-value" id="dec-position">—</div>
+            <div class="decision-value decision-value-sub" id="dec-bottom-formation" style="display:none;font-size:0.85em;margin-top:4px;color:#00B4D8"></div>
+          </div>
+          <div class="decision-item">
+            <div class="decision-label">Spot Allocation</div>
+            <div class="decision-value" id="dec-allocation">—</div>
+          </div>
+          <div class="decision-item">
+            <div class="decision-label">12M Expected Range</div>
+            <div class="decision-value" id="dec-range">—</div>
+            <div class="decision-value decision-value-sub" id="dec-range-worst" style="display:none;font-size:0.85em;color:#6b7280;margin-top:2px"></div>
+          </div>
+          <div class="decision-item">
+            <div class="decision-label">Confidence</div>
+            <div class="decision-value" id="dec-confidence">—</div>
+          </div>
+          <div class="decision-note">ARC RISK LEVEL <span id="dec-index-val" style="color:var(--btc);font-weight:600">—</span> / 100</div>
+        </div>
+      </div>
+    </div>
+    <div class="blur-overlay">
+      <div class="blur-overlay-icon">🔒</div>
+      <div class="blur-overlay-title" id="gate-decision-engine-title">🔒 FREE FEATURE</div>
+      <button class="blur-overlay-btn" id="gate-decision-engine-btn">CREATE FREE ACCOUNT</button>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:12px;margin:24px 0 16px;padding:0 4px;">
+    <div style="flex:1;height:1px;background:var(--border);"></div>
+    <div style="font-family:var(--f-mono);font-size:8px;letter-spacing:0.15em;color:var(--tx-ter);white-space:nowrap;">DEEP ANALYSIS</div>
+    <div style="flex:1;height:1px;background:var(--border);"></div>
+  </div>
+
   <!-- ── ARC HISTORY CHART ── -->
   <div id="gate-arc-history" class="blur-gate">
     <div class="blur-content">
@@ -3414,46 +3478,6 @@ canvas.sparkline {
       <div class="blur-overlay-icon">🔒</div>
       <div class="blur-overlay-title" id="gate-arc-momentum-title">🔒 FREE FEATURE</div>
       <button class="blur-overlay-btn" id="gate-arc-momentum-btn">CREATE FREE ACCOUNT</button>
-    </div>
-  </div>
-
-  <!-- DECISION ENGINE -->
-  <div id="gate-decision-engine" class="blur-gate">
-    <div class="blur-content">
-      <div class="sec-header anim d2">
-        <div class="sec-title">Decision Engine</div>
-        <div class="sec-line"></div>
-      </div>
-      <div class="card decision-card anim d2" id="decision-card">
-        <div class="card-accent accent-btc"></div>
-        <div class="decision-grid">
-          <div class="decision-item">
-        <div class="decision-label">Suggested Position</div>
-        <div class="decision-value" id="dec-position">—</div>
-        <div class="decision-value decision-value-sub" id="dec-bottom-formation" style="display:none;font-size:0.85em;margin-top:4px;color:#00B4D8"></div>
-      </div>
-          <div class="decision-item">
-        <div class="decision-label">Spot Allocation</div>
-        <div class="decision-value" id="dec-allocation">—</div>
-      </div>
-          <div class="decision-item">
-        <div class="decision-label">12M Expected Range</div>
-        <div class="decision-value" id="dec-range">—</div>
-        <div class="decision-value decision-value-sub" id="dec-range-worst" style="display:none;font-size:0.85em;color:#6b7280;margin-top:2px"></div>
-      </div>
-          <div class="decision-item">
-        <div class="decision-label">Confidence</div>
-        <div class="decision-value" id="dec-confidence">—</div>
-        </div>
-        <div class="decision-note">ARC RISK LEVEL <span id="dec-index-val" style="color:var(--btc);font-weight:600">—</span> / 100</div>
-      </div>
-    </div>
-    </div>
-    </div>
-    <div class="blur-overlay">
-      <div class="blur-overlay-icon">🔒</div>
-      <div class="blur-overlay-title" id="gate-decision-engine-title">🔒 FREE FEATURE</div>
-      <button class="blur-overlay-btn" id="gate-decision-engine-btn">CREATE FREE ACCOUNT</button>
     </div>
   </div>
 
@@ -4449,6 +4473,65 @@ function updateUI() {
   updatePhaseBanner();
   renderZoneHistory();
 
+  function renderSignalSummary() {
+    var el = document.getElementById('signal-summary');
+    if (!el) return;
+
+    var arcSum = S.arcSummary;
+    if (!arcSum || arcSum.arc_score == null) {
+      el.style.display = 'none';
+      return;
+    }
+    el.style.display = 'block';
+
+    var score = arcSum.arc_display != null ? arcSum.arc_display : arcSum.arc_score;
+    var rawScore = arcSum.arc_score;
+    var zoneName = arcSum.zone_name || 'Unknown';
+    var col = scoreColor(rawScore);
+
+    var zoneEl = document.getElementById('signal-summary-zone');
+    if (zoneEl) {
+      zoneEl.textContent = zoneName.toUpperCase() + ' ZONE · ARC ' + Math.round(score) + '/100';
+      zoneEl.style.color = col || '#fff';
+    }
+
+    el.style.borderLeftColor = col || 'var(--btc)';
+
+    var contextEl = document.getElementById('signal-summary-context');
+    if (contextEl) {
+      var zoneKey = rawScore <= 29 ? 'deep_value'
+        : rawScore <= 39 ? 'accumulation'
+        : rawScore <= 59 ? 'expansion'
+        : rawScore <= 69 ? 'risk_rising'
+        : 'euphoria';
+
+      var hr = S.historicalReturns && S.historicalReturns.zones
+        ? S.historicalReturns.zones[zoneKey]
+        : null;
+
+      if (zoneKey === 'risk_rising') {
+        contextEl.textContent = 'Historically unfavorable entry zone, often late-cycle in past cycles.';
+      } else if (zoneKey === 'euphoria') {
+        var dd = hr && hr.avg_drawdown != null ? Math.abs(hr.avg_drawdown) : 40;
+        contextEl.textContent = 'Historically late-cycle zone. Average drawdown from peak after entries: -' + dd + '%.';
+      } else if (hr && hr.avg_12m != null) {
+        var avg = hr.avg_12m;
+        contextEl.textContent = 'Historically, entries in this zone saw an average ' +
+          (avg > 0 ? '+' : '') + avg + '% move over the following 12 months.';
+      } else {
+        contextEl.textContent = 'Historical zone statistics loading…';
+      }
+    }
+
+    var liveTag = document.getElementById('signal-summary-live-tag');
+    if (liveTag) {
+      var arcVal = Math.round(score);
+      liveTag.textContent = 'LIVE · ARC ' + arcVal;
+    }
+  }
+
+  renderSignalSummary();
+
   // Decision Engine — from arc-summary when available, else local fallback
   (function renderDecision() {
     const score = S.btcScore;
@@ -4523,6 +4606,11 @@ function updateUI() {
       }
     }
     setText('dec-index-val',  Math.round(combinedScore), scoreColor(combinedScore));
+    var decLiveTag = document.getElementById('dec-live-tag');
+    if (decLiveTag && S.arcSummary) {
+      var arcValLive = Math.round(S.arcSummary.arc_display || S.arcSummary.arc_score || 0);
+      decLiveTag.textContent = 'LIVE · ARC ' + arcValLive;
+    }
   })();
 
   // Short Term Engine — from /api/short-term (v2) or btcC short_term fallback
@@ -5915,7 +6003,7 @@ function drawSparkline(canvasId, vals, color) {
 const CYCLE_MARKERS = [
   { date: '2017-12-17', type: 'top',    label: 'Cycle Top'    },
   { date: '2021-11-10', type: 'top',    label: 'Cycle Top'    },
-  { date: '2025-09-30', type: 'top',    label: 'Cycle Top'    },
+  { date: '2025-10-06', type: 'top',    label: 'Cycle Top'    },
   { date: '2018-12-15', type: 'bottom', label: 'Cycle Bottom' },
   { date: '2022-11-21', type: 'bottom', label: 'Cycle Bottom' },
 ];
@@ -5938,6 +6026,49 @@ function getCurrentMarker() {
     type: isBottom ? 'bottom' : 'top',
     label: isConfirmed ? (isBottom ? 'Confirmed Bottom' : 'Confirmed Top') : (isBottom ? 'Bottom Signal' : 'Top Signal'),
     dynamic: true
+  };
+}
+
+function getDynamicCycleBottom() {
+  var tops = CYCLE_MARKERS.filter(function(m) { return m.type === 'top'; })
+    .sort(function(a, b) { return b.date.localeCompare(a.date); });
+  var lastTop = tops[0];
+  if (!lastTop) return null;
+
+  var data = S.backtest || [];
+  if (!data.length) return null;
+
+  var topEntry = data.filter(function(d) { return d.date === lastTop.date; })[0];
+  var athClose = topEntry ? topEntry.price : 126210;
+
+  var afterTop = data.filter(function(d) { return d.date > lastTop.date; });
+  if (!afterTop.length) return null;
+
+  var bottomCandidate = afterTop.reduce(function(min, d) {
+    return d.price < min.price ? d : min;
+  }, afterTop[0]);
+
+  var daysAboveATH = 0;
+  var confirmedByATH = false;
+  for (var i = data.length - 1; i >= 0; i--) {
+    if (data[i].date <= bottomCandidate.date) break;
+    if (data[i].price >= athClose) {
+      daysAboveATH++;
+      if (daysAboveATH >= 90) { confirmedByATH = true; break; }
+    } else {
+      daysAboveATH = 0;
+    }
+  }
+
+  var latestPrice = data[data.length - 1].price;
+  var confirmedByRecovery = latestPrice >= bottomCandidate.price * 1.5;
+  var isConfirmed = confirmedByATH || confirmedByRecovery;
+  if (!isConfirmed) return null;
+
+  return {
+    date: bottomCandidate.date,
+    type: 'bottom',
+    label: 'Cycle Bottom'
   };
 }
 
@@ -6863,6 +6994,9 @@ async function fetchHistoricalReturns() {
       rrWr.style.color = 'rgba(255,255,255,0.4)';
     }
     setZone('euphoria', 'eu');
+    if (typeof renderSignalSummary === 'function') {
+      renderSignalSummary();
+    }
 
     var total = 0;
     ['deep_value', 'accumulation', 'expansion', 'risk_rising', 'euphoria'].forEach(function(k) { total += (z[k] && z[k].entry_count != null) ? z[k].entry_count : 0; });
