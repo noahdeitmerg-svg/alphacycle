@@ -813,6 +813,13 @@ body::before {
 }
 @media(max-width:700px){
   .decision-grid { grid-template-columns: repeat(2, 1fr); }
+  .decision-item {
+    padding: 1rem 1rem;
+  }
+  .decision-value {
+    font-size: 1.2rem;
+    word-break: break-word;
+  }
 }
 .decision-item {
   display: flex;
@@ -2495,6 +2502,20 @@ canvas.sparkline {
     padding: 6px 8px !important;
   }
 
+  /* ARC chart header: wrap + hide export/share on very small screens */
+  #arc-chart-card > div:first-child {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+  #arc-chart-card #export-arc-btn,
+  #arc-chart-card #share-arc-btn {
+    display: none !important;
+  }
+  #arc-chart-card #reset-zoom-arc-btn {
+    font-size: 8px !important;
+    padding: 3px 6px !important;
+  }
+
   /* TICKER */
   .ticker-bar {
     font-size: 9px !important;
@@ -2692,7 +2713,13 @@ canvas.sparkline {
     margin-bottom: 8px !important;
   }
   .sec-title {
-    font-size: 11px !important;
+    font-size: 11px;
+  }
+  .module-secondary .sec-title {
+    font-size: 10px !important;
+  }
+  .module-tertiary .sec-title {
+    font-size: 8px !important;
   }
 
   /* FOOTER */
