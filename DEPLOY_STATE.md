@@ -4,6 +4,12 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-03-13) — Premium UI Phase B: Visual Weight System + Spacing
+- **3-Stufen-Hierarchie:** module-secondary (Decision Engine, Historical Returns): hellere Karte (rgba 0.025), Border 0.07, border-radius 12px, sec-title 11px, sec-line dezenter. module-tertiary (Cycle Overview, Near-Term, ARC History, Momentum, Zone History, Content Export): kompakter (rgba 0.015), Border 0.04, border-radius 10px, card-accent ausgeblendet, sec-title 9px.
+- **Spacing-Variablen:** --space-section-primary 32px, --space-section-secondary 24px, --space-section-tertiary 14px, --space-group-break 40px. #gate-historical-returns margin-top group-break; #gate-cycle-overview margin-top group-break. .module-tertiary + .module-tertiary margin-top tertiary; .module-secondary + .module-secondary margin-top secondary.
+- **Trennlinien:** Separator-Divs (HISTORICAL CONTEXT, DEEP ANALYSIS) margin:0; vertikaler Rhythmus nur ueber Weight-System.
+- **Mobile @600px:** Spacing-Variablen reduziert (24/18/10/28px), sec-title secondary 10px, tertiary 8px. Hero (Phase A) unveraendert. Keine Backend-, ARC- oder Blur-Gate-Logik-Aenderungen.
+
 ## Letzter Session-Status (2026-03-13) — Premium UI Phase A: Hero Redesign + Score Dominance
 - **Hero Card:** ARC-Score ist dominantes Element: gauge-val clamp(48px, 8vw, 72px), score-phase clamp(14px, 2vw, 18px), gauge-wrap max-width 180px. Hintergrund rgba(10,18,40,0.5), Border 1px solid rgba(255,255,255,0.06), kein Gradient/Glow; card-accent und card-glow-btc (box-shadow, ::before, ::after) fuer Hero ausgeblendet.
 - **Komponenten-Gauges:** Standardmaessig eingeklappt; Wrapper #hero-components-collapse mit max-height:0; Toggle-Button "SHOW COMPONENTS" / "HIDE COMPONENTS" mit toggleHeroComponents(); IDs btc-components, gauge-ma/dd/fg/liq, val-* unveraendert.

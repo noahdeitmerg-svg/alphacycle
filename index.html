@@ -82,6 +82,12 @@ const LOGO_DATA_URL = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAA
   --ease-out:   cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in:    cubic-bezier(0.4, 0, 1, 1);
   --spring:     cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Visual hierarchy spacing */
+  --space-section-primary: 32px;
+  --space-section-secondary: 24px;
+  --space-section-tertiary: 14px;
+  --space-group-break: 40px;
 }
 
 /* ── Reset ── */
@@ -368,6 +374,102 @@ body::before {
 .accent-eth { background: linear-gradient(90deg, transparent 5%, var(--eth) 40%, var(--eth) 60%, transparent 95%); opacity:0.5; }
 .accent-mac { background: linear-gradient(90deg, transparent 5%, var(--mac) 40%, var(--mac) 60%, transparent 95%); opacity:0.5; }
 .accent-combined { background: linear-gradient(90deg, #0ea5e9 0%, var(--eth) 50%, var(--mac) 100%); opacity:0.4; }
+
+/* ═══════════════════════════════════════════════════════════
+   VISUAL WEIGHT SYSTEM — Phase B
+═══════════════════════════════════════════════════════════ */
+
+/* Secondary: key signal modules — slightly lighter, more breathing room */
+.module-secondary .card {
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.module-secondary .card::before {
+  display: none; /* remove gradient overlay */
+}
+.module-secondary .card:hover {
+  border-color: rgba(255, 255, 255, 0.10);
+}
+.module-secondary .card .card-accent {
+  opacity: 0.3;
+}
+.module-secondary .sec-header {
+  margin-top: var(--space-section-secondary);
+  margin-bottom: 14px;
+}
+.module-secondary .sec-title {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  color: var(--tx-sec);
+}
+.module-secondary .sec-line {
+  background: linear-gradient(90deg, rgba(148, 163, 184, 0.2), transparent);
+}
+
+/* Tertiary: deep dive / context modules — compact, receded */
+.module-tertiary .card {
+  background: rgba(255, 255, 255, 0.015);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.module-tertiary .card::before {
+  display: none;
+}
+.module-tertiary .card:hover {
+  border-color: rgba(255, 255, 255, 0.07);
+}
+.module-tertiary .card .card-accent {
+  display: none;
+}
+.module-tertiary .sec-header {
+  margin-top: var(--space-section-tertiary);
+  margin-bottom: 10px;
+}
+.module-tertiary .sec-title {
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  color: var(--tx-ter);
+}
+.module-tertiary .sec-line {
+  background: linear-gradient(90deg, rgba(148, 163, 184, 0.1), transparent);
+}
+
+/* Group spacing: more space before secondary modules after hero */
+#gate-historical-returns.module-secondary {
+  margin-top: var(--space-group-break);
+}
+/* Group spacing: more space before tertiary group starts */
+#gate-cycle-overview.module-tertiary {
+  margin-top: var(--space-group-break);
+}
+/* Tertiary modules closer together */
+.module-tertiary + .module-tertiary {
+  margin-top: var(--space-section-tertiary);
+}
+/* Secondary modules standard spacing */
+.module-secondary + .module-secondary {
+  margin-top: var(--space-section-secondary);
+}
+
+@media (max-width: 600px) {
+  :root {
+    --space-section-primary: 24px;
+    --space-section-secondary: 18px;
+    --space-section-tertiary: 10px;
+    --space-group-break: 28px;
+  }
+  .module-secondary .sec-title {
+    font-size: 10px;
+  }
+  .module-tertiary .sec-title {
+    font-size: 8px;
+  }
+}
 
 /* ════════════════════════════════════════════════════════════════
    HERO SCORE GRID
@@ -3204,14 +3306,14 @@ canvas.sparkline {
     <div id="signal-summary-context" style="font-family:var(--f-mono);font-size:11px;color:var(--tx-sec);line-height:1.6;">—</div>
   </div>
 
-  <div style="display:flex;align-items:center;gap:12px;margin:24px 0 16px;padding:0 4px;">
+  <div style="display:flex;align-items:center;gap:12px;margin:0;padding:0 4px;">
     <div style="flex:1;height:1px;background:var(--border);"></div>
     <div style="font-family:var(--f-mono);font-size:8px;letter-spacing:0.15em;color:var(--tx-ter);white-space:nowrap;">HISTORICAL CONTEXT</div>
     <div style="flex:1;height:1px;background:var(--border);"></div>
   </div>
 
   <!-- Historical ARC Returns -->
-  <div id="gate-historical-returns" class="blur-gate">
+  <div id="gate-historical-returns" class="blur-gate module-secondary">
     <div class="blur-content">
       <div class="sec-header anim">
         <div class="sec-title">Historical ARC Returns</div>
@@ -3293,7 +3395,7 @@ canvas.sparkline {
   </div>
 
   <!-- CYCLE OVERVIEW (Phase + Timeline merged) -->
-  <div id="gate-cycle-overview" class="blur-gate">
+  <div id="gate-cycle-overview" class="blur-gate module-tertiary">
     <div class="blur-content">
       <div class="sec-header anim d2">
         <div class="sec-title">Cycle Overview</div>
@@ -3387,7 +3489,7 @@ canvas.sparkline {
   </div>
 
   <!-- Near-Term Outlook (below Live Prices) -->
-  <div id="gate-near-term" class="blur-gate">
+  <div id="gate-near-term" class="blur-gate module-tertiary">
     <div class="blur-content">
       <div class="sec-header anim d4">
         <div class="sec-title">Near-Term Outlook <span class="sec-tag">30-90D</span></div>
@@ -3440,7 +3542,7 @@ canvas.sparkline {
   </div>
 
   <!-- DECISION ENGINE -->
-  <div id="gate-decision-engine" class="blur-gate">
+  <div id="gate-decision-engine" class="blur-gate module-secondary">
     <div class="blur-content">
       <div class="sec-header anim d2">
         <div class="sec-title">
@@ -3481,14 +3583,14 @@ canvas.sparkline {
     </div>
   </div>
 
-  <div style="display:flex;align-items:center;gap:12px;margin:24px 0 16px;padding:0 4px;">
+  <div style="display:flex;align-items:center;gap:12px;margin:0;padding:0 4px;">
     <div style="flex:1;height:1px;background:var(--border);"></div>
     <div style="font-family:var(--f-mono);font-size:8px;letter-spacing:0.15em;color:var(--tx-ter);white-space:nowrap;">DEEP ANALYSIS</div>
     <div style="flex:1;height:1px;background:var(--border);"></div>
   </div>
 
   <!-- ── ARC HISTORY CHART ── -->
-  <div id="gate-arc-history" class="blur-gate">
+  <div id="gate-arc-history" class="blur-gate module-tertiary">
     <div class="blur-content">
       <div class="sec-header anim d5">
         <div class="sec-title">ARC History</div>
@@ -3523,7 +3625,7 @@ canvas.sparkline {
       <button class="blur-overlay-btn" id="gate-arc-history-btn">CREATE FREE ACCOUNT</button>
     </div>
   </div>
-  <div id="gate-arc-momentum" class="blur-gate">
+  <div id="gate-arc-momentum" class="blur-gate module-tertiary">
     <div class="blur-content">
       <div class="card anim" style="padding:1rem 1.5rem;margin-top:0.5rem">
         <div style="font-size:11px;font-weight:600;color:var(--tx-sec);margin-bottom:0.5rem;font-family:var(--f-mono)">ARC MOMENTUM (30D)</div>
@@ -3540,7 +3642,7 @@ canvas.sparkline {
   </div>
 
   <!-- ── ZONE HISTORY ── -->
-  <div id="gate-zone-history" class="blur-gate">
+  <div id="gate-zone-history" class="blur-gate module-tertiary">
     <div class="blur-content">
       <div class="sec-header anim d6">
         <div class="sec-title">Zone History</div>
@@ -3579,7 +3681,7 @@ canvas.sparkline {
   </div>
 
   <!-- ── CONTENT EXPORT ── -->
-  <div id="gate-content-export" class="blur-gate">
+  <div id="gate-content-export" class="blur-gate module-tertiary">
     <div class="blur-content">
       <div id="content-export-section" class="sec-header anim d6">
         <div class="sec-title">Content Export</div>
