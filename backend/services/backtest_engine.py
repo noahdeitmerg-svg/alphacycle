@@ -8,11 +8,12 @@ Return: [{"date": "YYYY-MM-DD", "price": float (close), "high": float, "low": fl
 """
 
 import asyncio
+import csv
 import json
 import logging
 import math
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List, Dict, Any
 
@@ -34,6 +35,7 @@ HTTP_TIMEOUT = httpx.Timeout(60.0, connect=10.0)
 WINDOW_200W = 200  # 200 weekly data points = 200-week MA
 CACHE_FILE = Path("/tmp/backtest_cache.json")
 DAILY_CACHE_FILE = Path("/tmp/daily_full_cache.json")
+CSV_PATH = Path(__file__).resolve().parent.parent / "data" / "btc_daily_kraken.csv"
 
 
 async def _fetch_since(since_ts: int) -> List[Dict[str, Any]]:
@@ -157,67 +159,123 @@ async def _fetch_btc_history() -> List[Dict[str, Any]]:
     return sorted(out, key=lambda x: x["date"])
 
 
-async def _fetch_btc_daily_full() -> List[Dict[str, Any]]:
-    """Kraken OHLC daily (interval=1440) paginated from 2013-10-10 to present."""
-    since = 1381363200  # 2013-10-10
-    all_candles: List[list] = []
+def _load_csv_history() -> List[Dict[str, Any]]:
+    """Load static Kraken BTC/USD daily OHLC from bundled CSV (2013-10-06 to 2023-12-31)."""
+    if not CSV_PATH.exists():
+        logger.warning("CSV not found at %s", CSV_PATH)
+        return []
+    out = []
+    try:
+        with open(CSV_PATH, "r") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                try:
+                    ts = int(row["timestamp"])
+                    close = float(row["close"])
+                    high = float(row["high"])
+                    low = float(row["low"])
+                    if close > 0:
+                        dt = datetime.utcfromtimestamp(ts).date().isoformat()
+                        out.append({"date": dt, "price": close, "high": high, "low": low})
+                except (KeyError, ValueError, TypeError):
+                    continue
+        logger.info(
+            "CSV loaded: %s daily candles (%s to %s)",
+            len(out),
+            out[0]["date"] if out else "?",
+            out[-1]["date"] if out else "?",
+        )
+    except Exception as e:
+        logger.error("CSV load failed: %s", e)
+    return sorted(out, key=lambda x: x["date"]) if out else []
 
-    async with httpx.AsyncClient(timeout=HTTP_TIMEOUT, follow_redirects=True) as client:
-        while True:
+
+async def _fetch_gap_from_cryptocompare(start_date: str, end_date: str) -> List[Dict[str, Any]]:
+    """Fetch daily BTC/USD candles from CryptoCompare (Kraken exchange) for a specific date range."""
+    try:
+        start_ts = int(datetime.fromisoformat(start_date).timestamp())
+        end_ts = int(datetime.fromisoformat(end_date).timestamp())
+        days_needed = (end_ts - start_ts) // 86400 + 1
+
+        params = {
+            "fsym": "BTC",
+            "tsym": "USD",
+            "limit": min(days_needed, 2000),
+            "toTs": end_ts,
+            "e": "Kraken",
+        }
+        if os.environ.get("CRYPTOCOMPARE_KEY"):
+            params["api_key"] = os.environ["CRYPTOCOMPARE_KEY"]
+
+        async with httpx.AsyncClient(timeout=HTTP_TIMEOUT, follow_redirects=True) as client:
             resp = await client.get(
-                "https://api.kraken.com/0/public/OHLC",
-                params={"pair": "XBTUSD", "interval": 1440, "since": since},
+                "https://min-api.cryptocompare.com/data/v2/histoday",
+                params=params,
             )
             data = resp.json()
-            if data.get("error") or "result" not in data:
-                logger.warning("Kraken daily OHLC error: %s since=%s", data.get("error"), since)
-                break
-            keys = [k for k in data["result"] if k != "last"]
-            if not keys:
-                break
-            candles = data["result"][keys[0]]
-            if not candles:
-                break
-            all_candles.extend(candles)
-            last = data["result"].get("last", 0)
-            if last <= since or len(candles) < 10:
-                break
-            since = last
-            await asyncio.sleep(1.2)
 
-    out = []
-    seen = set()
-    for c in all_candles:
-        try:
-            ts = int(c[0])
-            if ts in seen:
-                continue
-            seen.add(ts)
-            close = float(c[4])
-            high = float(c[2])
-            low = float(c[3])
-            if close > 0:
+        if data.get("Response") != "Success" or "Data" not in data:
+            logger.warning("CryptoCompare gap fetch failed: %s", data.get("Message", "unknown"))
+            return []
+
+        entries = data.get("Data", {}).get("Data", [])
+        out = []
+        for entry in entries:
+            try:
+                ts = int(entry["time"])
+                close = float(entry["close"])
+                high = float(entry["high"])
+                low = float(entry["low"])
                 dt = datetime.utcfromtimestamp(ts).date().isoformat()
-                out.append({"date": dt, "price": close, "high": high, "low": low})
-        except (IndexError, TypeError, ValueError):
-            continue
-    return sorted(out, key=lambda x: x["date"])
+                if close > 0 and dt >= start_date and dt <= end_date:
+                    out.append({"date": dt, "price": close, "high": high, "low": low})
+            except (KeyError, ValueError, TypeError):
+                continue
+
+        logger.info(
+            "CryptoCompare gap fill: %s candles (%s to %s)",
+            len(out),
+            out[0]["date"] if out else "?",
+            out[-1]["date"] if out else "?",
+        )
+        return out
+    except Exception as e:
+        logger.warning("CryptoCompare gap fetch error: %s", e)
+        return []
+
+
+async def _fetch_btc_daily_full() -> List[Dict[str, Any]]:
+    """
+    DISABLED — Kraken daily OHLC API only returns ~720 most recent candles.
+    Pagination does not retrieve historical data beyond that window.
+    Replaced by CSV-based loading in _load_or_build_daily_cache().
+    """
+    logger.warning("_fetch_btc_daily_full() is disabled — use CSV-based cache loader")
+    return []
 
 
 async def _load_or_build_daily_cache() -> List[Dict[str, Any]]:
-    """Load daily candle cache from file or build from scratch. Incremental update if cache exists."""
+    """
+    Build complete daily BTC price history from three sources:
+    1. Static CSV: Kraken official OHLC 2013-10-06 to 2023-12-31
+    2. Gap bridge: CryptoCompare e=Kraken for any gap between CSV and API
+    3. Kraken live API: most recent ~720 daily candles
+
+    Result is cached in /tmp/daily_full_cache.json with incremental updates.
+    """
     today = datetime.utcnow().date().isoformat()
 
+    # Try file cache first
     if DAILY_CACHE_FILE.exists():
         try:
             cached = json.loads(DAILY_CACHE_FILE.read_text())
-            if cached and isinstance(cached, list) and len(cached) > 1000:
+            if cached and isinstance(cached, list) and len(cached) > 2000:
                 last_date = cached[-1]["date"]
                 if last_date >= today:
                     return cached
-                # Drop last entry — it may be an incomplete daily close
+                # Drop last entry (may be incomplete) and fetch incremental update
                 cached = cached[:-1]
-                since_ts = int(datetime.fromisoformat(cached[-1]["date"]).timestamp()) if cached else 0
+                since_ts = int(datetime.fromisoformat(cached[-1]["date"]).timestamp())
                 async with httpx.AsyncClient(timeout=HTTP_TIMEOUT, follow_redirects=True) as client:
                     resp = await client.get(
                         "https://api.kraken.com/0/public/OHLC",
@@ -237,6 +295,7 @@ async def _load_or_build_daily_cache() -> List[Dict[str, Any]]:
                                     cached.append({"date": dt, "price": close, "high": high, "low": low})
                             except (IndexError, TypeError, ValueError):
                                 continue
+                # Dedupe and sort
                 seen = set()
                 deduped = []
                 for item in cached:
@@ -245,17 +304,96 @@ async def _load_or_build_daily_cache() -> List[Dict[str, Any]]:
                         deduped.append(item)
                 cached = sorted(deduped, key=lambda x: x["date"])
                 DAILY_CACHE_FILE.write_text(json.dumps(cached))
+                logger.info("Daily cache incremental update: %s points to %s", len(cached), cached[-1]["date"])
                 return cached
         except Exception as e:
-            logger.warning("Daily cache load failed: %s", e)
+            logger.warning("Daily cache load failed, rebuilding: %s", e)
 
-    history = await _fetch_btc_daily_full()
-    if history:
+    # === FULL REBUILD ===
+
+    # 1. Load static CSV (2013 to 2023)
+    csv_data = _load_csv_history()
+    if not csv_data:
+        logger.error("CSV history empty — cannot build daily cache")
+        return []
+    csv_end_date = csv_data[-1]["date"]
+    logger.info("CSV base loaded: %s points, ends %s", len(csv_data), csv_end_date)
+
+    # 2. Fetch Kraken API (recent ~720 days)
+    since_ts = int(datetime.utcnow().timestamp()) - 750 * 86400
+    kraken_recent: List[Dict[str, Any]] = []
+    try:
+        async with httpx.AsyncClient(timeout=HTTP_TIMEOUT, follow_redirects=True) as client:
+            resp = await client.get(
+                "https://api.kraken.com/0/public/OHLC",
+                params={"pair": "XBTUSD", "interval": 1440, "since": since_ts},
+            )
+            data = resp.json()
+        if not data.get("error") and "result" in data:
+            keys = [k for k in data["result"] if k != "last"]
+            if keys:
+                for c in data["result"][keys[0]]:
+                    try:
+                        close = float(c[4])
+                        high = float(c[2])
+                        low = float(c[3])
+                        if close > 0:
+                            dt = datetime.utcfromtimestamp(int(c[0])).date().isoformat()
+                            kraken_recent.append({"date": dt, "price": close, "high": high, "low": low})
+                    except (IndexError, TypeError, ValueError):
+                        continue
+        logger.info(
+            "Kraken API recent: %s points (%s to %s)",
+            len(kraken_recent),
+            kraken_recent[0]["date"] if kraken_recent else "?",
+            kraken_recent[-1]["date"] if kraken_recent else "?",
+        )
+    except Exception as e:
+        logger.warning("Kraken API fetch failed: %s", e)
+
+    # 3. Detect and bridge gap
+    api_start_date = kraken_recent[0]["date"] if kraken_recent else today
+    gap_data: List[Dict[str, Any]] = []
+
+    if csv_end_date < api_start_date:
+        gap_start = (datetime.fromisoformat(csv_end_date) + timedelta(days=1)).date().isoformat()
+        gap_end = (datetime.fromisoformat(api_start_date) - timedelta(days=1)).date().isoformat()
+        gap_days = (datetime.fromisoformat(gap_end) - datetime.fromisoformat(gap_start)).days + 1
+
+        if gap_days > 0:
+            logger.info(
+                "Gap detected: %s to %s (%s days) — fetching from CryptoCompare",
+                gap_start,
+                gap_end,
+                gap_days,
+            )
+            gap_data = await _fetch_gap_from_cryptocompare(gap_start, gap_end)
+            if not gap_data:
+                logger.warning("Gap bridge failed — %s days will be missing", gap_days)
+
+    # 4. Merge all three sources
+    all_data = csv_data + gap_data + kraken_recent
+
+    # Dedupe by date (later entries override earlier for overlapping dates)
+    by_date: Dict[str, Dict[str, Any]] = {}
+    for item in all_data:
+        by_date[item["date"]] = item
+    merged = sorted(by_date.values(), key=lambda x: x["date"])
+
+    # 5. Save to file cache
+    if merged:
         try:
-            DAILY_CACHE_FILE.write_text(json.dumps(history))
+            DAILY_CACHE_FILE.write_text(json.dumps(merged))
         except Exception:
             pass
-    return history
+        logger.info(
+            "Daily cache built: %s points (%s to %s)",
+            len(merged),
+            merged[0]["date"],
+            merged[-1]["date"],
+        )
+
+    return merged
 
 
 async def _fetch_fred(series_id: str) -> list:
@@ -657,7 +795,8 @@ async def run_daily_backtest_full() -> Dict[str, Any]:
 
     if not history or len(history) < 1400:
         logger.warning(
-            "Daily history too short (%s points), temporary fallback to weekly backtest",
+            "Daily history too short (%s points). Kraken daily OHLC returns only ~720 "
+            "newest candles; full-range daily not available. Fallback to weekly backtest.",
             len(history) if history else 0,
         )
         return await run_backtest()
