@@ -11,6 +11,11 @@ Beim Bearbeiten von backend/fetcher.py, backend/main.py, backend/scoring.py oder
 ## Vor jeder Änderung
 - DEPLOY_STATE.md im Repo-Root prüfen und die dort genannten "Permanent Fixes" einhalten.
 
+## Nach jeder Änderung (PFLICHT)
+- **DEPLOY_STATE.md** aktualisieren: neuen Session-Status / Änderungen im Abschnitt „Letzter Session-Status“ dokumentieren (Datum, Kurzbeschreibung).
+- **.cursor/rules/permanent-fixes.mdc** aktualisieren, falls die Änderung dauerhafte Fixes oder Konventionen betrifft.
+- **Alles pushen**: `git add` (betroffene Dateien inkl. DEPLOY_STATE.md und ggf. permanent-fixes.mdc), `git commit` mit aussagekräftiger Message, `git push`. Keine Session beenden ohne Push.
+
 ## backend/fetcher.py
 - **Kraken ist primäre Preisquelle** (nicht Binance für Preise; Binance ist auf Railway US-West blockiert).
 - In `fetch_all()`: **Kein** `fetch_market_data("bitcoin")` / `fetch_market_data("ethereum")` (CoinGecko 429 auf Railway). asyncio.gather genau 13 Aufrufe: 0-3 Kraken, 4 fg, 5 tvl, 6 stable, 7 walcl, 8 DGS10, 9 global_data, 10 funding, 11 WTREGEN (TGA), 12 RRPONTSYD (Reverse Repo). WTREGEN und RRPONTSYD mit **start="2015-01-01"**. fetch_fred_series(): logger.info("FRED %s: %s pts", series_id, len(result)). btc_cg/eth_cg = leere Fallback-Dicts. Net Liquidity = _compute_net_liquidity(walcl, tga_series, rrp_series); return net_liq_series, tga_series, rrp_series.

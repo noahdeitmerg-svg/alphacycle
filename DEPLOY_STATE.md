@@ -2,6 +2,8 @@
 **Zuletzt aktualisiert:** 2026-03-13
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
+**Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
 ## Letzter Session-Status (2026-03-13) — ARC Daily Migration: Static CSV Integration
 - **CSV-basierte Daily-Historie:** Statische Datei `backend/data/btc_daily_kraken.csv` (Kraken BTC/USD Daily OHLC, Format: timestamp,open,high,low,close,volume,trades). Sollte 3727 Zeilen (2013-10-06 bis 2023-12-31) enthalten. Bei weniger Zeilen: Platzhalter mit `python backend/scripts/gen_btc_csv.py` erzeugen oder offizielle Kraken-CSV ablegen. Wenn CSV fehlt oder leer: Fallback auf woechentlichen Backtest.
 - **Drei Quellen in _load_or_build_daily_cache():** (1) CSV als Basis, (2) Luecke zwischen CSV-Ende und Kraken-API-Anfang per CryptoCompare e=Kraken (_fetch_gap_from_cryptocompare, optional CRYPTOCOMPARE_KEY), (3) Kraken Live-API (~720 neueste Tage). Merge, Dedup nach Datum, Sort, Persist in /tmp/daily_full_cache.json. Inkrementelles Update wenn Cache existiert und >2000 Eintraege.
