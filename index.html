@@ -3382,7 +3382,7 @@ canvas.sparkline {
             </div>
             <button class="ce-btn" id="export-arc-btn" type="button" onclick="exportArcChart()">↓ EXPORT PNG</button>
             <button class="ce-btn" id="share-arc-btn" type="button" onclick="shareArcChart()">SHARE</button>
-            <button class="ce-btn arc-chart-btn" id="reset-zoom-arc-btn" type="button" onclick="if(window._arcHistoryChart) window._arcHistoryChart.resetZoom();">↺ RESET</button>
+            <button class="ce-btn arc-chart-btn" id="reset-zoom-arc-btn" type="button" onclick="if(window._arcHistoryChart && window._arcHistoryChart.resetZoom) window._arcHistoryChart.resetZoom();">↺ RESET</button>
           </div>
         </div>
         <div id="arc-chart-placeholder" class="arc-chart-placeholder">Historische Daten werden geladen (kann bis zu 15 Sek. dauern)...</div>
@@ -6011,7 +6011,8 @@ function renderArcChart(period) {
       });
     }
   } else {
-    // 10Y: Weekly-Backtestdaten
+    // 10Y: full backtest (no truncation). First date is ~2017: backend run_daily_backtest_full()
+    // requires MIN_DAYS_FOR_MA200W (1400 days) before first ARC score, so CSV start 2013-10-06 + 1400 days.
     if (!S.backtest || !S.backtest.length) return;
     data = S.backtest || [];
   }
@@ -6080,26 +6081,27 @@ function renderArcChart(period) {
           filter: function(item, ch) { return item.text !== 'Live'; }
         },
         zoom: {
-          limits: {
-            x: {
-              min: 'original',
-              max: 'original'
-            }
+          pan: {
+            enabled: true,
+            mode: 'x',
+            modifierKey: null,
+            threshold: 5
           },
           zoom: {
             wheel: {
               enabled: true,
-              speed: 0.1
+              speed: 0.1,
+              modifierKey: null
             },
             pinch: {
               enabled: true
             },
             mode: 'x'
           },
-          pan: {
-            enabled: true,
-            mode: 'x',
-            threshold: 5
+          limits: {
+            x: {
+              minRange: 30 * 24 * 60 * 60 * 1000
+            }
           }
         },
         tooltip: {
