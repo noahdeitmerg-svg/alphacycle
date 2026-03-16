@@ -709,11 +709,11 @@ body::before {
   text-transform: uppercase;
   color: var(--tx-ter);
 }
-.zone-dv  .hz-range { color: #00D4AA; }
-.zone-ac  .hz-range { color: #00B4D8; }
-.zone-ex  .hz-range { color: #58A6FF; }
-.zone-rr  .hz-range { color: #FF9500; }
-.zone-eu  .hz-range { color: #FF3B3B; }
+.zone-dv  .hz-range { color: rgba(0, 212, 170, 0.7); }
+.zone-ac  .hz-range { color: rgba(0, 180, 216, 0.7); }
+.zone-ex  .hz-range { color: rgba(88, 166, 255, 0.7); }
+.zone-rr  .hz-range { color: rgba(255, 149, 0, 0.7); }
+.zone-eu  .hz-range { color: rgba(255, 59, 59, 0.7); }
 
 /* Above-fold compact: Ticker + Hero so Decision Engine visible in ~900px */
 .ticker-bar, #ticker-bar, .ticker {
@@ -783,6 +783,13 @@ body::before {
   font-size: 12px;
   font-weight: 600;
 }
+/* Phase C: hero subscores/meta neutral */
+#btc-card.hero-card .hero-subscores .hs-val {
+  color: var(--tx-sec) !important;
+}
+#btc-card.hero-card .hero-meta-row .hm-val {
+  color: var(--tx-sec) !important;
+}
 .hero-subscore {
   display: flex;
   flex-direction: column;
@@ -843,6 +850,13 @@ body::before {
   font-weight: 700;
   color: var(--tx-pri);
   line-height: 1.1;
+}
+/* Phase C: Decision Engine secondary values neutral */
+#dec-allocation {
+  color: var(--tx-sec) !important;
+}
+#dec-confidence {
+  color: var(--tx-sec) !important;
 }
 .decision-note {
   font-size: 0.65rem;
@@ -938,16 +952,26 @@ body::before {
   font-size: 8px;
   color: var(--tx-ter);
 }
-.hr-dv .hr-zone-range,
-.hr-dv .hr-zone-return { color: #00D4AA; }
-.hr-ac .hr-zone-range,
-.hr-ac .hr-zone-return { color: #00B4D8; }
-.hr-ex .hr-zone-range,
-.hr-ex .hr-zone-return { color: #58A6FF; }
-.hr-rr .hr-zone-range,
-.hr-rr .hr-zone-return { color: #FF9500; }
-.hr-eu .hr-zone-range,
-.hr-eu .hr-zone-return { color: #FF3B3B; }
+/* Phase C: HR zone colors — accent only */
+.hr-dv .hr-zone-range { color: #00D4AA; }
+.hr-dv .hr-zone-return { color: rgba(255, 255, 255, 0.85); }
+.hr-dv { border-left: 3px solid rgba(0, 212, 170, 0.5); }
+
+.hr-ac .hr-zone-range { color: #00B4D8; }
+.hr-ac .hr-zone-return { color: rgba(255, 255, 255, 0.85); }
+.hr-ac { border-left: 3px solid rgba(0, 180, 216, 0.5); }
+
+.hr-ex .hr-zone-range { color: #58A6FF; }
+.hr-ex .hr-zone-return { color: rgba(255, 255, 255, 0.85); }
+.hr-ex { border-left: 3px solid rgba(88, 166, 255, 0.5); }
+
+.hr-rr .hr-zone-range { color: #FF9500; }
+.hr-rr .hr-zone-return { color: rgba(255, 255, 255, 0.85); }
+.hr-rr { border-left: 3px solid rgba(255, 149, 0, 0.4); }
+
+.hr-eu .hr-zone-range { color: #FF3B3B; }
+.hr-eu .hr-zone-return { color: rgba(255, 255, 255, 0.85); }
+.hr-eu { border-left: 3px solid rgba(255, 59, 59, 0.4); }
 .hr-total-entries {
   font-family: var(--f-mono);
   font-size: 9px;
@@ -1429,10 +1453,10 @@ body::before {
   font-weight: 700;
 }
 .zone-history-return-pos {
-  color: #22c55e;
+  color: rgba(34, 197, 94, 0.7);
 }
 .zone-history-return-neg {
-  color: #ef4444;
+  color: rgba(239, 68, 68, 0.7);
 }
 @media (max-width: 1024px) {
   .score-card {
@@ -4616,6 +4640,12 @@ function updateUI() {
   // Score colors (use arc_display for Gauge/UI, raw ARC for zones)
   const combinedScore = S.arcSummary?.arc_display ?? S.arcSummary?.arc_score ?? S.combined ?? S.btcScore;
   const bCol=scoreColor(combinedScore), eCol=scoreColor(S.ethScore), mCol=scoreColor(S.macScore);
+  if (typeof window !== 'undefined' && bCol) {
+    try {
+      document.documentElement.style.setProperty('--zone-accent', bCol);
+      document.documentElement.style.setProperty('--zone-accent-dim', bCol + '33');
+    } catch (e) {}
+  }
 
   // Gauges
   animateGauge('btc-arc', combinedScore);
