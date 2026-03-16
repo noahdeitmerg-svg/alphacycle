@@ -3374,12 +3374,16 @@ canvas.sparkline {
       </div>
       <div class="chart-card anim d5" id="arc-chart-card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
-          <div style="font-size:13px;font-weight:600;color:var(--tx-pri)" id="arc-chart-title">BTC Price + ARC Score</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:600;color:var(--tx-pri)" id="arc-chart-title">BTC Price + ARC Score</div>
+            <div id="arc-chart-subtitle" style="font-family:var(--f-mono);font-size:9px;color:var(--tx-ter);letter-spacing:0.08em;margin-top:2px;"></div>
+          </div>
           <div style="display:flex;align-items:center;gap:8px">
             <div class="arc-toggle-group">
               <button class="arc-toggle active" id="arc-toggle-1y" type="button" onclick="setArcPeriod('1y')">1Y</button>
               <button class="arc-toggle" id="arc-toggle-10y" type="button" onclick="setArcPeriod('10y')">10Y</button>
             </div>
+            <span id="arc-chart-range-badge" style="font-family:var(--f-mono);font-size:8px;color:var(--tx-ter);letter-spacing:0.06em;margin-left:4px;opacity:0.6;"></span>
             <button class="ce-btn" id="export-arc-btn" type="button" onclick="exportArcChart()">↓ EXPORT PNG</button>
             <button class="ce-btn" id="share-arc-btn" type="button" onclick="shareArcChart()">SHARE</button>
             <button class="ce-btn arc-chart-btn" id="reset-zoom-arc-btn" type="button" onclick="if(window._arcHistoryChart && window._arcHistoryChart.resetZoom) window._arcHistoryChart.resetZoom();">↺ RESET</button>
@@ -6056,6 +6060,30 @@ function renderArcChart(period) {
     { label: 'BTC Low', data: lowData, borderColor: 'transparent', pointRadius: 0, yAxisID: 'yPrice', tension: 0.4, order: 5 },
     { label: 'Live', data: liveData, pointRadius: 0, pointHoverRadius: 14, pointHoverBackgroundColor: 'transparent', borderWidth: 0, backgroundColor: 'transparent', borderColor: 'transparent', fill: false, yAxisID: 'yArc', order: 10 }
   ];
+  var subtitleEl = document.getElementById('arc-chart-subtitle');
+  if (subtitleEl && data.length) {
+    var firstDate = data[0].date;
+    var lastDate = data[data.length - 1].date;
+    var formatSubtitleDate = function(d) {
+      try {
+        var dd = new Date(d);
+        if (!isNaN(dd.getTime())) {
+          return dd.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+        }
+        return d;
+      } catch (e) { return d; }
+    };
+    if (period === '1y') {
+      subtitleEl.textContent = 'Daily ARC scores · ' + formatSubtitleDate(firstDate) + ' — ' + formatSubtitleDate(lastDate);
+    } else {
+      subtitleEl.textContent = 'Daily ARC history · ' + formatSubtitleDate(firstDate) + ' — ' + formatSubtitleDate(lastDate) + ' · Kraken BTC/USD';
+    }
+  }
+  var rangeBadge = document.getElementById('arc-chart-range-badge');
+  if (rangeBadge && data.length) {
+    rangeBadge.textContent = data.length.toLocaleString() + ' data points';
+  }
+
   window._arcHistoryChart = new Chart(canvas, {
     type: 'line',
     data: { labels: labels, datasets: datasets },
@@ -6119,10 +6147,10 @@ function renderArcChart(period) {
           var btcDataset = (chart.data.datasets.filter(function(d) { return d.label === 'BTC Price'; })[0] || {}).data || [];
           var raw = chart._backtestData;
           var r = raw && raw[bestIdx];
+          var isTop = marker.type === 'top';
           var btcVal = (isTop && r && r.high != null) ? Number(r.high) : ((!isTop && r && r.low != null) ? Number(r.low) : (btcDataset[bestIdx] != null ? btcDataset[bestIdx] : 0));
           var x = xAxis.getPixelForValue(bestIdx);
           var arcVal = arcDataset[bestIdx] != null ? arcDataset[bestIdx] : 50;
-          var isTop = marker.type === 'top';
           var col = isTop ? '#22c55e' : '#ef4444';
           var colFill = isTop ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)';
           var colBorder = isTop ? 'rgba(34,197,94,0.5)' : 'rgba(239,68,68,0.5)';
@@ -6287,13 +6315,33 @@ function renderArcChart(period) {
         });
         c.restore();
       }
+    }, {
+      id: 'crosshairLine',
+      afterDraw: function(chart) {
+        if (!chart.tooltip || !chart.tooltip._active || !chart.tooltip._active.length) return;
+        var activePoint = chart.tooltip._active[0];
+        if (!activePoint || !activePoint.element) return;
+        var ctx = chart.ctx;
+        var x = activePoint.element.x;
+        var topY = chart.chartArea.top;
+        var bottomY = chart.chartArea.bottom;
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(x, topY);
+        ctx.lineTo(x, bottomY);
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+        ctx.setLineDash([4, 4]);
+        ctx.stroke();
+        ctx.restore();
+      }
     }],
     options: {
       devicePixelRatio: window.devicePixelRatio || 2,
       responsive: true,
       maintainAspectRatio: false,
       layout: { padding: { right: 10 } },
-      interaction: { mode: 'index', intersect: false },
+      interaction: { mode: 'index', intersect: false, axis: 'x' },
       plugins: {
         legend: {
           display: true,
@@ -6330,19 +6378,53 @@ function renderArcChart(period) {
           }
         },
         tooltip: {
+          backgroundColor: 'rgba(13, 17, 23, 0.95)',
+          titleColor: '#fff',
+          bodyColor: 'rgba(255,255,255,0.85)',
+          titleFont: { family: 'var(--f-mono)', size: 11, weight: '600' },
+          bodyFont: { family: 'var(--f-mono)', size: 11 },
+          padding: 10,
+          cornerRadius: 6,
+          displayColors: true,
+          caretSize: 6,
+          caretPadding: 8,
           filter: function(tooltipItem) {
             return tooltipItem.dataset.label === 'ARC Index' || tooltipItem.dataset.label === 'BTC Price' || tooltipItem.dataset.label === 'Live';
           },
           callbacks: {
+            title: function(tooltipItems) {
+              if (!tooltipItems.length) return '';
+              var raw = tooltipItems[0].label || '';
+              try {
+                var d = new Date(raw);
+                if (!isNaN(d.getTime())) {
+                  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                }
+                return raw;
+              } catch (e) { return raw; }
+            },
             label: function(context) {
               if (context.dataset.label === 'Live') {
-                var score = context.parsed.y;
-                var zoneName = getZoneLabelByArc(score);
-                return 'TODAY — ARC ' + Number(score).toFixed(1) + ' · ' + zoneName;
+                var scoreLive = context.parsed.y;
+                var zoneLive = getZoneLabelByArc(scoreLive);
+                return 'TODAY — ARC ' + Number(scoreLive).toFixed(1) + ' · ' + zoneLive;
               }
-              if (context.dataset.label === 'ARC Index') return 'ARC Index: ' + Number(context.parsed.y).toFixed(1);
-              if (context.dataset.label === 'BTC Price') return 'BTC Price: $' + Math.round(context.parsed.y).toLocaleString();
+              if (context.dataset.label === 'ARC Index') {
+                var score = Number(context.parsed.y).toFixed(1);
+                var zone = getZoneLabelByArc(context.parsed.y);
+                return 'ARC: ' + score + ' — ' + zone;
+              }
+              if (context.dataset.label === 'BTC Price') {
+                return 'BTC Price: $' + Math.round(context.parsed.y).toLocaleString();
+              }
               return '';
+            },
+            labelColor: function(context) {
+              if (context.dataset.label === 'ARC Index' || context.dataset.label === 'Live') {
+                var zCol = scoreColor(context.parsed.y);
+                return { borderColor: zCol, backgroundColor: zCol };
+              }
+              return {};
             },
             afterBody: function(tooltipItems) {
               if (!tooltipItems.length) return [];
@@ -6366,7 +6448,8 @@ function renderArcChart(period) {
               if (btcVal !== '') lines.push('BTC: $' + Math.round(btcVal).toLocaleString());
               return lines;
             }
-          }
+          },
+          events: ['mousemove', 'mouseout', 'click', 'touchstart', 'touchmove']
         }
       },
       scales: {
