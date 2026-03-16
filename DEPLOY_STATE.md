@@ -1,8 +1,16 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-03-13
+**Zuletzt aktualisiert:** 2026-03-11
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-03-11) — Premium UI Phase D: Mobile Narrative Flow
+- **Mobile (≤600px):** Tertiär-Sektionen (Cycle Overview, Near-Term, ARC History, Momentum, Zone History, Content Export) starten eingeklappt; nur sec-header + Pfeil sichtbar, Tap auf Header klappt Inhalt auf/zu (Klasse `mobile-expanded`). initMobileCollapseToggle() nach initAuth() und bei Resize (bei >600px werden alle mobile-expanded entfernt). gate-arc-momentum hat sec-header nachgerüstet für einheitliches Verhalten.
+- **ARC Chart:** Beim Aufklappen von gate-arc-history wird nach 500ms window._arcHistoryChart.resize() aufgerufen. Duplicate-Binding verhindert durch _mobileToggleBound-Flag.
+- **Live Prices:** Auf Mobile kompakter: prices-grid 1fr, gap 6px, price-card padding 8px 12px, sparkline 24px, pc-stat 9px.
+- **Historical Returns:** hr-grid auf Mobile mit scroll-snap-type: x mandatory, hr-zone flex 0 0 160px, scroll-snap-align: start.
+- **Zone History:** zone-history-table-wrap max-height 250px, Tabellen-Zellen padding 4px 6px, font-size 9px.
+- **Desktop:** Alle Änderungen nur in @media (max-width: 600px); Desktop-Layout unverändert. Keine Änderungen an ARC-Formel, Zonen, Backend, Blur-Gates oder Chart.js-Config.
 
 ## Letzter Session-Status (2026-03-13) — ARC Chart: Legend Cleanup + 1Y Price Axis Fix
 - **Legend Cleanup:** Chart.js Legend-Filter in renderArcChart() zeigt nur noch zwei Einträge: „ARC Index“ und „BTC Price“. Alle Zonen-Datasets, High/Low-Range und Live bleiben in datasets erhalten, werden aber aus der Legende gefiltert (Zonen weiter über farbige Bänder + Labels sichtbar).

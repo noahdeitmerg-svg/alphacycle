@@ -469,6 +469,75 @@ body::before {
   .module-tertiary .sec-title {
     font-size: 8px;
   }
+  /* Phase D: Live Prices compact */
+  .prices-grid {
+    grid-template-columns: 1fr !important;
+    gap: 6px !important;
+  }
+  .price-card {
+    padding: 8px 12px !important;
+    min-height: auto !important;
+  }
+  .price-card .sparkline {
+    height: 24px !important;
+  }
+  .price-card .pc-stat {
+    font-size: 9px !important;
+  }
+  /* Phase D: Deep-dive sections collapsed on mobile */
+  .module-tertiary .blur-content > .card,
+  .module-tertiary .blur-content > .chart-card,
+  .module-tertiary .blur-content > div:not(.sec-header) {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease;
+  }
+  .module-tertiary.mobile-expanded .blur-content > .card,
+  .module-tertiary.mobile-expanded .blur-content > .chart-card,
+  .module-tertiary.mobile-expanded .blur-content > div:not(.sec-header) {
+    max-height: 2000px;
+  }
+  .module-tertiary .sec-header {
+    cursor: pointer;
+    position: relative;
+    padding-right: 24px;
+  }
+  .module-tertiary .sec-header::after {
+    content: '\25BC';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 10px;
+    color: var(--tx-ter);
+    transition: transform 0.3s;
+  }
+  .module-tertiary.mobile-expanded .sec-header::after {
+    transform: translateY(-50%) rotate(180deg);
+  }
+  /* Phase D: Historical Returns scroll-snap */
+  .hr-grid {
+    display: flex !important;
+    overflow-x: auto !important;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    gap: 0 !important;
+    padding-bottom: 4px;
+  }
+  .hr-zone {
+    flex: 0 0 160px !important;
+    min-width: 160px !important;
+    scroll-snap-align: start;
+  }
+  /* Phase D: Zone History compact table */
+  .zone-history-table-wrap {
+    max-height: 250px !important;
+  }
+  .zone-history-table th,
+  .zone-history-table td {
+    padding: 4px 6px !important;
+    font-size: 9px !important;
+  }
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -3678,6 +3747,10 @@ canvas.sparkline {
   </div>
   <div id="gate-arc-momentum" class="blur-gate module-tertiary">
     <div class="blur-content">
+      <div class="sec-header anim">
+        <div class="sec-title">ARC Momentum</div>
+        <div class="sec-line"></div>
+      </div>
       <div class="card anim" style="padding:1rem 1.5rem;margin-top:0.5rem">
         <div style="font-size:11px;font-weight:600;color:var(--tx-sec);margin-bottom:0.5rem;font-family:var(--f-mono)">ARC MOMENTUM (30D)</div>
         <div style="height:80px;position:relative">
@@ -4629,6 +4702,23 @@ function toggleHeroComponents() {
     if (label) label.textContent = 'HIDE COMPONENTS';
     if (arrow) arrow.style.transform = 'rotate(180deg)';
   }
+}
+
+function initMobileCollapseToggle() {
+  if (window.innerWidth > 600) return;
+  document.querySelectorAll('.module-tertiary .sec-header').forEach(function(header) {
+    if (header._mobileToggleBound) return;
+    header._mobileToggleBound = true;
+    header.addEventListener('click', function() {
+      var gate = header.closest('.module-tertiary');
+      if (gate) {
+        gate.classList.toggle('mobile-expanded');
+        if (gate.id === 'gate-arc-history' && window._arcHistoryChart) {
+          setTimeout(function() { window._arcHistoryChart.resize(); }, 500);
+        }
+      }
+    });
+  });
 }
 
 // ── TICKER & SCORES UPDATE ──────────────────────────────────────────────────
@@ -7495,6 +7585,7 @@ async function boot() {
       if (!supabaseClient) {
         applyBlurGates();
       }
+      initMobileCollapseToggle();
       // Onboarding-Tour nur einmalig starten, nur wenn eingeloggt und Dashboard sichtbar
       var dv = document.getElementById('dashboard-view');
       if (!localStorage.getItem('alphacycle_onboarded') && currentUser && dv && dv.style.display !== 'none') {
@@ -7504,9 +7595,16 @@ async function boot() {
   }
 }
 
-window.addEventListener('resize',()=>{
+window.addEventListener('resize',function(){
   clearTimeout(window._resizeT);
   window._resizeT=setTimeout(renderCharts,200);
+  if (window.innerWidth > 600) {
+    document.querySelectorAll('.module-tertiary.mobile-expanded').forEach(function(el) {
+      el.classList.remove('mobile-expanded');
+    });
+  } else {
+    initMobileCollapseToggle();
+  }
 });
 
 const _diToggle = $('di-toggle');
