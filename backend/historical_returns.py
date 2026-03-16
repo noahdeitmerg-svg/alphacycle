@@ -3,6 +3,7 @@ AlphaCycle Historical Returns Calculator
 Computes average forward returns by ARC zone from historical backtest data.
 """
 from typing import Optional
+from datetime import datetime, timedelta
 
 
 def compute_historical_returns(backtest_data: list) -> dict:
@@ -42,9 +43,9 @@ def compute_historical_returns(backtest_data: list) -> dict:
     if len(data) < 20:
         return _empty_returns()
 
-    WEEKS_3M = 13
-    WEEKS_6M = 26
-    WEEKS_12M = 52
+    DAYS_3M = 91    # ~3 months
+    DAYS_6M = 182   # ~6 months
+    DAYS_12M = 365  # ~12 months
 
     def in_zone(arc: float, zone: str) -> bool:
         a = float(arc)
@@ -75,11 +76,39 @@ def compute_historical_returns(backtest_data: list) -> dict:
         if price_curr <= 0:
             continue
 
-        def fwd_return(weeks: int) -> Optional[float]:
-            target_i = i + weeks
-            if target_i >= len(data):
+        def fwd_return(days_ahead: int) -> Optional[float]:
+            """Find data point closest to days_ahead calendar days from current entry."""
+            entry_date = data[i].get("date", "")
+            if not entry_date:
                 return None
-            fwd_price = float(data[target_i].get("btc_price", 0))
+            try:
+                entry_dt = datetime.fromisoformat(str(entry_date)).date()
+                target_dt = entry_dt + timedelta(days=days_ahead)
+            except Exception:
+                return None
+
+            best_idx: Optional[int] = None
+            best_diff = float("inf")
+            for j in range(i + 1, len(data)):
+                d = data[j].get("date", "")
+                if not d:
+                    continue
+                try:
+                    dj = datetime.fromisoformat(str(d)).date()
+                except Exception:
+                    continue
+                diff = abs((dj - target_dt).days)
+                if diff < best_diff:
+                    best_diff = diff
+                    best_idx = j
+                # once we are clearly past target and diff is growing, we can stop
+                if dj > target_dt and diff > best_diff:
+                    break
+
+            # require reasonably close match (<=14 days)
+            if best_idx is None or best_diff > 14:
+                return None
+            fwd_price = float(data[best_idx].get("btc_price", 0))
             if fwd_price <= 0:
                 return None
             return (fwd_price - price_curr) / price_curr * 100
@@ -87,9 +116,9 @@ def compute_historical_returns(backtest_data: list) -> dict:
         for zone in zone_entries:
             if in_zone(arc_prev, zone) or not in_zone(arc_curr, zone):
                 continue
-            r3m = fwd_return(WEEKS_3M)
-            r6m = fwd_return(WEEKS_6M)
-            r12m = fwd_return(WEEKS_12M)
+            r3m = fwd_return(DAYS_3M)
+            r6m = fwd_return(DAYS_6M)
+            r12m = fwd_return(DAYS_12M)
             zone_entries[zone].append({
                 "date": data[i].get("date", ""),
                 "arc": round(arc_curr, 1),
@@ -184,9 +213,9 @@ def compute_arc_forward_returns(backtest_data: list) -> list:
         (70, 85, "70-85"),
         (85, 100, "85-100"),
     ]
-    WEEKS_3M = 13
-    WEEKS_6M = 26
-    WEEKS_12M = 52
+    DAYS_3M = 91
+    DAYS_6M = 182
+    DAYS_12M = 365
 
     data = [norm(d) for d in (backtest_data or [])]
     data = [d for d in data if d.get("arc_score") is not None and (d.get("btc_price") or 0) > 0]
@@ -199,16 +228,45 @@ def compute_arc_forward_returns(backtest_data: list) -> list:
         price = float(entry.get("btc_price", 0))
         for lo, hi, label in BUCKETS:
             if lo <= arc < hi:
-                def fwd(weeks):
-                    ti = i + weeks
-                    if ti >= len(data):
+                def fwd(days_ahead: int) -> Optional[float]:
+                    entry_date = entry.get("date", "")
+                    if not entry_date:
                         return None
-                    fp = float(data[ti].get("btc_price", 0))
+                    try:
+                        entry_dt = datetime.fromisoformat(str(entry_date)).date()
+                        target_dt = entry_dt + timedelta(days=days_ahead)
+                    except Exception:
+                        return None
+
+                    best_idx: Optional[int] = None
+                    best_diff = float("inf")
+                    for j in range(i + 1, len(data)):
+                        dj_raw = data[j].get("date", "")
+                        if not dj_raw:
+                            continue
+                        try:
+                            dj = datetime.fromisoformat(str(dj_raw)).date()
+                        except Exception:
+                            continue
+                        diff = abs((dj - target_dt).days)
+                        if diff < best_diff:
+                            best_diff = diff
+                            best_idx = j
+                        if dj > target_dt and diff > best_diff:
+                            break
+
+                    if best_idx is None or best_diff > 14:
+                        return None
+                    fp = float(data[best_idx].get("btc_price", 0))
                     if fp <= 0:
                         return None
                     return (fp - price) / price * 100
 
-                bucket_data[label].append({"r3m": fwd(WEEKS_3M), "r6m": fwd(WEEKS_6M), "r12m": fwd(WEEKS_12M)})
+                bucket_data[label].append({
+                    "r3m": fwd(DAYS_3M),
+                    "r6m": fwd(DAYS_6M),
+                    "r12m": fwd(DAYS_12M),
+                })
                 break
 
     results = []
@@ -263,7 +321,31 @@ def compute_high_risk_drawdown(backtest_data: list) -> dict:
         if arc_prev >= 70 or arc_curr < 70:
             continue
         entry_price = float(data[i].get("btc_price", 0))
-        window_end = min(i + 52, len(data))
+
+        # Determine 365-day window from entry date
+        entry_date = data[i].get("date", "")
+        try:
+            entry_dt = datetime.fromisoformat(str(entry_date)).date()
+            target_end = entry_dt + timedelta(days=365)
+        except Exception:
+            entry_dt = None
+            target_end = None
+
+        if target_end:
+            window_end = i + 1
+            for j in range(i + 1, len(data)):
+                d = data[j].get("date", "")
+                try:
+                    dj = datetime.fromisoformat(str(d)).date()
+                except Exception:
+                    continue
+                if dj <= target_end:
+                    window_end = j + 1
+                else:
+                    break
+        else:
+            window_end = min(i + 365, len(data))
+
         window = data[i:window_end]
         prices_in_window = [float(d.get("btc_price", 0)) for d in window if d.get("btc_price")]
 
