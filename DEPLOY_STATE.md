@@ -4,6 +4,14 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-03-13) — Premium UI Phase A: Hero Redesign + Score Dominance
+- **Hero Card:** ARC-Score ist dominantes Element: gauge-val clamp(48px, 8vw, 72px), score-phase clamp(14px, 2vw, 18px), gauge-wrap max-width 180px. Hintergrund rgba(10,18,40,0.5), Border 1px solid rgba(255,255,255,0.06), kein Gradient/Glow; card-accent und card-glow-btc (box-shadow, ::before, ::after) fuer Hero ausgeblendet.
+- **Komponenten-Gauges:** Standardmaessig eingeklappt; Wrapper #hero-components-collapse mit max-height:0; Toggle-Button "SHOW COMPONENTS" / "HIDE COMPONENTS" mit toggleHeroComponents(); IDs btc-components, gauge-ma/dd/fg/liq, val-* unveraendert.
+- **Zonenleiste:** Zurueckhaltend: margin-top 12px, padding-top 8px, opacity 0.6, hz-range 10px, hz-label 7px, hero-zone padding 6px 12px.
+- **Abstand:** #gate-hero margin-bottom 32px.
+- **SHARE PNG:** Button per style="display:none" versteckt; nur bei ?admin=ac_internal_2026 in boot() auf inline-block gesetzt.
+- **Mobile:** @media (max-width:700px) Hero padding 1.5rem 1rem, margin 0 -10px, border-radius 0, gauge-wrap 160px/120px, gauge-val clamp(44px,12vw,64px), score-footer/hero-subscores/hero-meta-row zentriert; @media (max-width:480px) gauge-val clamp(40px,14vw,56px), score-phase 13px. Keine ARC-Formel-, Backend- oder Blur-Gate-Struktur-Aenderungen.
+
 ## Letzter Session-Status (2026-03-13) — ARC Daily Migration: Static CSV Integration
 - **CSV-basierte Daily-Historie:** Statische Datei `backend/data/btc_daily_kraken.csv` (Kraken BTC/USD Daily OHLC, Format: timestamp,open,high,low,close,volume,trades). Sollte 3727 Zeilen (2013-10-06 bis 2023-12-31) enthalten. Bei weniger Zeilen: Platzhalter mit `python backend/scripts/gen_btc_csv.py` erzeugen oder offizielle Kraken-CSV ablegen. Wenn CSV fehlt oder leer: Fallback auf woechentlichen Backtest.
 - **Drei Quellen in _load_or_build_daily_cache():** (1) CSV als Basis, (2) Luecke zwischen CSV-Ende und Kraken-API-Anfang per CryptoCompare e=Kraken (_fetch_gap_from_cryptocompare, optional CRYPTOCOMPARE_KEY), (3) Kraken Live-API (~720 neueste Tage). Merge, Dedup nach Datum, Sort, Persist in /tmp/daily_full_cache.json. Inkrementelles Update wenn Cache existiert und >2000 Eintraege.

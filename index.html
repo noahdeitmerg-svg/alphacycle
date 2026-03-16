@@ -332,9 +332,19 @@ body::before {
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 .card:hover { border-color: var(--border2); }
+#btc-card.hero-card.card-glow-btc {
+  box-shadow: none;
+}
+#btc-card.hero-card.card-glow-btc::before,
+#btc-card.hero-card.card-glow-btc::after {
+  display: none;
+}
 .card-glow-btc { box-shadow: 0 0 40px var(--btc-dim), inset 0 1px 0 rgba(255,255,255,0.04); }
 .card-glow-eth { box-shadow: 0 0 40px var(--eth-dim), inset 0 1px 0 rgba(255,255,255,0.04); }
 .card-glow-mac { box-shadow: 0 0 40px var(--mac-dim), inset 0 1px 0 rgba(255,255,255,0.04); }
+#btc-card.hero-card.card::before {
+  display: none;
+}
 .card::before {
   content: '';
   position: absolute;
@@ -345,6 +355,9 @@ body::before {
 }
 
 /* Card top accent line */
+#btc-card.hero-card .card-accent {
+  display: none;
+}
 .card-accent {
   position: absolute;
   top: 0; left: 0; right: 0;
@@ -371,15 +384,11 @@ body::before {
 
 #btc-card.hero-card {
   max-width: 100% !important;
-  margin: 0.5rem 0 0.75rem 0 !important;
-  padding: 0.85rem 2rem !important;
-  background: linear-gradient(160deg,
-    rgba(14,165,233,0.08) 0%,
-    rgba(14,165,233,0.02) 40%,
-    transparent 100%),
-    rgba(10,18,40,0.7);
-  border: 1px solid rgba(14,165,233,0.28);
-  box-shadow: 0 0 80px rgba(14,165,233,0.1), 0 24px 48px rgba(0,0,0,0.5);
+  margin: 1.25rem 0 2rem 0 !important;
+  padding: 1.5rem 2.25rem !important;
+  background: rgba(10,18,40,0.5);
+  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow: none;
   position: relative;
   overflow: hidden;
   display: grid;
@@ -393,8 +402,13 @@ body::before {
   column-gap: 2rem !important;
   row-gap: 0 !important;
 }
-@media(max-width:700px){
+@media (max-width: 700px) {
   #btc-card.hero-card {
+    padding: 1.5rem 1rem !important;
+    margin: 0 -10px !important;
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
     grid-template-areas:
       "header"
       "gauge"
@@ -404,11 +418,37 @@ body::before {
     grid-template-columns: 1fr !important;
     text-align: center !important;
   }
+  #btc-card.hero-card .gauge-wrap {
+    max-width: 160px !important;
+    min-width: 120px !important;
+    margin: 0 auto !important;
+  }
+  #btc-card.hero-card .gauge-val {
+    font-size: clamp(44px, 12vw, 64px) !important;
+  }
+  #btc-card.hero-card .score-footer {
+    align-items: center;
+    text-align: center;
+  }
+  #btc-card.hero-card .hero-subscores {
+    justify-content: center;
+  }
+  #btc-card.hero-card .hero-meta-row {
+    justify-content: center;
+  }
   #btc-card.hero-card .components-grid {
     border-left: none !important;
     border-top: 1px solid rgba(255,255,255,0.05) !important;
     padding-left: 0 !important;
     padding-top: 0.75rem !important;
+  }
+}
+@media (max-width: 480px) {
+  #btc-card.hero-card .gauge-val {
+    font-size: clamp(40px, 14vw, 56px) !important;
+  }
+  #btc-card.hero-card .score-phase {
+    font-size: 13px !important;
   }
 }
 
@@ -421,8 +461,8 @@ body::before {
 }
 #btc-card.hero-card .gauge-wrap {
   grid-area: gauge;
-  max-width: 120px !important;
-  min-width: 100px !important;
+  max-width: 180px !important;
+  min-width: 140px !important;
   padding-right: 0 !important;
   align-self: center !important;
 }
@@ -455,14 +495,15 @@ body::before {
   }
 }
 #btc-card.hero-card .gauge-val {
-  font-size: clamp(36px, 5vw, 46px) !important;
-  font-weight: 800;
-  letter-spacing: -0.05em;
+  font-size: clamp(48px, 8vw, 72px) !important;
+  font-weight: 700;
+  letter-spacing: -0.04em;
   line-height: 1;
 }
 #btc-card.hero-card .score-phase {
-  font-size: clamp(16px, 2.5vw, 20px) !important;
-  font-weight: 700;
+  font-size: clamp(14px, 2vw, 18px) !important;
+  font-weight: 600;
+  letter-spacing: 0.1em;
   line-height: 1;
 }
 #btc-card.hero-card .score-price {
@@ -521,35 +562,48 @@ body::before {
 
 /* Zonen Row */
 .hero-zones {
-  grid-area: unset;
-  grid-column: 1 / -1;
+  grid-area: zones !important;
+  grid-column: 1 / -1 !important;
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 0;
-  margin-top: 1.25rem;
-  padding-top: 1.25rem;
-  border-top: 1px solid rgba(255,255,255,0.05);
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  opacity: 0.6;
 }
 @media(max-width:580px){
   .hero-zones { grid-template-columns: repeat(3, 1fr); }
 }
 .hero-zone {
-  padding: 0.75rem 1rem;
+  padding: 6px 12px;
   border-right: 1px solid rgba(255,255,255,0.05);
   display: flex;
   flex-direction: column;
   gap: 3px;
 }
 .hero-zone:last-child { border-right: none; }
+.hero-zone .hz-range {
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+}
+.hero-zone .hz-label {
+  font-family: var(--f-mono);
+  font-size: 7px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tx-ter);
+}
 .hz-range {
-  font-size: 1rem;
-  font-weight: 700;
+  font-size: 10px;
+  font-weight: 600;
   line-height: 1;
 }
 .hz-label {
   font-family: var(--f-mono);
-  font-size: 9px;
-  letter-spacing: 0.1em;
+  font-size: 7px;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--tx-ter);
 }
@@ -564,21 +618,6 @@ body::before {
   padding-top: 5px !important;
   padding-bottom: 5px !important;
   font-size: 10px !important;
-}
-.hero-zones {
-  grid-area: zones !important;
-  grid-column: 1 / -1 !important;
-  margin-top: 0.6rem !important;
-  padding-top: 0.6rem !important;
-}
-.hero-zone {
-  padding: 0.35rem 0.75rem !important;
-}
-.hz-range {
-  font-size: 0.8rem !important;
-}
-.hz-label {
-  font-size: 8px !important;
 }
 #btc-card.hero-card .hs-val {
   font-size: 11px !important;
@@ -828,6 +867,12 @@ body::before {
 #gate-decision-engine {
   margin-top: 0;
 }
+#gate-hero {
+  margin-bottom: 32px;
+}
+#gate-hero.blur-gate {
+  margin-bottom: 32px;
+}
 .blur-gate {
   position: relative;
   overflow: hidden;
@@ -938,6 +983,7 @@ body::before {
   color: var(--tx-sec);
   border-radius: 4px;
   transition: all 0.2s;
+  display: none;
 }
 #hero-share-btn:hover {
   background: rgba(14,165,233,0.1);
@@ -3015,7 +3061,7 @@ canvas.sparkline {
             <div class="hero-risk-label" id="hero-risk-label">—</div>
             <div id="hero-signal-badge" style="display:none;font-size:0.75em;margin-top:4px;letter-spacing:0.08em;font-weight:500"></div>
           </div>
-          <button class="ce-btn" id="hero-share-btn" type="button" onclick="exportHeroAsPNG()" style="font-size:9px;padding:4px 10px;white-space:nowrap;">↓ SHARE PNG</button>
+          <button class="ce-btn" id="hero-share-btn" type="button" onclick="exportHeroAsPNG()" style="display:none;font-size:9px;padding:4px 10px;white-space:nowrap;">↓ SHARE PNG</button>
         </div>
         <div class="gauge-wrap">
       <svg viewBox="0 0 200 130" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -3079,6 +3125,17 @@ canvas.sparkline {
         </div>
       </div>
     </div>
+    <button id="hero-components-toggle" type="button" style="
+      display:flex;align-items:center;gap:6px;justify-content:center;
+      width:100%;padding:8px 0;margin:8px 0 0;
+      background:none;border:none;border-top:1px solid rgba(255,255,255,0.06);
+      cursor:pointer;font-family:var(--f-mono);font-size:9px;letter-spacing:0.1em;
+      color:var(--tx-ter);text-transform:uppercase;transition:color 0.2s;
+    " onclick="toggleHeroComponents()">
+      <span id="hero-toggle-label">SHOW COMPONENTS</span>
+      <span id="hero-toggle-arrow" style="font-size:11px;transition:transform 0.3s;">▼</span>
+    </button>
+    <div id="hero-components-collapse" style="max-height:0;overflow:hidden;transition:max-height 0.4s ease;">
     <div class="components-grid" id="btc-components">
       <div class="factor-card">
         <div class="factor-label">200W MA DEV</div>
@@ -3100,6 +3157,7 @@ canvas.sparkline {
         <div id="gauge-liq" style="display:flex;justify-content:center;margin:4px 0;"></div>
         <div id="val-liq" class="factor-value">—</div>
       </div>
+    </div>
     </div>
     <div class="hero-zones">
       <div class="hero-zone zone-dv">
@@ -4400,6 +4458,23 @@ function renderSignalSummary() {
   if (liveTag) {
     var arcVal = Math.round(score);
     liveTag.textContent = 'LIVE · ARC ' + arcVal;
+  }
+}
+
+function toggleHeroComponents() {
+  var wrap = document.getElementById('hero-components-collapse');
+  var label = document.getElementById('hero-toggle-label');
+  var arrow = document.getElementById('hero-toggle-arrow');
+  if (!wrap) return;
+  var isOpen = wrap.style.maxHeight && wrap.style.maxHeight !== '0px';
+  if (isOpen) {
+    wrap.style.maxHeight = '0px';
+    if (label) label.textContent = 'SHOW COMPONENTS';
+    if (arrow) arrow.style.transform = 'rotate(0deg)';
+  } else {
+    wrap.style.maxHeight = Math.max(wrap.scrollHeight, 300) + 'px';
+    if (label) label.textContent = 'HIDE COMPONENTS';
+    if (arrow) arrow.style.transform = 'rotate(180deg)';
   }
 }
 
@@ -7200,6 +7275,8 @@ async function boot() {
       if (params.get('admin') === 'ac_internal_2026') {
         var ce = document.getElementById('content-export-section');
         if (ce) ce.style.display = 'block';
+        var hs = document.getElementById('hero-share-btn');
+        if (hs) hs.style.display = 'inline-block';
       }
       // Handle Stripe redirect: poll until plan is paid (webhook may be delayed)
       if (window.location.hash === '#upgrade-success') {
