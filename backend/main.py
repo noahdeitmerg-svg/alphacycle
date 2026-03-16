@@ -560,7 +560,11 @@ def compute_zone_history(arc_history: list, min_weeks: int = 4) -> list:
 
         elif zone == pending_zone:
             pending_count += 1
-            if pending_count >= min_weeks:
+            try:
+                days_pending = (datetime.fromisoformat(str(date)) - datetime.fromisoformat(str(pending_start_date))).days
+            except Exception:
+                days_pending = pending_count
+            if days_pending >= min_weeks * 7:
                 new_order = ZONE_ORDER.get(pending_zone, 2)
                 direction = "up" if new_order > confirmed_order else "down"
 
