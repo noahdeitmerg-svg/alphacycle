@@ -4346,6 +4346,63 @@ function updatePhaseBanner() {
   if (lbl) lbl.textContent = 'AlphaCycle Index';
 }
 
+function renderSignalSummary() {
+  var el = document.getElementById('signal-summary');
+  if (!el) return;
+
+  var arcSum = S.arcSummary;
+  if (!arcSum || arcSum.arc_score == null) {
+    el.style.display = 'none';
+    return;
+  }
+  el.style.display = 'block';
+
+  var score = arcSum.arc_display != null ? arcSum.arc_display : arcSum.arc_score;
+  var rawScore = arcSum.arc_score;
+  var zoneName = arcSum.zone_name || 'Unknown';
+  var col = scoreColor(rawScore);
+
+  var zoneEl = document.getElementById('signal-summary-zone');
+  if (zoneEl) {
+    zoneEl.textContent = zoneName.toUpperCase() + ' ZONE · ARC ' + Math.round(score) + '/100';
+    zoneEl.style.color = col || '#fff';
+  }
+
+  el.style.borderLeftColor = col || 'var(--btc)';
+
+  var contextEl = document.getElementById('signal-summary-context');
+  if (contextEl) {
+    var zoneKey = rawScore <= 29 ? 'deep_value'
+      : rawScore <= 39 ? 'accumulation'
+      : rawScore <= 59 ? 'expansion'
+      : rawScore <= 69 ? 'risk_rising'
+      : 'euphoria';
+
+    var hr = S.historicalReturns && S.historicalReturns.zones
+      ? S.historicalReturns.zones[zoneKey]
+      : null;
+
+    if (zoneKey === 'risk_rising') {
+      contextEl.textContent = 'Historically unfavorable entry zone, often late-cycle in past cycles.';
+    } else if (zoneKey === 'euphoria') {
+      var dd = hr && hr.avg_drawdown != null ? Math.abs(hr.avg_drawdown) : 40;
+      contextEl.textContent = 'Historically late-cycle zone. Average drawdown from peak after entries: -' + dd + '%.';
+    } else if (hr && hr.avg_12m != null) {
+      var avg = hr.avg_12m;
+      contextEl.textContent = 'Historically, entries in this zone saw an average ' +
+        (avg > 0 ? '+' : '') + avg + '% move over the following 12 months.';
+    } else {
+      contextEl.textContent = 'Historical zone statistics loading…';
+    }
+  }
+
+  var liveTag = document.getElementById('signal-summary-live-tag');
+  if (liveTag) {
+    var arcVal = Math.round(score);
+    liveTag.textContent = 'LIVE · ARC ' + arcVal;
+  }
+}
+
 // ── TICKER & SCORES UPDATE ──────────────────────────────────────────────────
 function updateUI() {
   var btcP = S.btcMarket?.price || S.btcPrices.at(-1) || 0;
@@ -4472,64 +4529,6 @@ function updateUI() {
 
   updatePhaseBanner();
   renderZoneHistory();
-
-  function renderSignalSummary() {
-    var el = document.getElementById('signal-summary');
-    if (!el) return;
-
-    var arcSum = S.arcSummary;
-    if (!arcSum || arcSum.arc_score == null) {
-      el.style.display = 'none';
-      return;
-    }
-    el.style.display = 'block';
-
-    var score = arcSum.arc_display != null ? arcSum.arc_display : arcSum.arc_score;
-    var rawScore = arcSum.arc_score;
-    var zoneName = arcSum.zone_name || 'Unknown';
-    var col = scoreColor(rawScore);
-
-    var zoneEl = document.getElementById('signal-summary-zone');
-    if (zoneEl) {
-      zoneEl.textContent = zoneName.toUpperCase() + ' ZONE · ARC ' + Math.round(score) + '/100';
-      zoneEl.style.color = col || '#fff';
-    }
-
-    el.style.borderLeftColor = col || 'var(--btc)';
-
-    var contextEl = document.getElementById('signal-summary-context');
-    if (contextEl) {
-      var zoneKey = rawScore <= 29 ? 'deep_value'
-        : rawScore <= 39 ? 'accumulation'
-        : rawScore <= 59 ? 'expansion'
-        : rawScore <= 69 ? 'risk_rising'
-        : 'euphoria';
-
-      var hr = S.historicalReturns && S.historicalReturns.zones
-        ? S.historicalReturns.zones[zoneKey]
-        : null;
-
-      if (zoneKey === 'risk_rising') {
-        contextEl.textContent = 'Historically unfavorable entry zone, often late-cycle in past cycles.';
-      } else if (zoneKey === 'euphoria') {
-        var dd = hr && hr.avg_drawdown != null ? Math.abs(hr.avg_drawdown) : 40;
-        contextEl.textContent = 'Historically late-cycle zone. Average drawdown from peak after entries: -' + dd + '%.';
-      } else if (hr && hr.avg_12m != null) {
-        var avg = hr.avg_12m;
-        contextEl.textContent = 'Historically, entries in this zone saw an average ' +
-          (avg > 0 ? '+' : '') + avg + '% move over the following 12 months.';
-      } else {
-        contextEl.textContent = 'Historical zone statistics loading…';
-      }
-    }
-
-    var liveTag = document.getElementById('signal-summary-live-tag');
-    if (liveTag) {
-      var arcVal = Math.round(score);
-      liveTag.textContent = 'LIVE · ARC ' + arcVal;
-    }
-  }
-
   renderSignalSummary();
 
   // Decision Engine — from arc-summary when available, else local fallback
