@@ -3750,7 +3750,7 @@ canvas.sparkline {
             <span id="arc-chart-range-badge" style="font-family:var(--f-mono);font-size:8px;color:var(--tx-ter);letter-spacing:0.06em;margin-left:4px;opacity:0.6;"></span>
             <button class="ce-btn" id="export-arc-btn" type="button" onclick="exportArcChart()">↓ EXPORT PNG</button>
             <button class="ce-btn" id="share-arc-btn" type="button" onclick="shareArcChart()">SHARE</button>
-            <button class="ce-btn arc-chart-btn" id="reset-zoom-arc-btn" type="button" onclick="if(window._arcHistoryChart && window._arcHistoryChart.resetZoom) window._arcHistoryChart.resetZoom();">↺ RESET</button>
+            <button class="ce-btn arc-chart-btn" id="reset-zoom-arc-btn" type="button" onclick="resetArcZoom()" title="Reset to 2Y view (double-click chart for full range)">↺ RESET</button>
           </div>
         </div>
         <div id="arc-chart-placeholder" class="arc-chart-placeholder">Historische Daten werden geladen (kann bis zu 15 Sek. dauern)...</div>
@@ -6491,8 +6491,25 @@ function setArcPeriod(period) {
   renderMomentumChart();
 }
 
+function resetArcZoom() {
+  var chart = window._arcHistoryChart;
+  if (!chart) return;
+  if (window._arcPeriod === '10y' && window._arcDefaultZoom) {
+    try {
+      chart.zoomScale('x', window._arcDefaultZoom, 'default');
+    } catch (e) {
+      chart.options.scales.x.min = window._arcDefaultZoom.min;
+      chart.options.scales.x.max = window._arcDefaultZoom.max;
+      chart.update('none');
+    }
+  } else if (typeof chart.resetZoom === 'function') {
+    chart.resetZoom();
+  }
+}
+
 function renderArcChart(period) {
   period = period || _arcPeriod;
+  window._arcPeriod = period;
   if ((!S.backtest || !S.backtest.length) && (!S.dailyHistory || !S.dailyHistory.length)) return;
   var data;
   if (period === '1y') {
@@ -6970,6 +6987,22 @@ function renderArcChart(period) {
       }
     }
   });
+  // Default 10Y view: zoom to last 2 years
+  if (period === '10y' && window._arcHistoryChart) {
+    var n = labels.length;
+    if (n > 730) {
+      var defaultStart = n - 730;
+      var defaultEnd = n - 1;
+      try {
+        window._arcHistoryChart.zoomScale('x', { min: defaultStart, max: defaultEnd }, 'default');
+      } catch (e) {
+        window._arcHistoryChart.options.scales.x.min = defaultStart;
+        window._arcHistoryChart.options.scales.x.max = defaultEnd;
+        window._arcHistoryChart.update('none');
+      }
+      window._arcDefaultZoom = { min: defaultStart, max: defaultEnd };
+    }
+  }
   // Expose ARC chart globally for external handlers
   window.arcChart = window._arcHistoryChart;
   canvas.style.cursor = 'crosshair';
@@ -6994,9 +7027,7 @@ function renderArcChart(period) {
   var resetBtn = document.getElementById('arc-reset-zoom') || document.getElementById('reset-zoom-arc-btn');
   if (resetBtn && !resetBtn._arcBound) {
     resetBtn.addEventListener('click', function() {
-      if (window.arcChart && typeof window.arcChart.resetZoom === 'function') {
-        window.arcChart.resetZoom();
-      }
+      resetArcZoom();
     });
     resetBtn._arcBound = true;
   }

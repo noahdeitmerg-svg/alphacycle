@@ -4,6 +4,12 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-03-11) — ARC Chart: 10Y Default Zoom to Last 2 Years
+- **10Y Chart:** Nach Erstellung wird die x-Achse programmatisch auf die letzten ~730 Datenpunkte (~2 Jahre) gezoomt. Nutzer sieht zuerst die jüngste Geschichte; Pan links / Zoom out zeigt den vollen 10Y-Bereich.
+- **RESET-Button:** Führt `resetArcZoom()` aus: bei 10Y Rückkehr zur 2Y-Default-Ansicht (nicht Vollbereich); bei 1Y wie bisher `resetZoom()`. Button-Title: „Reset to 2Y view (double-click chart for full range)“.
+- **Doppelklick auf Canvas:** Unverändert `chart.resetZoom()` → voller 10Y-Bereich (Escape-Hatch).
+- **1Y-Chart:** Unverändert, kein Default-Zoom. `window._arcPeriod` und `window._arcDefaultZoom` werden in `renderArcChart()` gesetzt; Zoom-Plugin-Config, Datasets, priceMin/priceMax, Formel und Backend unverändert.
+
 ## Letzter Session-Status (2026-03-11) — Premium UI Phase E: Micro-Polish
 - **Fade-in:** .anim nutzt weiterhin fadeUp (opacity + translateY); @media (prefers-reduced-motion: reduce) setzt animation: none und opacity: 1 für .anim. Keine strukturellen Änderungen.
 - **Hero Freshness:** #hero-freshness im Hero-Header; updateHeroFreshness() zeigt LIVE / Xm ago / Xh ago; S._lastRefresh wird in updateUI() bei „Last updated“ gesetzt; 60s-Interval für Aktualisierung. Kein neues Backend.
