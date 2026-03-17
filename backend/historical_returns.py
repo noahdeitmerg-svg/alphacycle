@@ -6,12 +6,13 @@ from typing import Optional
 from datetime import datetime, timedelta
 
 
-def compute_historical_returns(backtest_data: list) -> dict:
+def compute_historical_returns(backtest_data: list, zone_periods: Optional[list] = None) -> dict:
     """
     Analyzes backtest data and computes average forward returns by ARC zone.
-    Zone-crossing entry logic: an entry is counted ONLY when ARC crosses FROM
-    OUTSIDE the zone INTO the zone (previous week not in zone, current week in zone).
-    Forward return = (price at 52 weeks / entry price - 1) * 100.
+    If zone_periods is provided, confirmed zone periods from compute_zone_history()
+    are used as entry points. Otherwise, a zone-crossing entry is counted ONLY when
+    ARC crosses FROM outside the zone INTO the zone (previous day not in zone,
+    current day in zone).
 
     backtest_data: List of dicts with date, arc_score (or score), btc_price (or price).
 
@@ -69,16 +70,22 @@ def compute_historical_returns(backtest_data: list) -> dict:
         "euphoria": [],
     }
 
-    for i in range(1, len(data)):
-        arc_curr = float(data[i].get("arc_score", 50))
-        arc_prev = float(data[i - 1].get("arc_score", 50))
-        price_curr = float(data[i].get("btc_price", 0))
-        if price_curr <= 0:
-            continue
+    # Build lookup by date for arc/price at entry
+    price_by_date = {d.get("date", ""): d for d in data if d.get("date")}
 
-        def fwd_return(days_ahead: int) -> Optional[float]:
-            """Find data point closest to days_ahead calendar days from current entry."""
-            entry_date = data[i].get("date", "")
+    if zone_periods:
+        # Use confirmed zone periods (from compute_zone_history) as entry points
+        zone_name_to_key = {
+            "Deep Value": "deep_value",
+            "Accumulation": "accumulation",
+            "Expansion": "expansion",
+            "Risk Rising": "risk_rising",
+            "Euphoria": "euphoria",
+        }
+
+        def fwd_return_from(index: int, entry_price: float, days_ahead: int) -> Optional[float]:
+            """Find data point closest to days_ahead calendar days from given entry index."""
+            entry_date = data[index].get("date", "")
             if not entry_date:
                 return None
             try:
@@ -89,44 +96,136 @@ def compute_historical_returns(backtest_data: list) -> dict:
 
             best_idx: Optional[int] = None
             best_diff = float("inf")
-            for j in range(i + 1, len(data)):
-                d = data[j].get("date", "")
-                if not d:
+            for j in range(index + 1, len(data)):
+                d_raw = data[j].get("date", "")
+                if not d_raw:
                     continue
                 try:
-                    dj = datetime.fromisoformat(str(d)).date()
+                    dj = datetime.fromisoformat(str(d_raw)).date()
                 except Exception:
                     continue
                 diff = abs((dj - target_dt).days)
                 if diff < best_diff:
                     best_diff = diff
                     best_idx = j
-                # once we are clearly past target and diff is growing, we can stop
                 if dj > target_dt and diff > best_diff:
                     break
 
-            # require reasonably close match (<=14 days)
             if best_idx is None or best_diff > 14:
                 return None
             fwd_price = float(data[best_idx].get("btc_price", 0))
             if fwd_price <= 0:
                 return None
-            return (fwd_price - price_curr) / price_curr * 100
+            return (fwd_price - entry_price) / entry_price * 100
 
-        for zone in zone_entries:
-            if in_zone(arc_prev, zone) or not in_zone(arc_curr, zone):
+        for period in zone_periods:
+            zone_display = period.get("zone") or ""
+            zone_key = zone_name_to_key.get(zone_display)
+            if not zone_key or zone_key not in zone_entries:
                 continue
-            r3m = fwd_return(DAYS_3M)
-            r6m = fwd_return(DAYS_6M)
-            r12m = fwd_return(DAYS_12M)
-            zone_entries[zone].append({
-                "date": data[i].get("date", ""),
-                "arc": round(arc_curr, 1),
-                "price": price_curr,
-                "r3m": r3m,
-                "r6m": r6m,
-                "r12m": r12m,
-            })
+
+            entry_date = period.get("from") or ""
+            if not entry_date:
+                continue
+            try:
+                entry_price = float(period.get("btc_entry") or 0.0)
+            except Exception:
+                entry_price = 0.0
+            if entry_price <= 0:
+                continue
+
+            entry_idx: Optional[int] = None
+            for idx, d in enumerate(data):
+                if d.get("date") == entry_date:
+                    entry_idx = idx
+                    break
+            if entry_idx is None:
+                continue
+
+            r3m = fwd_return_from(entry_idx, entry_price, DAYS_3M)
+            r6m = fwd_return_from(entry_idx, entry_price, DAYS_6M)
+            r12m = fwd_return_from(entry_idx, entry_price, DAYS_12M)
+
+            entry_data = price_by_date.get(entry_date, {})
+            arc_at_entry = float(
+                entry_data.get(
+                    "arc_score",
+                    entry_data.get("score_display", entry_data.get("score", 50.0)),
+                )
+            )
+
+            zone_entries[zone_key].append(
+                {
+                    "date": entry_date,
+                    "arc": round(arc_at_entry, 1),
+                    "price": entry_price,
+                    "r3m": r3m,
+                    "r6m": r6m,
+                    "r12m": r12m,
+                }
+            )
+    else:
+        # Fallback: original zone-crossing logic on daily data
+        for i in range(1, len(data)):
+            arc_curr = float(data[i].get("arc_score", 50))
+            arc_prev = float(data[i - 1].get("arc_score", 50))
+            price_curr = float(data[i].get("btc_price", 0))
+            if price_curr <= 0:
+                continue
+
+            def fwd_return(days_ahead: int) -> Optional[float]:
+                """Find data point closest to days_ahead calendar days from current entry."""
+                entry_date = data[i].get("date", "")
+                if not entry_date:
+                    return None
+                try:
+                    entry_dt = datetime.fromisoformat(str(entry_date)).date()
+                    target_dt = entry_dt + timedelta(days=days_ahead)
+                except Exception:
+                    return None
+
+                best_idx: Optional[int] = None
+                best_diff = float("inf")
+                for j in range(i + 1, len(data)):
+                    d = data[j].get("date", "")
+                    if not d:
+                        continue
+                    try:
+                        dj = datetime.fromisoformat(str(d)).date()
+                    except Exception:
+                        continue
+                    diff = abs((dj - target_dt).days)
+                    if diff < best_diff:
+                        best_diff = diff
+                        best_idx = j
+                    # once we are clearly past target and diff is growing, we can stop
+                    if dj > target_dt and diff > best_diff:
+                        break
+
+                # require reasonably close match (<=14 days)
+                if best_idx is None or best_diff > 14:
+                    return None
+                fwd_price = float(data[best_idx].get("btc_price", 0))
+                if fwd_price <= 0:
+                    return None
+                return (fwd_price - price_curr) / price_curr * 100
+
+            for zone in zone_entries:
+                if in_zone(arc_prev, zone) or not in_zone(arc_curr, zone):
+                    continue
+                r3m = fwd_return(DAYS_3M)
+                r6m = fwd_return(DAYS_6M)
+                r12m = fwd_return(DAYS_12M)
+                zone_entries[zone].append(
+                    {
+                        "date": data[i].get("date", ""),
+                        "arc": round(arc_curr, 1),
+                        "price": price_curr,
+                        "r3m": r3m,
+                        "r6m": r6m,
+                        "r12m": r12m,
+                    }
+                )
 
     zone_meta = {
         "deep_value": ("0-29", "Deep Value"),

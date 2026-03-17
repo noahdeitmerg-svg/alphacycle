@@ -236,7 +236,21 @@ async def refresh_cache(force: bool = False):
                         compute_arc_forward_returns,
                         compute_high_risk_drawdown,
                     )
-                    hist_returns = compute_historical_returns(bt_results)
+                    arc_history = []
+                    for _r in bt_results:
+                        d = _r.get("date")
+                        arc_val = _r.get("arc_score", _r.get("score"))
+                        price = _r.get("btc_price", _r.get("price"))
+                        if d and arc_val is not None and price is not None:
+                            arc_history.append(
+                                {
+                                    "date": d,
+                                    "arc_score": float(arc_val),
+                                    "btc_price": float(price),
+                                }
+                            )
+                    zone_periods = compute_zone_history(arc_history) if arc_history else []
+                    hist_returns = compute_historical_returns(bt_results, zone_periods=zone_periods or None)
                     fwd_returns = compute_arc_forward_returns(bt_results)
                     dd_data = compute_high_risk_drawdown(bt_results)
                     CACHE.update({
@@ -1689,7 +1703,23 @@ async def get_historical_returns(request: Request):
             if not bt_list:
                 bt = await run_backtest()
                 bt_list = bt.get("results", []) if isinstance(bt, dict) else []
-            result = compute_historical_returns(bt_list)
+            arc_history_for_zones = []
+            for r in bt_list:
+                if not r:
+                    continue
+                d = r.get("date")
+                arc_val = r.get("score_display", r.get("arc_score", r.get("score")))
+                price = r.get("btc_price", r.get("price"))
+                if d and arc_val is not None and price is not None:
+                    arc_history_for_zones.append(
+                        {
+                            "date": d,
+                            "arc_score": float(arc_val),
+                            "btc_price": float(price),
+                        }
+                    )
+            zone_periods = compute_zone_history(arc_history_for_zones) if arc_history_for_zones else []
+            result = compute_historical_returns(bt_list, zone_periods=zone_periods or None)
         if result.get("zones", {}).get("risk_rising"):
             result["zones"]["risk_rising"]["display_mode"] = "reduce"
             result["zones"]["risk_rising"]["display_label"] = "REDUCE — DO NOT BUY"
@@ -2063,7 +2093,23 @@ async def get_snapshot(request: Request):
             hist_returns = CACHE.get("hist_returns")
             if hist_returns is None and bt_results:
                 from historical_returns import compute_historical_returns
-                hist_returns = compute_historical_returns(bt_results)
+                arc_history = []
+                for _r in bt_results:
+                    d = _r.get("date")
+                    arc_val = _r.get("arc_score", _r.get("score"))
+                    price = _r.get("btc_price", _r.get("price"))
+                    if d and arc_val is not None and price is not None:
+                        arc_history.append(
+                            {
+                                "date": d,
+                                "arc_score": float(arc_val),
+                                "btc_price": float(price),
+                            }
+                        )
+                zone_periods_for_expected = compute_zone_history(arc_history) if arc_history else []
+                hist_returns = compute_historical_returns(
+                    bt_results, zone_periods=zone_periods_for_expected or None
+                )
             expected = _get_expected_range(arc_display_val, hist_returns=hist_returns or {}, high_risk_drawdown=dd_data)
             expected_range_label = expected.get("label", "N/A")
         except Exception:
