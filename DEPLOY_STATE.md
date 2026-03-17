@@ -19,6 +19,12 @@
 ## Letzter Session-Status (2026-03-17) — Hotfix: Track Record Deep Value Return
 - **Track Record Highlights:** Deep-Value-12M-Return in #track-dv-return auf +260% aktualisiert (Quelle /api/historical-returns deep_value.avg_12m, verified 2026-03-17). Nur dieser Wert und Verifizierungs-Kommentar geändert.
 
+## Letzter Session-Status (2026-03-17) — Decision Engine: Move to position 5 + ARC chart auto-fit price axis
+- **DOM-Reihenfolge:** `gate-decision-engine` nach `gate-historical-returns` eingefügt (vor `gate-cycle-overview`), und „DEEP ANALYSIS“-Separator bleibt vor `gate-arc-history` korrekt positioniert (Signal-Hierarchie: Score → Signal Summary → HR → Decision → Cycle → Deep Dive).
+- **ARC Chart:** `autoFitPriceAxis()` hinzugefügt (Re-entrancy Guard), passt yPrice (BTC) min/max beim Zoom/Pan auf den sichtbaren X-Bereich an; yArc bleibt 0–100 fix.
+- **Reset/Doppelklick:** `resetArcZoom()` und Double-Click stellen die originale yPrice (Full-Range) Bounding-Werte wieder her.
+- **Zoom/Pan Callbacks:** onZoom/onPan in der Chart.js zoom/pan Konfiguration ruft `autoFitPriceAxis()` auf.
+
 ## Letzter Session-Status (2026-03-11) — Trust Layer Phase T-C: Track Record Highlights + Footer Sources Cleanup
 - **Track Record Highlights:** Kompakter Block `.track-highlights` nach gate-content-export, vor DATA SOURCES. Vier hardcodierte Stats: 10/10 Major cycle tops & bottoms, verifizierter Deep-Value-12M-Return (+X%), 8 Jahre ARC-Daten seit Aug 2017, 4 Quellen (Kraken · Alternative.me · DeFiLlama · FRED). Link „VIEW FULL TRACK RECORD →“ ruft showTrackRecord() auf. Kein Blur-Gate, immer sichtbar.
 - **CSS:** .track-highlights-grid 4 Spalten, Border/Track-Style; .track-stat, .track-stat-value, .track-stat-label. @media 600px: 2 Spalten; @media 380px: 1 Spalte, kleinere Padding/Schrift.

@@ -3775,6 +3775,48 @@ canvas.sparkline {
     </div>
   </div>
 
+  <!-- DECISION ENGINE -->
+  <div id="gate-decision-engine" class="blur-gate module-secondary">
+    <div class="blur-content">
+      <div class="sec-header anim d2">
+        <div class="sec-title">
+          Decision Engine
+          <span id="dec-live-tag" style="font-size:8px;letter-spacing:0.08em;padding:2px 8px;border-radius:4px;background:rgba(0,212,170,0.12);color:#00D4AA;margin-left:8px;vertical-align:middle;">LIVE · ARC —</span>
+        </div>
+        <div class="sec-line"></div>
+      </div>
+      <div class="card decision-card anim d2" id="decision-card">
+        <div class="card-accent accent-btc"></div>
+        <div class="decision-grid">
+          <div class="decision-item">
+            <div class="decision-label">Suggested Position</div>
+            <div class="decision-value" id="dec-position">—</div>
+            <div class="decision-value decision-value-sub" id="dec-bottom-formation" style="display:none;font-size:0.85em;margin-top:4px;color:#00B4D8"></div>
+          </div>
+          <div class="decision-item">
+            <div class="decision-label">Spot Allocation</div>
+            <div class="decision-value" id="dec-allocation">—</div>
+          </div>
+          <div class="decision-item">
+            <div class="decision-label">12M Expected Range</div>
+            <div class="decision-value" id="dec-range">—</div>
+            <div class="decision-value decision-value-sub" id="dec-range-worst" style="display:none;font-size:0.85em;color:#6b7280;margin-top:2px"></div>
+          </div>
+          <div class="decision-item">
+            <div class="decision-label">Confidence</div>
+            <div class="decision-value" id="dec-confidence">—</div>
+          </div>
+          <div class="decision-note">ARC RISK LEVEL <span id="dec-index-val" style="color:var(--btc);font-weight:600">—</span> / 100</div>
+        </div>
+      </div>
+    </div>
+    <div class="blur-overlay">
+      <div class="blur-overlay-icon">🔒</div>
+      <div class="blur-overlay-title" id="gate-decision-engine-title">🔒 FREE FEATURE</div>
+      <button class="blur-overlay-btn" id="gate-decision-engine-btn">CREATE FREE ACCOUNT</button>
+    </div>
+  </div>
+
   <!-- Hidden: ETH + Macro IDs for JS (cards removed from UI) -->
   <div style="display:none">
     <canvas id="eth-arc"></canvas>
@@ -3935,48 +3977,6 @@ canvas.sparkline {
       <div class="blur-overlay-icon">🔒</div>
       <div class="blur-overlay-title" id="gate-near-term-title">🔒 FREE FEATURE</div>
       <button class="blur-overlay-btn" id="gate-near-term-btn">CREATE FREE ACCOUNT</button>
-    </div>
-  </div>
-
-  <!-- DECISION ENGINE -->
-  <div id="gate-decision-engine" class="blur-gate module-secondary">
-    <div class="blur-content">
-      <div class="sec-header anim d2">
-        <div class="sec-title">
-          Decision Engine
-          <span id="dec-live-tag" style="font-size:8px;letter-spacing:0.08em;padding:2px 8px;border-radius:4px;background:rgba(0,212,170,0.12);color:#00D4AA;margin-left:8px;vertical-align:middle;">LIVE · ARC —</span>
-        </div>
-        <div class="sec-line"></div>
-      </div>
-      <div class="card decision-card anim d2" id="decision-card">
-        <div class="card-accent accent-btc"></div>
-        <div class="decision-grid">
-          <div class="decision-item">
-            <div class="decision-label">Suggested Position</div>
-            <div class="decision-value" id="dec-position">—</div>
-            <div class="decision-value decision-value-sub" id="dec-bottom-formation" style="display:none;font-size:0.85em;margin-top:4px;color:#00B4D8"></div>
-          </div>
-          <div class="decision-item">
-            <div class="decision-label">Spot Allocation</div>
-            <div class="decision-value" id="dec-allocation">—</div>
-          </div>
-          <div class="decision-item">
-            <div class="decision-label">12M Expected Range</div>
-            <div class="decision-value" id="dec-range">—</div>
-            <div class="decision-value decision-value-sub" id="dec-range-worst" style="display:none;font-size:0.85em;color:#6b7280;margin-top:2px"></div>
-          </div>
-          <div class="decision-item">
-            <div class="decision-label">Confidence</div>
-            <div class="decision-value" id="dec-confidence">—</div>
-          </div>
-          <div class="decision-note">ARC RISK LEVEL <span id="dec-index-val" style="color:var(--btc);font-weight:600">—</span> / 100</div>
-        </div>
-      </div>
-    </div>
-    <div class="blur-overlay">
-      <div class="blur-overlay-icon">🔒</div>
-      <div class="blur-overlay-title" id="gate-decision-engine-title">🔒 FREE FEATURE</div>
-      <button class="blur-overlay-btn" id="gate-decision-engine-btn">CREATE FREE ACCOUNT</button>
     </div>
   </div>
 
@@ -6859,6 +6859,7 @@ function resetArcZoom() {
   if (window._arcPeriod === '10y' && window._arcDefaultZoom) {
     try {
       chart.zoomScale('x', window._arcDefaultZoom, 'default');
+      setTimeout(function() { autoFitPriceAxis(chart); }, 100);
     } catch (e) {
       chart.options.scales.x.min = window._arcDefaultZoom.min;
       chart.options.scales.x.max = window._arcDefaultZoom.max;
@@ -6866,6 +6867,61 @@ function resetArcZoom() {
     }
   } else if (typeof chart.resetZoom === 'function') {
     chart.resetZoom();
+    if (window._arcOriginalPriceMin != null) {
+      chart.options.scales.yPrice.min = window._arcOriginalPriceMin;
+      chart.options.scales.yPrice.max = window._arcOriginalPriceMax;
+      chart.update('none');
+    }
+  }
+}
+
+function autoFitPriceAxis(chart) {
+  if (autoFitPriceAxis._running) return;
+  autoFitPriceAxis._running = true;
+
+  try {
+    if (!chart || !chart.scales || !chart.scales.x || !chart.scales.yPrice) return;
+    var xScale = chart.scales.x;
+    var minIdx = Math.max(0, Math.floor(xScale.min));
+    var maxIdx = Math.min(chart.data.labels.length - 1, Math.ceil(xScale.max));
+
+    var priceDs = null;
+    var highDs = null;
+    var lowDs = null;
+    chart.data.datasets.forEach(function(ds) {
+      if (ds.label === 'BTC Price') priceDs = ds;
+      if (ds.label === 'BTC High-Low') highDs = ds;
+      if (ds.label === 'BTC Low') lowDs = ds;
+    });
+    if (!priceDs) return;
+
+    var visibleMin = Infinity;
+    var visibleMax = -Infinity;
+    for (var i = minIdx; i <= maxIdx; i++) {
+      var p = priceDs.data[i];
+      if (p != null && p > 100) {
+        if (p < visibleMin) visibleMin = p;
+        if (p > visibleMax) visibleMax = p;
+      }
+      if (highDs && highDs.data[i] != null && highDs.data[i] > 100) {
+        if (highDs.data[i] > visibleMax) visibleMax = highDs.data[i];
+      }
+      if (lowDs && lowDs.data[i] != null && lowDs.data[i] > 100) {
+        if (lowDs.data[i] < visibleMin) visibleMin = lowDs.data[i];
+      }
+    }
+
+    if (visibleMin === Infinity || visibleMax === -Infinity) return;
+
+    var padding = (visibleMax - visibleMin) * 0.08;
+    var newMin = Math.max(100, Math.floor(visibleMin - padding));
+    var newMax = Math.ceil(visibleMax + padding);
+
+    chart.options.scales.yPrice.min = newMin;
+    chart.options.scales.yPrice.max = newMax;
+    chart.update('none');
+  } finally {
+    autoFitPriceAxis._running = false;
   }
 }
 
@@ -7246,12 +7302,15 @@ function renderArcChart(period) {
             pinch: {
               enabled: true
             },
-            mode: 'x'
+            mode: 'x',
+            onZoom: function(ctx) { autoFitPriceAxis(ctx.chart); }
           },
           pan: {
             enabled: true,
             mode: 'x',
             threshold: 5
+            ,
+            onPan: function(ctx) { autoFitPriceAxis(ctx.chart); }
           }
         },
         tooltip: {
@@ -7381,6 +7440,11 @@ function renderArcChart(period) {
     canvas.addEventListener('dblclick', function() {
       if (window.arcChart && typeof window.arcChart.resetZoom === 'function') {
         window.arcChart.resetZoom();
+        if (window._arcOriginalPriceMin != null) {
+          window.arcChart.options.scales.yPrice.min = window._arcOriginalPriceMin;
+          window.arcChart.options.scales.yPrice.max = window._arcOriginalPriceMax;
+          window.arcChart.update('none');
+        }
       }
     });
     canvas._arcCursorBound = true;
@@ -7466,6 +7530,10 @@ function renderMomentumChart() {
       }
     }
   });
+  if (window._arcHistoryChart) {
+    window._arcOriginalPriceMin = priceMin;
+    window._arcOriginalPriceMax = priceMax;
+  }
 }
 
 function exportArcChart() {
