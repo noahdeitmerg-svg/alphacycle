@@ -2278,6 +2278,25 @@ canvas.sparkline {
 .anim { opacity:0; animation:fadeUp 0.5s var(--ease-out) forwards; }
 .d1{animation-delay:0.05s} .d2{animation-delay:0.12s} .d3{animation-delay:0.20s}
 .d4{animation-delay:0.28s} .d5{animation-delay:0.36s} .d6{animation-delay:0.44s}
+.zone-history-table-wrap,
+.hr-grid {
+  scroll-behavior: smooth;
+}
+.is-placeholder {
+  color: var(--tx-ter) !important;
+}
+.loading-text {
+  color: var(--tx-ter) !important;
+  font-style: italic;
+}
+@media (prefers-reduced-motion: reduce) {
+  .anim { animation: none !important; opacity: 1 !important; }
+  html,
+  .zone-history-table-wrap,
+  .hr-grid {
+    scroll-behavior: auto !important;
+  }
+}
 
 /* Number transition */
 .num-transition { transition: all 0.4s var(--ease-out); }
@@ -3280,6 +3299,7 @@ canvas.sparkline {
             <div class="score-label-dot" style="background:var(--btc)"></div>
             AlphaCycle Index
             <div class="hero-subtitle">STRUCTURAL RISK INDEX (0–100)</div>
+            <span id="hero-freshness" style="font-family:var(--f-mono);font-size:8px;letter-spacing:0.06em;color:var(--tx-ter);opacity:0.6;"></span>
             <div class="hero-risk-label" id="hero-risk-label">—</div>
             <div id="hero-signal-badge" style="display:none;font-size:0.75em;margin-top:4px;letter-spacing:0.08em;font-weight:500"></div>
           </div>
@@ -3440,7 +3460,7 @@ canvas.sparkline {
         <div class="sec-line"></div>
       </div>
       <div class="card hist-returns-card anim">
-    <div class="hr-eyebrow">Avg. 12-Month Forward Returns by ARC Zone — Based on Backtest Data (2017–Present)</div>
+    <div class="hr-eyebrow">Avg. 12-Month Forward Returns by ARC Zone — Based on Backtest Data (2017–Present) · Kraken BTC/USD</div>
     <div class="hr-grid" id="hr-grid">
       <div class="hr-zone hr-dv" data-hr-zone="dv">
         <span class="hr-zone-badge" aria-hidden="true">YOU ARE HERE</span>
@@ -3774,8 +3794,8 @@ canvas.sparkline {
       </div>
       <div class="card anim zone-history-card" id="zone-history-card" style="padding:1rem 1.5rem;display:none">
         <div class="zone-history-header">
-          <div class="zone-history-title">ZONE HISTORY — How long BTC spent in each zone</div>
-          <div class="zone-history-sub" id="zone-history-sub">Loading zone history…</div>
+          <div class="zone-history-title">ZONE HISTORY — How long BTC spent in each zone · Daily ARC data since 2017</div>
+          <div class="zone-history-sub loading-text" id="zone-history-sub">Loading zone history…</div>
         </div>
         <div class="zone-history-table-wrap">
           <table class="zone-history-table">
@@ -4546,7 +4566,7 @@ function updateGauge(gaugeId, valueId, value) {
   const el = document.getElementById(gaugeId);
   if (el) el.innerHTML = buildGaugeSVG(v, color);
   const valEl = document.getElementById(valueId);
-  if (valEl) valEl.textContent = String(v);
+  if (valEl) { valEl.textContent = String(v); valEl.classList.remove('is-placeholder'); }
 }
 
 // ── COMPONENT BARS / RADIALS ───────────────────────────────────────────────
@@ -4677,8 +4697,10 @@ function renderSignalSummary() {
         (avg > 0 ? '+' : '') + avg + '% move over the following 12 months.';
     } else {
       contextEl.textContent = 'Historical zone statistics loading…';
+      contextEl.classList.add('loading-text');
     }
   }
+  if (contextEl && contextEl.textContent !== 'Historical zone statistics loading…') contextEl.classList.remove('loading-text');
 
   var liveTag = document.getElementById('signal-summary-live-tag');
   if (liveTag) {
@@ -4701,6 +4723,20 @@ function toggleHeroComponents() {
     wrap.style.maxHeight = Math.max(wrap.scrollHeight, 300) + 'px';
     if (label) label.textContent = 'HIDE COMPONENTS';
     if (arrow) arrow.style.transform = 'rotate(180deg)';
+  }
+}
+
+function updateHeroFreshness() {
+  var el = document.getElementById('hero-freshness');
+  if (!el) return;
+  var ts = S._lastRefresh || Date.now();
+  var ago = Math.round((Date.now() - ts) / 60000);
+  if (ago < 1) {
+    el.textContent = 'LIVE';
+  } else if (ago < 60) {
+    el.textContent = ago + 'm ago';
+  } else {
+    el.textContent = Math.round(ago / 60) + 'h ago';
   }
 }
 
@@ -5136,7 +5172,10 @@ function updateUI() {
 
   // Last updated
   const ts=new Date();
+  S._lastRefresh = ts.getTime();
   $('last-updated').textContent=`Updated ${ts.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})} UTC`;
+  updateHeroFreshness();
+  if (!window._heroFreshnessInterval) window._heroFreshnessInterval = setInterval(updateHeroFreshness, 60000);
 
   updateShortTermContext();
   renderCharts();
@@ -5185,6 +5224,7 @@ function renderZoneHistory() {
   var liveConfirmed = zh.live_zone_confirmed !== false;
 
   if (sub) {
+    sub.classList.remove('loading-text');
     if (liveConfirmed && currentZone && currentWeeks) {
       // Live ARC matches confirmed backtest zone
       var col = scoreColorForZone(currentZone);
@@ -6163,6 +6203,7 @@ function setText(id, val, color) {
   const el=$(id); if(!el) return;
   el.textContent=typeof val==='number'?String(val):val;
   if(color) el.style.color=color;
+  if (val === '\u2014') el.classList.add('is-placeholder'); else el.classList.remove('is-placeholder');
 }
 function updatePriceCard(priceId,chgId,statId, price,chg,stat,col,isRatio=false) {
   if($(priceId)){ $(priceId).textContent=price>0?`$${fmt(price)}`:'—'; }
@@ -6528,7 +6569,7 @@ function renderArcChart(period) {
       } catch (e) { return d; }
     };
     if (period === '1y') {
-      subtitleEl.textContent = 'Daily ARC scores · ' + formatSubtitleDate(firstDate) + ' — ' + formatSubtitleDate(lastDate);
+      subtitleEl.textContent = 'Daily ARC scores · ' + formatSubtitleDate(firstDate) + ' — ' + formatSubtitleDate(lastDate) + ' · Kraken BTC/USD';
     } else {
       subtitleEl.textContent = 'Daily ARC history · ' + formatSubtitleDate(firstDate) + ' — ' + formatSubtitleDate(lastDate) + ' · Kraken BTC/USD';
     }
@@ -7201,14 +7242,14 @@ function exportHeroAsPNG() {
 
 function showSkeletons() {
   document.querySelectorAll('.score-value, .gauge-val').forEach(el => {
-    el.classList.add('skeleton');
+    el.classList.add('skeleton', 'is-placeholder');
     el.dataset.original = el.textContent;
-    el.textContent = '—';
+    el.textContent = '\u2014';
   });
   document.querySelectorAll('.price-value, .live-price, .tick-val, .score-price').forEach(el => {
-    el.classList.add('skeleton');
+    el.classList.add('skeleton', 'is-placeholder');
     el.dataset.original = el.textContent;
-    el.textContent = el.classList.contains('tick-val') || el.classList.contains('score-price') ? '$—' : '—';
+    el.textContent = el.classList.contains('tick-val') || el.classList.contains('score-price') ? '$\u2014' : '\u2014';
   });
   document.querySelectorAll('.component-bar-fill, .comp-fill').forEach(el => {
     el.style.width = '30%';

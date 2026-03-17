@@ -4,6 +4,13 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-03-11) — Premium UI Phase E: Micro-Polish
+- **Fade-in:** .anim nutzt weiterhin fadeUp (opacity + translateY); @media (prefers-reduced-motion: reduce) setzt animation: none und opacity: 1 für .anim. Keine strukturellen Änderungen.
+- **Hero Freshness:** #hero-freshness im Hero-Header; updateHeroFreshness() zeigt LIVE / Xm ago / Xh ago; S._lastRefresh wird in updateUI() bei „Last updated“ gesetzt; 60s-Interval für Aktualisierung. Kein neues Backend.
+- **Loading-States:** .is-placeholder (color: var(--tx-ter)) für Werte „—“; setText() und updateGauge() setzen/entfernen die Klasse; showSkeletons() setzt Em-Dash und is-placeholder. .loading-text (dim + italic) für „Loading…“ / „Historical zone statistics loading…“; zone-history-sub initial mit loading-text, Entfernung in renderZoneHistory bei echten Daten; signal-summary-context bei Loading-Text mit loading-text.
+- **Quellen-Badges:** HR-Eyebrow um „· Kraken BTC/USD“ ergänzt; ARC-Chart-Subtitle (1Y) um „· Kraken BTC/USD“ ergänzt (10Y war bereits vorhanden); Zone-History-Titel um „· Daily ARC data since 2017“ ergänzt.
+- **Smooth Scroll:** .zone-history-table-wrap und .hr-grid mit scroll-behavior: smooth; bei prefers-reduced-motion: reduce auf html und diese Container scroll-behavior: auto. Keine Layout- oder Formel-Änderungen.
+
 ## Letzter Session-Status (2026-03-11) — Premium UI Phase D: Mobile Narrative Flow
 - **Mobile (≤600px):** Tertiär-Sektionen (Cycle Overview, Near-Term, ARC History, Momentum, Zone History, Content Export) starten eingeklappt; nur sec-header + Pfeil sichtbar, Tap auf Header klappt Inhalt auf/zu (Klasse `mobile-expanded`). initMobileCollapseToggle() nach initAuth() und bei Resize (bei >600px werden alle mobile-expanded entfernt). gate-arc-momentum hat sec-header nachgerüstet für einheitliches Verhalten.
 - **ARC Chart:** Beim Aufklappen von gate-arc-history wird nach 500ms window._arcHistoryChart.resize() aufgerufen. Duplicate-Binding verhindert durch _mobileToggleBound-Flag.
