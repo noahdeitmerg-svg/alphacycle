@@ -982,6 +982,80 @@ body::before {
   text-transform: uppercase;
 }
 
+/* Decision Engine — visual dominance */
+#gate-decision-engine {
+  margin-top: 48px;
+  margin-bottom: 40px;
+}
+
+#decision-card.decision-card {
+  background: rgba(255, 255, 255, 0.015);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  box-shadow: none;
+  border-radius: 12px;
+}
+#decision-card.decision-card .card-accent {
+  display: none;
+}
+#decision-card.decision-card::before {
+  display: none;
+}
+
+#dec-position {
+  font-size: 2.1rem !important;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  line-height: 1;
+}
+
+#decision-card .decision-grid .decision-item:first-child {
+  padding: 1.75rem 1.75rem 1.5rem;
+}
+
+#dec-bottom-formation {
+  font-size: 0.8rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.08em !important;
+  margin-top: 8px !important;
+  padding: 4px 10px !important;
+  background: rgba(0, 180, 216, 0.1) !important;
+  border: 1px solid rgba(0, 180, 216, 0.25) !important;
+  border-radius: 4px !important;
+  color: #00B4D8 !important;
+}
+
+#decision-card .decision-item:nth-child(n+2) .decision-value {
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+@media (max-width: 700px) {
+  #gate-decision-engine {
+    margin-top: 36px;
+    margin-bottom: 32px;
+  }
+  #dec-position {
+    font-size: 1.6rem !important;
+    letter-spacing: 0.04em;
+  }
+  #decision-card .decision-item:first-child {
+    padding: 1.25rem 1rem 1rem;
+  }
+  #decision-card .decision-item:nth-child(n+2) .decision-value {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  #dec-position {
+    font-size: 1.4rem !important;
+  }
+  #dec-bottom-formation {
+    font-size: 0.7rem !important;
+    padding: 3px 8px !important;
+  }
+}
+
 .hist-returns-card {
   padding: 1.25rem 1.5rem 1rem;
 }
@@ -1110,9 +1184,6 @@ body::before {
 }
 #content-export-section {
   display: none;
-}
-#gate-decision-engine {
-  margin-top: 0;
 }
 #gate-hero {
   margin-bottom: 32px;
@@ -5222,7 +5293,7 @@ function updateUI() {
     if (bfEl) {
       if (arcSum && arcSum.bottom_formation === true) {
         bfEl.textContent = '\u2691 Bottom Formation Signal';
-        bfEl.style.display = 'block';
+        bfEl.style.display = 'inline-block';
         bfEl.style.color = '#00B4D8';
       } else {
         bfEl.style.display = 'none';
