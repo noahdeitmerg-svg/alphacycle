@@ -4,6 +4,12 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-03-11) — Trust Layer Phase T-C: Track Record Highlights + Footer Sources Cleanup
+- **Track Record Highlights:** Kompakter Block `.track-highlights` nach gate-content-export, vor DATA SOURCES. Vier hardcodierte Stats: 10/10 Major cycle tops & bottoms, verifizierter Deep-Value-12M-Return (+X%), 8 Jahre ARC-Daten seit Aug 2017, 4 Quellen (Kraken · Alternative.me · DeFiLlama · FRED). Link „VIEW FULL TRACK RECORD →“ ruft showTrackRecord() auf. Kein Blur-Gate, immer sichtbar.
+- **CSS:** .track-highlights-grid 4 Spalten, Border/Track-Style; .track-stat, .track-stat-value, .track-stat-label. @media 600px: 2 Spalten; @media 380px: 1 Spalte, kleinere Padding/Schrift.
+- **Footer Data Sources:** .status-row auf 4 sichtbare Pills + Timestamp konsolidiert: Kraken, Fear & Greed, DeFiLlama, FRED, src-ts (src-ts-lbl). DeFiLlama Stablecoins als eigenständige Pill entfernt; Element #src-stable bleibt im DOM mit display:none, damit markSources() weiterhin gesetzt werden kann.
+- **Unverändert:** markSources()-Logik, showTrackRecord(), Blur-Gates, Section-Reihenfolge, ARC-Formel, Backend, Track-Record-Seite als eigene View. Keine neuen Endpoints, keine dynamischen Berechnungen.
+
 ## Letzter Session-Status (2026-03-11) — Trust Layer Phase T-B: Live vs History Labels + Chart Start Annotation
 - **BACKTEST-Badges:** .sec-badge „BACKTEST“ bei Historical ARC Returns, ARC History und Zone History (zwischen sec-title und sec-line). .module-tertiary .sec-badge: 7px, padding 1px 5px, opacity 0.6; .module-secondary .sec-badge: 8px.
 - **Chart-Start-Tooltip:** Neben #arc-chart-title ein .chart-info-tip (ⓘ) mit tabindex="0"; Hover/Focus zeigt .chart-info-tooltip (Warum ARC ab Aug 2017: 200-Wochen-MA braucht 1.400 Tage Vorlauf, BTC-Preise ab Okt 2013 Kraken). Mobile: Tooltip 220px, right:-10px, 8px Schrift.

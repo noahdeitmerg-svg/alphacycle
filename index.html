@@ -580,6 +580,9 @@ body::before {
     padding: 4px 6px !important;
     font-size: 9px !important;
   }
+  .track-highlights-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -1831,6 +1834,36 @@ body::before {
   text-transform: none;
 }
 
+.track-highlights-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.track-stat {
+  background: rgba(255, 255, 255, 0.015);
+  padding: 14px 12px;
+  text-align: center;
+}
+.track-stat-value {
+  font-family: var(--f-mono);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--tx-pri);
+  line-height: 1.2;
+}
+.track-stat-label {
+  font-family: var(--f-mono);
+  font-size: 7px;
+  letter-spacing: 0.04em;
+  color: var(--tx-ter);
+  margin-top: 4px;
+  line-height: 1.3;
+}
+
 /* ════════════════════════════════════════════════════════════════
    COMBINED / PHASE BANNER
 ════════════════════════════════════════════════════════════════ */
@@ -2969,6 +3002,18 @@ canvas.sparkline {
   }
 }
 
+@media (max-width: 380px) {
+  .track-highlights-grid {
+    grid-template-columns: 1fr;
+  }
+  .track-stat {
+    padding: 10px 12px;
+  }
+  .track-stat-value {
+    font-size: 14px;
+  }
+}
+
 /* ════════════════════════════════════════════════════════
    SMALL PHONE (≤360px, iPhone SE etc.)
    ════════════════════════════════════════════════════════ */
@@ -3957,6 +4002,36 @@ canvas.sparkline {
     </div>
   </div>
 
+  <!-- TRACK RECORD HIGHLIGHTS -->
+  <div class="track-highlights anim d6" style="margin-top:var(--space-group-break, 40px);">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+      <div style="font-family:var(--f-mono);font-size:8px;letter-spacing:0.15em;color:var(--tx-ter);">ARC TRACK RECORD</div>
+      <div style="flex:1;height:1px;background:var(--border);"></div>
+    </div>
+    <div class="track-highlights-grid">
+      <div class="track-stat">
+        <div class="track-stat-value">10 / 10</div>
+        <div class="track-stat-label">Major cycle tops &amp; bottoms identified</div>
+      </div>
+      <div class="track-stat">
+        <!-- Value from /api/historical-returns deep_value.avg_12m, verified 2026-03-11 -->
+        <div class="track-stat-value" id="track-dv-return">+134%</div>
+        <div class="track-stat-label">Avg 12M return from Deep Value entries</div>
+      </div>
+      <div class="track-stat">
+        <div class="track-stat-value">8 years</div>
+        <div class="track-stat-label">Daily ARC data since Aug 2017</div>
+      </div>
+      <div class="track-stat">
+        <div class="track-stat-value">4 sources</div>
+        <div class="track-stat-label">Kraken · Alternative.me · DeFiLlama · FRED</div>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:10px;">
+      <a href="#" onclick="showTrackRecord();return false;" style="font-family:var(--f-mono);font-size:8px;letter-spacing:0.1em;color:var(--tx-ter);text-decoration:none;border-bottom:1px solid rgba(148,163,184,0.3);">VIEW FULL TRACK RECORD &#8594;</a>
+    </div>
+  </div>
+
   <!-- ── DATA SOURCES ── -->
   <div class="sec-header anim d6">
     <div class="sec-title">Data Sources</div>
@@ -3964,11 +4039,11 @@ canvas.sparkline {
   </div>
   <div class="status-row anim d6">
     <div class="status-src" id="src-cg"><span class="status-dot"></span>Kraken</div>
-    <div class="status-src" id="src-fg"><span class="status-dot"></span>Alt.me Fear&amp;Greed</div>
-    <div class="status-src" id="src-dl"><span class="status-dot"></span>DeFiLlama TVL</div>
-    <div class="status-src" id="src-stable"><span class="status-dot"></span>DeFiLlama Stablecoins</div>
+    <div class="status-src" id="src-fg"><span class="status-dot"></span>Fear &amp; Greed</div>
+    <div class="status-src" id="src-dl"><span class="status-dot"></span>DeFiLlama</div>
     <div class="status-src" id="src-fred"><span class="status-dot"></span>FRED</div>
     <div class="status-src" id="src-ts"><span class="status-dot"></span><span id="src-ts-lbl">—</span></div>
+    <div class="status-src" id="src-stable" style="display:none;"><span class="status-dot"></span>DeFiLlama Stablecoins</div>
   </div>
 
   <!-- ── FOOTER ── -->
