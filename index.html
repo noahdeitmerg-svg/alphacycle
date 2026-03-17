@@ -3959,7 +3959,7 @@ canvas.sparkline {
             <thead>
               <tr>
                 <th>Zone</th>
-                <th>Entry</th>
+                <th>Signal</th>
                 <th>From</th>
                 <th>To</th>
                 <th>Weeks</th>
@@ -5464,13 +5464,34 @@ function renderZoneHistory() {
     var zCol = scoreColorForZone(p.zone);
     if (zCol) zoneTd.style.color = zCol;
     var dirTd = document.createElement('td');
+    var zone = (p.zone || '').toLowerCase();
     var dir = p.direction || '';
-    if (dir === 'up') {
-      dirTd.textContent = '\u2191 Long Entry';
+
+    if (zone.indexOf('deep value') !== -1) {
+      dirTd.textContent = '\u2191 BUY ZONE';
       dirTd.style.color = '#22c55e';
-    } else if (dir === 'down') {
-      dirTd.textContent = '\u2193 Cycle Down';
-      dirTd.style.color = '#ef4444';
+    } else if (zone.indexOf('accumulation') !== -1) {
+      if (dir === 'up') {
+        dirTd.textContent = '\u2191 BUY ZONE';
+        dirTd.style.color = '#22c55e';
+      } else {
+        dirTd.textContent = '\u2193 BUY ZONE';
+        dirTd.style.color = '#00B4D8';
+      }
+    } else if (zone.indexOf('expansion') !== -1) {
+      if (dir === 'up') {
+        dirTd.textContent = '\u2191 Uptrend';
+        dirTd.style.color = 'rgba(255,255,255,0.5)';
+      } else {
+        dirTd.textContent = '\u2193 Downtrend';
+        dirTd.style.color = 'rgba(255,255,255,0.4)';
+      }
+    } else if (zone.indexOf('risk rising') !== -1) {
+      dirTd.textContent = '\u26A0 NO ENTRY';
+      dirTd.style.color = '#FF9500';
+    } else if (zone.indexOf('euphoria') !== -1) {
+      dirTd.textContent = '\u26A0 SELL / REDUCE';
+      dirTd.style.color = '#FF3B3B';
     } else {
       dirTd.textContent = '\u2014';
       dirTd.style.color = 'var(--tx-ter)';

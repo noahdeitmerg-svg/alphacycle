@@ -4,6 +4,9 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-03-17) — Zone History: Zone-Aware Signal Labels
+- **Zone History Tabelle:** Spalte „Entry“ in „Signal“ umbenannt. Anzeige-Logik in renderZoneHistory() zonenbasiert: Deep Value → „↑ BUY ZONE“ (grün); Accumulation → „↑ BUY ZONE“ (grün) bzw. „↓ BUY ZONE“ (cyan #00B4D8); Expansion → „↑ Uptrend“ / „↓ Downtrend“ (gedimmt); Risk Rising → „⚠ NO ENTRY“ (orange); Euphoria → „⚠ SELL / REDUCE“ (rot). Backend direction und API-Response unverändert; nur Frontend-Darstellung.
+
 ## Letzter Session-Status (2026-03-17) — Hotfix: Track Record Deep Value Return
 - **Track Record Highlights:** Deep-Value-12M-Return in #track-dv-return auf +260% aktualisiert (Quelle /api/historical-returns deep_value.avg_12m, verified 2026-03-17). Nur dieser Wert und Verifizierungs-Kommentar geändert.
 
