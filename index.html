@@ -324,6 +324,48 @@ body::before {
   border-radius: 4px;
   padding: 2px 7px;
 }
+.module-tertiary .sec-badge {
+  font-size: 7px;
+  padding: 1px 5px;
+  opacity: 0.6;
+}
+.module-secondary .sec-badge {
+  font-size: 8px;
+}
+
+.chart-info-tip {
+  position: relative;
+  cursor: help;
+  font-size: 11px;
+  color: var(--tx-ter);
+  margin-left: 4px;
+  font-weight: 400;
+}
+.chart-info-tooltip {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 260px;
+  padding: 10px 12px;
+  background: rgba(10, 18, 40, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  font-family: var(--f-mono);
+  font-size: 9px;
+  line-height: 1.5;
+  color: var(--tx-sec);
+  text-align: left;
+  z-index: 100;
+  pointer-events: none;
+  white-space: normal;
+  font-weight: 400;
+}
+.chart-info-tip:hover .chart-info-tooltip,
+.chart-info-tip:focus .chart-info-tooltip {
+  display: block;
+}
 
 /* ════════════════════════════════════════════════════════════════
    GLASS CARDS
@@ -2642,6 +2684,14 @@ canvas.sparkline {
     grid-template-columns: 1fr !important;
   }
 
+  .chart-info-tooltip {
+    width: 220px;
+    left: auto;
+    right: -10px;
+    transform: none;
+    font-size: 8px;
+  }
+
   /* TICKER */
   .ticker-bar {
     font-size: 9px !important;
@@ -3511,6 +3561,7 @@ canvas.sparkline {
     <div class="blur-content">
       <div class="sec-header anim">
         <div class="sec-title">Historical ARC Returns</div>
+        <span class="sec-badge">BACKTEST</span>
         <div class="sec-line"></div>
       </div>
       <div class="card hist-returns-card anim">
@@ -3788,12 +3839,18 @@ canvas.sparkline {
     <div class="blur-content">
       <div class="sec-header anim d5">
         <div class="sec-title">ARC History</div>
+        <span class="sec-badge">BACKTEST</span>
         <div class="sec-line"></div>
       </div>
       <div class="chart-card anim d5" id="arc-chart-card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
           <div style="flex:1;min-width:0;">
-            <div style="font-size:13px;font-weight:600;color:var(--tx-pri)" id="arc-chart-title">BTC Price + ARC Score</div>
+            <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;">
+              <div style="font-size:13px;font-weight:600;color:var(--tx-pri)" id="arc-chart-title">BTC Price + ARC Score</div>
+              <span class="chart-info-tip" tabindex="0">&#9400;
+                <span class="chart-info-tooltip">ARC scoring starts Aug 2017. The 200-week moving average requires 1,400 days of prior price data before it can produce a score. BTC price history begins Oct 2013 (Kraken).</span>
+              </span>
+            </div>
             <div id="arc-chart-subtitle" style="font-family:var(--f-mono);font-size:9px;color:var(--tx-ter);letter-spacing:0.08em;margin-top:2px;"></div>
           </div>
           <div style="display:flex;align-items:center;gap:8px">
@@ -3844,6 +3901,7 @@ canvas.sparkline {
     <div class="blur-content">
       <div class="sec-header anim d6">
         <div class="sec-title">Zone History</div>
+        <span class="sec-badge">BACKTEST</span>
         <div class="sec-line"></div>
       </div>
       <div class="card anim zone-history-card" id="zone-history-card" style="padding:1rem 1.5rem;display:none">

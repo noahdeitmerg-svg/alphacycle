@@ -4,6 +4,11 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-03-11) — Trust Layer Phase T-B: Live vs History Labels + Chart Start Annotation
+- **BACKTEST-Badges:** .sec-badge „BACKTEST“ bei Historical ARC Returns, ARC History und Zone History (zwischen sec-title und sec-line). .module-tertiary .sec-badge: 7px, padding 1px 5px, opacity 0.6; .module-secondary .sec-badge: 8px.
+- **Chart-Start-Tooltip:** Neben #arc-chart-title ein .chart-info-tip (ⓘ) mit tabindex="0"; Hover/Focus zeigt .chart-info-tooltip (Warum ARC ab Aug 2017: 200-Wochen-MA braucht 1.400 Tage Vorlauf, BTC-Preise ab Okt 2013 Kraken). Mobile: Tooltip 220px, right:-10px, 8px Schrift.
+- **LIVE-Indikatoren verifiziert:** #hero-freshness (Phase E) und #dec-live-tag (renderDecision) vorhanden und funktionsfähig. Keine Formel-, Zonen- oder Backend-Änderungen.
+
 ## Letzter Session-Status (2026-03-11) — Trust Layer Phase T-A: Component Source Labels + How ARC Works
 - **Quellen-Labels:** In jeder der 4 .factor-card (200W MA DEV, DRAWDOWN, FEAR & GREED, LIQUIDITY) ein .factor-source unter dem factor-value: Kraken BTC/USD, Kraken BTC/USD, Alternative.me, FRED (Fed Net Liquidity). CSS: 7px, var(--tx-ter), opacity 0.6, margin-top 2px. Sichtbar nur wenn Komponenten ausgeklappt (Phase A).
 - **How ARC Works:** Expandierbarer Block #arc-methodology nach hero-components-collapse, vor .hero-zones (innerhalb gate-hero blur-content). Toggle-Button „HOW ARC WORKS“, Klick ruft toggleArcMethodology(); Inhalt: Einleitung, Gewichte-Balken (35/25/25/15), .arc-weights-grid mit 4 Komponenten-Beschreibungen (Trend, Drawdown, Liquidity, Sentiment), Abschlusszeile. Standard eingeklappt (max-height:0). Keine Formel- oder Backend-Änderung.
