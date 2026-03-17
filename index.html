@@ -583,6 +583,11 @@ body::before {
   .track-highlights-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+  #dec-interpretation .dec-layer { padding: 12px 14px; }
+  #dec-interpretation .dec-layer-1 { padding: 14px 14px; }
+  #dec-interpretation .dec-layer-zone { font-size: 11px; }
+  #dec-interpretation .dec-layer-text { font-size: 9px; }
+  #dec-interpretation .dec-layer-list li { font-size: 8px; }
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -980,6 +985,60 @@ body::before {
   font-family: var(--f-mono);
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+/* Decision Engine — 3-Layer Interpretation (Regime / Positioning / Risk/Reward) */
+#dec-interpretation {
+  border-top: 1px solid var(--border);
+}
+.dec-layer {
+  padding: 14px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+.dec-layer:last-child { border-bottom: none; }
+.dec-layer-1 { padding: 18px 20px; }
+.dec-layer-zone {
+  font-family: var(--f-mono);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.dec-layer-text {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  color: var(--tx-sec);
+  line-height: 1.6;
+}
+.dec-layer-title {
+  font-family: var(--f-mono);
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  color: var(--tx-ter);
+  margin-bottom: 8px;
+}
+.dec-layer-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.dec-layer-list li {
+  font-family: var(--f-mono);
+  font-size: 9px;
+  color: var(--tx-sec);
+  line-height: 1.5;
+  padding-left: 12px;
+  position: relative;
+}
+.dec-layer-list li::before {
+  content: '·';
+  position: absolute;
+  left: 0;
+  color: var(--tx-ter);
 }
 
 /* Decision Engine — visual dominance */
@@ -3807,6 +3866,21 @@ canvas.sparkline {
             <div class="decision-value" id="dec-confidence">—</div>
           </div>
           <div class="decision-note">ARC RISK LEVEL <span id="dec-index-val" style="color:var(--btc);font-weight:600">—</span> / 100</div>
+
+          <div id="dec-interpretation" style="display:none;">
+            <div class="dec-layer dec-layer-1">
+              <div class="dec-layer-zone" id="dec-regime-zone">—</div>
+              <div class="dec-layer-text" id="dec-regime-text">—</div>
+            </div>
+            <div class="dec-layer dec-layer-2">
+              <div class="dec-layer-title">TYPICAL POSITIONING</div>
+              <ul class="dec-layer-list" id="dec-positioning-list"></ul>
+            </div>
+            <div class="dec-layer dec-layer-3">
+              <div class="dec-layer-title">RISK / REWARD PROFILE</div>
+              <ul class="dec-layer-list" id="dec-risk-list"></ul>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -5227,6 +5301,113 @@ function updateUI() {
   renderZoneHistory();
   renderSignalSummary();
 
+  function renderDecisionInterpretation(score) {
+    var wrap = document.getElementById('dec-interpretation');
+    if (!wrap) return;
+    var zoneEl = document.getElementById('dec-regime-zone');
+    var textEl = document.getElementById('dec-regime-text');
+    var posEl = document.getElementById('dec-positioning-list');
+    var riskEl = document.getElementById('dec-risk-list');
+    if (!zoneEl || !textEl || !posEl || !riskEl) return;
+
+    var s = Number(score);
+    if (isNaN(s)) { wrap.style.display = 'none'; return; }
+
+    var zone, zoneColor, interpretation, positioning, riskReward;
+
+    if (s <= 29) {
+      zone = 'DEEP VALUE';
+      zoneColor = '#00D4AA';
+      interpretation = 'Historically the strongest risk/reward environment. Markets have typically reached this zone during periods of maximum fear, with most participants already capitulated.';
+      positioning = [
+        'Aggressive accumulation historically rewarded at this level',
+        'Full allocation justified by historical asymmetry',
+        'Patience required — recovery timelines vary from weeks to months',
+      ];
+      riskReward = [
+        'Downside historically limited relative to upside potential',
+        'Maximum asymmetry — historically the best entry zone',
+        'Volatility remains elevated but historically dissipating',
+      ];
+    } else if (s <= 39) {
+      zone = 'ACCUMULATION';
+      zoneColor = '#00B4D8';
+      interpretation = 'Historically one of the strongest risk/reward environments. Markets typically transition from fear to early recovery during this phase.';
+      positioning = [
+        'Gradual accumulation historically preferred over timing precision',
+        'Higher allocation justified relative to neutral phases',
+        'Early positioning has historically been rewarded across cycles',
+      ];
+      riskReward = [
+        'Downside historically limited relative to upside',
+        'Asymmetric opportunity environment based on prior cycles',
+        'Near-term volatility possible but historically constructive',
+      ];
+    } else if (s <= 59) {
+      zone = 'EXPANSION';
+      zoneColor = '#58A6FF';
+      interpretation = 'Mid-cycle phase where trend has typically established itself. Neither extreme fear nor extreme greed — a transitional environment.';
+      positioning = [
+        'Maintaining existing positions historically reasonable',
+        'New entries carry moderate risk/reward relative to earlier phases',
+        'Trend-following has historically outperformed contrarian positioning here',
+      ];
+      riskReward = [
+        'Balanced risk/reward — neither extreme',
+        'Upside potential remains but historical edge is smaller',
+        'Drawdown risk increasing relative to lower zones',
+      ];
+    } else if (s <= 69) {
+      zone = 'RISK RISING';
+      zoneColor = '#FF9500';
+      interpretation = 'Late-cycle environment where risk has historically outweighed reward. Markets typically show signs of overextension at this level.';
+      positioning = [
+        'New entries historically unfavorable at this level',
+        'Reducing exposure has historically preserved capital',
+        'Defensive positioning typically outperforms aggressive allocation',
+      ];
+      riskReward = [
+        'Downside risk historically exceeds remaining upside',
+        'Drawdowns from this zone have averaged significant losses',
+        'Timing exits is difficult — systematic reduction preferred',
+      ];
+    } else {
+      zone = 'EUPHORIA';
+      zoneColor = '#FF3B3B';
+      interpretation = 'Peak-cycle environment. Historically, the most dangerous phase for new capital deployment. Maximum optimism typically precedes significant corrections.';
+      positioning = [
+        'Historically the worst entry zone for new positions',
+        'Profit-taking and de-risking have historically been rewarded',
+        'Cash allocation increase historically optimal at this level',
+      ];
+      riskReward = [
+        'Historical avg drawdown from this zone has been severe',
+        'Upside typically limited relative to downside exposure',
+        'Mean reversion historically inevitable — timing uncertain',
+      ];
+    }
+
+    zoneEl.textContent = zone;
+    zoneEl.style.color = zoneColor;
+    textEl.textContent = interpretation;
+
+    posEl.innerHTML = '';
+    positioning.forEach(function(t) {
+      var li = document.createElement('li');
+      li.textContent = t;
+      posEl.appendChild(li);
+    });
+
+    riskEl.innerHTML = '';
+    riskReward.forEach(function(t) {
+      var li = document.createElement('li');
+      li.textContent = t;
+      riskEl.appendChild(li);
+    });
+
+    wrap.style.display = 'block';
+  }
+
   // Decision Engine — from arc-summary when available, else local fallback
   (function renderDecision() {
     const score = S.btcScore;
@@ -5301,6 +5482,7 @@ function updateUI() {
       }
     }
     setText('dec-index-val',  Math.round(combinedScore), scoreColor(combinedScore));
+    renderDecisionInterpretation(combinedScore);
     var decLiveTag = document.getElementById('dec-live-tag');
     if (decLiveTag && S.arcSummary) {
       var arcValLive = Math.round(S.arcSummary.arc_display || S.arcSummary.arc_score || 0);
