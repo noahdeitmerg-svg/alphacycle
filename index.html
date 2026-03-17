@@ -1572,6 +1572,12 @@ body::before {
 .zone-history-return-neg {
   color: rgba(239, 68, 68, 0.7);
 }
+.zone-row-expansion {
+  opacity: 0.5;
+}
+.zone-row-expansion:hover {
+  opacity: 0.8;
+}
 @media (max-width: 1024px) {
   .score-card {
     min-width: unset;
@@ -3307,7 +3313,7 @@ canvas.sparkline {
 
     <!-- Disclaimer -->
     <div style="margin-top:24px;font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);line-height:1.6;">
-      Past performance does not guarantee future results. The ARC Index is an analytical tool, not financial advice. All returns based on weekly backtest data from 2017 to present.
+      Past performance does not guarantee future results. The ARC Index is an analytical tool, not financial advice. All returns based on daily backtest data from 2017 to present.
     </div>
 
     <!-- CTA -->
@@ -3688,7 +3694,7 @@ canvas.sparkline {
     </div>
     <div class="scroll-hint-hr" style="display:none;text-align:center;font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);padding:4px 0;letter-spacing:0.1em;">SWIPE FOR MORE ZONES →</div>
         <div class="hr-total-entries" id="hr-total-entries"></div>
-        <div class="hr-disclaimer">Based on weekly backtest data. Past performance does not guarantee future results. Not financial advice.</div>
+        <div class="hr-disclaimer">Based on daily backtest data. Past performance does not guarantee future results. Not financial advice.</div>
       </div>
     </div>
     <div class="blur-overlay">
@@ -5554,6 +5560,9 @@ function renderZoneHistory() {
       dirTd.style.color = 'var(--tx-ter)';
     }
     dirTd.style.fontSize = '10px';
+    if (zone.indexOf('expansion') !== -1) {
+      tr.classList.add('zone-row-expansion');
+    }
     var fromTd = document.createElement('td');
     fromTd.textContent = p.from || '';
     var toTd = document.createElement('td');

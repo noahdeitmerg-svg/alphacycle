@@ -4,6 +4,10 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-03-17) — Precision Polish: Zone History Scanability + Weekly→Daily Wording
+- **Zone History:** Expansion-Zeilen erhalten Klasse .zone-row-expansion (opacity 0.5, hover 0.8), damit BUY ZONE / NO ENTRY / SELL-REDUCE-Zeilen visuell dominieren. Keine Zeilen ausgeblendet, nur Opacity.
+- **Disclaimer:** HR-Disclaimer und Landing/Track-Record-Text von „weekly backtest data“ auf „daily backtest data“ geändert. JS-Variablen (btcWeekly, ethWeekly, const weekly, etc.) unverändert (intern).
+
 ## Letzter Session-Status (2026-03-17) — How ARC Works: Soft-Gated Methodology
 - **Methodology-Block:** #arc-method-content in zwei Stufen geteilt: #arc-method-free (nur 4 Komponentennamen + kurzer Kontext + CTA) und #arc-method-paid (Gewichte-Balken 35/25/25/15 + detaillierte Beschreibungen). Anzeige nach currentPlan: paid/trial sehen paid, free/anonymous sehen free.
 - **updateArcMethodologyGate():** Zeigt free- oder paid-Inhalt, setzt CTA für free („UPGRADE TO SEE FULL METHODOLOGY →“ / openUpgradeModal) bzw. anonymous („UNLOCK FULL METHODOLOGY →“ / openAuthModal('signup')). Wird am Ende von applyBlurGates() aufgerufen.
