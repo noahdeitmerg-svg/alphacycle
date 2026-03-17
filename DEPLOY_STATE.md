@@ -30,6 +30,10 @@
 - **JS-Rendering:** Neue Funktion `renderDecisionInterpretation(score)` füllt zone-spezifische Inhalte anhand des ARC Score und wird am Ende von `renderDecision()` mit derselben Score-Quelle aufgerufen.
 - **Blur-Gate:** Der Layer liegt innerhalb von `gate-decision-engine` und wird vom bestehenden Blur-Gate abgedeckt, wenn gelockt.
 
+## Letzter Session-Status (2026-03-17) — Snapshot Bugfix: days_since_top parameter
+- **build_snapshot():** Signatur um `days_since_top` ergänzt, damit der Parameter aus `/api/snapshot` ohne TypeError akzeptiert wird.
+- **Snapshot Dict:** `days_since_top` wird im Snapshot-Dict bereitgestellt (nur bei vorhandenem Value).
+
 ## Letzter Session-Status (2026-03-11) — Trust Layer Phase T-C: Track Record Highlights + Footer Sources Cleanup
 - **Track Record Highlights:** Kompakter Block `.track-highlights` nach gate-content-export, vor DATA SOURCES. Vier hardcodierte Stats: 10/10 Major cycle tops & bottoms, verifizierter Deep-Value-12M-Return (+X%), 8 Jahre ARC-Daten seit Aug 2017, 4 Quellen (Kraken · Alternative.me · DeFiLlama · FRED). Link „VIEW FULL TRACK RECORD →“ ruft showTrackRecord() auf. Kein Blur-Gate, immer sichtbar.
 - **CSS:** .track-highlights-grid 4 Spalten, Border/Track-Style; .track-stat, .track-stat-value, .track-stat-label. @media 600px: 2 Spalten; @media 380px: 1 Spalte, kleinere Padding/Schrift.

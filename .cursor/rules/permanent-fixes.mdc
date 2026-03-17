@@ -161,6 +161,9 @@ Beim Bearbeiten von backend/fetcher.py, backend/main.py, backend/scoring.py oder
 ## backend/liquidity_engine.py
 - **bond_score** aus absolutem Yield-Niveau (us10y_vals[-1]) berechnen — **NICHT** aus trend_score (sonst us10y_trend=0 → 150 → clamp 100 Bug). Stufen: <2% → 20, <3% → 20–50, <4% → 50–70, <5% → 70–85, else → 85–100.
 
+## backend/snapshot.py
+- **Snapshot Parameter Kompatibilität:** `build_snapshot()` muss Parameter akzeptieren, die in `backend/main.py` beim `/api/snapshot` Aufruf übergeben werden (z. B. `days_since_top`). Fehlende Signatur-Parameter dürfen keine 500er erzeugen.
+
 ## Kurz: Was du dir merken musst
 - Kraken für Preise, OKX für Funding (nicht Binance/Bybit — 403 auf Railway).
 - drawdown_score: len(clean) < 10 → return 50.0.
