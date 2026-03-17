@@ -1,0 +1,100 @@
+---
+description: AlphaCycle Cursor Build - working mode and locked rules for live SaaS changes
+globs: backend/**/*.py, **/index.html, DEPLOY_STATE.md, .cursor/rules/*.mdc
+alwaysApply: true
+---
+
+# AlphaCycle Cursor Build
+
+You are implementing changes for an **existing live project** called AlphaCycle. This is NOT a greenfield rebuild.
+
+## PROJECT CONTEXT
+
+- AlphaCycle is a live crypto cycle intelligence SaaS.
+- Frontend: single-file **index.html** with inline CSS and JS.
+- Backend: **FastAPI** + **Supabase** + **Stripe** + **Railway**.
+- Existing product logic, auth flow, paid/free resolution, and blur-gate system **already exist** and must be preserved unless the task explicitly requires a safe targeted change.
+
+## LOCKED GLOBAL RULES
+
+- **Do not change the ARC formula.**
+- **Do not change raw-score zone classification.**
+- **Kraken remains the primary price source.**
+- **Keep Promise.allSettled** in frontend data loading unless explicitly instructed otherwise.
+- **Preserve blur-gate functionality and structure** unless the task explicitly requires a safe targeted change.
+- **Preserve payment, auth, entitlement, and paid/free correctness.**
+- Do not introduce unrelated refactors.
+- If a response shape changes, **verify and update all dependent frontend usage** in the same task.
+- Do not silently change product policy while making technical changes.
+- **No Unicode in main.py strings** (comments or literals).
+
+## WORKING MODE
+
+- **Read the real code first.**
+- **Audit before changing.**
+- Do not assume previous descriptions are perfectly accurate.
+- Make the **smallest safe change** that solves the actual problem.
+- Keep existing behavior unchanged unless the task explicitly requires a change.
+- Change only the relevant files, functions, components, or flows.
+- Do not refactor unrelated areas.
+- Be defensive about: auth, payments, gating, API contracts, event listeners, chart initialization, dashboard rendering.
+- If the prompt says audit-only for a part, **do not modify it** unless you verify it is wrong.
+
+## SOURCE-OF-TRUTH DISCIPLINE
+
+- **Backend is source of truth for entitlement** unless the task explicitly says otherwise.
+- Frontend must **not invent entitlement logic** heuristically.
+- Distinguish clearly between:
+  - incoming event / raw input
+  - persisted backend fields
+  - API response
+  - frontend state
+  - effective user-facing behavior
+
+## FRONTEND SAFETY
+
+- Treat the **blur-gate structure** with extreme care.
+- Do not accidentally duplicate listeners, timers, or chart initialization.
+- Avoid horizontal overflow and auth/render regressions when touching mobile UI.
+- Do not damage **landing / dashboard routing** (showLanding, showDashboard, showTrackRecord, initAuth).
+
+## BACKEND SAFETY
+
+- Do not create silent breaking changes.
+- Be explicit about response shape changes.
+- Handle edge cases defensively.
+- Prefer robust logging and minimal safe logic changes over speculative redesign.
+
+## REQUIRED EXECUTION BEHAVIOR
+
+**Before making changes:**
+
+1. Inspect the real current implementation.
+2. Identify whether the current code already satisfies the requested behavior.
+3. Change only what is actually needed.
+4. Preserve all locked rules.
+
+**After making changes:**
+
+- Explain exactly what changed.
+- Explain why.
+- Identify residual risks.
+- Provide a manual test checklist.
+- Update project state documentation (e.g. DEPLOY_STATE.md, permanent-fixes.mdc) if the task requires it.
+
+## OUTPUT FORMAT
+
+When completing a task, return:
+
+1. **Files changed**
+2. **Exact changes made**
+3. **What was verified but left unchanged**
+4. **Risks to review manually**
+5. **Test checklist**
+
+## FINAL RULE
+
+Implement **safely**, **minimally**, and **precisely**.  
+Do not improvise product decisions.  
+Do not expand scope.  
+Do not trade correctness for cleverness.
