@@ -1779,6 +1779,15 @@ body::before {
   color: #ffffff;
   font-family: var(--f-mono);
 }
+.factor-source {
+  font-family: var(--f-mono);
+  font-size: 7px;
+  letter-spacing: 0.06em;
+  color: var(--tx-ter);
+  opacity: 0.6;
+  margin-top: 2px;
+  text-transform: none;
+}
 
 /* ════════════════════════════════════════════════════════════════
    COMBINED / PHASE BANNER
@@ -2628,6 +2637,11 @@ canvas.sparkline {
     padding: 3px 6px !important;
   }
 
+  /* How ARC Works: single column on small screens */
+  .arc-weights-grid {
+    grid-template-columns: 1fr !important;
+  }
+
   /* TICKER */
   .ticker-bar {
     font-size: 9px !important;
@@ -3383,23 +3397,63 @@ canvas.sparkline {
         <div class="factor-label">200W MA DEV</div>
         <div id="gauge-ma" style="display:flex;justify-content:center;margin:4px 0;"></div>
         <div id="val-ma" class="factor-value">—</div>
+        <div class="factor-source">Kraken BTC/USD</div>
       </div>
       <div class="factor-card">
         <div class="factor-label">DRAWDOWN</div>
         <div id="gauge-dd" style="display:flex;justify-content:center;margin:4px 0;"></div>
         <div id="val-dd" class="factor-value">—</div>
+        <div class="factor-source">Kraken BTC/USD</div>
       </div>
       <div class="factor-card">
         <div class="factor-label">FEAR &amp; GREED</div>
         <div id="gauge-fg" style="display:flex;justify-content:center;margin:4px 0;"></div>
         <div id="val-fg" class="factor-value">—</div>
+        <div class="factor-source">Alternative.me</div>
       </div>
       <div class="factor-card">
         <div class="factor-label">LIQUIDITY</div>
         <div id="gauge-liq" style="display:flex;justify-content:center;margin:4px 0;"></div>
         <div id="val-liq" class="factor-value">—</div>
+        <div class="factor-source">FRED (Fed Net Liquidity)</div>
       </div>
     </div>
+    </div>
+    <div id="arc-methodology" style="margin-top:12px;">
+      <button id="arc-method-toggle" type="button" style="
+        display:flex;align-items:center;gap:6px;width:100%;
+        padding:8px 0;background:none;border:none;
+        border-top:1px solid rgba(255,255,255,0.04);
+        cursor:pointer;font-family:var(--f-mono);font-size:8px;
+        letter-spacing:0.12em;color:var(--tx-ter);text-transform:uppercase;
+        transition:color 0.2s;
+      " onclick="toggleArcMethodology()">
+        <span id="arc-method-label">HOW ARC WORKS</span>
+        <span id="arc-method-arrow" style="font-size:10px;transition:transform 0.3s;">&#9660;</span>
+      </button>
+      <div id="arc-method-content" style="max-height:0;overflow:hidden;transition:max-height 0.4s ease;">
+        <div style="padding:12px 0 8px;font-family:var(--f-mono);font-size:10px;color:var(--tx-sec);line-height:1.7;">
+          <div style="margin-bottom:10px;color:rgba(255,255,255,0.7);font-size:10px;line-height:1.6;">
+            The ARC Index combines four market signals into a single risk score (0–100):
+          </div>
+          <div id="arc-weights-bar" style="display:flex;border-radius:4px;overflow:hidden;height:6px;margin-bottom:10px;">
+            <div style="flex:35;background:#58A6FF;" title="Trend 35%"></div>
+            <div style="flex:25;background:#00B4D8;" title="Drawdown 25%"></div>
+            <div style="flex:25;background:#00D4AA;" title="Liquidity 25%"></div>
+            <div style="flex:15;background:#FF9500;" title="Sentiment 15%"></div>
+          </div>
+          <div class="arc-weights-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;font-size:9px;">
+            <div><span style="color:#58A6FF;">&#9632;</span> <span style="color:var(--tx-sec);">Trend (35%)</span><br><span style="color:var(--tx-ter);font-size:8px;">BTC price vs 200-week moving average</span></div>
+            <div><span style="color:#00B4D8;">&#9632;</span> <span style="color:var(--tx-sec);">Drawdown (25%)</span><br><span style="color:var(--tx-ter);font-size:8px;">Distance from all-time high</span></div>
+            <div><span style="color:#00D4AA;">&#9632;</span> <span style="color:var(--tx-sec);">Liquidity (25%)</span><br><span style="color:var(--tx-ter);font-size:8px;">Fed balance sheet net liquidity (WALCL − TGA − RRP)</span></div>
+            <div><span style="color:#FF9500;">&#9632;</span> <span style="color:var(--tx-sec);">Sentiment (15%)</span><br><span style="color:var(--tx-ter);font-size:8px;">Crypto Fear &amp; Greed Index</span></div>
+          </div>
+          <div style="margin-top:10px;font-size:8px;color:var(--tx-ter);line-height:1.5;">
+            Lower scores → historically stronger entry points.<br>
+            Higher scores → historically higher drawdown risk.
+          </div>
+        </div>
+      </div>
     </div>
     <div class="hero-zones">
       <div class="hero-zone zone-dv">
@@ -4722,6 +4776,21 @@ function toggleHeroComponents() {
   } else {
     wrap.style.maxHeight = Math.max(wrap.scrollHeight, 300) + 'px';
     if (label) label.textContent = 'HIDE COMPONENTS';
+    if (arrow) arrow.style.transform = 'rotate(180deg)';
+  }
+}
+
+function toggleArcMethodology() {
+  var content = document.getElementById('arc-method-content');
+  var label = document.getElementById('arc-method-label');
+  var arrow = document.getElementById('arc-method-arrow');
+  if (!content) return;
+  var isOpen = content.style.maxHeight && content.style.maxHeight !== '0px';
+  if (isOpen) {
+    content.style.maxHeight = '0px';
+    if (arrow) arrow.style.transform = 'rotate(0deg)';
+  } else {
+    content.style.maxHeight = Math.max(content.scrollHeight, 250) + 'px';
     if (arrow) arrow.style.transform = 'rotate(180deg)';
   }
 }

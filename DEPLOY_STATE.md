@@ -4,6 +4,11 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-03-11) — Trust Layer Phase T-A: Component Source Labels + How ARC Works
+- **Quellen-Labels:** In jeder der 4 .factor-card (200W MA DEV, DRAWDOWN, FEAR & GREED, LIQUIDITY) ein .factor-source unter dem factor-value: Kraken BTC/USD, Kraken BTC/USD, Alternative.me, FRED (Fed Net Liquidity). CSS: 7px, var(--tx-ter), opacity 0.6, margin-top 2px. Sichtbar nur wenn Komponenten ausgeklappt (Phase A).
+- **How ARC Works:** Expandierbarer Block #arc-methodology nach hero-components-collapse, vor .hero-zones (innerhalb gate-hero blur-content). Toggle-Button „HOW ARC WORKS“, Klick ruft toggleArcMethodology(); Inhalt: Einleitung, Gewichte-Balken (35/25/25/15), .arc-weights-grid mit 4 Komponenten-Beschreibungen (Trend, Drawdown, Liquidity, Sentiment), Abschlusszeile. Standard eingeklappt (max-height:0). Keine Formel- oder Backend-Änderung.
+- **Mobile:** @media (max-width:480px) .arc-weights-grid: grid-template-columns: 1fr !important. Phase A–E, Blur-Gate, alle IDs unverändert.
+
 ## Letzter Session-Status (2026-03-11) — ARC Chart: 10Y Default Zoom to Last 2 Years
 - **10Y Chart:** Nach Erstellung wird die x-Achse programmatisch auf die letzten ~730 Datenpunkte (~2 Jahre) gezoomt. Nutzer sieht zuerst die jüngste Geschichte; Pan links / Zoom out zeigt den vollen 10Y-Bereich.
 - **RESET-Button:** Führt `resetArcZoom()` aus: bei 10Y Rückkehr zur 2Y-Default-Ansicht (nicht Vollbereich); bei 1Y wie bisher `resetZoom()`. Button-Title: „Reset to 2Y view (double-click chart for full range)“.
