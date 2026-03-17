@@ -4,6 +4,11 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-03-17) — How ARC Works: Soft-Gated Methodology
+- **Methodology-Block:** #arc-method-content in zwei Stufen geteilt: #arc-method-free (nur 4 Komponentennamen + kurzer Kontext + CTA) und #arc-method-paid (Gewichte-Balken 35/25/25/15 + detaillierte Beschreibungen). Anzeige nach currentPlan: paid/trial sehen paid, free/anonymous sehen free.
+- **updateArcMethodologyGate():** Zeigt free- oder paid-Inhalt, setzt CTA für free („UPGRADE TO SEE FULL METHODOLOGY →“ / openUpgradeModal) bzw. anonymous („UNLOCK FULL METHODOLOGY →“ / openAuthModal('signup')). Wird am Ende von applyBlurGates() aufgerufen.
+- **Toggle:** toggleArcMethodology() unverändert; bei geöffnetem Block wird maxHeight nach Gate-Update neu berechnet. Mobile: #arc-method-free Grid bleibt 2 Spalten (480px). Keine Änderung an applyBlurGates/gateInfo, Auth oder Backend.
+
 ## Letzter Session-Status (2026-03-17) — Zone History: Zone-Aware Signal Labels
 - **Zone History Tabelle:** Spalte „Entry“ in „Signal“ umbenannt. Anzeige-Logik in renderZoneHistory() zonenbasiert: Deep Value → „↑ BUY ZONE“ (grün); Accumulation → „↑ BUY ZONE“ (grün) bzw. „↓ BUY ZONE“ (cyan #00B4D8); Expansion → „↑ Uptrend“ / „↓ Downtrend“ (gedimmt); Risk Rising → „⚠ NO ENTRY“ (orange); Euphoria → „⚠ SELL / REDUCE“ (rot). Backend direction und API-Response unverändert; nur Frontend-Darstellung.
 

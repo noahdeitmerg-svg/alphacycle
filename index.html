@@ -2716,6 +2716,9 @@ canvas.sparkline {
   .arc-weights-grid {
     grid-template-columns: 1fr !important;
   }
+  #arc-method-free [style*="grid-template-columns"] {
+    grid-template-columns: 1fr 1fr !important;
+  }
 
   .chart-info-tooltip {
     width: 220px;
@@ -3527,7 +3530,33 @@ canvas.sparkline {
         <span id="arc-method-arrow" style="font-size:10px;transition:transform 0.3s;">&#9660;</span>
       </button>
       <div id="arc-method-content" style="max-height:0;overflow:hidden;transition:max-height 0.4s ease;">
-        <div style="padding:12px 0 8px;font-family:var(--f-mono);font-size:10px;color:var(--tx-sec);line-height:1.7;">
+
+        <!-- FREE / ANONYMOUS: high-level overview only -->
+        <div id="arc-method-free" style="padding:12px 0 8px;font-family:var(--f-mono);font-size:10px;color:var(--tx-sec);line-height:1.7;">
+          <div style="margin-bottom:10px;color:rgba(255,255,255,0.7);font-size:10px;line-height:1.6;">
+            The ARC Index combines four core market signals into a single risk score (0–100):
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 20px;font-size:10px;margin-bottom:12px;">
+            <div style="color:var(--tx-sec);"><span style="color:#58A6FF;">&#9632;</span> Trend</div>
+            <div style="color:var(--tx-sec);"><span style="color:#00B4D8;">&#9632;</span> Drawdown</div>
+            <div style="color:var(--tx-sec);"><span style="color:#00D4AA;">&#9632;</span> Liquidity</div>
+            <div style="color:var(--tx-sec);"><span style="color:#FF9500;">&#9632;</span> Sentiment</div>
+          </div>
+          <div style="margin-top:8px;font-size:8px;color:var(--tx-ter);line-height:1.5;">
+            Lower scores &#8594; historically stronger entry points. Higher scores &#8594; historically higher drawdown risk.
+          </div>
+          <div style="margin-top:12px;text-align:center;">
+            <a href="#" onclick="openAuthModal('signup');return false;" id="arc-method-cta" style="
+              font-family:var(--f-mono);font-size:8px;letter-spacing:0.1em;
+              color:#00D4AA;text-decoration:none;
+              border-bottom:1px solid rgba(0,212,170,0.3);
+              padding-bottom:1px;
+            ">UNLOCK FULL METHODOLOGY &#8594;</a>
+          </div>
+        </div>
+
+        <!-- PAID: full breakdown with weights -->
+        <div id="arc-method-paid" style="display:none;padding:12px 0 8px;font-family:var(--f-mono);font-size:10px;color:var(--tx-sec);line-height:1.7;">
           <div style="margin-bottom:10px;color:rgba(255,255,255,0.7);font-size:10px;line-height:1.6;">
             The ARC Index combines four market signals into a single risk score (0–100):
           </div>
@@ -3540,14 +3569,15 @@ canvas.sparkline {
           <div class="arc-weights-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;font-size:9px;">
             <div><span style="color:#58A6FF;">&#9632;</span> <span style="color:var(--tx-sec);">Trend (35%)</span><br><span style="color:var(--tx-ter);font-size:8px;">BTC price vs 200-week moving average</span></div>
             <div><span style="color:#00B4D8;">&#9632;</span> <span style="color:var(--tx-sec);">Drawdown (25%)</span><br><span style="color:var(--tx-ter);font-size:8px;">Distance from all-time high</span></div>
-            <div><span style="color:#00D4AA;">&#9632;</span> <span style="color:var(--tx-sec);">Liquidity (25%)</span><br><span style="color:var(--tx-ter);font-size:8px;">Fed balance sheet net liquidity (WALCL − TGA − RRP)</span></div>
+            <div><span style="color:#00D4AA;">&#9632;</span> <span style="color:var(--tx-sec);">Liquidity (25%)</span><br><span style="color:var(--tx-ter);font-size:8px;">Fed balance sheet net liquidity (WALCL &#8722; TGA &#8722; RRP)</span></div>
             <div><span style="color:#FF9500;">&#9632;</span> <span style="color:var(--tx-sec);">Sentiment (15%)</span><br><span style="color:var(--tx-ter);font-size:8px;">Crypto Fear &amp; Greed Index</span></div>
           </div>
           <div style="margin-top:10px;font-size:8px;color:var(--tx-ter);line-height:1.5;">
-            Lower scores → historically stronger entry points.<br>
-            Higher scores → historically higher drawdown risk.
+            Lower scores &#8594; historically stronger entry points.<br>
+            Higher scores &#8594; historically higher drawdown risk.
           </div>
         </div>
+
       </div>
     </div>
     <div class="hero-zones">
@@ -4928,6 +4958,33 @@ function toggleArcMethodology() {
   }
 }
 
+function updateArcMethodologyGate() {
+  var freeEl = document.getElementById('arc-method-free');
+  var paidEl = document.getElementById('arc-method-paid');
+  if (!freeEl || !paidEl) return;
+  if (currentPlan === 'paid' || currentPlan === 'trial') {
+    freeEl.style.display = 'none';
+    paidEl.style.display = 'block';
+  } else {
+    freeEl.style.display = 'block';
+    paidEl.style.display = 'none';
+    var ctaEl = document.getElementById('arc-method-cta');
+    if (ctaEl) {
+      if (currentPlan === 'free') {
+        ctaEl.textContent = 'UPGRADE TO SEE FULL METHODOLOGY \u2192';
+        ctaEl.onclick = function(e) { e.preventDefault(); openUpgradeModal(); };
+      } else {
+        ctaEl.textContent = 'UNLOCK FULL METHODOLOGY \u2192';
+        ctaEl.onclick = function(e) { e.preventDefault(); openAuthModal('signup'); };
+      }
+    }
+  }
+  var contentWrap = document.getElementById('arc-method-content');
+  if (contentWrap && contentWrap.style.maxHeight && contentWrap.style.maxHeight !== '0px') {
+    contentWrap.style.maxHeight = Math.max(contentWrap.scrollHeight, 250) + 'px';
+  }
+}
+
 function updateHeroFreshness() {
   var el = document.getElementById('hero-freshness');
   if (!el) return;
@@ -6088,6 +6145,8 @@ function applyBlurGates() {
   // Live Prices sollen immer sichtbar sein (niemals geblurrt)
   var lp = document.getElementById('gate-live-prices');
   if (lp) lp.classList.remove('locked');
+
+  updateArcMethodologyGate();
 }
 
 async function openUpgradeModal() {
