@@ -1942,10 +1942,11 @@ async def get_analyzer(request: Request):
 
 
 def _phase_label(arc: float) -> str:
-    if arc < 30: return "Low Risk"
-    if arc < 60: return "Moderate Risk"
-    if arc < 75: return "Elevated Risk"
-    return "High Risk"
+    if arc < 30: return "Deep Value"
+    if arc < 40: return "Accumulation"
+    if arc < 60: return "Expansion"
+    if arc < 70: return "Risk Rising"
+    return "Euphoria"
 
 
 @app.get("/api/snapshot")

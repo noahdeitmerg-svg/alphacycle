@@ -54,11 +54,11 @@ def get_position(arc: float, momentum: float = 0, confidence: float = 50) -> str
     a = _sf(arc, 50.0)
     if a < 30:
         return "BUY"
-    if a < 45:
-        return "BUY" if (momentum is not None and momentum <= 0) else "HOLD"
+    if a < 40:
+        return "ACCUMULATE"
     if a < 60:
         return "HOLD"
-    if a < 75:
+    if a < 70:
         return "REDUCE"
     return "SELL"
 

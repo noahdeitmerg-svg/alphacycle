@@ -4460,10 +4460,10 @@ const fmtT    = n => '$'+safeNum(n/1e12).toFixed(2)+'T';
 
 function scoreColor(s) {
   s = clamp(s);
-  if (s <= 29) return '#00C896';
-  if (s <= 39) return '#00B4D8';
-  if (s <= 59) return '#3B82F6';
-  if (s <= 69) return '#F97316';
+  if (s < 30) return '#00C896';
+  if (s < 40) return '#00B4D8';
+  if (s < 60) return '#3B82F6';
+  if (s < 70) return '#F97316';
   return '#EF4444';
 }
 function phaseOf(score) {
@@ -5315,7 +5315,7 @@ function updateUI() {
 
     var zone, zoneColor, interpretation, positioning, riskReward;
 
-    if (s <= 29) {
+    if (s < 30) {
       zone = 'DEEP VALUE';
       zoneColor = '#00D4AA';
       interpretation = 'Historically the strongest risk/reward environment. Markets have typically reached this zone during periods of maximum fear, with most participants already capitulated.';
@@ -5329,7 +5329,7 @@ function updateUI() {
         'Maximum asymmetry — historically the best entry zone',
         'Volatility remains elevated but historically dissipating',
       ];
-    } else if (s <= 39) {
+    } else if (s < 40) {
       zone = 'ACCUMULATION';
       zoneColor = '#00B4D8';
       interpretation = 'Historically one of the strongest risk/reward environments. Markets typically transition from fear to early recovery during this phase.';
@@ -5337,13 +5337,14 @@ function updateUI() {
         'Gradual accumulation historically preferred over timing precision',
         'Higher allocation justified relative to neutral phases',
         'Early positioning has historically been rewarded across cycles',
+        'In rising momentum environments, allocation typically stabilizes rather than increases aggressively',
       ];
       riskReward = [
         'Downside historically limited relative to upside',
         'Asymmetric opportunity environment based on prior cycles',
         'Near-term volatility possible but historically constructive',
       ];
-    } else if (s <= 59) {
+    } else if (s < 60) {
       zone = 'EXPANSION';
       zoneColor = '#58A6FF';
       interpretation = 'Mid-cycle phase where trend has typically established itself. Neither extreme fear nor extreme greed — a transitional environment.';
@@ -5357,7 +5358,7 @@ function updateUI() {
         'Upside potential remains but historical edge is smaller',
         'Drawdown risk increasing relative to lower zones',
       ];
-    } else if (s <= 69) {
+    } else if (s < 70) {
       zone = 'RISK RISING';
       zoneColor = '#FF9500';
       interpretation = 'Late-cycle environment where risk has historically outweighed reward. Markets typically show signs of overextension at this level.';
@@ -8118,7 +8119,7 @@ function ordinal(n) {
 function buildDataBlock() {
   var arc = S.arcSummary?.arc_display ?? S.combined ?? 32;
   arc = Math.round(Number(arc)) || 32;
-  var zoneKey = arc <= 29 ? 'deep_value' : arc <= 39 ? 'accumulation' : arc <= 59 ? 'expansion' : arc <= 69 ? 'risk_rising' : 'euphoria';
+  var zoneKey = arc < 30 ? 'deep_value' : arc < 40 ? 'accumulation' : arc < 60 ? 'expansion' : arc < 70 ? 'risk_rising' : 'euphoria';
   var zone = S.historicalReturns && S.historicalReturns.zones ? S.historicalReturns.zones[zoneKey] : null;
   var zoneName = getZoneLabelByArc(arc);
   var phase = S.arcSummary?.phase_context || '—';
