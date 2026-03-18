@@ -28,6 +28,12 @@
 - **Warum:** Minimaler Orbit-Ring statt Gauge-Arc, klare visuelle Hierarchie und export-sichere Darstellung ohne Backend-Changes.
 - **Status:** ✅ deployed
 
+## Letzter Session-Status (2026-03-18) — Hero Orbit Final (Instrument depth + labels)
+- **Datei(en):** index.html
+- **Was wurde geändert:** Orbit-`orbit-ring` als instrumenteller Conic-Gradient (thin ring via `mask`) inkl. innerem Precision-Ring und Micro-Ticks; `orbit-dot` auf 12px Double-Glow umgestellt inkl. Blur-Trail und Move-Scale (`moving`-Class). In `#orbit-ring` wurden 5 Zonenlabels ergänzt und per `highlightOrbitZone(score)` mit dem aktuellen ARC-Score synchronisiert.
+- **Warum:** Mehr visuelle Tiefe/Präzision beim Orbit, ohne Layout/IDs/Backend- oder Logic-Änderungen.
+- **Status:** ✅ deployed
+
 ## Letzter Session-Status (2026-03-18) — Rollback: UX Prompts vom 2026-03-17 (Decision/Positioning)
 - **Rollback:** Fehlgeschlagene UX-Iteration von gestern (Positioning Framework / Decision-Layout / Live-Prices-Reihenfolge) zurückgerollt.
 - **Betroffen:** `index.html` (UI), `DEPLOY_STATE.md` (Dokumentation), `.cursor/rules/permanent-fixes.mdc` (nur Doku-Zeile).

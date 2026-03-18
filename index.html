@@ -1127,26 +1127,118 @@ body::before {
   width: 240px;
   height: 240px;
   border-radius: 50%;
-  border: 1.5px solid rgba(255, 255, 255, 0.06);
+  border: none !important;
+  background: conic-gradient(
+    #22c55e 0% 29%,
+    #00D4AA 29% 39%,
+    #3b82f6 39% 59%,
+    #f59e0b 59% 69%,
+    #ef4444 69% 100%
+  );
+  -webkit-mask: radial-gradient(circle, transparent 93%, black 94.5%);
+  mask: radial-gradient(circle, transparent 93%, black 94.5%);
+  box-shadow:
+    0 0 60px rgba(0, 212, 170, 0.06),
+    inset 0 0 30px rgba(255, 255, 255, 0.04),
+    inset 0 0 6px rgba(255, 255, 255, 0.06);
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 0px;
-  opacity: 0.7;
+  opacity: 0.85;
+}
+
+/* Inner precision ring */
+.orbit-ring::after {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Micro ticks */
+.orbit-ring::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: repeating-conic-gradient(
+    rgba(255, 255, 255, 0.08) 0deg 1deg,
+    transparent 1deg 6deg
+  );
+  -webkit-mask: radial-gradient(circle, transparent 70%, black 71%);
+  mask: radial-gradient(circle, transparent 70%, black 71%);
+  opacity: 0.15;
+  pointer-events: none;
 }
 
 /* ARC Dot */
 .orbit-dot {
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   position: absolute;
   background: var(--btc);
-  box-shadow: 0 0 14px var(--btc);
+  box-shadow:
+    0 0 18px currentColor,
+    0 0 40px currentColor;
   transform: translate(-50%, -50%);
-  transition: left 0.8s cubic-bezier(0.22, 1, 0.36, 1),
-              top 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  transition:
+    left 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+    top 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.4s ease;
+}
+
+/* Dot trail (momentum feel) */
+.orbit-dot::after {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: currentColor;
+  filter: blur(6px);
+  opacity: 0.25;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+/* Dot pulse on move */
+.orbit-dot.moving {
+  transform: translate(-50%, -50%) scale(1.15);
+}
+
+/* Zone labels around the ring */
+.orbit-label {
+  position: absolute;
+  font-family: var(--f-mono);
+  font-size: 7px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.25;
+  white-space: nowrap;
+  transform: translate(-50%, -50%);
+  font-weight: 500;
+  color: var(--tx-ter);
+  pointer-events: none;
+  transition: opacity 0.4s ease, text-shadow 0.4s ease;
+}
+
+.ol-dv { top: 70%; left: 18%; }
+.ol-ac { top: 30%; left: 18%; }
+.ol-ex { top: 12%; left: 50%; }
+.ol-rr { top: 30%; left: 82%; }
+.ol-eu { top: 70%; left: 82%; }
+
+.orbit-label.active {
+  opacity: 0.7;
+  text-shadow: 0 0 8px currentColor;
 }
 
 /* Score inside orbit — centered via orbit-ring flex */
@@ -1288,6 +1380,11 @@ body::before {
     flex-direction: column !important;
     align-items: center !important;
     gap: 12px !important;
+  }
+
+  .orbit-label {
+    font-size: 6px !important;
+    letter-spacing: 0.1em !important;
   }
 }
 
@@ -3983,6 +4080,11 @@ canvas.sparkline {
         </div>
         <div class="orbit-ring" id="orbit-ring">
           <div class="orbit-dot" id="orbit-dot"></div>
+          <span class="orbit-label ol-dv">DEEP VALUE</span>
+          <span class="orbit-label ol-ac">ACCUMULATION</span>
+          <span class="orbit-label ol-ex">EXPANSION</span>
+          <span class="orbit-label ol-rr">RISK RISING</span>
+          <span class="orbit-label ol-eu">EUPHORIA</span>
           <div class="gauge-wrap">
       <svg viewBox="0 0 200 130" fill="none" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -4959,9 +5061,35 @@ function positionOrbitDot(score) {
   dot.style.left = x + 'px';
   dot.style.top = y + 'px';
 
+  dot.classList.add('moving');
+  setTimeout(function() { dot.classList.remove('moving'); }, 500);
+
   var col = scoreColor(s);
   dot.style.background = col;
-  dot.style.boxShadow = '0 0 14px ' + col;
+  dot.style.color = col;
+}
+
+function highlightOrbitZone(score) {
+  var labels = document.querySelectorAll('.orbit-label');
+  if (!labels.length) return;
+  labels.forEach(function(l) { l.classList.remove('active'); });
+
+  var s = Number(score);
+  if (isNaN(s)) return;
+
+  var sel;
+  if (s < 30) sel = '.ol-dv';
+  else if (s < 40) sel = '.ol-ac';
+  else if (s < 60) sel = '.ol-ex';
+  else if (s < 70) sel = '.ol-rr';
+  else sel = '.ol-eu';
+
+  var active = document.querySelector(sel);
+  if (active) {
+    active.classList.add('active');
+    var col = scoreColor(s);
+    active.style.color = col;
+  }
 }
 
 // ── CLOCK ──────────────────────────────────────────────────────────────────
@@ -5622,8 +5750,10 @@ function updateUI() {
   animateGauge('mac-arc', S.macScore);
 
   // Score numbers (Hero ARC Gauge nutzt arc_display)
-  setText('btc-score-val', Math.round(combinedScore), bCol);
-  positionOrbitDot(Math.round(combinedScore));
+  var orbitScore = Math.round(combinedScore);
+  setText('btc-score-val', orbitScore, bCol);
+  positionOrbitDot(orbitScore);
+  highlightOrbitZone(orbitScore);
   (function updateHeroRisk() {
     const el = document.getElementById('hero-risk-label');
     if (!el) return;
@@ -8799,7 +8929,10 @@ window.addEventListener('resize',function(){
     var scoreEl = document.getElementById('btc-score-val');
     if (scoreEl) {
       var val = parseFloat(scoreEl.textContent);
-      if (!isNaN(val)) positionOrbitDot(val);
+      if (!isNaN(val)) {
+        positionOrbitDot(val);
+        highlightOrbitZone(val);
+      }
     }
   } catch (e) {}
 });
