@@ -1092,106 +1092,165 @@ body::before {
 
 /* === END HERO REFINEMENT V2 === */
 
-/* === HERO REDESIGN V1 — centered cycle instrument === */
+/* === HERO ORBITAL DESIGN === */
 
 #btc-card.hero-card {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
   justify-content: center !important;
   text-align: center !important;
-  padding: 2.5rem 1.5rem !important;
+  padding: 3rem 1rem !important;
   grid-template-areas: none !important;
   grid-template-columns: none !important;
+  position: relative !important;
 }
 
 #btc-card.hero-card > * {
   grid-area: unset !important;
 }
 
-#btc-card.hero-card .score-card-header {
-  width: 100% !important;
-  justify-content: center !important;
+#btc-card.hero-card .card-accent {
+  display: none !important;
 }
 
+/* Hide old gauge SVG — keep in DOM */
+#btc-card.hero-card .gauge-wrap svg {
+  display: none !important;
+}
+
+/* Orbit Ring */
+.orbit-ring {
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.06);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0px;
+  opacity: 0.7;
+}
+
+/* ARC Dot */
+.orbit-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  position: absolute;
+  background: var(--btc);
+  box-shadow: 0 0 14px var(--btc);
+  transform: translate(-50%, -50%);
+  transition: left 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+              top 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Score inside orbit — centered via orbit-ring flex */
 #btc-card.hero-card .gauge-wrap {
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  width: auto !important;
+  height: auto !important;
+  margin-top: 0px !important;
+}
+
+#btc-card.hero-card .gauge-center {
   display: flex !important;
-  justify-content: center !important;
+  flex-direction: column !important;
   align-items: center !important;
-  margin-bottom: 6px !important;
+  gap: 2px !important;
+  position: static !important;
 }
 
 #btc-card.hero-card .gauge-val {
-  font-size: clamp(72px, 10vw, 92px) !important;
+  font-size: clamp(68px, 10vw, 88px) !important;
   font-weight: 700 !important;
-  letter-spacing: -0.025em !important;
+  letter-spacing: -0.03em !important;
   line-height: 1 !important;
+  text-shadow: 0 0 18px rgba(0, 212, 170, 0.15);
+  transition: color 0.6s ease;
 }
 
-#btc-card.hero-card .gauge-wrap svg {
-  opacity: 0.85 !important;
+#btc-card.hero-card .gauge-denom {
+  font-size: 10px !important;
+  opacity: 0.35 !important;
 }
 
+/* Zone label */
 #btc-card.hero-card .score-phase {
-  margin-top: 6px !important;
   font-size: 16px !important;
-  letter-spacing: 0.14em !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.16em !important;
+  margin-top: 6px !important;
 }
 
+/* Context */
 #hero-regime-context {
+  font-size: 10px !important;
+  color: var(--tx-ter) !important;
   margin-top: 10px !important;
-  max-width: 360px !important;
+  max-width: 260px !important;
   margin-left: auto !important;
   margin-right: auto !important;
-  opacity: 0.75 !important;
+  text-align: center !important;
   line-height: 1.5 !important;
+  opacity: 0.6 !important;
 }
 
+/* Header — hide (score-phase shows zone) */
+#btc-card.hero-card .score-card-header {
+  display: none !important;
+}
+
+/* Hero risk label — hide (shown via score-phase) */
+#btc-card.hero-card .hero-risk-label {
+  display: none !important;
+}
+
+/* Footer */
 #btc-card.hero-card .score-footer {
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
-  width: 100% !important;
 }
 
 #btc-card.hero-card .score-price {
-  margin-top: 14px !important;
-  font-size: 10px !important;
-  opacity: 0.6 !important;
-  text-align: center !important;
+  font-size: 8px !important;
+  opacity: 0.4 !important;
+  margin-top: 8px !important;
+  letter-spacing: 0.06em !important;
 }
 
 #btc-card.hero-card .hero-subscores {
-  margin-top: 12px !important;
-  opacity: 0.6 !important;
-  font-size: 10px !important;
-  justify-content: center !important;
+  display: none !important;
 }
 
 #btc-card.hero-card .hero-meta-row {
-  justify-content: center !important;
-  opacity: 0.5 !important;
+  display: none !important;
 }
 
+/* Components — below, toggle reveals */
 #btc-card.hero-card #hero-components-collapse {
-  margin-top: 22px !important;
-  width: 100% !important;
+  margin-top: 24px !important;
   opacity: 0.7 !important;
+  width: 100% !important;
 }
 
 #btc-card.hero-card .components-grid {
   display: flex !important;
   justify-content: center !important;
-  gap: 24px !important;
+  gap: 20px !important;
   flex-wrap: wrap !important;
 }
 
-#btc-card.hero-card .factor-card {
-  flex: 0 0 auto !important;
-}
-
 #btc-card.hero-card .factor-card svg {
-  transform: scale(0.85) !important;
+  transform: scale(0.8) !important;
   opacity: 0.7 !important;
 }
 
@@ -1199,19 +1258,31 @@ body::before {
   opacity: 0.75 !important;
 }
 
-#btc-card.hero-card .gauge-center {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  gap: 5px !important;
+/* Toggle */
+#btc-card.hero-card [onclick="toggleHeroComponents()"] {
+  font-size: 7px !important;
+  opacity: 0.4 !important;
+  margin-top: 14px !important;
 }
 
+/* Zones bar — keep but dim */
+#btc-card.hero-card .hero-zones {
+  opacity: 0.3 !important;
+  margin-top: 16px !important;
+}
+
+/* Mobile */
 @media (max-width: 700px) {
-  #btc-card.hero-card {
-    padding: 1.5rem 1rem !important;
+  .orbit-ring {
+    width: 200px;
+    height: 200px;
   }
   #btc-card.hero-card .gauge-val {
-    font-size: clamp(56px, 14vw, 72px) !important;
+    font-size: clamp(52px, 14vw, 68px) !important;
+  }
+  #hero-regime-context {
+    font-size: 9px !important;
+    max-width: 220px !important;
   }
   #btc-card.hero-card .components-grid {
     flex-direction: column !important;
@@ -1220,7 +1291,7 @@ body::before {
   }
 }
 
-/* === END HERO REDESIGN V1 === */
+/* === END HERO ORBITAL DESIGN === */
 
 .decision-card {
   padding: 0;
@@ -3910,7 +3981,9 @@ canvas.sparkline {
           </div>
           <button class="ce-btn" id="hero-share-btn" type="button" onclick="exportHeroAsPNG()" style="display:none;font-size:9px;padding:4px 10px;white-space:nowrap;">↓ SHARE PNG</button>
         </div>
-        <div class="gauge-wrap">
+        <div class="orbit-ring" id="orbit-ring">
+          <div class="orbit-dot" id="orbit-dot"></div>
+          <div class="gauge-wrap">
       <svg viewBox="0 0 200 130" fill="none" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="btc-grad" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -3945,7 +4018,8 @@ canvas.sparkline {
           </div>
           <div id="hero-regime-context" style="font-family:var(--f-mono);font-size:9px;color:var(--tx-ter);letter-spacing:0.04em;margin-top:6px;max-width:320px;text-align:center;line-height:1.4;"></div>
         </div>
-    </div>
+          </div>
+        </div>
     <div class="score-footer">
       <div class="score-price" id="btc-price-sm">—</div>
       <div class="hero-subscores">
@@ -4856,11 +4930,38 @@ function phaseDesc(phase) {
 }
 function _getCycleDescription(arc) {
   var a = Number(arc);
-  if (a < 30) return 'Market undervalued. Smart money accumulating. Fear elevated, prices near or below 200W MA.';
-  if (a < 35) return 'Structurally favorable. Accumulation zone. Historically strong risk/reward for long-term exposure.';
-  if (a < 60) return 'Uptrend confirmed. Liquidity expanding. Momentum building with healthy sentiment.';
-  if (a < 75) return 'Market overheating. FOMO elevated. Whale distribution likely in progress.';
-  return 'Risk-off environment. Liquidity contracting. Downtrend confirmed - caution advised.';
+  if (a < 30) return 'Historically strongest accumulation environment';
+  if (a < 40) return 'Strong historical risk/reward phase';
+  if (a < 60) return 'Balanced expansion environment';
+  if (a < 70) return 'Risk increasing phase';
+  return 'Historically high risk environment';
+}
+
+function positionOrbitDot(score) {
+  var dot = document.getElementById('orbit-dot');
+  var ring = document.getElementById('orbit-ring');
+  if (!dot || !ring) return;
+  if (!ring.offsetWidth) return;
+
+  var s = Number(score);
+  if (isNaN(s)) return;
+
+  var radius = ring.offsetWidth / 2;
+  var dotOffset = 6;
+  var effectiveRadius = radius - dotOffset;
+
+  var angle = (s / 100) * 360 - 90;
+  var rad = angle * Math.PI / 180;
+
+  var x = radius + effectiveRadius * Math.cos(rad);
+  var y = radius + effectiveRadius * Math.sin(rad);
+
+  dot.style.left = x + 'px';
+  dot.style.top = y + 'px';
+
+  var col = scoreColor(s);
+  dot.style.background = col;
+  dot.style.boxShadow = '0 0 14px ' + col;
 }
 
 // ── CLOCK ──────────────────────────────────────────────────────────────────
@@ -5522,6 +5623,7 @@ function updateUI() {
 
   // Score numbers (Hero ARC Gauge nutzt arc_display)
   setText('btc-score-val', Math.round(combinedScore), bCol);
+  positionOrbitDot(Math.round(combinedScore));
   (function updateHeroRisk() {
     const el = document.getElementById('hero-risk-label');
     if (!el) return;
@@ -5594,13 +5696,7 @@ function updateUI() {
   var ctxEl = document.getElementById('hero-regime-context');
   if (ctxEl) {
     var s = S.arcSummary ? S.arcSummary.arc_score : null;
-    if (s != null) {
-      if (s < 30) ctxEl.textContent = 'Historically the strongest risk/reward environment';
-      else if (s < 40) ctxEl.textContent = 'Markets in this phase have historically delivered strong 12-month returns';
-      else if (s < 60) ctxEl.textContent = 'Mid-cycle transitional environment — balanced risk/reward';
-      else if (s < 70) ctxEl.textContent = 'Late-cycle phase — risk historically outweighs reward';
-      else ctxEl.textContent = 'Peak-cycle environment — historically elevated drawdown risk';
-    }
+    if (s != null) ctxEl.textContent = _getCycleDescription(s);
   }
 
   // Prices
@@ -8233,6 +8329,10 @@ function exportHeroAsPNG() {
   var heroCard = document.getElementById('btc-card');
   if (!heroCard) { if (btn) { btn.textContent = '\u2193 SHARE PNG'; btn.disabled = false; } return; }
 
+  var btcCard = heroCard;
+  var origBg = btcCard.style.background;
+  btcCard.style.background = '#0a1228';
+
   function doCapture() {
     html2canvas(heroCard, {
       backgroundColor: '#0d1117',
@@ -8263,10 +8363,12 @@ function exportHeroAsPNG() {
       link.href = finalCanvas.toDataURL('image/png');
       link.click();
 
+      btcCard.style.background = origBg;
       if (btn) { btn.textContent = '\u2713 SAVED'; btn.disabled = false; }
       setTimeout(function() { if (btn) btn.textContent = '\u2193 SHARE PNG'; }, 2000);
     }).catch(function(err) {
       console.error('Hero export failed:', err);
+      btcCard.style.background = origBg;
       if (btn) { btn.textContent = '\u2193 SHARE PNG'; btn.disabled = false; }
     });
   }
@@ -8279,6 +8381,7 @@ function exportHeroAsPNG() {
     script.onload = doCapture;
     script.onerror = function() {
       console.error('html2canvas load failed');
+      btcCard.style.background = origBg;
       if (btn) { btn.textContent = '\u2193 SHARE PNG'; btn.disabled = false; }
     };
     document.head.appendChild(script);
@@ -8691,6 +8794,14 @@ window.addEventListener('resize',function(){
   } else {
     initMobileCollapseToggle();
   }
+
+  try {
+    var scoreEl = document.getElementById('btc-score-val');
+    if (scoreEl) {
+      var val = parseFloat(scoreEl.textContent);
+      if (!isNaN(val)) positionOrbitDot(val);
+    }
+  } catch (e) {}
 });
 
 const _diToggle = $('di-toggle');

@@ -22,6 +22,12 @@
 - **Warum:** "Centered cycle instrument" Layout fuer ruhigeres, export-taugliches Hero ohne Datenverlust.
 - **Status:** ✅ deployed
 
+## Letzter Session-Status (2026-03-18) — Hero Orbital Design (Orbit ring + dot)
+- **Datei(en):** index.html
+- **Was wurde geändert:** `orbit-ring`/`orbit-dot` um den Hero-`gauge-wrap` gelegt, altes Gauge-SVG per CSS ausgeblendet, Dot-Positionierung via `positionOrbitDot(score)` nach `btc-score-val` (0–100 -> 360°) + Resize-Relayout. `_getCycleDescription()` auf 5 Zonen-Shorttext umgestellt und Hero-Context nutzt die neue Funktion. `exportHeroAsPNG()` setzt vor Capture `#0a1228` und stellt danach den Original-Background wieder her.
+- **Warum:** Minimaler Orbit-Ring statt Gauge-Arc, klare visuelle Hierarchie und export-sichere Darstellung ohne Backend-Changes.
+- **Status:** ✅ deployed
+
 ## Letzter Session-Status (2026-03-18) — Rollback: UX Prompts vom 2026-03-17 (Decision/Positioning)
 - **Rollback:** Fehlgeschlagene UX-Iteration von gestern (Positioning Framework / Decision-Layout / Live-Prices-Reihenfolge) zurückgerollt.
 - **Betroffen:** `index.html` (UI), `DEPLOY_STATE.md` (Dokumentation), `.cursor/rules/permanent-fixes.mdc` (nur Doku-Zeile).
