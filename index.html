@@ -1274,7 +1274,7 @@ body::before {
   display: block;
 }
 .hr-zone.hr-current-zone {
-  background: rgba(255, 255, 255, 0.04) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
   border-color: currentColor !important;
   border-width: 1px !important;
   border-style: solid !important;
@@ -7633,9 +7633,9 @@ function renderArcChart(period) {
         var monoFont = (getComputedStyle(document.documentElement).getPropertyValue('--f-mono') || 'monospace').trim();
         ctx.font = '8px ' + monoFont;
         ctx.fillStyle = 'rgba(251, 146, 60, 0.6)';
-        ctx.textAlign = 'left';
+        ctx.textAlign = 'right';
         ctx.textBaseline = 'middle';
-        ctx.fillText(label, ca.right + 4, py);
+        ctx.fillText(label, ca.right - 6, py);
 
         ctx.restore();
       }
