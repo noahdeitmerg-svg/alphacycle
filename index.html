@@ -1149,9 +1149,8 @@ body::before {
   opacity: 0.85;
 }
 
-/* Inner precision ring */
-.orbit-ring::after {
-  content: '';
+/* Inner precision ring (real DOM element) */
+.orbit-inner-ring {
   position: absolute;
   inset: 8px;
   border-radius: 50%;
@@ -1160,9 +1159,8 @@ body::before {
   pointer-events: none;
 }
 
-/* Micro ticks */
-.orbit-ring::before {
-  content: '';
+/* Micro ticks (real DOM element) */
+.orbit-ticks {
   position: absolute;
   inset: 0;
   border-radius: 50%;
@@ -1386,6 +1384,13 @@ body::before {
     font-size: 6px !important;
     letter-spacing: 0.1em !important;
   }
+
+  /* Adjust label positions for smaller 200px ring */
+  .ol-dv { top: 72% !important; left: 16% !important; }
+  .ol-ac { top: 28% !important; left: 16% !important; }
+  .ol-ex { top: 10% !important; left: 50% !important; }
+  .ol-rr { top: 28% !important; left: 84% !important; }
+  .ol-eu { top: 72% !important; left: 84% !important; }
 }
 
 /* === END HERO ORBITAL DESIGN === */
@@ -4079,6 +4084,8 @@ canvas.sparkline {
           <button class="ce-btn" id="hero-share-btn" type="button" onclick="exportHeroAsPNG()" style="display:none;font-size:9px;padding:4px 10px;white-space:nowrap;">↓ SHARE PNG</button>
         </div>
         <div class="orbit-ring" id="orbit-ring">
+          <div class="orbit-inner-ring"></div>
+          <div class="orbit-ticks"></div>
           <div class="orbit-dot" id="orbit-dot"></div>
           <span class="orbit-label ol-dv">DEEP VALUE</span>
           <span class="orbit-label ol-ac">ACCUMULATION</span>
@@ -5067,6 +5074,10 @@ function positionOrbitDot(score) {
   var col = scoreColor(s);
   dot.style.background = col;
   dot.style.color = col;
+  // NOTE: Dot position is LINEAR (score/100 * 360°).
+  // Conic gradient zones are proportional to zone width.
+  // Max deviation ~10°. Acceptable for V1.
+  // Non-linear mapping needed for pixel-perfect alignment.
 }
 
 function highlightOrbitZone(score) {

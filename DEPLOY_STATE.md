@@ -34,6 +34,12 @@
 - **Warum:** Mehr visuelle Tiefe/Präzision beim Orbit, ohne Layout/IDs/Backend- oder Logic-Änderungen.
 - **Status:** ✅ deployed
 
+## Letzter Session-Status (2026-03-18) — Hero Orbit Final: DOM Inner Ring + Mobile Label Offsets
+- **Datei(en):** index.html
+- **Was wurde geändert:** `orbit-ring`-Pseudo-Elemente (`orbit-ring::before/::after`) durch echte DOM-Elemente ersetzt (`orbit-inner-ring`, `orbit-ticks`) um Mask/Rendering-Effekte stabiler zu machen. Mobile Label-Offsets in `@media (max-width: 700px)` final justiert (ol-* Positionswerte).
+- **Warum:** Instrument-Tiefe & Tick-Details bleiben sichtbar/sauber gerendert; Labels auf 375px bleiben nicht überlappend und korrekt positioniert.
+- **Status:** ✅ deployed
+
 ## Letzter Session-Status (2026-03-18) — Rollback: UX Prompts vom 2026-03-17 (Decision/Positioning)
 - **Rollback:** Fehlgeschlagene UX-Iteration von gestern (Positioning Framework / Decision-Layout / Live-Prices-Reihenfolge) zurückgerollt.
 - **Betroffen:** `index.html` (UI), `DEPLOY_STATE.md` (Dokumentation), `.cursor/rules/permanent-fixes.mdc` (nur Doku-Zeile).
