@@ -22,6 +22,12 @@
 - **Warum:** Orbit ist wieder sichtbar und Overlay/Mask blendet Score/Dot nicht aus.
 - **Status:** ✅ deployed
 
+## Letzter Session-Status (2026-03-18) — Hotfix: Orbit Labels + Ring Visibility
+- **Datei(en):** index.html
+- **Was wurde geändert:** Orbit-Labels nach außen verschoben (ueber `ol-*` top/left so dass sie nicht den Score ueberlappen), `.orbit-ring` `overflow: visible` gesetzt, Gradient-Ring heller (`.orbit-ring::before` opacity auf `1`), innerer Ring heller (`border`/`opacity` von `0.05/0.6` auf `0.08/0.8`), Mobile Label-Offsets final justiert.
+- **Warum:** Orbit war optisch zu dunkel bzw. Labels ueberschneiden den Score; jetzt klare Sichtbarkeit und Instrument-Lesbarkeit.
+- **Status:** ✅ deployed
+
 ## Letzter Session-Status (2026-03-18) — Rollback: UX Prompts vom 2026-03-17 (Decision/Positioning)
 - **Rollback:** Fehlgeschlagene UX-Iteration von gestern (Positioning Framework / Decision-Layout / Live-Prices-Reihenfolge) zurückgerollt.
 - **Betroffen:** `index.html` (UI), `DEPLOY_STATE.md` (Dokumentation), `.cursor/rules/permanent-fixes.mdc` (nur Doku-Zeile).

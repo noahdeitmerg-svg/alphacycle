@@ -1136,6 +1136,7 @@ body::before {
   margin-bottom: 0px;
   box-shadow: 0 0 60px rgba(0, 212, 170, 0.06);
   z-index: 0;
+  overflow: visible !important;
 }
 
 .orbit-ring::before {
@@ -1152,7 +1153,7 @@ body::before {
   );
   -webkit-mask: radial-gradient(circle, transparent 93%, black 94.5%);
   mask: radial-gradient(circle, transparent 93%, black 94.5%);
-  opacity: 0.85;
+  opacity: 1 !important;
   pointer-events: none;
   z-index: 0;
 }
@@ -1161,8 +1162,8 @@ body::before {
   position: absolute;
   inset: 8px;
   border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  opacity: 0.6;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  opacity: 0.8;
   pointer-events: none;
   z-index: 0;
 }
@@ -1365,10 +1366,11 @@ body::before {
 }
 
 .ol-dv { top: 70%; left: 18%; }
-.ol-ac { top: 30%; left: 18%; }
-.ol-ex { top: 12%; left: 50%; }
-.ol-rr { top: 30%; left: 82%; }
-.ol-eu { top: 70%; left: 82%; }
+.ol-ac { top: 25%; left: 5%; }
+.ol-ex { top: 5%; left: 50%; }
+.ol-rr { top: 25%; left: 95%; }
+.ol-eu { top: 82%; left: 85%; }
+.ol-dv { top: 82%; left: 15%; }
 
 .orbit-label.active {
   opacity: 0.7;
@@ -1397,11 +1399,11 @@ body::before {
     font-size: 6px !important;
     letter-spacing: 0.1em !important;
   }
-  .ol-dv { top: 72% !important; left: 16% !important; }
-  .ol-ac { top: 28% !important; left: 16% !important; }
-  .ol-ex { top: 10% !important; left: 50% !important; }
-  .ol-rr { top: 28% !important; left: 84% !important; }
-  .ol-eu { top: 72% !important; left: 84% !important; }
+  .ol-dv { top: 84% !important; left: 12% !important; }
+  .ol-ac { top: 22% !important; left: 2% !important; }
+  .ol-ex { top: 2% !important; left: 50% !important; }
+  .ol-rr { top: 22% !important; left: 98% !important; }
+  .ol-eu { top: 84% !important; left: 88% !important; }
 }
 
 /* === END HERO ORBITAL DESIGN === */
