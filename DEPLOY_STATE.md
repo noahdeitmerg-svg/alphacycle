@@ -34,6 +34,13 @@
 - **build_snapshot():** Signatur um `days_since_top` ergänzt, damit der Parameter aus `/api/snapshot` ohne TypeError akzeptiert wird.
 - **Snapshot Dict:** `days_since_top` wird im Snapshot-Dict bereitgestellt (nur bei vorhandenem Value).
 
+## Letzter Session-Status (2026-03-18) — UI/UX Finalization: Signal Summary + HR/Chart/Cycle/Landing
+- **Signal Summary:** Auf „[ZONE] PHASE · ARC [SCORE]“ reduziert; Kontext/Allocation ausgeblendet.
+- **HR Grid:** `hr-current-zone` visuell stärker hervorgehoben und DV/EU mit subtilen linken Border-Akzenten ergänzt.
+- **ARC Chart:** Kleines `currentPriceLabel` Plugin ergänzt (rechte Kante, 8px, niedrig kontrast).
+- **Cycle Overview:** Vorhersage-Elemente (`ca-window`, `ca-confidence`) ausgeblendet + Regime-Kontext-Subtext ergänzt.
+- **Landing:** Action-basierte Now-Teaser/Return-Claim entfernt; jetzt deskriptive Regime-Formulierungen ohne hardcoded Prozent.
+
 ## Letzter Session-Status (2026-03-11) — Trust Layer Phase T-C: Track Record Highlights + Footer Sources Cleanup
 - **Track Record Highlights:** Kompakter Block `.track-highlights` nach gate-content-export, vor DATA SOURCES. Vier hardcodierte Stats: 10/10 Major cycle tops & bottoms, verifizierter Deep-Value-12M-Return (+X%), 8 Jahre ARC-Daten seit Aug 2017, 4 Quellen (Kraken · Alternative.me · DeFiLlama · FRED). Link „VIEW FULL TRACK RECORD →“ ruft showTrackRecord() auf. Kein Blur-Gate, immer sichtbar.
 - **CSS:** .track-highlights-grid 4 Spalten, Border/Track-Style; .track-stat, .track-stat-value, .track-stat-label. @media 600px: 2 Spalten; @media 380px: 1 Spalte, kleinere Padding/Schrift.

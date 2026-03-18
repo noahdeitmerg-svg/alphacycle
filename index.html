@@ -1169,6 +1169,18 @@ body::before {
 .hr-zone.hr-current-zone .hr-zone-badge {
   display: block;
 }
+.hr-zone.hr-current-zone {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: currentColor !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+}
+.hr-dv {
+  border-left: 3px solid rgba(0, 212, 170, 0.4);
+}
+.hr-eu {
+  border-left: 3px solid rgba(255, 59, 59, 0.3);
+}
 .hr-zone-range {
   font-family: var(--f-mono);
   font-size: 18px;
@@ -3296,9 +3308,9 @@ canvas.sparkline {
           <div style="font-size:16px;font-weight:700;color:#f59e0b;font-family:var(--f-mono);margin-top:4px;">→ Peak at $108k, then -45%</div>
         </div>
         <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:16px;text-align:left;">
-          <div style="font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);">NOW — ACCUMULATION</div>
+          <div style="font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);" id="landing-now-label">NOW — ACCUMULATION PHASE</div>
           <div style="font-size:11px;color:var(--tx-sec);font-family:var(--f-mono);margin-top:4px;" id="landing-now-detail">ARC at 33 · BTC $71k</div>
-          <div style="font-size:16px;font-weight:700;color:#00B4D8;font-family:var(--f-mono);margin-top:4px;">Historically +134% avg 12M</div>
+          <div style="font-size:16px;font-weight:700;color:#00B4D8;font-family:var(--f-mono);margin-top:4px;" id="landing-now-return">Historically strong accumulation environment</div>
         </div>
       </div>
     </div>
@@ -3435,7 +3447,7 @@ canvas.sparkline {
         </div>
         <div style="margin-top:12px;padding:10px 12px;background:rgba(0,212,170,0.08);border-radius:6px;">
           <div style="font-size:10px;color:var(--tx-ter);font-family:var(--f-mono);">HISTORICAL AVERAGE FOR THIS ZONE</div>
-          <div style="font-size:18px;font-weight:700;color:#00D4AA;font-family:var(--f-mono);margin-top:4px;">+134% avg 12-month forward return</div>
+          <div style="font-size:16px;font-weight:700;color:#00B4D8;font-family:var(--f-mono);margin-top:4px;" id="landing-now-return">Historically strong accumulation environment</div>
         </div>
       </div>
 
@@ -3968,14 +3980,17 @@ canvas.sparkline {
             <div class="ca-label">Cycle Top</div>
             <div class="ca-value" id="ca-halving-pos">Oct 2025</div>
           </div>
-          <div class="ca-item">
+          <div class="ca-item" style="display:none;">
             <div class="ca-label">Est. Cycle Bottom</div>
             <div class="ca-value" id="ca-window">Oct 2026</div>
           </div>
-          <div class="ca-item">
+          <div class="ca-item" style="display:none;">
             <div class="ca-label">Time Confidence</div>
             <div class="ca-value" id="ca-confidence">—</div>
           </div>
+        </div>
+        <div style="font-family:var(--f-mono);font-size:8px;color:var(--tx-ter);margin-top:10px;letter-spacing:0.04em;">
+          Based on historical cycle structure
         </div>
       </div>
 
@@ -5036,45 +5051,16 @@ function renderSignalSummary() {
 
   var zoneEl = document.getElementById('signal-summary-zone');
   if (zoneEl) {
-    zoneEl.textContent = zoneName.toUpperCase() + ' ZONE · ARC ' + Math.round(score) + '/100';
+    zoneEl.textContent = zoneName.toUpperCase() + ' PHASE · ARC ' + Math.round(score);
     zoneEl.style.color = col || '#fff';
   }
 
   el.style.borderLeftColor = col || 'var(--btc)';
 
   var contextEl = document.getElementById('signal-summary-context');
-  if (contextEl) {
-    var zoneKey = rawScore < 30 ? 'deep_value'
-      : rawScore < 40 ? 'accumulation'
-      : rawScore < 60 ? 'expansion'
-      : rawScore < 70 ? 'risk_rising'
-      : 'euphoria';
-
-    var hr = S.historicalReturns && S.historicalReturns.zones
-      ? S.historicalReturns.zones[zoneKey]
-      : null;
-
-    if (zoneKey === 'risk_rising') {
-      contextEl.textContent = 'Historically unfavorable entry zone, often late-cycle in past cycles.';
-    } else if (zoneKey === 'euphoria') {
-      var dd = hr && hr.avg_drawdown != null ? Math.abs(hr.avg_drawdown) : 40;
-      contextEl.textContent = 'Historically late-cycle zone. Average drawdown from peak after entries: -' + dd + '%.';
-    } else if (hr && hr.avg_12m != null) {
-      var avg = hr.avg_12m;
-      contextEl.textContent = 'Historically, entries in this zone saw an average ' +
-        (avg > 0 ? '+' : '') + avg + '% move over the following 12 months.';
-    } else {
-      contextEl.textContent = 'Historical zone statistics loading…';
-      contextEl.classList.add('loading-text');
-    }
-  }
-  if (contextEl && contextEl.textContent !== 'Historical zone statistics loading…') contextEl.classList.remove('loading-text');
-
-  var liveTag = document.getElementById('signal-summary-live-tag');
-  if (liveTag) {
-    var arcVal = Math.round(score);
-    liveTag.textContent = 'LIVE · ARC ' + arcVal;
-  }
+  if (contextEl) contextEl.style.display = 'none';
+  var allocEl = document.getElementById('signal-summary-allocation');
+  if (allocEl) allocEl.style.display = 'none';
 }
 
 function toggleHeroComponents() {
@@ -7457,6 +7443,46 @@ function renderArcChart(period) {
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
         ctx.setLineDash([4, 4]);
         ctx.stroke();
+        ctx.restore();
+      }
+    }, {
+      id: 'currentPriceLabel',
+      afterDraw: function(chart) {
+        var yPrice = chart.scales && chart.scales.yPrice;
+        var ca = chart.chartArea;
+        if (!yPrice || !ca) return;
+
+        var priceDs = null;
+        (chart.data.datasets || []).forEach(function(ds) {
+          if (ds && ds.label === 'BTC Price') priceDs = ds;
+        });
+        if (!priceDs || !priceDs.data || !priceDs.data.length) return;
+
+        var lastPrice = priceDs.data[priceDs.data.length - 1];
+        if (!lastPrice || lastPrice <= 0) return;
+
+        var py = yPrice.getPixelForValue(lastPrice);
+        if (py < ca.top || py > ca.bottom) return;
+
+        var ctx = chart.ctx;
+        if (!ctx) return;
+        ctx.save();
+
+        ctx.beginPath();
+        ctx.moveTo(ca.right - 8, py);
+        ctx.lineTo(ca.right, py);
+        ctx.strokeStyle = 'rgba(251, 146, 60, 0.5)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        var label = '$' + Math.round(lastPrice).toLocaleString();
+        var monoFont = (getComputedStyle(document.documentElement).getPropertyValue('--f-mono') || 'monospace').trim();
+        ctx.font = '8px ' + monoFont;
+        ctx.fillStyle = 'rgba(251, 146, 60, 0.6)';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(label, ca.right + 4, py);
+
         ctx.restore();
       }
     }],
