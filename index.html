@@ -733,6 +733,90 @@ body::before {
   color: var(--tx-sec);
 }
 
+/* Hero instrument mode: transparent card container, dominant score */
+#btc-card.hero-card {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  backdrop-filter: none !important;
+  padding: 1.5rem 1rem !important;
+}
+#btc-card.hero-card .card-accent {
+  display: none !important;
+}
+#btc-card.hero-card::before {
+  display: none !important;
+}
+#btc-card.hero-card .gauge-center {
+  text-align: center;
+}
+#btc-card.hero-card .gauge-val {
+  font-size: clamp(52px, 10vw, 80px) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.03em !important;
+}
+#btc-card.hero-card .score-phase {
+  font-size: clamp(13px, 2vw, 16px) !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.12em !important;
+  margin-top: 6px !important;
+}
+#btc-card.hero-card .gauge-denom {
+  font-size: 9px !important;
+  color: rgba(255,255,255,0.3) !important;
+}
+#btc-card.hero-card .score-footer {
+  flex-direction: row !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 12px !important;
+  flex-wrap: wrap !important;
+  margin-top: 12px !important;
+  padding-top: 12px !important;
+  border-top: 1px solid rgba(255,255,255,0.04) !important;
+}
+#btc-card.hero-card .score-price {
+  font-size: 10px !important;
+  color: var(--tx-ter) !important;
+  opacity: 0.7 !important;
+}
+#btc-card.hero-card .hero-subscores {
+  display: none !important;
+}
+#btc-card.hero-card .hero-meta-row {
+  display: none !important;
+}
+
+@media (max-width: 700px) {
+  #btc-card.hero-card {
+    padding: 1rem 0.5rem !important;
+    text-align: center !important;
+  }
+  #btc-card.hero-card .gauge-val {
+    font-size: clamp(44px, 14vw, 64px) !important;
+  }
+  #hero-regime-context {
+    font-size: 8px !important;
+    max-width: 260px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+  #btc-card.hero-card .score-footer {
+    flex-direction: column !important;
+    gap: 4px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  #btc-card.hero-card .gauge-val {
+    font-size: clamp(36px, 12vw, 52px) !important;
+  }
+  .hr-zone-return {
+    font-size: 1rem !important;
+  }
+}
+
 #btc-card.hero-card .components-grid {
   grid-area: comps !important;
   display: grid !important;
@@ -1047,6 +1131,26 @@ body::before {
   margin-bottom: 40px;
 }
 
+#gate-decision-engine {
+  margin-top: 48px !important;
+  margin-bottom: 40px !important;
+}
+#decision-card.decision-card {
+  background: rgba(255, 255, 255, 0.01) !important;
+  border: 1px solid rgba(255, 255, 255, 0.03) !important;
+}
+.decision-grid {
+  gap: 0 !important;
+}
+.decision-item {
+  border-right-color: rgba(255, 255, 255, 0.03) !important;
+}
+.decision-note {
+  border-top-color: rgba(255, 255, 255, 0.03) !important;
+  color: var(--tx-ter) !important;
+  opacity: 0.6 !important;
+}
+
 #decision-card.decision-card {
   background: rgba(255, 255, 255, 0.015);
   border: 1px solid rgba(255, 255, 255, 0.04);
@@ -1201,15 +1305,36 @@ body::before {
   font-family: var(--f-mono);
   line-height: 1;
 }
+.hr-zone-return {
+  font-size: 1.2rem !important;
+  font-weight: 700 !important;
+}
 .hr-zone-wr {
   font-family: var(--f-mono);
   font-size: 9px;
   color: var(--tx-sec);
 }
+.hr-zone-wr {
+  font-size: 8px !important;
+  color: var(--tx-ter) !important;
+}
 .hr-zone-count {
   font-family: var(--f-mono);
   font-size: 8px;
   color: var(--tx-ter);
+}
+.hr-zone-count {
+  font-size: 7px !important;
+  color: var(--tx-ter) !important;
+  opacity: 0.6 !important;
+}
+.hr-zone-range {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+}
+.hr-zone-label {
+  font-size: 7px !important;
+  opacity: 0.7 !important;
 }
 /* Phase C: HR zone colors — accent only */
 .hr-dv .hr-zone-range { color: #00D4AA; }
@@ -1258,6 +1383,16 @@ body::before {
 }
 #gate-hero {
   margin-bottom: 32px;
+}
+
+#gate-hero {
+  margin-bottom: 40px !important;
+}
+.module-secondary {
+  margin-bottom: 24px !important;
+}
+.module-tertiary {
+  margin-bottom: 12px !important;
 }
 #gate-hero.blur-gate {
   margin-bottom: 32px;
@@ -3598,6 +3733,7 @@ canvas.sparkline {
           <div class="score-phase" id="btc-phase" style="color:var(--btc);font-family:var(--f-mono);font-size:11px;letter-spacing:0.08em;text-transform:uppercase;margin-top:4px;">
             —
           </div>
+          <div id="hero-regime-context" style="font-family:var(--f-mono);font-size:9px;color:var(--tx-ter);letter-spacing:0.04em;margin-top:6px;max-width:320px;text-align:center;line-height:1.4;"></div>
         </div>
     </div>
     <div class="score-footer">
@@ -5244,8 +5380,26 @@ function updateUI() {
   setText('eth-phase', phaseOf(S.ethScore), eCol);
   setText('mac-phase', phaseOf(S.macScore), mCol);
 
+  // Hero regime context (1-line, dim)
+  var ctxEl = document.getElementById('hero-regime-context');
+  if (ctxEl) {
+    var s = S.arcSummary ? S.arcSummary.arc_score : null;
+    if (s != null) {
+      if (s < 30) ctxEl.textContent = 'Historically the strongest risk/reward environment';
+      else if (s < 40) ctxEl.textContent = 'Markets in this phase have historically delivered strong 12-month returns';
+      else if (s < 60) ctxEl.textContent = 'Mid-cycle transitional environment — balanced risk/reward';
+      else if (s < 70) ctxEl.textContent = 'Late-cycle phase — risk historically outweighs reward';
+      else ctxEl.textContent = 'Peak-cycle environment — historically elevated drawdown risk';
+    }
+  }
+
   // Prices
-  setText('btc-price-sm', btcP>0?`$${fmt(btcP)}`:'—');
+  var priceEl = document.getElementById('btc-price-sm');
+  if (priceEl) {
+    priceEl.textContent = btcP > 0 ? 'BTC/USD · Kraken · $' + Math.round(btcP).toLocaleString() : '—';
+  } else {
+    setText('btc-price-sm', btcP > 0 ? `$${fmt(btcP)}` : '—');
+  }
   setText('eth-price-sm', ethP>0?`$${fmt(ethP)}`:'—');
   setText('mac-walcl',    S.walclCurrent>0?`$${(S.walclCurrent/1e12).toFixed(2)}T WALCL`:'Synthetic');
 
