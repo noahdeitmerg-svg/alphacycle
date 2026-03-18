@@ -1788,6 +1788,58 @@ body::before {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* ════════════════════════════════════════════════════════════════
+   Historical Returns — YOU ARE HERE focus block
+════════════════════════════════════════════════════════════════ */
+.hr-grid {
+  display: none !important;
+}
+.hr-focus {
+  padding: 32px 24px;
+  text-align: center;
+  font-family: var(--f-mono);
+}
+.hr-focus-zone {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  opacity: 0.7;
+  margin-bottom: 8px;
+}
+.hr-focus-return {
+  font-size: 42px;
+  font-weight: 700;
+  line-height: 1.1;
+  margin-bottom: 10px;
+}
+.hr-focus-meta {
+  font-size: 10px;
+  color: var(--tx-ter);
+  opacity: 0.5;
+  letter-spacing: 0.06em;
+}
+.hr-context-line {
+  margin-top: 12px;
+  padding: 10px 24px;
+  font-family: var(--f-mono);
+  font-size: 8px;
+  color: var(--tx-ter);
+  opacity: 0.4;
+  text-align: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  line-height: 1.8;
+}
+
+@media (max-width: 480px) {
+  .hr-focus {
+    padding: 24px 16px;
+  }
+  .hr-focus-return {
+    font-size: 32px;
+  }
+}
 .content-export-card {
   padding: 1.25rem 1.5rem;
 }
@@ -4348,6 +4400,12 @@ canvas.sparkline {
       </div>
       <div class="card hist-returns-card anim">
     <div class="hr-eyebrow">Historical 12-Month Performance by Market Regime — Daily backtest data, 2017–present · Kraken BTC/USD</div>
+    <div class="hr-focus" id="hr-focus-block">
+      <div class="hr-focus-zone" id="hr-focus-zone">—</div>
+      <div class="hr-focus-return" id="hr-focus-return">—</div>
+      <div class="hr-focus-meta" id="hr-focus-meta">—</div>
+    </div>
+    <div class="hr-context-line" id="hr-context-line"></div>
     <div class="hr-grid" id="hr-grid">
       <div class="hr-zone hr-dv" data-hr-zone="dv">
         <span class="hr-zone-badge" aria-hidden="true">YOU ARE HERE</span>
@@ -8656,6 +8714,68 @@ async function fetchSnapshot() {
   }
 }
 
+function updateHRFocus() {
+  var arc = S.arcSummary && S.arcSummary.arc_score != null
+    ? Number(S.arcSummary.arc_score) : 50;
+  var key = arc < 30 ? 'dv' : arc < 40 ? 'ac' : arc < 60 ? 'ex' : arc < 70 ? 'rr' : 'eu';
+  var names = { dv: 'DEEP VALUE', ac: 'ACCUMULATION', ex: 'EXPANSION', rr: 'RISK RISING', eu: 'EUPHORIA' };
+  var ranges = { dv: '0–29', ac: '30–39', ex: '40–59', rr: '60–69', eu: '70–100' };
+  var colors = { dv: '#00D4AA', ac: '#00B4D8', ex: '#58A6FF', rr: '#FF9500', eu: '#FF3B3B' };
+
+  // Read from hidden original elements that fetchHistoricalReturns() populates
+  var retEl = document.getElementById('hr-' + key + '-12m');
+  var wrEl = document.getElementById('hr-' + key + '-wr');
+  var countEl = document.getElementById('hr-' + key + '-count');
+
+  var zoneEl = document.getElementById('hr-focus-zone');
+  var returnEl = document.getElementById('hr-focus-return');
+  var metaEl = document.getElementById('hr-focus-meta');
+
+  if (zoneEl) {
+    zoneEl.textContent = (names[key] || '—') + ' (' + (ranges[key] || '') + ')';
+    zoneEl.style.color = colors[key] || '#fff';
+  }
+
+  if (returnEl) {
+    returnEl.textContent = retEl ? retEl.textContent : '—';
+    returnEl.style.color = colors[key] || '#fff';
+    // Risk zones show warning text instead of a normal number
+    if (key === 'rr' || key === 'eu') {
+      returnEl.style.fontSize = '18px';
+    } else {
+      returnEl.style.fontSize = '';
+    }
+  }
+
+  if (metaEl) {
+    var wrText = wrEl ? wrEl.textContent : '—';
+    var countText = countEl ? countEl.textContent : '—';
+    metaEl.textContent = wrText + ' · ' + countText;
+  }
+}
+
+function updateHRContext() {
+  var el = document.getElementById('hr-context-line');
+  if (!el) return;
+
+  var arc = S.arcSummary && S.arcSummary.arc_score != null
+    ? Number(S.arcSummary.arc_score) : 50;
+  var currentKey = arc < 30 ? 'dv' : arc < 40 ? 'ac' : arc < 60 ? 'ex' : arc < 70 ? 'rr' : 'eu';
+
+  var names = { dv: 'Deep Value', ac: 'Accumulation', ex: 'Expansion', rr: 'Risk Rising', eu: 'Euphoria' };
+  var colors = { dv: '#00D4AA', ac: '#00B4D8', ex: '#58A6FF', rr: '#FF9500', eu: '#FF3B3B' };
+  var keys = ['dv', 'ac', 'ex', 'rr', 'eu'];
+
+  el.innerHTML = '';
+  var parts = [];
+  keys.forEach(function(k) {
+    if (k === currentKey) return;
+    var ret = document.getElementById('hr-' + k + '-12m');
+    parts.push('<span style="color:' + colors[k] + '">' + names[k] + '</span>: ' + (ret ? ret.textContent : '—'));
+  });
+  el.innerHTML = parts.join(' &nbsp;·&nbsp; ');
+}
+
 async function fetchHistoricalReturns() {
   if (!BACKEND_URL) return;
   try {
@@ -8733,6 +8853,9 @@ async function fetchHistoricalReturns() {
       var euC = document.getElementById('hr-eu-count');
       if (euC) euC.textContent = (euZone.entry_count != null ? euZone.entry_count : '—') + ' entries';
     }
+
+    updateHRFocus();
+    updateHRContext();
   } catch (e) {
     console.warn('historical returns error:', e);
   }
@@ -8744,7 +8867,11 @@ function applyHistoricalReturnsCurrentZone() {
     : (S.combined != null ? S.combined : 50);
   arc = Number(arc);
   var key = arc < 30 ? 'dv' : arc < 40 ? 'ac' : arc < 60 ? 'ex' : arc < 70 ? 'rr' : 'eu';
-  if (key === 'rr') return;
+  if (key === 'rr') {
+    updateHRFocus();
+    updateHRContext();
+    return;
+  }
   var colors = { dv: '#00D4AA', ac: '#00B4D8', ex: '#58A6FF', rr: '#FF9500', eu: '#FF3B3B' };
   document.querySelectorAll('.hr-zone').forEach(function(el) {
     el.classList.remove('hr-current-zone');
@@ -8755,6 +8882,9 @@ function applyHistoricalReturnsCurrentZone() {
     el.classList.add('hr-current-zone');
     el.style.borderColor = colors[key];
   }
+
+  updateHRFocus();
+  updateHRContext();
 }
 
 function updateContentPreview() {

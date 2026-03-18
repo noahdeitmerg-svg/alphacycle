@@ -46,6 +46,12 @@
 - **Warum:** Gradient-Ring war zu dunkel/unsichtbar, Labels deckten Score eher ab, ARC RISK lenkte ab, und Glows waren im Vergleich zur Referenz zu schwach.
 - **Status:** ✅ deployed
 
+## Letzter Session-Status (2026-03-18) — refactor: Historical Returns — YOU ARE HERE focus block
+- **Datei(en):** index.html
+- **Was wurde geändert:** Single dominanter `hr-focus` Block (YOU ARE HERE) ergänzt; bestehende `.hr-grid` nur per `display:none !important` ausgeblendet; `updateHRFocus()`/`updateHRContext()` ergänzt und am Ende von `fetchHistoricalReturns()`/`applyHistoricalReturnsCurrentZone()` aufgerufen.
+- **Warum:** Radikaler Fokus auf die aktuelle Zone (eine große Zahl + Kontextzeile), weniger visuelles Rauschen.
+- **Status:** ✅ deployed
+
 ## Letzter Session-Status (2026-03-18) — Rollback: UX Prompts vom 2026-03-17 (Decision/Positioning)
 - **Rollback:** Fehlgeschlagene UX-Iteration von gestern (Positioning Framework / Decision-Layout / Live-Prices-Reihenfolge) zurückgerollt.
 - **Betroffen:** `index.html` (UI), `DEPLOY_STATE.md` (Dokumentation), `.cursor/rules/permanent-fixes.mdc` (nur Doku-Zeile).
