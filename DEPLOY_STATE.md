@@ -48,14 +48,6 @@
 - **HR Grid:** Rückkehrwerte und Supporting-Text visuell verkleinert/dimmed (Return/Wr/Count/Label).
 - **Positioning Framework + Spacing:** Decision-Card visuell beruhigt und Section-Abstände reduziert Konflikte / mehr breathing room.
 
-## Letzter Session-Status (2026-03-18) — Hotfix: Positioning Framework 2-Column + Risk/Reward removal
-- **Layout:** `#decision-card` auf kompakte 2-Spalten-Grid-Struktur umgebaut (Werte links, Kontext rechts) mit Mobile-Stacking.
-- **Redundanz:** Risk/Reward-Interpretation (dec-layer-3 / `#dec-risk-list`) entfernt; `CURRENT REGIME` in der Interpretation durch eine kompakte Eyebrow integriert (bestehende IDs bleiben für JS kompatibel).
-
-## Letzter Session-Status (2026-03-18) — Hotfix: Live Prices nach Historical Returns
-- **DOM:** `gate-live-prices` nach `gate-historical-returns` verschoben (vor `gate-decision-engine`).
-- **CSS:** Preise-Grid kompakt (3 Spalten Desktop) inklusive reduzierte Card-Paddings/Typo.
-
 ## Letzter Session-Status (2026-03-11) — Trust Layer Phase T-C: Track Record Highlights + Footer Sources Cleanup
 - **Track Record Highlights:** Kompakter Block `.track-highlights` nach gate-content-export, vor DATA SOURCES. Vier hardcodierte Stats: 10/10 Major cycle tops & bottoms, verifizierter Deep-Value-12M-Return (+X%), 8 Jahre ARC-Daten seit Aug 2017, 4 Quellen (Kraken · Alternative.me · DeFiLlama · FRED). Link „VIEW FULL TRACK RECORD →“ ruft showTrackRecord() auf. Kein Blur-Gate, immer sichtbar.
 - **CSS:** .track-highlights-grid 4 Spalten, Border/Track-Style; .track-stat, .track-stat-value, .track-stat-label. @media 600px: 2 Spalten; @media 380px: 1 Spalte, kleinere Padding/Schrift.
