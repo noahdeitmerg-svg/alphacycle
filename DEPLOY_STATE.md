@@ -48,6 +48,10 @@
 - **HR Grid:** Rückkehrwerte und Supporting-Text visuell verkleinert/dimmed (Return/Wr/Count/Label).
 - **Positioning Framework + Spacing:** Decision-Card visuell beruhigt und Section-Abstände reduziert Konflikte / mehr breathing room.
 
+## Letzter Session-Status (2026-03-18) — Hotfix: Positioning Framework 2-Column + Risk/Reward removal
+- **Layout:** `#decision-card` auf kompakte 2-Spalten-Grid-Struktur umgebaut (Werte links, Kontext rechts) mit Mobile-Stacking.
+- **Redundanz:** Risk/Reward-Interpretation (dec-layer-3 / `#dec-risk-list`) entfernt; `CURRENT REGIME` in der Interpretation durch eine kompakte Eyebrow integriert (bestehende IDs bleiben für JS kompatibel).
+
 ## Letzter Session-Status (2026-03-18) — Hotfix: Live Prices nach Historical Returns
 - **DOM:** `gate-live-prices` nach `gate-historical-returns` verschoben (vor `gate-decision-engine`).
 - **CSS:** Preise-Grid kompakt (3 Spalten Desktop) inklusive reduzierte Card-Paddings/Typo.
