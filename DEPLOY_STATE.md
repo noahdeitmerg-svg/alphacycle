@@ -10,6 +10,12 @@
 - **Warum:** Safe UX-Polish ohne Risiko fuer Logik/Layouts (CSS-only).
 - **Status:** ✅ deployed
 
+## Letzter Session-Status (2026-03-18) — Style: Hero Refinement V4 (CSS-only)
+- **Datei(en):** index.html
+- **Was wurde geändert:** CSS-Polish fuer Hero (gauge-val groesser, Gauge-SVG leicht gedimmt, Components-Bereich und Factor-Values gedimmt); keine Layout/HTML/JS-Aenderungen.
+- **Warum:** Visuelle Beruhigung (weniger Noise), Score dominiert weiterhin.
+- **Status:** ✅ deployed
+
 ## Letzter Session-Status (2026-03-18) — Rollback: UX Prompts vom 2026-03-17 (Decision/Positioning)
 - **Rollback:** Fehlgeschlagene UX-Iteration von gestern (Positioning Framework / Decision-Layout / Live-Prices-Reihenfolge) zurückgerollt.
 - **Betroffen:** `index.html` (UI), `DEPLOY_STATE.md` (Dokumentation), `.cursor/rules/permanent-fixes.mdc` (nur Doku-Zeile).
