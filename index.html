@@ -3661,50 +3661,6 @@ canvas.sparkline {
 <!-- MAIN -->
 <main class="container">
 
-  <!-- ── PRICES ── -->
-  <div id="gate-live-prices" class="blur-gate">
-    <div class="blur-content">
-      <div class="sec-header anim d3">
-        <div class="sec-title">Live Prices</div>
-        <div class="sec-line"></div>
-      </div>
-      <div class="prices-grid anim d4">
-    <div class="card price-card card-glow-btc">
-      <div class="card-accent accent-btc"></div>
-      <div class="pc-sym"><div class="pc-dot" style="background:var(--btc)"></div>BITCOIN</div>
-      <div class="pc-price" id="pc-btc-price" style="color:var(--btc)">—</div>
-      <div class="pc-change" id="pc-btc-chg">—</div>
-      <canvas class="sparkline" id="spark-btc" height="40"></canvas>
-      <div class="pc-stat">
-        <span class="pc-stat-lbl">24h Vol</span>
-        <span class="pc-stat-val" id="pc-btc-vol">—</span>
-      </div>
-    </div>
-    <div class="card price-card card-glow-eth">
-      <div class="card-accent accent-eth"></div>
-      <div class="pc-sym"><div class="pc-dot" style="background:var(--eth)"></div>ETHEREUM</div>
-      <div class="pc-price" id="pc-eth-price" style="color:var(--eth)">—</div>
-      <div class="pc-change" id="pc-eth-chg">—</div>
-      <canvas class="sparkline" id="spark-eth" height="40"></canvas>
-      <div class="pc-stat">
-        <span class="pc-stat-lbl">ETH/BTC</span>
-        <span class="pc-stat-val" id="pc-ratio">—</span>
-      </div>
-    </div>
-        <div class="card price-card">
-      <div class="pc-sym"><div class="pc-dot" style="background:var(--yellow)"></div>FEAR &amp; GREED</div>
-      <div class="pc-price" id="pc-fg-val" style="color:var(--yellow)">—</div>
-      <div class="pc-change" id="pc-fg-lbl" style="color:var(--tx-sec)">—</div>
-          <canvas class="sparkline" id="spark-fg" height="40"></canvas>
-          <div class="pc-stat">
-            <span class="pc-stat-lbl">Signal</span>
-            <span class="pc-stat-val" id="pc-fg-signal">—</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- SECTION: HERO AlphaCycle Index (FREE gate) -->
   <div id="gate-hero" class="blur-gate">
     <div class="blur-content">
@@ -4000,6 +3956,50 @@ canvas.sparkline {
       <div class="blur-overlay-icon">🔒</div>
       <div class="blur-overlay-title" id="gate-historical-returns-title">🔒 FREE FEATURE</div>
       <button class="blur-overlay-btn" id="gate-historical-returns-btn">CREATE FREE ACCOUNT</button>
+    </div>
+  </div>
+
+  <!-- ── PRICES ── -->
+  <div id="gate-live-prices" class="blur-gate">
+    <div class="blur-content">
+      <div class="sec-header anim d3">
+        <div class="sec-title">Live Prices</div>
+        <div class="sec-line"></div>
+      </div>
+      <div class="prices-grid anim d4">
+        <div class="card price-card card-glow-btc">
+          <div class="card-accent accent-btc"></div>
+          <div class="pc-sym"><div class="pc-dot" style="background:var(--btc)"></div>BITCOIN</div>
+          <div class="pc-price" id="pc-btc-price" style="color:var(--btc)">—</div>
+          <div class="pc-change" id="pc-btc-chg">—</div>
+          <canvas class="sparkline" id="spark-btc" height="40"></canvas>
+          <div class="pc-stat">
+            <span class="pc-stat-lbl">24h Vol</span>
+            <span class="pc-stat-val" id="pc-btc-vol">—</span>
+          </div>
+        </div>
+        <div class="card price-card card-glow-eth">
+          <div class="card-accent accent-eth"></div>
+          <div class="pc-sym"><div class="pc-dot" style="background:var(--eth)"></div>ETHEREUM</div>
+          <div class="pc-price" id="pc-eth-price" style="color:var(--eth)">—</div>
+          <div class="pc-change" id="pc-eth-chg">—</div>
+          <canvas class="sparkline" id="spark-eth" height="40"></canvas>
+          <div class="pc-stat">
+            <span class="pc-stat-lbl">ETH/BTC</span>
+            <span class="pc-stat-val" id="pc-ratio">—</span>
+          </div>
+        </div>
+        <div class="card price-card">
+          <div class="pc-sym"><div class="pc-dot" style="background:var(--yellow)"></div>FEAR &amp; GREED</div>
+          <div class="pc-price" id="pc-fg-val" style="color:var(--yellow)">—</div>
+          <div class="pc-change" id="pc-fg-lbl" style="color:var(--tx-sec)">—</div>
+          <canvas class="sparkline" id="spark-fg" height="40"></canvas>
+          <div class="pc-stat">
+            <span class="pc-stat-lbl">Signal</span>
+            <span class="pc-stat-val" id="pc-fg-signal">—</span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
