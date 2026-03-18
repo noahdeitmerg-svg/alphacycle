@@ -178,3 +178,4 @@ Beim Bearbeiten von backend/fetcher.py, backend/main.py, backend/scoring.py oder
 - index.html: Orbit Hotfix — Labels fuer "outside ring" (ol-* top/left) + `.orbit-ring overflow: visible` sowie Ring/Halo heller (gradient opacity 1, inner ring border/opacity 0.08/0.8).
 - index.html: HERO ORBIT PREMIUM — Ring-/Dot-/Label-Visuals (Ring mask 90/91 dickere Optik, dunkler Innenbereich via `.orbit-inner-ring` radial gradient + `z-index:-1`, ARC RISK im Hero per CSS ausgeblendet, Score-Glow/Context leicht verstärkt).
 - index.html: Orbit Hotfix — Orbit Labels weiter nach außen (ol-* top/left Desktop+Mobile) + `#hero-regime-context` kompakter (max-width 200px, font-size 9px).
+- index.html: Orbit match reference (6 fixes) — `orbit-ring::before` via !important zwangs-sichtbar, `ol-*` Offsets (Desktop+Mobile) auf Referenzwerte, `ARC RISK` im Hero ausgeblendet, `_getCycleDescription()` nach Referenz ersetzt, Dot-/Score-Glow verstärkt.

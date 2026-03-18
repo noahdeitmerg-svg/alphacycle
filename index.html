@@ -1129,6 +1129,7 @@ body::before {
   border-radius: 50%;
   border: none !important;
   background: transparent !important;
+  opacity: 1 !important;
   position: relative;
   display: flex;
   align-items: center;
@@ -1143,23 +1144,23 @@ body::before {
 }
 
 .orbit-ring::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
+  content: '' !important;
+  position: absolute !important;
+  inset: 0 !important;
+  border-radius: 50% !important;
   background: conic-gradient(
     #22c55e 0% 29%,
     #00D4AA 29% 39%,
     #3b82f6 39% 59%,
     #f59e0b 59% 69%,
     #ef4444 69% 100%
-  );
-  -webkit-mask: radial-gradient(circle, transparent 90%, black 91%);
-  mask: radial-gradient(circle, transparent 90%, black 91%);
-  opacity: 1;
-  pointer-events: none;
-  z-index: 0;
-  filter: blur(0.5px);
+  ) !important;
+  -webkit-mask: radial-gradient(circle, transparent 90%, black 91%) !important;
+  mask: radial-gradient(circle, transparent 90%, black 91%) !important;
+  opacity: 1 !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+  filter: blur(0.5px) !important;
 }
 
 .orbit-inner-ring {
@@ -1194,8 +1195,8 @@ body::before {
 
 /* ARC Dot */
 .orbit-dot {
-  width: 14px;
-  height: 14px;
+  width: 14px !important;
+  height: 14px !important;
   border-radius: 50%;
   position: absolute;
   background: var(--btc);
@@ -1203,7 +1204,7 @@ body::before {
   box-shadow:
     0 0 12px currentColor,
     0 0 30px currentColor,
-    0 0 60px currentColor;
+    0 0 60px currentColor !important;
   transform: translate(-50%, -50%);
   transition:
     left 0.8s cubic-bezier(0.22, 1, 0.36, 1),
@@ -1215,12 +1216,12 @@ body::before {
 .orbit-dot::after {
   content: '';
   position: absolute;
-  width: 24px;
-  height: 24px;
+  width: 24px !important;
+  height: 24px !important;
   border-radius: 50%;
   background: currentColor;
-  filter: blur(8px);
-  opacity: 0.35;
+  filter: blur(8px) !important;
+  opacity: 0.4 !important;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
@@ -1258,8 +1259,8 @@ body::before {
   letter-spacing: -0.03em !important;
   line-height: 1 !important;
   text-shadow:
-    0 0 20px rgba(0, 212, 170, 0.25),
-    0 0 60px rgba(0, 212, 170, 0.1);
+    0 0 20px rgba(0, 212, 170, 0.3),
+    0 0 60px rgba(0, 212, 170, 0.15) !important;
   transition: color 0.6s ease;
   z-index: 1;
 }
@@ -1377,11 +1378,11 @@ body::before {
   z-index: 1;
 }
 
-.ol-dv { top: 62%; left: -18%; }
-.ol-ac { top: 15%; left: -12%; }
-.ol-ex { top: -10%; left: 50%; }
-.ol-rr { top: 15%; left: 108%; }
-.ol-eu { top: 62%; left: 112%; }
+.ol-dv { top: 62%; left: -22%; }
+.ol-ac { top: 15%; left: -16%; }
+.ol-ex { top: -12%; left: 50%; }
+.ol-rr { top: 15%; left: 112%; }
+.ol-eu { top: 62%; left: 116%; }
 
 .orbit-label.active {
   opacity: 0.9;
@@ -1389,7 +1390,7 @@ body::before {
 }
 
 /* Hide ARC RISK label above the hero score */
-#btc-card.hero-card .gauge-center > .gauge-denom:first-child {
+#btc-card.hero-card .gauge-center > div:first-child {
   display: none !important;
 }
 
@@ -1415,11 +1416,11 @@ body::before {
     font-size: 7px !important;
     letter-spacing: 0.1em !important;
   }
-  .ol-dv { top: 64% !important; left: -15% !important; }
-  .ol-ac { top: 17% !important; left: -10% !important; }
-  .ol-ex { top: -8% !important; left: 50% !important; }
-  .ol-rr { top: 17% !important; left: 106% !important; }
-  .ol-eu { top: 64% !important; left: 108% !important; }
+  .ol-dv { top: 64% !important; left: -18% !important; }
+  .ol-ac { top: 17% !important; left: -12% !important; }
+  .ol-ex { top: -10% !important; left: 50% !important; }
+  .ol-rr { top: 17% !important; left: 108% !important; }
+  .ol-eu { top: 64% !important; left: 112% !important; }
 }
 
 /* === END HERO ORBITAL DESIGN === */
@@ -5068,11 +5069,11 @@ function phaseDesc(phase) {
 }
 function _getCycleDescription(arc) {
   var a = Number(arc);
-  if (a < 30) return 'Historically strongest accumulation environment';
+  if (a < 30) return 'Maximum asymmetry. Strongest accumulation zone.';
   if (a < 40) return 'Strong historical risk/reward phase';
-  if (a < 60) return 'Balanced expansion environment';
-  if (a < 70) return 'Risk increasing phase';
-  return 'Historically high risk environment';
+  if (a < 60) return 'Balanced mid-cycle environment';
+  if (a < 70) return 'Risk outweighing reward';
+  return 'Peak risk. Severe historical drawdowns.';
 }
 
 function positionOrbitDot(score) {

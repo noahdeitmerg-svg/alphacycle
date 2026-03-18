@@ -40,6 +40,12 @@
 - **Warum:** Labels sollen sichtbar außerhalb des Rings sitzen (kein Überlappen/Verdecken) und Context-Text soll die Hero-Fläche weniger dominieren.
 - **Status:** ✅ deployed
 
+## Letzter Session-Status (2026-03-18) — fix: HERO ORBIT match reference (6 fixes)
+- **Datei(en):** index.html
+- **Was wurde geändert:** `orbit-ring::before` per !important gegen Override/Masking sichtbar gemacht; `ol-*` Offsets (Desktop + Mobile) auf Referenzwerte verschoben; `ARC RISK` im Hero per CSS ausgeblendet; `_getCycleDescription()` exakt nach Referenz-Textstrings ersetzt; Dot-Glow und Score-Glow verstärkt.
+- **Warum:** Gradient-Ring war zu dunkel/unsichtbar, Labels deckten Score eher ab, ARC RISK lenkte ab, und Glows waren im Vergleich zur Referenz zu schwach.
+- **Status:** ✅ deployed
+
 ## Letzter Session-Status (2026-03-18) — Rollback: UX Prompts vom 2026-03-17 (Decision/Positioning)
 - **Rollback:** Fehlgeschlagene UX-Iteration von gestern (Positioning Framework / Decision-Layout / Live-Prices-Reihenfolge) zurückgerollt.
 - **Betroffen:** `index.html` (UI), `DEPLOY_STATE.md` (Dokumentation), `.cursor/rules/permanent-fixes.mdc` (nur Doku-Zeile).
