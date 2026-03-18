@@ -34,6 +34,12 @@
 - **Warum:** Match reference design; bessere Lesbarkeit (Score/Dot) und klarer Orbit-„Instrument“-Look ohne HTML/JS-Änderungen.
 - **Status:** ✅ deployed
 
+## Letzter Session-Status (2026-03-18) — hotfix: Orbit Labels weiter außen + Context kürzer
+- **Datei(en):** index.html
+- **Was wurde geändert:** `.ol-*` Positionen im Hero-Orbit (Desktop + Mobile) weiter nach außen geschoben (overflow: visible bleibt aktiv). `#hero-regime-context` kompakter (max-width 200px, font-size 9px), damit es weniger Platz einnimmt.
+- **Warum:** Labels sollen sichtbar außerhalb des Rings sitzen (kein Überlappen/Verdecken) und Context-Text soll die Hero-Fläche weniger dominieren.
+- **Status:** ✅ deployed
+
 ## Letzter Session-Status (2026-03-18) — Rollback: UX Prompts vom 2026-03-17 (Decision/Positioning)
 - **Rollback:** Fehlgeschlagene UX-Iteration von gestern (Positioning Framework / Decision-Layout / Live-Prices-Reihenfolge) zurückgerollt.
 - **Betroffen:** `index.html` (UI), `DEPLOY_STATE.md` (Dokumentation), `.cursor/rules/permanent-fixes.mdc` (nur Doku-Zeile).
