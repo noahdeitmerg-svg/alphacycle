@@ -176,3 +176,4 @@ Beim Bearbeiten von backend/fetcher.py, backend/main.py, backend/scoring.py oder
 - index.html: allSettled, phaseOf-Grenzen, btcShortTerm/ethComponents/btcScore-Guard, BACKEND_URL Railway.
 - index.html: Hero Orbit Instrument Gradient-Ring ist in `.orbit-ring::before` gerendert (conic-gradient + eigene radial mask), Container bleibt transparent; Inner-Ring/Ticks als DOM (`orbit-inner-ring`/`orbit-ticks`). `positionOrbitDot()` und `highlightOrbitZone()` synchronisieren Dot + aktives Zonenlabel.
 - index.html: Orbit Hotfix — Labels fuer "outside ring" (ol-* top/left) + `.orbit-ring overflow: visible` sowie Ring/Halo heller (gradient opacity 1, inner ring border/opacity 0.08/0.8).
+- index.html: HERO ORBIT PREMIUM — Ring-/Dot-/Label-Visuals (Ring mask 90/91 dickere Optik, dunkler Innenbereich via `.orbit-inner-ring` radial gradient + `z-index:-1`, ARC RISK im Hero per CSS ausgeblendet, Score-Glow/Context leicht verstärkt).

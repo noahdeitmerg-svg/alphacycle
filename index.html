@@ -1134,7 +1134,10 @@ body::before {
   align-items: center;
   justify-content: center;
   margin-bottom: 0px;
-  box-shadow: 0 0 60px rgba(0, 212, 170, 0.06);
+  box-shadow:
+    0 0 40px rgba(0, 212, 170, 0.12),
+    0 0 80px rgba(0, 212, 170, 0.06),
+    inset 0 0 40px rgba(0, 0, 0, 0.4);
   z-index: 0;
   overflow: visible !important;
 }
@@ -1151,21 +1154,27 @@ body::before {
     #f59e0b 59% 69%,
     #ef4444 69% 100%
   );
-  -webkit-mask: radial-gradient(circle, transparent 93%, black 94.5%);
-  mask: radial-gradient(circle, transparent 93%, black 94.5%);
-  opacity: 1 !important;
+  -webkit-mask: radial-gradient(circle, transparent 90%, black 91%);
+  mask: radial-gradient(circle, transparent 90%, black 91%);
+  opacity: 1;
   pointer-events: none;
   z-index: 0;
+  filter: blur(0.5px);
 }
 
 .orbit-inner-ring {
+  content: '';
   position: absolute;
-  inset: 8px;
+  inset: 12px;
   border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  opacity: 0.8;
+  background: radial-gradient(circle,
+    rgba(10, 18, 40, 0.9) 0%,
+    rgba(10, 18, 40, 0.7) 70%,
+    transparent 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.06);
   pointer-events: none;
-  z-index: 0;
+  z-index: -1;
 }
 
 .orbit-ticks {
@@ -1185,15 +1194,16 @@ body::before {
 
 /* ARC Dot */
 .orbit-dot {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
   position: absolute;
   background: var(--btc);
   color: var(--btc);
   box-shadow:
-    0 0 18px currentColor,
-    0 0 40px currentColor;
+    0 0 12px currentColor,
+    0 0 30px currentColor,
+    0 0 60px currentColor;
   transform: translate(-50%, -50%);
   transition:
     left 0.8s cubic-bezier(0.22, 1, 0.36, 1),
@@ -1205,12 +1215,12 @@ body::before {
 .orbit-dot::after {
   content: '';
   position: absolute;
-  width: 18px;
-  height: 18px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   background: currentColor;
-  filter: blur(6px);
-  opacity: 0.25;
+  filter: blur(8px);
+  opacity: 0.35;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
@@ -1247,7 +1257,9 @@ body::before {
   font-weight: 700 !important;
   letter-spacing: -0.03em !important;
   line-height: 1 !important;
-  text-shadow: 0 0 18px rgba(0, 212, 170, 0.15);
+  text-shadow:
+    0 0 20px rgba(0, 212, 170, 0.25),
+    0 0 60px rgba(0, 212, 170, 0.1);
   transition: color 0.6s ease;
   z-index: 1;
 }
@@ -1269,15 +1281,15 @@ body::before {
 
 /* Context */
 #hero-regime-context {
-  font-size: 10px !important;
+  font-size: 11px !important;
   color: var(--tx-ter) !important;
   margin-top: 10px !important;
-  max-width: 260px !important;
+  max-width: 300px !important;
   margin-left: auto !important;
   margin-right: auto !important;
   text-align: center !important;
   line-height: 1.5 !important;
-  opacity: 0.6 !important;
+  opacity: 0.5 !important;
 }
 
 /* Header — hide (score-phase shows zone) */
@@ -1352,29 +1364,33 @@ body::before {
 .orbit-label {
   position: absolute;
   font-family: var(--f-mono);
-  font-size: 7px;
-  letter-spacing: 0.14em;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  opacity: 0.25;
+  opacity: 0.35;
   white-space: nowrap;
   transform: translate(-50%, -50%);
-  font-weight: 500;
   color: var(--tx-ter);
   pointer-events: none;
   transition: opacity 0.4s ease, text-shadow 0.4s ease;
   z-index: 1;
 }
 
-.ol-dv { top: 70%; left: 18%; }
-.ol-ac { top: 25%; left: 5%; }
-.ol-ex { top: 5%; left: 50%; }
-.ol-rr { top: 25%; left: 95%; }
-.ol-eu { top: 82%; left: 85%; }
-.ol-dv { top: 82%; left: 15%; }
+.ol-dv { top: 58%; left: -8%; }
+.ol-ac { top: 18%; left: 0%; }
+.ol-ex { top: -5%; left: 50%; }
+.ol-rr { top: 18%; left: 95%; }
+.ol-eu { top: 58%; left: 105%; }
 
 .orbit-label.active {
-  opacity: 0.7;
-  text-shadow: 0 0 8px currentColor;
+  opacity: 0.9;
+  text-shadow: 0 0 12px currentColor, 0 0 24px currentColor;
+}
+
+/* Hide ARC RISK label above the hero score */
+#btc-card.hero-card .gauge-center > .gauge-denom:first-child {
+  display: none !important;
 }
 
 /* Mobile */
@@ -1396,14 +1412,14 @@ body::before {
     gap: 12px !important;
   }
   .orbit-label {
-    font-size: 6px !important;
+    font-size: 7px !important;
     letter-spacing: 0.1em !important;
   }
-  .ol-dv { top: 84% !important; left: 12% !important; }
-  .ol-ac { top: 22% !important; left: 2% !important; }
-  .ol-ex { top: 2% !important; left: 50% !important; }
-  .ol-rr { top: 22% !important; left: 98% !important; }
-  .ol-eu { top: 84% !important; left: 88% !important; }
+  .ol-dv { top: 60% !important; left: -5% !important; }
+  .ol-ac { top: 20% !important; left: 2% !important; }
+  .ol-ex { top: -3% !important; left: 50% !important; }
+  .ol-rr { top: 20% !important; left: 96% !important; }
+  .ol-eu { top: 60% !important; left: 102% !important; }
 }
 
 /* === END HERO ORBITAL DESIGN === */

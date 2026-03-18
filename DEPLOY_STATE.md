@@ -28,6 +28,12 @@
 - **Warum:** Orbit war optisch zu dunkel bzw. Labels ueberschneiden den Score; jetzt klare Sichtbarkeit und Instrument-Lesbarkeit.
 - **Status:** ✅ deployed
 
+## Letzter Session-Status (2026-03-18) — HERO ORBIT PREMIUM — Match reference design (CSS only)
+- **Datei(en):** index.html
+- **Was wurde geändert:** Orbit Premium Visuals im Hero: Ring-Dicke/Mask (90/91), kompletter Ring-Glow-Aura, dunkler Innenbereich hinter Score via `.orbit-inner-ring` radial gradient + `z-index: -1`, Dot (14px) + stärkerer Glow/Trail, Orbit-Labels größer (9px) und außerhalb positioniert, `.orbit-label.active` stärkerer Glow, `ARC RISK` im Hero per CSS ausgeblendet (first `.gauge-denom` in `.gauge-center`), Score-Glow und `#hero-regime-context` feinjustiert, Mobile Label-Offsets entsprechend angepasst.
+- **Warum:** Match reference design; bessere Lesbarkeit (Score/Dot) und klarer Orbit-„Instrument“-Look ohne HTML/JS-Änderungen.
+- **Status:** ✅ deployed
+
 ## Letzter Session-Status (2026-03-18) — Rollback: UX Prompts vom 2026-03-17 (Decision/Positioning)
 - **Rollback:** Fehlgeschlagene UX-Iteration von gestern (Positioning Framework / Decision-Layout / Live-Prices-Reihenfolge) zurückgerollt.
 - **Betroffen:** `index.html` (UI), `DEPLOY_STATE.md` (Dokumentation), `.cursor/rules/permanent-fixes.mdc` (nur Doku-Zeile).
