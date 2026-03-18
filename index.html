@@ -3347,7 +3347,7 @@ canvas.sparkline {
           <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:#00D4AA;color:#0d1117;font-size:8px;font-weight:700;font-family:var(--f-mono);padding:3px 10px;border-radius:4px;letter-spacing:0.1em;">7 DAYS FREE</div>
           <div style="font-size:10px;color:#00D4AA;font-family:var(--f-mono);letter-spacing:0.1em;margin-bottom:8px;">PRO</div>
           <div style="font-size:28px;font-weight:700;color:var(--tx-pri);font-family:var(--f-mono);">$49<span style="font-size:14px;color:var(--tx-ter);">/mo</span></div>
-          <div style="font-size:10px;color:var(--tx-ter);font-family:var(--f-mono);margin-top:8px;line-height:1.6;">Everything in Free +<br>Decision Engine<br>Cycle Analysis<br>ARC History<br>Zone History<br>Email Alerts</div>
+          <div style="font-size:10px;color:var(--tx-ter);font-family:var(--f-mono);margin-top:8px;line-height:1.6;">Everything in Free +<br>Positioning Framework<br>Cycle Analysis<br>ARC History<br>Zone History<br>Email Alerts</div>
           <button onclick="openAuthModal('signup')" style="margin-top:16px;padding:10px 20px;background:#00D4AA;color:#0d1117;border:none;border-radius:6px;font-family:var(--f-mono);font-size:11px;font-weight:700;cursor:pointer;">START FREE TRIAL</button>
         </div>
       </div>
@@ -3649,7 +3649,7 @@ canvas.sparkline {
         <div class="factor-label">LIQUIDITY</div>
         <div id="gauge-liq" style="display:flex;justify-content:center;margin:4px 0;"></div>
         <div id="val-liq" class="factor-value">—</div>
-        <div class="factor-source">FRED (Fed Net Liquidity)</div>
+      <div class="factor-source">FRED (Fed Net Liquidity · weekly)</div>
       </div>
     </div>
     </div>
@@ -3776,7 +3776,7 @@ canvas.sparkline {
         <div class="sec-line"></div>
       </div>
       <div class="card hist-returns-card anim">
-    <div class="hr-eyebrow">Avg. 12-Month Forward Returns by ARC Zone — Based on Backtest Data (2017–Present) · Kraken BTC/USD</div>
+    <div class="hr-eyebrow">Historical 12-Month Performance by Market Regime — Daily backtest data, 2017–present · Kraken BTC/USD</div>
     <div class="hr-grid" id="hr-grid">
       <div class="hr-zone hr-dv" data-hr-zone="dv">
         <span class="hr-zone-badge" aria-hidden="true">YOU ARE HERE</span>
@@ -3808,7 +3808,7 @@ canvas.sparkline {
       <div class="hr-zone hr-rr" data-hr-zone="rr" style="opacity:0.5;">
         <div class="hr-zone-range" style="color:#FF9500">60–69</div>
         <div class="hr-zone-label">RISK RISING</div>
-        <div class="hr-zone-return" id="hr-rr-12m" style="color:#FF9500;font-size:1rem;">⚠️ NO ENTRY ZONE</div>
+        <div class="hr-zone-return" id="hr-rr-12m" style="color:#FF9500;font-size:1rem;">⚠️ ELEVATED RISK</div>
         <div class="hr-zone-wr" id="hr-rr-wr" style="font-size:10px;color:rgba(255,255,255,0.4);">Historically unfavorable entry point</div>
         <div class="hr-zone-count" id="hr-rr-count" style="color:rgba(255,255,255,0.3);">— entries</div>
       </div>
@@ -3839,7 +3839,7 @@ canvas.sparkline {
     <div class="blur-content">
       <div class="sec-header anim d2">
         <div class="sec-title">
-          Decision Engine
+          Positioning Framework
           <span id="dec-live-tag" style="font-size:8px;letter-spacing:0.08em;padding:2px 8px;border-radius:4px;background:rgba(0,212,170,0.12);color:#00D4AA;margin-left:8px;vertical-align:middle;">LIVE · ARC —</span>
         </div>
         <div class="sec-line"></div>
@@ -3848,24 +3848,24 @@ canvas.sparkline {
         <div class="card-accent accent-btc"></div>
         <div class="decision-grid">
           <div class="decision-item">
-            <div class="decision-label">Suggested Position</div>
+        <div class="decision-label">Regime Positioning</div>
             <div class="decision-value" id="dec-position">—</div>
             <div class="decision-value decision-value-sub" id="dec-bottom-formation" style="display:none;font-size:0.85em;margin-top:4px;color:#00B4D8"></div>
           </div>
           <div class="decision-item">
-            <div class="decision-label">Spot Allocation</div>
+        <div class="decision-label">Historical Allocation Range</div>
             <div class="decision-value" id="dec-allocation">—</div>
           </div>
           <div class="decision-item">
-            <div class="decision-label">12M Expected Range</div>
+        <div class="decision-label">Historical 12M Range</div>
             <div class="decision-value" id="dec-range">—</div>
             <div class="decision-value decision-value-sub" id="dec-range-worst" style="display:none;font-size:0.85em;color:#6b7280;margin-top:2px"></div>
           </div>
           <div class="decision-item">
-            <div class="decision-label">Confidence</div>
+        <div class="decision-label">Regime Clarity</div>
             <div class="decision-value" id="dec-confidence">—</div>
           </div>
-          <div class="decision-note">ARC RISK LEVEL <span id="dec-index-val" style="color:var(--btc);font-weight:600">—</span> / 100</div>
+          <div class="decision-note">CURRENT REGIME <span id="dec-index-val" style="color:var(--btc);font-weight:600">—</span> / 100</div>
 
           <div id="dec-interpretation" style="display:none;">
             <div class="dec-layer dec-layer-1">
@@ -3920,7 +3920,7 @@ canvas.sparkline {
 
           <!-- Links: Phase -->
       <div class="cycle-phase-side">
-        <div class="ca-label">ARC RISK LEVEL</div>
+        <div class="ca-label">CURRENT REGIME</div>
         <div class="phase-name" id="phase-name">—</div>
         <div class="cp-phase-row">
           <div class="cp-phase-item">
@@ -4140,7 +4140,7 @@ canvas.sparkline {
             <thead>
               <tr>
                 <th>Zone</th>
-                <th>Signal</th>
+                <th>Regime</th>
                 <th>From</th>
                 <th>To</th>
                 <th>Weeks</th>
@@ -4191,13 +4191,13 @@ canvas.sparkline {
     </div>
     <div class="track-highlights-grid">
       <div class="track-stat">
-        <div class="track-stat-value">10 / 10</div>
-        <div class="track-stat-label">Major cycle tops &amp; bottoms identified</div>
+        <div class="track-stat-value">—</div>
+        <div class="track-stat-label">Major cycle transitions since 2017 correctly classified</div>
       </div>
       <div class="track-stat">
         <!-- Value from /api/historical-returns accumulation.avg_12m, verified 2026-03-17, n=4 confirmed periods, 100% win rate -->
         <div class="track-stat-value" id="track-dv-return">+151%</div>
-        <div class="track-stat-label">Avg 12M return from Accumulation entries</div>
+        <div class="track-stat-label">Avg 12M return in Accumulation phase</div>
       </div>
       <div class="track-stat">
         <div class="track-stat-value">8 years</div>
@@ -4282,7 +4282,7 @@ canvas.sparkline {
     </p>
     <p id="auth-modal-subtitle"
        style="color:#6b7280; font-size:13px; margin-bottom:24px;">
-      See Decision Engine, Near-Term Outlook, Zone History and more.
+      See Positioning Framework, Near-Term Outlook, Zone History and more.
     </p>
 
     <input id="auth-email" type="email" placeholder="you@example.com"
@@ -5421,13 +5421,13 @@ function updateUI() {
       confidence = arcSum.confidence_label ?? 'Moderate';
       var exp = arcSum.expected_range;
       if (exp && exp.type === 'reduce') {
-        range = '\u26A0 REDUCE \u2014 DO NOT BUY';
+        range = '\u26A0 ELEVATED RISK';
         if (rangeEl) { rangeEl.textContent = range; rangeEl.style.color = '#f97316'; }
         if (rangeWorstEl) { rangeWorstEl.style.display = 'none'; rangeWorstEl.textContent = ''; }
       } else if (exp && exp.type === 'drawdown') {
         var avgDd = exp.avg_drawdown;
         var maxDd = exp.max_drawdown;
-        range = (avgDd != null ? 'AVG -' + Math.abs(avgDd) + '% FROM PEAK' : 'HIGH RISK — SELL / REDUCE');
+        range = (avgDd != null ? 'AVG -' + Math.abs(avgDd) + '% FROM PEAK' : 'HIGH RISK — ELEVATED RISK');
         if (rangeEl) { rangeEl.textContent = (avgDd != null ? '\u2193 AVG -' + Math.abs(avgDd) + '% FROM PEAK' : range); rangeEl.style.color = '#ef4444'; }
         if (rangeWorstEl) {
           if (maxDd != null) { rangeWorstEl.textContent = 'Worst case: -' + Math.abs(maxDd) + '%'; rangeWorstEl.style.display = 'block'; rangeWorstEl.style.color = '#6b7280'; }
@@ -5440,16 +5440,16 @@ function updateUI() {
       }
     } else {
       if (score < 25) {
-        position = 'ACCUMULATE'; allocation = '80–100%';
+        position = 'ACCUMULATION PHASE'; allocation = '80–100%';
         range = '+150% – +400%'; confidence = 'High';
       } else if (score < 45) {
-        position = 'BUY'; allocation = '60–80%';
+        position = 'EARLY CYCLE'; allocation = '60–80%';
         range = '+50% – +150%'; confidence = 'Moderate-High';
       } else if (score < 60) {
         position = 'HOLD'; allocation = '40–60%';
         range = '+10% – +50%'; confidence = 'Moderate';
       } else if (score < 75) {
-        position = 'REDUCE'; allocation = '20–40%';
+        position = 'ELEVATED RISK'; allocation = '20–40%';
         range = '-10% – +20%'; confidence = 'Low-Moderate';
       } else {
         position = 'DEFENSIVE'; allocation = '0–20%';
@@ -5459,8 +5459,19 @@ function updateUI() {
       if (rangeWorstEl) { rangeWorstEl.style.display = 'none'; rangeWorstEl.textContent = ''; }
     }
     if (S.decisionOverride) position = S.decisionOverride;
+
+    var positionDisplay = {
+      'BUY': 'EARLY CYCLE',
+      'ACCUMULATE': 'ACCUMULATION PHASE',
+      'HOLD': 'MID CYCLE',
+      'REDUCE': 'ELEVATED RISK',
+      'SELL': 'EXTREME RISK',
+      'DEFENSIVE': 'EXTREME RISK',
+      'WAIT \u2014 Bear Market': 'BEAR PHASE'
+    }[position] || position;
+
     const col = scoreColor(score);
-    setText('dec-position',   position, col);
+    setText('dec-position', positionDisplay, col);
     var decPosEl = document.getElementById('dec-position');
     if (decPosEl) {
       var pg = getPhaseGroup();
@@ -5607,7 +5618,7 @@ function updateUI() {
     $('pc-fg-val').textContent = S.fgCurrent;
     $('pc-fg-val').style.color = scoreColor(S.fgCurrent);
     $('pc-fg-lbl').textContent = S.fgLabel;
-    $('pc-fg-signal').textContent = S.fgCurrent<30?'BUY Zone':S.fgCurrent>75?'SELL Zone':'Neutral';
+    $('pc-fg-signal').textContent = S.fgCurrent<30?'DEEP VALUE PHASE':S.fgCurrent>75?'EXTREME RISK':'NEUTRAL CONDITIONS';
   }
 
   // Stable card (null-checks: card was removed from DOM)
@@ -5784,29 +5795,29 @@ function renderZoneHistory() {
     var dir = p.direction || '';
 
     if (zone.indexOf('deep value') !== -1) {
-      dirTd.textContent = '\u2191 BUY ZONE';
+      dirTd.textContent = '\u2191 DEEP VALUE PHASE';
       dirTd.style.color = '#22c55e';
     } else if (zone.indexOf('accumulation') !== -1) {
       if (dir === 'up') {
-        dirTd.textContent = '\u2191 BUY ZONE';
+        dirTd.textContent = '\u2191 ACCUMULATION PHASE';
         dirTd.style.color = '#22c55e';
       } else {
-        dirTd.textContent = '\u2193 BUY ZONE';
+        dirTd.textContent = '\u2193 ACCUMULATION PHASE';
         dirTd.style.color = '#00B4D8';
       }
     } else if (zone.indexOf('expansion') !== -1) {
       if (dir === 'up') {
-        dirTd.textContent = '\u2191 Uptrend';
+        dirTd.textContent = '\u2191 MID CYCLE';
         dirTd.style.color = 'rgba(255,255,255,0.5)';
       } else {
-        dirTd.textContent = '\u2193 Downtrend';
+        dirTd.textContent = '\u2193 MID CYCLE';
         dirTd.style.color = 'rgba(255,255,255,0.4)';
       }
     } else if (zone.indexOf('risk rising') !== -1) {
-      dirTd.textContent = '\u26A0 NO ENTRY';
+      dirTd.textContent = '\u26A0 ELEVATED RISK';
       dirTd.style.color = '#FF9500';
     } else if (zone.indexOf('euphoria') !== -1) {
-      dirTd.textContent = '\u26A0 SELL / REDUCE';
+      dirTd.textContent = '\u26A0 EXTREME RISK';
       dirTd.style.color = '#FF3B3B';
     } else {
       dirTd.textContent = '\u2014';
@@ -5867,7 +5878,7 @@ function getTourSteps() {
     {
       id: 'decision',
       selector: '#decision-card',
-      title: 'Decision Engine',
+      title: 'Positioning Framework',
       text: 'Translates the ARC score into actionable position sizing. Not financial advice — a structured framework for thinking about allocation.'
     },
     {
@@ -6141,7 +6152,7 @@ function switchTab(mode) {
   if (!title || !sub || !btn || !tabSignup || !tabLogin) return;
   title.textContent = isSignup ? 'Get Free Access' : 'Welcome Back';
   sub.textContent = isSignup
-    ? 'See Decision Engine, Near-Term Outlook and more.'
+    ? 'See Positioning Framework, Near-Term Outlook and more.'
     : 'Log in to your AlphaCycle account.';
   btn.textContent = isSignup ? 'CREATE FREE ACCOUNT' : 'LOG IN';
   tabSignup.style.background = isSignup ? '#00D4AA' : 'transparent';
@@ -6328,8 +6339,8 @@ function applyBlurGates() {
     },
     'gate-decision-engine': {
       tier: 'paid',
-      title: 'Decision Engine',
-      desc: 'Suggested position, spot allocation, 12M expected range and confidence level.'
+      title: 'Positioning Framework',
+      desc: 'Classified regime, historical allocation range, historical 12M range and clarity level.'
     },
     'gate-zone-history': {
       tier: 'paid',
@@ -8007,13 +8018,13 @@ async function fetchHistoricalReturns() {
     setZone('risk_rising', 'rr');
     var rrRet = document.getElementById('hr-rr-12m');
     if (rrRet) {
-      rrRet.textContent = '\u26A0\uFE0F NO ENTRY ZONE';
+      rrRet.textContent = '\u26A0\uFE0F ELEVATED RISK';
       rrRet.style.color = '#FF9500';
       rrRet.style.fontSize = '1rem';
     }
     var rrWr = document.getElementById('hr-rr-wr');
     if (rrWr) {
-      rrWr.textContent = 'Historically unfavorable entry point';
+      rrWr.textContent = 'Historically elevated drawdown risk';
       rrWr.style.color = 'rgba(255,255,255,0.4)';
     }
     setZone('euphoria', 'eu');
@@ -8035,7 +8046,7 @@ async function fetchHistoricalReturns() {
         if (euZone.display_mode === 'drawdown' && euZone.avg_drawdown != null) {
           euRet.textContent = '\u2193 AVG -' + Math.abs(euZone.avg_drawdown) + '% FROM PEAK';
         } else {
-          euRet.textContent = euZone.avg_12m != null ? (euZone.avg_12m > 0 ? '+' : '') + euZone.avg_12m + '%' : 'SELL / REDUCE';
+          euRet.textContent = euZone.avg_12m != null ? (euZone.avg_12m > 0 ? '+' : '') + euZone.avg_12m + '%' : 'EXTREME RISK';
         }
         euRet.style.color = '#FF3B3B';
         euRet.style.fontSize = '0.9rem';
