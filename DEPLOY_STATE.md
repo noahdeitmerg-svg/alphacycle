@@ -16,6 +16,12 @@
 - **Warum:** Visuelle Beruhigung (weniger Noise), Score dominiert weiterhin.
 - **Status:** ✅ deployed
 
+## Letzter Session-Status (2026-03-18) — Hero Orbital Instrument (re-implementation; ::before mask fix)
+- **Datei(en):** index.html
+- **Was wurde geändert:** Orbit-Ring um `gauge-wrap` wieder integriert (`orbit-ring`/`orbit-dot` + `orbit-inner-ring`/`orbit-ticks` + 5 Orbit-Zonenlabels). Gradient-Ring rendert über `.orbit-ring::before` mit eigener Mask (Container bleibt transparent), Dot-Position via `positionOrbitDot()` und Zone-Highlight via `highlightOrbitZone()`. Resize-Sync + PNG-Export Safety (temporär `btc-card` Hintergrund `#0a1228`).
+- **Warum:** Orbit ist wieder sichtbar und Overlay/Mask blendet Score/Dot nicht aus.
+- **Status:** ✅ deployed
+
 ## Letzter Session-Status (2026-03-18) — Rollback: UX Prompts vom 2026-03-17 (Decision/Positioning)
 - **Rollback:** Fehlgeschlagene UX-Iteration von gestern (Positioning Framework / Decision-Layout / Live-Prices-Reihenfolge) zurückgerollt.
 - **Betroffen:** `index.html` (UI), `DEPLOY_STATE.md` (Dokumentation), `.cursor/rules/permanent-fixes.mdc` (nur Doku-Zeile).
