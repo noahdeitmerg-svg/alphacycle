@@ -1016,6 +1016,82 @@ body::before {
   color: var(--tx-sec);
 }
 
+/* === HERO REFINEMENT V2 === */
+
+#btc-card.hero-card {
+  background: rgba(255,255,255,0.025) !important;
+  border: 1px solid rgba(255,255,255,0.06) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.45) !important;
+  padding: 2rem 1.6rem !important;
+  position: relative;
+}
+
+#btc-card.hero-card .gauge-val {
+  font-size: clamp(58px, 9vw, 76px) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.025em !important;
+  line-height: 1 !important;
+}
+
+#btc-card.hero-card .score-phase {
+  margin-top: 6px !important;
+  font-size: 14px !important;
+  letter-spacing: 0.12em !important;
+}
+
+#hero-regime-context {
+  font-size: 10px !important;
+  opacity: 0.8 !important;
+  margin-top: 8px !important;
+  line-height: 1.4 !important;
+  max-width: 340px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+#btc-card.hero-card .score-price {
+  font-size: 10px !important;
+  opacity: 0.65 !important;
+  margin-top: 12px !important;
+  letter-spacing: 0.04em !important;
+}
+
+#btc-card.hero-card .hero-subscores {
+  margin-top: 14px !important;
+  opacity: 0.55 !important;
+  font-size: 10px !important;
+}
+
+#btc-card.hero-card [onclick="toggleHeroComponents()"],
+#btc-card.hero-card .hero-components-toggle {
+  margin-top: 14px !important;
+  font-size: 9px !important;
+  opacity: 0.5 !important;
+}
+
+#btc-card.hero-card .gauge-center {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 4px !important;
+}
+
+#btc-card.hero-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 50% 30%,
+    rgba(255,255,255,0.04),
+    transparent 60%
+  );
+}
+
+/* === END HERO REFINEMENT V2 === */
+
 .decision-card {
   padding: 0;
   overflow: hidden;
