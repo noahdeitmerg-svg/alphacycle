@@ -4921,10 +4921,10 @@ function buildGaugeSVG(value, color) {
 
 function getGaugeColor(value) {
   const v = Number(value) || 0;
-  if (v <= 29) return '#00D4AA';
-  if (v <= 39) return '#00B4D8';
-  if (v <= 59) return '#58A6FF';
-  if (v <= 69) return '#FF9500';
+  if (v < 30) return '#00D4AA';
+  if (v < 40) return '#00B4D8';
+  if (v < 60) return '#58A6FF';
+  if (v < 70) return '#FF9500';
   return '#FF3B3B';
 }
 
@@ -5044,10 +5044,10 @@ function renderSignalSummary() {
 
   var contextEl = document.getElementById('signal-summary-context');
   if (contextEl) {
-    var zoneKey = rawScore <= 29 ? 'deep_value'
-      : rawScore <= 39 ? 'accumulation'
-      : rawScore <= 59 ? 'expansion'
-      : rawScore <= 69 ? 'risk_rising'
+    var zoneKey = rawScore < 30 ? 'deep_value'
+      : rawScore < 40 ? 'accumulation'
+      : rawScore < 60 ? 'expansion'
+      : rawScore < 70 ? 'risk_rising'
       : 'euphoria';
 
     var hr = S.historicalReturns && S.historicalReturns.zones
@@ -8073,7 +8073,7 @@ function applyHistoricalReturnsCurrentZone() {
     ? S.arcSummary.arc_score
     : (S.combined != null ? S.combined : 50);
   arc = Number(arc);
-  var key = arc <= 29 ? 'dv' : arc <= 39 ? 'ac' : arc <= 59 ? 'ex' : arc <= 69 ? 'rr' : 'eu';
+  var key = arc < 30 ? 'dv' : arc < 40 ? 'ac' : arc < 60 ? 'ex' : arc < 70 ? 'rr' : 'eu';
   if (key === 'rr') return;
   var colors = { dv: '#00D4AA', ac: '#00B4D8', ex: '#58A6FF', rr: '#FF9500', eu: '#FF3B3B' };
   document.querySelectorAll('.hr-zone').forEach(function(el) {
@@ -8099,10 +8099,10 @@ function formatPrice(n) {
 
 function getZoneLabelByArc(arc) {
   var s = Number(arc);
-  if (s <= 29) return 'Deep Value';
-  if (s <= 39) return 'Accumulation';
-  if (s <= 59) return 'Expansion';
-  if (s <= 69) return 'Risk Rising';
+  if (s < 30) return 'Deep Value';
+  if (s < 40) return 'Accumulation';
+  if (s < 60) return 'Expansion';
+  if (s < 70) return 'Risk Rising';
   return 'Euphoria';
 }
 
