@@ -85,9 +85,9 @@ const LOGO_DATA_URL = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAA
 
   /* Visual hierarchy spacing */
   --space-section-primary: 32px;
-  --space-section-secondary: 24px;
-  --space-section-tertiary: 14px;
-  --space-group-break: 40px;
+  --space-section-secondary: 32px;
+  --space-section-tertiary: 18px;
+  --space-group-break: 56px;
 }
 
 /* ── Reset ── */
@@ -566,6 +566,63 @@ body::before {
     gap: 0 !important;
     padding-bottom: 4px;
   }
+  /* Prompt 2 HR: dominant + secondary layout (cards removed) */
+  .hr-dominant {
+    text-align: center;
+    padding: 24px 20px;
+    flex: 0 0 100%;
+  }
+  .hr-dominant-label {
+    font-family: var(--f-mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .hr-dominant-range {
+    font-family: var(--f-mono);
+    font-size: 9px;
+    color: var(--tx-ter);
+    letter-spacing: 0.1em;
+    margin-bottom: 12px;
+  }
+  .hr-dominant-return {
+    font-family: var(--f-mono);
+    font-size: clamp(32px, 6vw, 48px);
+    font-weight: 700;
+    line-height: 1.1;
+    margin-bottom: 8px;
+  }
+  .hr-dominant-meta {
+    font-family: var(--f-mono);
+    font-size: 9px;
+    color: var(--tx-ter);
+    letter-spacing: 0.06em;
+  }
+  .hr-secondary {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    padding: 12px 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+    font-family: var(--f-mono);
+    font-size: 8px;
+    color: var(--tx-ter);
+    opacity: 0.5;
+    flex-wrap: wrap;
+    flex: 0 0 100%;
+  }
+  .hr-secondary-item {
+    white-space: nowrap;
+  }
+  .hr-secondary-item .hr-sec-label {
+    color: var(--tx-ter);
+  }
+  .hr-secondary-item .hr-sec-return {
+    font-weight: 600;
+    margin-left: 4px;
+  }
   .hr-zone {
     flex: 0 0 160px !important;
     min-width: 160px !important;
@@ -625,6 +682,132 @@ body::before {
   align-items: center !important;
   column-gap: 2rem !important;
   row-gap: 0 !important;
+}
+
+/* Locked UI spec: hero centered 80vh and score-focus (Prompt payload) */
+#gate-hero > .blur-content {
+  min-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+#btc-card.hero-card .gauge-val {
+  font-size: clamp(64px, 20vw, 120px) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.03em !important;
+  line-height: 1 !important;
+}
+
+#btc-card.hero-card .hero-risk-label {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.12em !important;
+  margin-top: 8px !important;
+}
+
+#hero-regime-context {
+  font-size: 12px !important;
+  color: var(--tx-sec) !important;
+  opacity: 0.7 !important;
+  max-width: 460px !important;
+  text-align: center !important;
+  margin-top: 8px !important;
+  line-height: 1.5 !important;
+}
+
+/* Blurred positioning teaser placeholder (decorative) */
+.hero-positioning-teaser {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 8px 16px;
+  font-family: var(--f-mono);
+  filter: blur(6px);
+  pointer-events: none;
+  user-select: none;
+  opacity: 0.6;
+}
+.hero-teaser-label {
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  color: var(--tx-ter);
+  text-transform: uppercase;
+}
+.hero-teaser-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--tx-pri);
+}
+
+/* Hide competing hero elements (no-card feel) */
+#btc-card.hero-card .gauge-wrap svg,
+#btc-card.hero-card .hero-subscores,
+#btc-card.hero-card .hero-meta-row,
+#btc-card.hero-card .score-card-header,
+#btc-card.hero-card .score-footer {
+  display: none !important;
+}
+
+#btc-card.hero-card {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  max-width: 100% !important;
+  text-align: center !important;
+}
+#btc-card.hero-card .card-accent {
+  display: none !important;
+}
+
+/* No cards anywhere, but keep blurred gated content opaque */
+.card,
+.decision-card,
+.hist-returns-card,
+.cycle-overview-card {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+.blur-gate .blur-content .card {
+  background: var(--glass, rgba(10, 18, 40, 0.5)) !important;
+}
+.card-accent {
+  display: none !important;
+}
+.card::before {
+  display: none !important;
+}
+.blur-overlay {
+  background: rgba(13, 17, 23, 0.85) !important;
+}
+
+/* Hero radical strip — hide competing elements (Prompt 1) */
+#btc-card.hero-card .gauge-wrap svg {
+  opacity: 0.15;
+}
+#btc-card.hero-card .hero-subscores {
+  display: none;
+}
+#btc-card.hero-card .hero-meta-row {
+  display: none;
+}
+/* Strip the hero container feel (transparent during normal view) */
+#btc-card.hero-card {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+/* Reduce BTC price in the hero */
+#btc-card.hero-card .score-price {
+  font-size: 8px !important;
+  opacity: 0.3;
+  letter-spacing: 0.08em !important;
 }
 @media (max-width: 700px) {
   #btc-card.hero-card {
@@ -1083,6 +1266,85 @@ body::before {
   grid-template-columns: 280px 1fr;
   gap: 0;
   min-height: 0;
+}
+
+/* Prompt 3: Positioning Framework linear */
+.decision-linear {
+  padding: 24px;
+}
+.dec-lin-eyebrow {
+  font-family: var(--f-mono);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.dec-lin-interpretation {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--tx-sec);
+  line-height: 1.7;
+  margin-bottom: 24px;
+  max-width: 600px;
+}
+.dec-lin-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding: 16px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+.dec-lin-metric {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+.dec-lin-metric-label {
+  font-family: var(--f-mono);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  color: var(--tx-ter);
+  text-transform: uppercase;
+  min-width: 140px;
+}
+.dec-lin-metric-value {
+  font-family: var(--f-mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--tx-pri);
+}
+.dec-lin-metric-sub {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  margin-left: 8px;
+}
+.dec-lin-section {
+  margin-bottom: 20px;
+}
+.dec-lin-section-title {
+  font-family: var(--f-mono);
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  color: var(--tx-ter);
+  margin-bottom: 10px;
+}
+.dec-lin-disclaimer {
+  font-family: var(--f-mono);
+  font-size: 7px;
+  letter-spacing: 0.06em;
+  color: var(--tx-ter);
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+@media (max-width: 600px) {
+  .decision-linear { padding: 16px; }
+  .dec-lin-metric { flex-direction: column; gap: 2px; }
+  .dec-lin-metric-label { min-width: auto; }
+  .dec-lin-eyebrow { font-size: 11px; }
 }
 .decision-grid-col {
   display: flex;
@@ -3515,107 +3777,32 @@ canvas.sparkline {
 </nav>
 
 <div id="landing-view" style="display:none;">
-  <div style="min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:40px 20px;max-width:720px;margin:0 auto;text-align:center;">
-
-    <!-- Hero -->
-    <div style="margin-bottom:12px;font-size:11px;color:#00D4AA;font-family:var(--f-mono);letter-spacing:0.15em;font-weight:600;">CRYPTO CYCLE INTELLIGENCE</div>
-    <h1 style="font-family:'Outfit',sans-serif;font-size:clamp(28px,5vw,48px);font-weight:700;color:#fff;line-height:1.15;margin:0 0 16px;">Know exactly where<br>Bitcoin is in the cycle.</h1>
-    <p style="font-family:var(--f-mono);font-size:14px;color:var(--tx-sec);line-height:1.7;max-width:500px;margin:0 0 32px;">The AlphaCycle Risk Index combines trend, drawdown, sentiment & liquidity into one score. 0-100. Updated live.</p>
-
-    <!-- Live ARC Preview -->
-    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px 32px;margin-bottom:32px;min-width:280px;">
-      <div style="font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);letter-spacing:0.12em;margin-bottom:8px;">LIVE ARC INDEX</div>
-      <div id="landing-arc-score" style="font-size:48px;font-weight:700;color:#00D4AA;font-family:var(--f-mono);line-height:1;">—</div>
-      <div style="font-size:11px;color:var(--tx-ter);font-family:var(--f-mono);margin-top:2px;">/100</div>
-      <div id="landing-arc-zone" style="font-size:14px;font-weight:600;font-family:var(--f-mono);letter-spacing:0.08em;margin-top:8px;color:#00D4AA;">—</div>
-      <div style="margin-top:12px;font-size:11px;color:var(--tx-ter);font-family:var(--f-mono);">
-        BTC <span id="landing-btc-price" style="color:var(--tx-pri);">—</span>
-        &nbsp;·&nbsp;
-        Fear &amp; Greed <span id="landing-fg" style="color:var(--tx-pri);">—</span>
+  <div style="max-width:680px;margin:0 auto;padding:0 20px;">
+    <!-- NEW Landing (7 sections) injected by prompt 4 -->
+    <section style="min-height:85vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:60px 0 40px;">
+      <div style="font-family:var(--f-mono);font-size:8px;letter-spacing:0.2em;color:var(--tx-ter);margin-bottom:32px;">CRYPTO CYCLE INTELLIGENCE</div>
+      <div style="margin-bottom:8px;">
+        <div style="font-family:var(--f-mono);font-size:9px;letter-spacing:0.12em;color:var(--tx-ter);margin-bottom:8px;">LIVE ARC INDEX</div>
+        <div id="landing-arc-score" style="font-family:var(--f-mono);font-size:clamp(64px,12vw,96px);font-weight:700;color:#00D4AA;line-height:1;">—</div>
+        <div style="font-family:var(--f-mono);font-size:10px;color:var(--tx-ter);margin-top:2px;opacity:0.5;">/100</div>
       </div>
-    </div>
-
-    <!-- CTA -->
-    <button onclick="openAuthModal('signup')" style="padding:16px 40px;background:#00D4AA;color:#0d1117;border:none;border-radius:8px;font-family:var(--f-mono);font-size:15px;font-weight:700;cursor:pointer;letter-spacing:0.06em;transition:transform 0.15s;box-shadow:0 0 30px rgba(0,212,170,0.25);margin-bottom:12px;">START 7-DAY FREE TRIAL</button>
-    <div style="font-size:11px;color:var(--tx-ter);font-family:var(--f-mono);">No credit card required · Cancel anytime</div>
-
-    <!-- Track Record Teaser -->
-    <div style="margin-top:48px;width:100%;">
-      <div style="font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);letter-spacing:0.15em;margin-bottom:16px;">WHAT ARC TOLD US BEFORE THE MARKET MOVED</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">
-        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:16px;text-align:left;">
-          <div style="font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);">DEC 2022 — DEEP VALUE</div>
-          <div style="font-size:11px;color:var(--tx-sec);font-family:var(--f-mono);margin-top:4px;">ARC at 12 · BTC $16,500</div>
-          <div style="font-size:16px;font-weight:700;color:#22c55e;font-family:var(--f-mono);margin-top:4px;">→ +170% in 12 months</div>
-        </div>
-        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:16px;text-align:left;">
-          <div style="font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);">OCT 2024 — RISK RISING</div>
-          <div style="font-size:11px;color:var(--tx-sec);font-family:var(--f-mono);margin-top:4px;">ARC at 65 · BTC $65,000</div>
-          <div style="font-size:16px;font-weight:700;color:#f59e0b;font-family:var(--f-mono);margin-top:4px;">→ Peak at $108k, then -45%</div>
-        </div>
-        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:16px;text-align:left;">
-          <div style="font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);" id="landing-now-label">NOW — ACCUMULATION PHASE</div>
-          <div style="font-size:11px;color:var(--tx-sec);font-family:var(--f-mono);margin-top:4px;" id="landing-now-detail">ARC at 33 · BTC $71k</div>
-          <div style="font-size:16px;font-weight:700;color:#00B4D8;font-family:var(--f-mono);margin-top:4px;" id="landing-now-return">Historically strong accumulation environment</div>
-        </div>
+      <div id="landing-arc-zone" style="font-family:var(--f-mono);font-size:clamp(14px,3vw,20px);font-weight:700;letter-spacing:0.12em;margin-bottom:8px;color:#00D4AA;">—</div>
+      <div style="font-family:var(--f-mono);font-size:10px;color:var(--tx-ter);opacity:0.4;margin-bottom:32px;">
+        BTC <span id="landing-btc-price">—</span> · Fear & Greed <span id="landing-fg">—</span>
       </div>
-    </div>
-    <div style="text-align:center;margin-top:16px;">
-      <a href="#" onclick="showTrackRecord();return false;" style="font-size:11px;color:#00D4AA;font-family:var(--f-mono);text-decoration:none;">View Full Track Record &#8594;</a>
-    </div>
+      <h1 style="font-family:'Outfit',sans-serif;font-size:clamp(24px,4.5vw,40px);font-weight:700;color:#fff;line-height:1.2;margin:0 0 12px;max-width:520px;">
+        The cycle repeats.<br>Now you can see it.
+      </h1>
+      <p style="font-family:var(--f-mono);font-size:12px;color:var(--tx-sec);line-height:1.7;max-width:440px;margin:0 0 32px;">
+        One score. Four structural signals. Eight years of cycle data. Know when risk is low — and when it's not.
+      </p>
+      <button onclick="openAuthModal('signup')" style="padding:16px 40px;background:#00D4AA;color:#0d1117;border:none;border-radius:8px;font-family:var(--f-mono);font-size:14px;font-weight:700;cursor:pointer;letter-spacing:0.06em;transition:transform 0.15s,box-shadow 0.15s;box-shadow:0 0 30px rgba(0,212,170,0.2);margin-bottom:8px;">
+        SEE HOW TO POSITION →
+      </button>
+      <div style="font-family:var(--f-mono);font-size:9px;color:var(--tx-ter);opacity:0.5;">7-day free trial · No credit card</div>
+    </section>
 
-    <!-- How it works -->
-    <div style="margin-top:48px;width:100%;">
-      <div style="font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);letter-spacing:0.15em;margin-bottom:16px;">4 COMPONENTS. 1 SCORE. 0-100.</div>
-      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
-        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">
-          <div style="font-size:20px;margin-bottom:4px;">&#128200;</div>
-          <div style="font-size:10px;color:var(--tx-pri);font-family:var(--f-mono);font-weight:600;">TREND</div>
-          <div style="font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);">200-week MA deviation</div>
-        </div>
-        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">
-          <div style="font-size:20px;margin-bottom:4px;">&#128201;</div>
-          <div style="font-size:10px;color:var(--tx-pri);font-family:var(--f-mono);font-weight:600;">DRAWDOWN</div>
-          <div style="font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);">Distance from all-time high</div>
-        </div>
-        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">
-          <div style="font-size:20px;margin-bottom:4px;">&#128561;</div>
-          <div style="font-size:10px;color:var(--tx-pri);font-family:var(--f-mono);font-weight:600;">SENTIMENT</div>
-          <div style="font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);">Fear & Greed Index</div>
-        </div>
-        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">
-          <div style="font-size:20px;margin-bottom:4px;">&#128176;</div>
-          <div style="font-size:10px;color:var(--tx-pri);font-family:var(--f-mono);font-weight:600;">LIQUIDITY</div>
-          <div style="font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);">Fed balance sheet + stablecoins</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Pricing -->
-    <div style="margin-top:48px;width:100%;" id="pricing">
-      <div style="font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);letter-spacing:0.15em;margin-bottom:16px;">PRICING</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:500px;margin:0 auto;">
-        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px 16px;text-align:center;">
-          <div style="font-size:10px;color:var(--tx-ter);font-family:var(--f-mono);letter-spacing:0.1em;margin-bottom:8px;">FREE</div>
-          <div style="font-size:28px;font-weight:700;color:var(--tx-pri);font-family:var(--f-mono);">$0</div>
-          <div style="font-size:10px;color:var(--tx-ter);font-family:var(--f-mono);margin-top:8px;line-height:1.6;">Live Prices<br>ARC Index<br>Historical Returns</div>
-          <button onclick="openAuthModal('signup')" style="margin-top:16px;padding:10px 20px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--tx-sec);font-family:var(--f-mono);font-size:11px;font-weight:600;cursor:pointer;">GET STARTED</button>
-        </div>
-        <div style="background:var(--bg-card);border:2px solid #00D4AA;border-radius:12px;padding:24px 16px;text-align:center;position:relative;">
-          <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:#00D4AA;color:#0d1117;font-size:8px;font-weight:700;font-family:var(--f-mono);padding:3px 10px;border-radius:4px;letter-spacing:0.1em;">7 DAYS FREE</div>
-          <div style="font-size:10px;color:#00D4AA;font-family:var(--f-mono);letter-spacing:0.1em;margin-bottom:8px;">PRO</div>
-          <div style="font-size:28px;font-weight:700;color:var(--tx-pri);font-family:var(--f-mono);">$49<span style="font-size:14px;color:var(--tx-ter);">/mo</span></div>
-          <div style="font-size:10px;color:var(--tx-ter);font-family:var(--f-mono);margin-top:8px;line-height:1.6;">Everything in Free +<br>Positioning Framework<br>Cycle Analysis<br>ARC History<br>Zone History<br>Email Alerts</div>
-          <button onclick="openAuthModal('signup')" style="margin-top:16px;padding:10px 20px;background:#00D4AA;color:#0d1117;border:none;border-radius:6px;font-family:var(--f-mono);font-size:11px;font-weight:700;cursor:pointer;">START FREE TRIAL</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Footer -->
-    <div style="margin-top:48px;font-size:10px;color:var(--tx-ter);font-family:var(--f-mono);">
-      <a href="#" onclick="showDashboard();return false;" style="color:var(--tx-sec);text-decoration:none;">View Dashboard &#8594;</a>
-    </div>
-
+    <!-- TODO: Remaining 6 sections -->
   </div>
 </div>
 
@@ -3801,6 +3988,10 @@ canvas.sparkline {
             —
           </div>
           <div id="hero-regime-context" style="font-family:var(--f-mono);font-size:9px;color:var(--tx-ter);letter-spacing:0.04em;margin-top:6px;max-width:320px;text-align:center;line-height:1.4;"></div>
+          <div class="hero-positioning-teaser">
+            <span class="hero-teaser-label">POSITIONING</span>
+            <span class="hero-teaser-value">ACCUMULATION PHASE · 35-50%</span>
+          </div>
         </div>
     </div>
     <div class="score-footer">
@@ -3966,6 +4157,15 @@ canvas.sparkline {
     </div>
   </div>
 
+  <!-- HERO CTA (anonymous only; outside gate-hero) -->
+  <div class="hero-cta-block" style="display:none;">
+    <div class="hero-cta-text">Unlock full positioning</div>
+    <div class="hero-cta-sub">See how to act in this phase</div>
+    <button class="hero-cta-btn" onclick="openAuthModal('signup')">START 7-DAY FREE TRIAL</button>
+  </div>
+
+  <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.06),transparent);margin:24px 0;"></div>
+
   <!-- SIGNAL SUMMARY — translates current ARC into one-glance interpretation -->
   <div id="signal-summary" class="card anim" style="padding:16px 20px;margin-bottom:10px;border-left:3px solid var(--btc);display:none;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
@@ -3993,48 +4193,61 @@ canvas.sparkline {
       <div class="card hist-returns-card anim">
     <div class="hr-eyebrow">Historical 12-Month Performance by Market Regime — Daily backtest data, 2017–present · Kraken BTC/USD</div>
     <div class="hr-grid" id="hr-grid">
-      <div class="hr-zone hr-dv" data-hr-zone="dv">
-        <span class="hr-zone-badge" aria-hidden="true">YOU ARE HERE</span>
-        <div class="hr-zone-context">Historically strongest entry zone</div>
-        <div class="hr-zone-range">0–29</div>
-        <div class="hr-zone-label">DEEP VALUE</div>
-        <div class="hr-zone-return" id="hr-dv-12m">—</div>
-        <div class="hr-zone-wr" id="hr-dv-wr">— win rate</div>
-        <div class="hr-zone-count" id="hr-dv-count">— entries</div>
+      <div class="hr-dominant" id="hr-dominant-zone">
+        <div class="hr-dominant-label" id="hr-dominant-label">—</div>
+        <div class="hr-dominant-range" id="hr-dominant-range">—</div>
+        <div class="hr-dominant-return" id="hr-dominant-return">—</div>
+        <div class="hr-dominant-meta">
+          <span id="hr-dominant-wr">—</span> · <span id="hr-dominant-count">—</span>
+        </div>
       </div>
-      <div class="hr-zone hr-ac" data-hr-zone="ac">
-        <span class="hr-zone-badge" aria-hidden="true">YOU ARE HERE</span>
-        <div class="hr-zone-context">High probability long-term returns</div>
-        <div class="hr-zone-range">30–39</div>
-        <div class="hr-zone-label">ACCUMULATION</div>
-        <div class="hr-zone-return" id="hr-ac-12m">—</div>
-        <div class="hr-zone-wr" id="hr-ac-wr">— win rate</div>
-        <div class="hr-zone-count" id="hr-ac-count">— entries</div>
-      </div>
-      <div class="hr-zone hr-ex" data-hr-zone="ex">
-        <span class="hr-zone-badge" aria-hidden="true">YOU ARE HERE</span>
-        <div class="hr-zone-context">Moderate upside, increasing risk</div>
-        <div class="hr-zone-range">40–59</div>
-        <div class="hr-zone-label">EXPANSION</div>
-        <div class="hr-zone-return" id="hr-ex-12m">—</div>
-        <div class="hr-zone-wr" id="hr-ex-wr">— win rate</div>
-        <div class="hr-zone-count" id="hr-ex-count">— entries</div>
-      </div>
-      <div class="hr-zone hr-rr" data-hr-zone="rr" style="opacity:0.5;">
-        <div class="hr-zone-range" style="color:#FF9500">60–69</div>
-        <div class="hr-zone-label">RISK RISING</div>
-        <div class="hr-zone-return" id="hr-rr-12m" style="color:#FF9500;font-size:1rem;">⚠️ ELEVATED RISK</div>
-        <div class="hr-zone-wr" id="hr-rr-wr" style="font-size:10px;color:rgba(255,255,255,0.4);">Historically unfavorable entry point</div>
-        <div class="hr-zone-count" id="hr-rr-count" style="color:rgba(255,255,255,0.3);">— entries</div>
-      </div>
-      <div class="hr-zone hr-eu" data-hr-zone="eu">
-        <span class="hr-zone-badge" aria-hidden="true">YOU ARE HERE</span>
-        <div class="hr-zone-context">Avg -40% drawdown from peak</div>
-        <div class="hr-zone-range">70–100</div>
-        <div class="hr-zone-label">EUPHORIA</div>
-        <div class="hr-zone-return" id="hr-eu-12m">—</div>
-        <div class="hr-zone-wr" id="hr-eu-wr">— win rate</div>
-        <div class="hr-zone-count" id="hr-eu-count">— entries</div>
+
+      <div class="hr-secondary" id="hr-secondary-zones"></div>
+
+      <div style="display:none;">
+        <div class="hr-zone hr-dv" data-hr-zone="dv">
+          <span class="hr-zone-badge" aria-hidden="true">YOU ARE HERE</span>
+          <div class="hr-zone-context">Historically strongest entry zone</div>
+          <div class="hr-zone-range">0–29</div>
+          <div class="hr-zone-label">DEEP VALUE</div>
+          <div class="hr-zone-return" id="hr-dv-12m">—</div>
+          <div class="hr-zone-wr" id="hr-dv-wr">— win rate</div>
+          <div class="hr-zone-count" id="hr-dv-count">— entries</div>
+        </div>
+        <div class="hr-zone hr-ac" data-hr-zone="ac">
+          <span class="hr-zone-badge" aria-hidden="true">YOU ARE HERE</span>
+          <div class="hr-zone-context">High probability long-term returns</div>
+          <div class="hr-zone-range">30–39</div>
+          <div class="hr-zone-label">ACCUMULATION</div>
+          <div class="hr-zone-return" id="hr-ac-12m">—</div>
+          <div class="hr-zone-wr" id="hr-ac-wr">— win rate</div>
+          <div class="hr-zone-count" id="hr-ac-count">— entries</div>
+        </div>
+        <div class="hr-zone hr-ex" data-hr-zone="ex">
+          <span class="hr-zone-badge" aria-hidden="true">YOU ARE HERE</span>
+          <div class="hr-zone-context">Moderate upside, increasing risk</div>
+          <div class="hr-zone-range">40–59</div>
+          <div class="hr-zone-label">EXPANSION</div>
+          <div class="hr-zone-return" id="hr-ex-12m">—</div>
+          <div class="hr-zone-wr" id="hr-ex-wr">— win rate</div>
+          <div class="hr-zone-count" id="hr-ex-count">— entries</div>
+        </div>
+        <div class="hr-zone hr-rr" data-hr-zone="rr" style="opacity:0.5;">
+          <div class="hr-zone-range" style="color:#FF9500">60–69</div>
+          <div class="hr-zone-label">RISK RISING</div>
+          <div class="hr-zone-return" id="hr-rr-12m" style="color:#FF9500;font-size:1rem;">⚠️ ELEVATED RISK</div>
+          <div class="hr-zone-wr" id="hr-rr-wr" style="font-size:10px;color:rgba(255,255,255,0.4);">Historically unfavorable entry point</div>
+          <div class="hr-zone-count" id="hr-rr-count" style="color:rgba(255,255,255,0.3);">— entries</div>
+        </div>
+        <div class="hr-zone hr-eu" data-hr-zone="eu">
+          <span class="hr-zone-badge" aria-hidden="true">YOU ARE HERE</span>
+          <div class="hr-zone-context">Avg -40% drawdown from peak</div>
+          <div class="hr-zone-range">70–100</div>
+          <div class="hr-zone-label">EUPHORIA</div>
+          <div class="hr-zone-return" id="hr-eu-12m">—</div>
+          <div class="hr-zone-wr" id="hr-eu-wr">— win rate</div>
+          <div class="hr-zone-count" id="hr-eu-count">— entries</div>
+        </div>
       </div>
     </div>
     <div class="scroll-hint-hr" style="display:none;text-align:center;font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);padding:4px 0;letter-spacing:0.1em;">SWIPE FOR MORE ZONES →</div>
@@ -4105,39 +4318,37 @@ canvas.sparkline {
       </div>
       <div class="card decision-card anim d2" id="decision-card">
         <div class="card-accent accent-btc"></div>
-        <div class="decision-layout">
-          <div class="decision-grid-col">
-            <div class="decision-item">
-              <div class="decision-label">Regime Positioning</div>
-              <div class="decision-value" id="dec-position">—</div>
-              <div class="decision-value decision-value-sub" id="dec-bottom-formation" style="display:none;font-size:0.85em;margin-top:4px;color:#00B4D8"></div>
+        <div class="decision-linear">
+          <div class="dec-lin-eyebrow">
+            <span id="dec-regime-zone">—</span> · ARC <span id="dec-index-val" style="font-weight:600">—</span>
+          </div>
+          <div class="dec-lin-interpretation" id="dec-regime-text">—</div>
+          <div class="dec-lin-metrics">
+            <div class="dec-lin-metric">
+              <span class="dec-lin-metric-label">Positioning</span>
+              <span class="dec-lin-metric-value" id="dec-position">—</span>
+              <span class="dec-lin-metric-sub" id="dec-bottom-formation" style="display:none;color:#00B4D8"></span>
             </div>
-            <div class="decision-item">
-              <div class="decision-label">Historical Allocation Range</div>
-              <div class="decision-value" id="dec-allocation">—</div>
+            <div class="dec-lin-metric">
+              <span class="dec-lin-metric-label">Allocation</span>
+              <span class="dec-lin-metric-value" id="dec-allocation">—</span>
             </div>
-            <div class="decision-item">
-              <div class="decision-label">Historical 12M Range</div>
-              <div class="decision-value" id="dec-range">—</div>
-              <div class="decision-value decision-value-sub" id="dec-range-worst" style="display:none;font-size:0.85em;color:#6b7280;margin-top:2px"></div>
+            <div class="dec-lin-metric">
+              <span class="dec-lin-metric-label">Historical Outcome</span>
+              <span class="dec-lin-metric-value" id="dec-range">—</span>
+              <span class="dec-lin-metric-sub" id="dec-range-worst" style="display:none;color:#6b7280"></span>
             </div>
-            <div class="decision-item">
-              <div class="decision-label">Regime Clarity</div>
-              <div class="decision-value" id="dec-confidence">—</div>
+            <div class="dec-lin-metric">
+              <span class="dec-lin-metric-label">Clarity</span>
+              <span class="dec-lin-metric-value" id="dec-confidence">—</span>
             </div>
           </div>
-          <div class="decision-context-col">
-            <div class="dec-context-eyebrow">
-              <span id="dec-regime-zone">—</span> · ARC <span id="dec-index-val" style="font-weight:600;color:var(--btc);">—</span>
-            </div>
-            <div class="dec-context-text" id="dec-regime-text">—</div>
-            <div class="dec-context-section">
-              <div class="dec-context-title">TYPICAL POSITIONING</div>
-              <ul class="dec-layer-list" id="dec-positioning-list"></ul>
-            </div>
-            <div class="dec-context-disclaimer">
-              THIS REFLECTS HOW SIMILAR ENVIRONMENTS BEHAVED HISTORICALLY · NOT A PREDICTION
-            </div>
+          <div class="dec-lin-section">
+            <div class="dec-lin-section-title">TYPICAL POSITIONING</div>
+            <ul class="dec-layer-list" id="dec-positioning-list"></ul>
+          </div>
+          <div class="dec-lin-disclaimer">
+            THIS REFLECTS HOW SIMILAR ENVIRONMENTS BEHAVED HISTORICALLY · NOT A PREDICTION
           </div>
         </div>
       </div>
@@ -4756,11 +4967,11 @@ function phaseDesc(phase) {
 }
 function _getCycleDescription(arc) {
   var a = Number(arc);
-  if (a < 30) return 'Market undervalued. Smart money accumulating. Fear elevated, prices near or below 200W MA.';
-  if (a < 35) return 'Structurally favorable. Accumulation zone. Historically strong risk/reward for long-term exposure.';
-  if (a < 60) return 'Uptrend confirmed. Liquidity expanding. Momentum building with healthy sentiment.';
-  if (a < 75) return 'Market overheating. FOMO elevated. Whale distribution likely in progress.';
-  return 'Risk-off environment. Liquidity contracting. Downtrend confirmed - caution advised.';
+  if (a < 30) return 'Maximum asymmetry. Historically strongest risk/reward.';
+  if (a < 40) return 'Asymmetric upside. Early cycle positioning historically rewarded.';
+  if (a < 60) return 'Trend confirmed. Balanced risk/reward environment.';
+  if (a < 70) return 'Risk outweighing reward. Late-cycle characteristics.';
+  return 'Peak risk. Historical drawdowns from this phase have been severe.';
 }
 
 // ── CLOCK ──────────────────────────────────────────────────────────────────
@@ -5383,7 +5594,6 @@ function updateHeroFreshness() {
 }
 
 function initMobileCollapseToggle() {
-  if (window.innerWidth > 600) return;
   document.querySelectorAll('.module-tertiary .sec-header').forEach(function(header) {
     if (header._mobileToggleBound) return;
     header._mobileToggleBound = true;
@@ -5945,6 +6155,21 @@ function updateUI() {
   if (lb && btcP) lb.textContent = btcP;
   if (lf && fgV) lf.textContent = fgV;
   if (ld && arcScore != null && btcP) ld.textContent = 'ARC at ' + arcScore + ' · BTC ' + btcP;
+
+  // Landing NOW return: dynamic zone avg (Prompt 5)
+  var lReturn = document.getElementById('landing-now-return');
+  if (lReturn && S.historicalReturns && S.historicalReturns.zones && arcScore != null) {
+    var zoneKey = arcScore < 30 ? 'deep_value'
+      : arcScore < 40 ? 'accumulation'
+        : arcScore < 60 ? 'expansion'
+          : arcScore < 70 ? 'risk_rising'
+            : 'euphoria';
+    var zoneData = S.historicalReturns.zones[zoneKey];
+    if (zoneData && zoneData.avg_12m != null) {
+      var zoneName = { deep_value: 'Deep Value', accumulation: 'Accumulation', expansion: 'Expansion', risk_rising: 'Risk Rising', euphoria: 'Euphoria' }[zoneKey] || '';
+      lReturn.textContent = zoneName + ' phase. Historical avg: +' + Math.round(zoneData.avg_12m) + '% over 12 months.';
+    }
+  }
 }
 
 function renderZoneHistory() {
@@ -6517,6 +6742,12 @@ function applyBlurGates() {
   var effectivePlan = currentPlan;
   if (currentPlan === 'trial') {
     effectivePlan = 'paid';
+  }
+
+  // Hero CTA: only for anonymous visitors
+  var ctaBlock = document.querySelector('.hero-cta-block');
+  if (ctaBlock) {
+    ctaBlock.style.display = (currentPlan === 'anonymous') ? 'block' : 'none';
   }
   // Gate descriptions — was jede Section bietet
   var gateInfo = {
@@ -8098,6 +8329,12 @@ function exportHeroAsPNG() {
   if (!heroCard) { if (btn) { btn.textContent = '\u2193 SHARE PNG'; btn.disabled = false; } return; }
 
   function doCapture() {
+    // Export: ensure branding/header + solid background
+    var header = document.querySelector('#btc-card .score-card-header');
+    var origHeaderDisplay = header ? header.style.display : '';
+    var origBg = heroCard ? heroCard.style.background : '';
+    if (header) header.style.display = '';
+    if (heroCard) heroCard.style.background = '#0a1228';
     html2canvas(heroCard, {
       backgroundColor: '#0d1117',
       scale: 2,
@@ -8106,6 +8343,8 @@ function exportHeroAsPNG() {
       width: heroCard.scrollWidth,
       height: heroCard.scrollHeight,
     }).then(function(canvas) {
+      if (header) header.style.display = origHeaderDisplay;
+      if (heroCard) heroCard.style.background = origBg;
       var finalCanvas = document.createElement('canvas');
       var padding = 40;
       var footerHeight = 36;
@@ -8130,6 +8369,8 @@ function exportHeroAsPNG() {
       if (btn) { btn.textContent = '\u2713 SAVED'; btn.disabled = false; }
       setTimeout(function() { if (btn) btn.textContent = '\u2193 SHARE PNG'; }, 2000);
     }).catch(function(err) {
+      if (header) header.style.display = origHeaderDisplay;
+      if (heroCard) heroCard.style.background = origBg;
       console.error('Hero export failed:', err);
       if (btn) { btn.textContent = '\u2193 SHARE PNG'; btn.disabled = false; }
     });
@@ -8293,6 +8534,7 @@ async function fetchHistoricalReturns() {
     if (totalEl) totalEl.textContent = 'Based on ' + total + ' historical zone entries since 2017.';
 
     applyHistoricalReturnsCurrentZone();
+    if (typeof updateHrDominantBlock === 'function') updateHrDominantBlock();
 
     var euZone = z['euphoria'];
     if (euZone) {
@@ -8338,6 +8580,53 @@ function applyHistoricalReturnsCurrentZone() {
   if (el) {
     el.classList.add('hr-current-zone');
     el.style.borderColor = colors[key];
+  }
+
+  if (typeof updateHrDominantBlock === 'function') updateHrDominantBlock();
+}
+
+function updateHrDominantBlock() {
+  var arc = S.arcSummary && S.arcSummary.arc_score != null ? Number(S.arcSummary.arc_score) : 50;
+  var key = arc < 30 ? 'dv' : arc < 40 ? 'ac' : arc < 60 ? 'ex' : arc < 70 ? 'rr' : 'eu';
+  var names = { dv: 'DEEP VALUE', ac: 'ACCUMULATION', ex: 'EXPANSION', rr: 'RISK RISING', eu: 'EUPHORIA' };
+  var ranges = { dv: '0–29', ac: '30–39', ex: '40–59', rr: '60–69', eu: '70–100' };
+  var colors = { dv: '#00D4AA', ac: '#00B4D8', ex: '#58A6FF', rr: '#FF9500', eu: '#FF3B3B' };
+  var allKeys = ['dv', 'ac', 'ex', 'rr', 'eu'];
+
+  var returnEl = document.getElementById('hr-' + key + '-12m');
+  var wrEl = document.getElementById('hr-' + key + '-wr');
+  var countEl = document.getElementById('hr-' + key + '-count');
+
+  var domLabel = document.getElementById('hr-dominant-label');
+  var domRange = document.getElementById('hr-dominant-range');
+  var domReturn = document.getElementById('hr-dominant-return');
+  var domMeta = document.getElementById('hr-dominant-wr');
+  var domCount = document.getElementById('hr-dominant-count');
+
+  if (domLabel) { domLabel.textContent = names[key] || '—'; domLabel.style.color = colors[key] || '#fff'; }
+  if (domRange) domRange.textContent = ranges[key] || '—';
+  if (domReturn) {
+    domReturn.textContent = returnEl ? returnEl.textContent : '—';
+    domReturn.style.color = colors[key] || '#fff';
+    if (key === 'rr' || key === 'eu') domReturn.style.fontSize = '18px';
+    else domReturn.style.fontSize = '';
+  }
+  if (domMeta) domMeta.textContent = wrEl ? wrEl.textContent : '—';
+  if (domCount) domCount.textContent = countEl ? countEl.textContent : '—';
+
+  var secContainer = document.getElementById('hr-secondary-zones');
+  if (secContainer) {
+    secContainer.innerHTML = '';
+    allKeys.forEach(function(k) {
+      if (k === key) return;
+      var ret = document.getElementById('hr-' + k + '-12m');
+      var span = document.createElement('span');
+      span.className = 'hr-secondary-item';
+      span.innerHTML = '<span class="hr-sec-label">' + (names[k] || k) + '</span>' +
+        '<span class="hr-sec-return" style="color:' + (colors[k] || '#fff') + '">' +
+        (ret ? ret.textContent : '—') + '</span>';
+      secContainer.appendChild(span);
+    });
   }
 }
 
