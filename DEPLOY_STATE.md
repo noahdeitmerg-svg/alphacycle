@@ -16,6 +16,12 @@
 - **Warum:** Visuelle Beruhigung (weniger Noise), Score dominiert weiterhin.
 - **Status:** ✅ deployed
 
+## Letzter Session-Status (2026-03-18) — Style: Hero Redesign V1 (CSS-only)
+- **Datei(en):** index.html
+- **Was wurde geändert:** Hero-Card von Grid auf zentrierten Flex-Flow umgestellt (vertical/centered Instrument), `grid-area` fuer direkte Children reset; Header/Footer/Subscores/Meta zentriert; Komponenten-Gauges darunter als flex-wrap Grid mit Scale/Opacity; Mobile stackt Komponenten vertikal. Keine HTML/JS/ID-Aenderungen.
+- **Warum:** "Centered cycle instrument" Layout fuer ruhigeres, export-taugliches Hero ohne Datenverlust.
+- **Status:** ✅ deployed
+
 ## Letzter Session-Status (2026-03-18) — Rollback: UX Prompts vom 2026-03-17 (Decision/Positioning)
 - **Rollback:** Fehlgeschlagene UX-Iteration von gestern (Positioning Framework / Decision-Layout / Live-Prices-Reihenfolge) zurückgerollt.
 - **Betroffen:** `index.html` (UI), `DEPLOY_STATE.md` (Dokumentation), `.cursor/rules/permanent-fixes.mdc` (nur Doku-Zeile).
