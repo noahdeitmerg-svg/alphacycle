@@ -606,7 +606,10 @@ body::before {
 #btc-card.hero-card {
   max-width: 100% !important;
   margin: 1.25rem 0 2rem 0 !important;
-  padding: 1.5rem 2.25rem !important;
+  padding-top: 2rem !important;
+  padding-bottom: 2.5rem !important;
+  padding-left: 2.25rem !important;
+  padding-right: 2.25rem !important;
   background: rgba(10,18,40,0.5);
   border: 1px solid rgba(255,255,255,0.06);
   box-shadow: none;
@@ -774,12 +777,13 @@ body::before {
   flex-wrap: wrap !important;
   margin-top: 12px !important;
   padding-top: 12px !important;
-  border-top: 1px solid rgba(255,255,255,0.04) !important;
+  border-top: none !important;
 }
 #btc-card.hero-card .score-price {
-  font-size: 10px !important;
+  font-size: 9px !important;
   color: var(--tx-ter) !important;
-  opacity: 0.7 !important;
+  opacity: 0.55 !important;
+  letter-spacing: 0.04em !important;
 }
 #btc-card.hero-card .hero-subscores {
   display: none !important;
@@ -2759,7 +2763,7 @@ canvas.sparkline {
   }
   .tour-tooltip {
     position: fixed;
-    max-width: 320px;
+    max-width: 420px;
     background: #1a2233;
     border: 1px solid #00D4AA;
     border-radius: 8px;
