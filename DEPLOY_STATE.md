@@ -4,6 +4,12 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-03-18) — Rollback: UX Prompts vom 2026-03-17 (Decision/Positioning)
+- **Rollback:** Fehlgeschlagene UX-Iteration von gestern (Positioning Framework / Decision-Layout / Live-Prices-Reihenfolge) zurückgerollt.
+- **Betroffen:** `index.html` (UI), `DEPLOY_STATE.md` (Dokumentation), `.cursor/rules/permanent-fixes.mdc` (nur Doku-Zeile).
+- **Warum:** UI-Änderungen waren instabil bzw. führten zu fehlerhaften/unerwünschten UX-States im IDE-Test.
+- **Status:** ✅ deployed (Commit-Reverts, kein Force-Push)
+
 ## Letzter Session-Status (2026-03-17) — Precision Polish: Zone History Scanability + Weekly→Daily Wording
 - **Zone History:** Expansion-Zeilen erhalten Klasse .zone-row-expansion (opacity 0.5, hover 0.8), damit BUY ZONE / NO ENTRY / SELL-REDUCE-Zeilen visuell dominieren. Keine Zeilen ausgeblendet, nur Opacity.
 - **Disclaimer:** HR-Disclaimer und Landing/Track-Record-Text von „weekly backtest data“ auf „daily backtest data“ geändert. JS-Variablen (btcWeekly, ethWeekly, const weekly, etc.) unverändert (intern).
@@ -48,6 +54,9 @@
 - **HR Grid:** Rückkehrwerte und Supporting-Text visuell verkleinert/dimmed (Return/Wr/Count/Label).
 - **Positioning Framework + Spacing:** Decision-Card visuell beruhigt und Section-Abstände reduziert Konflikte / mehr breathing room.
 
+## Letzter Session-Status (2026-03-18) — Hotfix: Live Prices nach Historical Returns
+- **DOM:** `gate-live-prices` nach `gate-historical-returns` verschoben (vor `gate-decision-engine`).
+- **CSS:** Preise-Grid kompakt (3 Spalten Desktop) inklusive reduzierte Card-Paddings/Typo.
 ## Letzter Session-Status (2026-03-11) — Trust Layer Phase T-C: Track Record Highlights + Footer Sources Cleanup
 - **Track Record Highlights:** Kompakter Block `.track-highlights` nach gate-content-export, vor DATA SOURCES. Vier hardcodierte Stats: 10/10 Major cycle tops & bottoms, verifizierter Deep-Value-12M-Return (+X%), 8 Jahre ARC-Daten seit Aug 2017, 4 Quellen (Kraken · Alternative.me · DeFiLlama · FRED). Link „VIEW FULL TRACK RECORD →“ ruft showTrackRecord() auf. Kein Blur-Gate, immer sichtbar.
 - **CSS:** .track-highlights-grid 4 Spalten, Border/Track-Style; .track-stat, .track-stat-value, .track-stat-label. @media 600px: 2 Spalten; @media 380px: 1 Spalte, kleinere Padding/Schrift.
