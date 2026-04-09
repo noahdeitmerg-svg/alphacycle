@@ -24,7 +24,10 @@ def main() -> int:
         if not v
     ]
     if missing:
-        print("Missing:", ", ".join(missing), "-- check .env next to config.py")
+        env_path = getattr(config, "ENV_FILE", None)
+        print("Missing:", ", ".join(missing))
+        if env_path is not None:
+            print(f"Expected .env: {env_path} (exists: {env_path.exists()})")
         return 1
 
     text = " ".join(sys.argv[1:]).strip() if len(sys.argv) > 1 else "AlphaCycle bot — write test (standalone)."

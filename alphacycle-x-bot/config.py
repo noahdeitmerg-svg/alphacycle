@@ -5,8 +5,10 @@ from dotenv import load_dotenv
 
 # Same directory as this file (works no matter what cwd is when starting bot.py).
 _BASE_DIR = Path(__file__).resolve().parent
+ENV_FILE = _BASE_DIR / ".env"
 # Use override=True so .env wins over empty exports (export TWITTER_API_KEY= blocks dotenv otherwise).
-load_dotenv(_BASE_DIR / ".env", override=True)
+# utf-8-sig strips BOM from editors that save "UTF-8 with BOM" (would break first key otherwise).
+load_dotenv(ENV_FILE, override=True, encoding="utf-8-sig")
 
 # Strip: trailing newlines/spaces from .env or copy-paste break OAuth1 signatures (401).
 TWITTER_API_KEY = (os.getenv("TWITTER_API_KEY", "") or "").strip()
@@ -20,15 +22,16 @@ CLAUDE_MODEL = "claude-sonnet-4-20250514"
 
 ALPHACYCLE_API = "https://alphacycle-production.up.railway.app"
 
+# Handles must match x.com URLs (no @). Updated when API returns resource-not-found.
 TRACKED_ACCOUNTS = [
-    "WClementeIII",
+    "wclementeiii",
     "RaoulGMI",
     "LynAldenContact",
     "100trillionUSD",
-    "capaboreal",
+    "CryptoCapo_",
     "TechDev_52",
     "CryptoCred",
-    "DylanLeClair_",
+    "DylanLeClair",
 ]
 
 MAX_REPLIES_PER_HOUR = 3
