@@ -19,7 +19,11 @@ def get_latest_tweets(username: str, client: tweepy.Client) -> list[dict]:
     try:
         user = client.get_user(username=username)
         if not user.data:
-            print(f"[SCANNER] User @{username} not found")
+            errs = getattr(user, "errors", None) or []
+            if errs:
+                print(f"[SCANNER] User @{username}: API errors: {errs}")
+            else:
+                print(f"[SCANNER] User @{username} not found (wrong handle, suspended, or renamed)")
             return []
 
         tweets = client.get_users_tweets(

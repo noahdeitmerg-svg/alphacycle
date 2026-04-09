@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-09
+**Zuletzt aktualisiert:** 2026-04-10
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-10) — alphacycle-x-bot: load_dotenv override + Scanner-Fehler
+- **Datei(en):** alphacycle-x-bot/config.py, alphacycle-x-bot/scanner.py
+- **Was wurde geaendert:** `load_dotenv(..., override=True)` damit `.env` leere Shell-Exports ueberschreibt (sonst 401 trotz gueltiger .env); Scanner loggt API-`errors` bei User-Lookup.
+- **Warum:** VPS-Sessions mit exportierten aber leeren TWITTER_* blockieren dotenv; klarere Diagnose bei "User not found".
+- **Status:** in progress
 
 ## Letzter Session-Status (2026-04-09) — alphacycle-x-bot: dotenv, Start-Skript, Test-Post
 - **Datei(en):** alphacycle-x-bot/config.py, requirements.txt, bot.py (--once), poster.py (403-Hinweis), post_test_tweet.py, start.sh, .env.example

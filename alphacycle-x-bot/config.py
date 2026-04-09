@@ -5,8 +5,8 @@ from dotenv import load_dotenv
 
 # Same directory as this file (works no matter what cwd is when starting bot.py).
 _BASE_DIR = Path(__file__).resolve().parent
-# Does not override variables already set in the shell.
-load_dotenv(_BASE_DIR / ".env")
+# Use override=True so .env wins over empty exports (export TWITTER_API_KEY= blocks dotenv otherwise).
+load_dotenv(_BASE_DIR / ".env", override=True)
 
 # Strip: trailing newlines/spaces from .env or copy-paste break OAuth1 signatures (401).
 TWITTER_API_KEY = (os.getenv("TWITTER_API_KEY", "") or "").strip()
