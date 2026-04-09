@@ -22,9 +22,10 @@ CLAUDE_MODEL = "claude-sonnet-4-20250514"
 
 ALPHACYCLE_API = "https://alphacycle-production.up.railway.app"
 
-# Handles: no @. Names must exist for GET /2/users/by/username (check x.com URL if API says resource-not-found).
+# Handles: no @. Use id:NUMERIC_ID if username returns resource-not-found (renames / X API).
+# Will Clemente: public listings use @WClementeIII on web but v2 username lookup can fail; id from twitterscore.io profile WClementeIII.
 TRACKED_ACCOUNTS = [
-    "wclementeiii",
+    "id:1291302716296697856",
     "RaoulGMI",
     "LynAldenContact",
     "100trillionUSD",

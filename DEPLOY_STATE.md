@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10
+**Zuletzt aktualisiert:** 2026-04-11
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-11) — alphacycle-x-bot: Scanner id: user_id fallback
+- **Datei(en):** alphacycle-x-bot/scanner.py, alphacycle-x-bot/config.py
+- **Was wurde geaendert:** `TRACKED_ACCOUNTS` Eintraege koennen `id:SNOWFLAKE_ID` sein; Lookup per GET /2/users/:id wenn Username resource-not-found; `author` aus API-Username.
+- **Warum:** wclementeiii/WClementeIII liefert bei X v2 teils keinen Username-Match.
+- **Status:** in progress
 
 ## Letzter Session-Status (2026-04-10) — alphacycle-x-bot: TRACKED Fix + 401 Response + MIN_LIKES
 - **Datei(en):** alphacycle-x-bot/config.py, post_test_tweet.py, verify_env.py, .env.example

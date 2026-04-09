@@ -187,3 +187,4 @@ Beim Bearbeiten von backend/fetcher.py, backend/main.py, backend/scoring.py oder
 - **ALWAYS** Credentials mit `.strip()` laden (Zeilenumbrüche in `.env` brechen OAuth1-Signaturen). Nach Permission-Änderung im Developer Portal Access Token + Secret neu generieren und zur selben App wie API Key/Secret verwenden.
 - **ALWAYS** `config.py` laedt `.env` via `python-dotenv` aus dem Verzeichnis von `config.py` (`load_dotenv(_BASE_DIR / ".env")`); `DB_PATH` = `str(_BASE_DIR / "database.db")` damit SQLite nicht vom cwd abhaengt.
 - **ALWAYS** `scanner.py` nutzt fuer `tweepy.Client` **nur** `TWITTER_BEARER` (keine OAuth1-Felder im Scanner-Client); Lese-Endpoints nutzen App-only Bearer.
+- **TRACKED_ACCOUNTS** darf `id:USER_ID` enthalten (Snowflake), wenn `get_user(username=...)` resource-not-found liefert; Author-String kommt aus `user.data.username`.

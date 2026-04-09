@@ -15,17 +15,33 @@ def get_client() -> tweepy.Client:
     )
 
 
-def get_latest_tweets(username: str, client: tweepy.Client) -> list[dict]:
+def _fetch_user(client: tweepy.Client, account_spec: str):
+    """
+    account_spec: Twitter handle (no @) OR 'id:123456789' when username lookup returns not-found
+    (handles renames / API quirks).
+    """
+    spec = (account_spec or "").strip()
+    if spec.lower().startswith("id:"):
+        uid = spec[3:].strip()
+        if not uid.isdigit():
+            print(f"[SCANNER] Invalid id spec (need digits): {account_spec!r}")
+            return None, spec
+        return client.get_user(id=uid), spec
+    return client.get_user(username=spec), spec
+
+
+def get_latest_tweets(account_spec: str, client: tweepy.Client) -> list[dict]:
     try:
-        user = client.get_user(username=username)
+        user, spec = _fetch_user(client, account_spec)
         if not user.data:
             errs = getattr(user, "errors", None) or []
             if errs:
-                print(f"[SCANNER] User @{username}: API errors: {errs}")
+                print(f"[SCANNER] User {spec!r}: API errors: {errs}")
             else:
-                print(f"[SCANNER] User @{username} not found (wrong handle, suspended, or renamed)")
+                print(f"[SCANNER] User {spec!r} not found (wrong handle, suspended, or renamed)")
             return []
 
+        handle = (user.data.username or spec).strip()
         tweets = client.get_users_tweets(
             user.data.id,
             max_results=5,
@@ -53,7 +69,7 @@ def get_latest_tweets(username: str, client: tweepy.Client) -> list[dict]:
 
             results.append({
                 "id": str(tweet.id),
-                "author": username,
+                "author": handle,
                 "text": tweet.text,
                 "likes": likes,
                 "age_seconds": int(age),
@@ -62,7 +78,7 @@ def get_latest_tweets(username: str, client: tweepy.Client) -> list[dict]:
         return results
 
     except Exception as e:
-        print(f"[SCANNER] Error fetching @{username}: {e}")
+        print(f"[SCANNER] Error fetching {account_spec!r}: {e}")
         return []
 
 
