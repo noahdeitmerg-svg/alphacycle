@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-11
+**Zuletzt aktualisiert:** 2026-04-09
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-09) — alphacycle-x-bot: WClemente als Snowflake-ID
+- **Datei(en):** alphacycle-x-bot/config.py
+- **Was wurde geaendert:** Erster Eintrag in TRACKED_ACCOUNTS ist `id:1270906326823186432` (verifiziert via resolve_user.py fuer Username WClemente); WClementeIII bleibt ungueltig.
+- **Warum:** Username-Lookup kann bei Renames brechen; stabile User-ID vermeidet not-found nach zukuenftigen Aenderungen am @-Handle.
+- **Status:** in progress
 
 ## Letzter Session-Status (2026-04-11) — alphacycle-x-bot: WClemente handle + resolve_user.py
 - **Datei(en):** alphacycle-x-bot/config.py, alphacycle-x-bot/resolve_user.py

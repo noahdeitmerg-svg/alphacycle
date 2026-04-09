@@ -23,9 +23,9 @@ CLAUDE_MODEL = "claude-sonnet-4-20250514"
 ALPHACYCLE_API = "https://alphacycle-production.up.railway.app"
 
 # Handles: no @. Prefix id:SNOWFLAKE only if you verified it (GET /2/users/:id). Wrong id => not-found.
-# Will Clemente: handle is often @WClemente now (rename); @WClementeIII may not resolve in v2 for some apps.
+# Will Clemente: @WClemente (WClementeIII not found in v2). id from resolve_user.py 2026-04-09.
 TRACKED_ACCOUNTS = [
-    "WClemente",
+    "id:1270906326823186432",
     "RaoulGMI",
     "LynAldenContact",
     "100trillionUSD",
