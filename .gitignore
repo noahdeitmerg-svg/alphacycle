@@ -10,3 +10,4 @@ build/
 venv/
 .idea/
 .vscode/
+alphacycle-x-bot/database.db

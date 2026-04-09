@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-08
+**Zuletzt aktualisiert:** 2026-04-09
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-09) — alphacycle-x-bot: Twitter/X 401 Posting-Diagnose
+- **Datei(en):** alphacycle-x-bot/config.py, alphacycle-x-bot/poster.py, alphacycle-x-bot/test_manual_reply.py, .cursor/rules/permanent-fixes.mdc
+- **Was wurde geaendert:** Alle Twitter/Claude-Env-Werte mit `.strip()`; poster: explizit `user_auth=True`, klare Prüfung OAuth-User-Credentials, `tweepy.Unauthorized` mit Response-Body + Hinweis (Bearer vs OAuth1, Screen-Env, Token-Regeneration); `test_manual_reply.py` für manuellen `get_me` + Reply-Test.
+- **Warum:** 401 beim Posten tritt häufig auf, wenn nur der Bearer für Reads gesetzt ist oder OAuth-Secrets whitespace-/App-mismatch haben; Scan kann unabhängig davon funktionieren.
+- **Status:** in progress (VPS: Env prüfen, ggf. Tokens nach Read+Write neu generieren)
 
 ## Letzter Session-Status (2026-04-08) — Hotfix: Hero Orbit Mobile (CSS-only)
 - **Datei(en):** index.html
