@@ -1,4 +1,6 @@
 """Print secret lengths and obvious .env issues (no values shown). Run: python3 verify_env.py"""
+from datetime import datetime, timezone
+
 import config
 
 
@@ -22,6 +24,8 @@ def main() -> None:
         print("Hint: API secret often ~50 chars; check for truncated line in .env.")
     if config.TWITTER_ACCESS_SECRET and len(config.TWITTER_ACCESS_SECRET) < 40:
         print("Hint: Access token secret often ~45 chars; check .env single-line value.")
+    print("Server UTC now:", datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%SZ"))
+    print("If get_me 401: run `timedatectl` / sync NTP; in X Portal regenerate Key+Secret AND Access+Secret for same app.")
 
 
 if __name__ == "__main__":

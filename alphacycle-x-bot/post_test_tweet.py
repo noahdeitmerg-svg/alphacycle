@@ -46,6 +46,15 @@ def main() -> int:
         print("get_me:", me)
     except tweepy.Unauthorized as e:
         print("get_me 401:", e)
+        if getattr(e, "response", None) is not None:
+            try:
+                print("get_me body:", e.response.text[:800])
+            except Exception:
+                pass
+        print(
+            "If lens look OK in verify_env.py: regenerate Consumer+Access tokens in ONE app "
+            "(Read-Write), paste into .env, check server time (ntp), no OAuth2 token in OAuth1 fields."
+        )
         return 1
 
     try:
@@ -53,6 +62,11 @@ def main() -> int:
         print("create_tweet:", r)
     except tweepy.Unauthorized as e:
         print("create_tweet 401:", e)
+        if getattr(e, "response", None) is not None:
+            try:
+                print("create_tweet body:", e.response.text[:800])
+            except Exception:
+                pass
         return 1
     except tweepy.Forbidden as e:
         print("create_tweet 403:", e)

@@ -4,6 +4,12 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-04-10) — alphacycle-x-bot: TRACKED Fix + 401 Response + MIN_LIKES
+- **Datei(en):** alphacycle-x-bot/config.py, post_test_tweet.py, verify_env.py, .env.example
+- **Was wurde geaendert:** TRACKED wieder API-tauglich (wclementeiii, CryptoCapo_, DylanLeClair); `MIN_LIKES_TO_REPLY` per Env; `post_test_tweet` druckt 401-Body; `verify_env` UTC + NTP-Hinweis (`timedatectl` Typos korrigiert).
+- **Warum:** X meldet resource-not-found fuer alte Handles; 401 mit plausiblen Laengen braucht Portal-Token-Reset bzw. Zeit-Sync.
+- **Status:** in progress
+
 ## Letzter Session-Status (2026-04-10) — alphacycle-x-bot: Scanner nur Bearer + verify_env
 - **Datei(en):** alphacycle-x-bot/scanner.py, alphacycle-x-bot/config.py (TRACKED zurueck), alphacycle-x-bot/verify_env.py
 - **Was wurde geaendert:** Scanner-Client nur noch `bearer_token` (Lese-API); OAuth1 dort entfernt; Tracking-Liste wieder wie vom Nutzer; `verify_env.py` fuer Laengen/Newline-Check bei 401 trotz dotenv.

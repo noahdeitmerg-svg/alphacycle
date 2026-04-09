@@ -22,16 +22,16 @@ CLAUDE_MODEL = "claude-sonnet-4-20250514"
 
 ALPHACYCLE_API = "https://alphacycle-production.up.railway.app"
 
-# Handles: no @. If X returns "resource-not-found", fix the handle on x.com (e.g. capaboreal -> CryptoCapo_).
+# Handles: no @. Names must exist for GET /2/users/by/username (check x.com URL if API says resource-not-found).
 TRACKED_ACCOUNTS = [
-    "WClementeIII",
+    "wclementeiii",
     "RaoulGMI",
     "LynAldenContact",
     "100trillionUSD",
-    "capaboreal",
+    "CryptoCapo_",
     "TechDev_52",
     "CryptoCred",
-    "DylanLeClair_",
+    "DylanLeClair",
 ]
 
 MAX_REPLIES_PER_HOUR = 3
@@ -43,6 +43,6 @@ REPLY_DELAY_MAX = 1320
 
 MIN_TWEET_AGE_SECONDS = 60
 MAX_TWEET_AGE_SECONDS = 3600
-MIN_LIKES_TO_REPLY = 5
+MIN_LIKES_TO_REPLY = int(os.getenv("MIN_LIKES_TO_REPLY", "5"))
 
 DB_PATH = str(_BASE_DIR / "database.db")
