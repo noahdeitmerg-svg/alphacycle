@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-03-11
+**Zuletzt aktualisiert:** 2026-04-08
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-08) — Hotfix: Hero Orbit Mobile (CSS-only)
+- **Datei(en):** index.html
+- **Was wurde geaendert:** Einheitlicher `@media (max-width: 700px)`-Block im HERO ORBITAL-Abschnitt: Ring 180px, Score 42px, kleinere gauge-denom/score-phase/#hero-regime-context, Orbit-Labels weiter aussen (ol-*), Components-Stack, Hero-Padding reduziert; globale Zone-Leiste unter `#btc-card.hero-card .hero-zones` (opacity 0.6, hz-range/hz-label Lesbarkeit); `@media (max-width: 400px)` Ring 160px / Score 36px. Entfernt: spaetere Overrides in `@media (max-width: 480px)` und `@media (max-width: 360px)` fuer `#btc-card` gauge/components sowie das alte `@media(max-width:700px)` nur fuer `.components-grid` (Konflikt mit Orbit-Flex).
+- **Warum:** Ueberlappungen auf Mobile; widerspruechliche spaete CSS-Regeln haben Orbit-Fixes ueberschrieben.
+- **Status:** deployed
 
 ## Letzter Session-Status (2026-03-18) — Style: Hero Refinement V2 (CSS-only)
 - **Datei(en):** index.html
