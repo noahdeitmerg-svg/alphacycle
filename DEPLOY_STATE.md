@@ -6,7 +6,7 @@
 
 ## Letzter Session-Status (2026-04-10) — alphacycle-x-bot: TRACKED Fix + 401 Response + MIN_LIKES
 - **Datei(en):** alphacycle-x-bot/config.py, post_test_tweet.py, verify_env.py, .env.example
-- **Was wurde geaendert:** TRACKED wieder API-tauglich (wclementeiii, CryptoCapo_, DylanLeClair); `MIN_LIKES_TO_REPLY` per Env; `post_test_tweet` druckt 401-Body; `verify_env` UTC + NTP-Hinweis (`timedatectl` Typos korrigiert).
+- **Was wurde geaendert:** TRACKED wieder API-tauglich (wclementeiii, CryptoCapo_, DylanLeClair); `MIN_LIKES_TO_REPLY` per Env; `post_test_tweet` druckt 401-Body; `verify_env` mit UTC-Zeit und NTP-Hinweis (`timedatectl`).
 - **Warum:** X meldet resource-not-found fuer alte Handles; 401 mit plausiblen Laengen braucht Portal-Token-Reset bzw. Zeit-Sync.
 - **Status:** in progress
 
