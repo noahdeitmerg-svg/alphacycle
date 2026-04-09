@@ -22,10 +22,10 @@ CLAUDE_MODEL = "claude-sonnet-4-20250514"
 
 ALPHACYCLE_API = "https://alphacycle-production.up.railway.app"
 
-# Handles: no @. Use id:NUMERIC_ID if username returns resource-not-found (renames / X API).
-# Will Clemente: public listings use @WClementeIII on web but v2 username lookup can fail; id from twitterscore.io profile WClementeIII.
+# Handles: no @. Prefix id:SNOWFLAKE only if you verified it (GET /2/users/:id). Wrong id => not-found.
+# Will Clemente: handle is often @WClemente now (rename); @WClementeIII may not resolve in v2 for some apps.
 TRACKED_ACCOUNTS = [
-    "id:1291302716296697856",
+    "WClemente",
     "RaoulGMI",
     "LynAldenContact",
     "100trillionUSD",

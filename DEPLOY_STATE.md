@@ -4,6 +4,12 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-04-11) — alphacycle-x-bot: WClemente handle + resolve_user.py
+- **Datei(en):** alphacycle-x-bot/config.py, alphacycle-x-bot/resolve_user.py
+- **Was wurde geaendert:** Will Clemente als `WClemente` (statt falscher id/fester wclementeiii); Hilfsskript `resolve_user.py` fuer User-ID per Bearer.
+- **Warum:** Falsche Snowflake-ID liefert not-found; aktueller Handle oft WClemente.
+- **Status:** in progress
+
 ## Letzter Session-Status (2026-04-11) — alphacycle-x-bot: Scanner id: user_id fallback
 - **Datei(en):** alphacycle-x-bot/scanner.py, alphacycle-x-bot/config.py
 - **Was wurde geaendert:** `TRACKED_ACCOUNTS` Eintraege koennen `id:SNOWFLAKE_ID` sein; Lookup per GET /2/users/:id wenn Username resource-not-found; `author` aus API-Username.
