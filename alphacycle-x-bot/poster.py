@@ -92,7 +92,19 @@ def post_reply(tweet_id: str, author: str, reply_text: str) -> bool:
         )
         return False
     except tweepy.Forbidden as e:
-        print(f"[POSTER] Twitter forbidden: {e}")
+        detail = ""
+        if getattr(e, "response", None) is not None:
+            try:
+                detail = e.response.text[:600]
+            except Exception:
+                detail = str(e.response)
+        print(f"[POSTER] 403 Forbidden (X policy, not OAuth): {e}")
+        if detail:
+            print(f"[POSTER] Response body: {detail}")
+        print(
+            "[POSTER] Common cause: reply to a tweet where @you was not mentioned / no prior engagement. "
+            "Try another candidate or a standalone tweet for testing."
+        )
         return False
     except Exception as e:
         print(f"[POSTER] Error posting reply: {e}")

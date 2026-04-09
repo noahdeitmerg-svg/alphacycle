@@ -4,6 +4,12 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-04-09) — alphacycle-x-bot: dotenv, Start-Skript, Test-Post
+- **Datei(en):** alphacycle-x-bot/config.py, requirements.txt, bot.py (--once), poster.py (403-Hinweis), post_test_tweet.py, start.sh, .env.example
+- **Was wurde geaendert:** `python-dotenv` laedt `.env` automatisch aus dem Ordner von `config.py`; `DB_PATH` absolut dorthin; `SCAN_INTERVAL_SECONDS` default 300 per Env override; `bot.py --once` fuer einen Zyklus; `post_test_tweet.py` fuer Standalone-Write-Test; `start.sh` fuer VPS/screen ohne manuelles `source .env`; klarere 403-Logs beim Reply.
+- **Warum:** Bot soll ohne Shell-`export` laufen; schneller Testzyklus und einfacher Write-Test.
+- **Status:** in progress (VPS: `git pull`, `pip3 install -r requirements.txt`, `chmod +x start.sh`)
+
 ## Letzter Session-Status (2026-04-09) — alphacycle-x-bot: Twitter/X 401 Posting-Diagnose
 - **Datei(en):** alphacycle-x-bot/config.py, alphacycle-x-bot/poster.py, alphacycle-x-bot/test_manual_reply.py, .cursor/rules/permanent-fixes.mdc
 - **Was wurde geaendert:** Alle Twitter/Claude-Env-Werte mit `.strip()`; poster: explizit `user_auth=True`, klare Prüfung OAuth-User-Credentials, `tweepy.Unauthorized` mit Response-Body + Hinweis (Bearer vs OAuth1, Screen-Env, Token-Regeneration); `test_manual_reply.py` für manuellen `get_me` + Reply-Test.

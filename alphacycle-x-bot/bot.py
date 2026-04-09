@@ -1,3 +1,4 @@
+import argparse
 import time
 import sys
 import database
@@ -69,19 +70,37 @@ def run_cycle():
 
 
 def main():
+    parser = argparse.ArgumentParser(description="AlphaCycle X Bot")
+    parser.add_argument(
+        "--once",
+        action="store_true",
+        help="Run a single scan cycle then exit (good for smoke tests).",
+    )
+    args = parser.parse_args()
+
     print("[BOT] AlphaCycle X Bot v2 starting...")
+    print("[BOT] Config: .env auto-loaded from folder containing config.py (python-dotenv).")
     print(f"[BOT] Tracking: {', '.join(config.TRACKED_ACCOUNTS)}")
     print(f"[BOT] Interval: {config.SCAN_INTERVAL_SECONDS}s")
     print(f"[BOT] Limits: {config.MAX_REPLIES_PER_HOUR}/hr, {config.MAX_REPLIES_PER_DAY}/day")
     print(f"[BOT] Delay: {config.REPLY_DELAY_MIN}-{config.REPLY_DELAY_MAX}s per reply")
 
     if not preflight_check():
-        print("[BOT] Preflight failed — set missing env vars and restart.")
+        print("[BOT] Preflight failed — add secrets to .env next to config.py and retry.")
         sys.exit(1)
 
     database.init_db()
     print("[BOT] Database ready.")
     print("[BOT] All systems go.\n")
+
+    if args.once:
+        try:
+            run_cycle()
+        except KeyboardInterrupt:
+            print("\n[BOT] Stopped.")
+        except Exception as e:
+            print(f"[BOT] Cycle error: {e}")
+        return
 
     while True:
         try:

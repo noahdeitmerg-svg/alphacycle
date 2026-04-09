@@ -1,4 +1,12 @@
 import os
+from pathlib import Path
+
+from dotenv import load_dotenv
+
+# Same directory as this file (works no matter what cwd is when starting bot.py).
+_BASE_DIR = Path(__file__).resolve().parent
+# Does not override variables already set in the shell.
+load_dotenv(_BASE_DIR / ".env")
 
 # Strip: trailing newlines/spaces from .env or copy-paste break OAuth1 signatures (401).
 TWITTER_API_KEY = (os.getenv("TWITTER_API_KEY", "") or "").strip()
@@ -25,7 +33,7 @@ TRACKED_ACCOUNTS = [
 
 MAX_REPLIES_PER_HOUR = 3
 MAX_REPLIES_PER_DAY = 15
-SCAN_INTERVAL_SECONDS = 600
+SCAN_INTERVAL_SECONDS = int(os.getenv("SCAN_INTERVAL_SECONDS", "300"))
 
 REPLY_DELAY_MIN = 360
 REPLY_DELAY_MAX = 1320
@@ -34,4 +42,4 @@ MIN_TWEET_AGE_SECONDS = 60
 MAX_TWEET_AGE_SECONDS = 3600
 MIN_LIKES_TO_REPLY = 5
 
-DB_PATH = "database.db"
+DB_PATH = str(_BASE_DIR / "database.db")
