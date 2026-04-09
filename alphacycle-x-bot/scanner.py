@@ -5,12 +5,12 @@ import database
 
 
 def get_client() -> tweepy.Client:
+    # Reads (get_user, user timeline) use Bearer by default (user_auth=False).
+    # Do not pass OAuth1 here: invalid user keys can break lookups; Bearer is enough for public data.
+    if not config.TWITTER_BEARER:
+        raise RuntimeError("TWITTER_BEARER missing — scanner cannot run.")
     return tweepy.Client(
         bearer_token=config.TWITTER_BEARER,
-        consumer_key=config.TWITTER_API_KEY,
-        consumer_secret=config.TWITTER_API_SECRET,
-        access_token=config.TWITTER_ACCESS_TOKEN,
-        access_token_secret=config.TWITTER_ACCESS_SECRET,
         wait_on_rate_limit=True,
     )
 

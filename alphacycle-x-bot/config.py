@@ -22,16 +22,16 @@ CLAUDE_MODEL = "claude-sonnet-4-20250514"
 
 ALPHACYCLE_API = "https://alphacycle-production.up.railway.app"
 
-# Handles must match x.com URLs (no @). Updated when API returns resource-not-found.
+# Handles: no @. If X returns "resource-not-found", fix the handle on x.com (e.g. capaboreal -> CryptoCapo_).
 TRACKED_ACCOUNTS = [
-    "wclementeiii",
+    "WClementeIII",
     "RaoulGMI",
     "LynAldenContact",
     "100trillionUSD",
-    "CryptoCapo_",
+    "capaboreal",
     "TechDev_52",
     "CryptoCred",
-    "DylanLeClair",
+    "DylanLeClair_",
 ]
 
 MAX_REPLIES_PER_HOUR = 3

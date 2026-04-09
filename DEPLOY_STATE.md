@@ -4,6 +4,12 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-04-10) — alphacycle-x-bot: Scanner nur Bearer + verify_env
+- **Datei(en):** alphacycle-x-bot/scanner.py, alphacycle-x-bot/config.py (TRACKED zurueck), alphacycle-x-bot/verify_env.py
+- **Was wurde geaendert:** Scanner-Client nur noch `bearer_token` (Lese-API); OAuth1 dort entfernt; Tracking-Liste wieder wie vom Nutzer; `verify_env.py` fuer Laengen/Newline-Check bei 401 trotz dotenv.
+- **Warum:** OAuth1 mit ungueltigen Keys im gleichen Client kann Lookups stoeren; 401 mit len>0 oft abgeschnittene .env-Zeilen oder falsche Secrets.
+- **Status:** in progress
+
 ## Letzter Session-Status (2026-04-10) — alphacycle-x-bot: Handles + .env UTF-8-BOM
 - **Datei(en):** alphacycle-x-bot/config.py, alphacycle-x-bot/post_test_tweet.py
 - **Was wurde geaendert:** `TRACKED_ACCOUNTS`: capaboreal -> CryptoCapo_, DylanLeClair_ -> DylanLeClair, WClemente -> wclementeiii; `load_dotenv(..., encoding=utf-8-sig)` gegen BOM; `ENV_FILE` fuer Diagnose; post_test_tweet zeigt .env-Pfad wenn Keys fehlen.
