@@ -9,7 +9,7 @@ from __future__ import annotations
 import logging
 import re
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
@@ -161,32 +161,66 @@ def fetch_arc_data() -> dict[str, Any] | None:
         return out
 
 
-def generate_daily_post(arc_data: dict[str, Any] | None, db_connection) -> str | None:
+def summarize_post_one_sentence(post_text: str) -> str | None:
     """
-    Load posted_topics from the last 7 days, build post prompt (weekday from local time),
-    call Claude. db_connection: sqlite3.Connection or None (opens own connection).
+    Claude follow-up: one-sentence angle summary for posted_topics.topic_summary.
     """
-    if not arc_data:
-        logger.error("generate_daily_post: arc_data is missing")
+    raw = (post_text or "").strip()
+    if not raw or not config.CLAUDE_API_KEY:
         return None
-    if not config.CLAUDE_API_KEY:
-        logger.error("generate_daily_post: CLAUDE_API_KEY not set")
+    try:
+        client = anthropic.Anthropic(api_key=config.CLAUDE_API_KEY)
+        response = client.messages.create(
+            model=config.CLAUDE_MODEL,
+            max_tokens=120,
+            system=(
+                "Reply with exactly one clear English sentence describing the post's "
+                "main angle or thesis. No quotation marks, no hashtags, no emojis, no labels."
+            ),
+            messages=[{"role": "user", "content": raw[:3500]}],
+        )
+        block = response.content[0].text.strip()
+        line = block.split("\n")[0].strip()
+        return line[:500] if line else None
+    except Exception as e:
+        logger.warning("summarize_post_one_sentence: Claude error: %s", e)
         return None
 
-    posted_topics = database.get_daily_post_topics_last_7_days(db_connection)
-    day_name = datetime.now().strftime("%A")
-    weekday_idx = datetime.now().weekday()
-    logger.info("generate_daily_post: day_of_week=%s (weekday index %s)", day_name, weekday_idx)
+
+def generate_daily_post(
+    arc_data: dict[str, Any] | None, db_connection
+) -> tuple[str | None, str]:
+    """
+    Build post prompt (topics from database.get_recent_topics via growth_engine),
+    call Claude. Returns (post_text_or_none, post_type_key for this UTC weekday).
+    db_connection is unused (kept for API compatibility).
+    """
+    _ = db_connection
+    if not arc_data:
+        logger.error("generate_daily_post: arc_data is missing")
+        return None, ""
+    if not config.CLAUDE_API_KEY:
+        logger.error("generate_daily_post: CLAUDE_API_KEY not set")
+        return None, ""
+
+    weekday_idx = datetime.now(timezone.utc).weekday()
+    day_name = datetime.now(timezone.utc).strftime("%A")
+    post_type = growth_engine.POST_TYPE_BY_WEEKDAY[int(weekday_idx) % 7]
+    logger.info(
+        "generate_daily_post: day_of_week=%s (UTC index %s) type=%s",
+        day_name,
+        weekday_idx,
+        post_type,
+    )
 
     try:
         system_prompt = growth_engine.build_post_prompt(
             arc_data,
-            posted_topics,
             day_of_week=int(weekday_idx),
         )
     except Exception as e:
         logger.error("generate_daily_post: build_post_prompt failed: %s", e)
-        return None
+        return None, post_type
 
     user_msg = (
         "Write only the final post body. Follow the system rules (line count, no hashtags/emojis, "
@@ -203,10 +237,10 @@ def generate_daily_post(arc_data: dict[str, Any] | None, db_connection) -> str |
         )
         text = response.content[0].text.strip()
         logger.info("generate_daily_post: generated %s chars", len(text))
-        return text
+        return text, post_type
     except Exception as e:
         logger.error("generate_daily_post: Claude API error: %s", e)
-        return None
+        return None, post_type
 
 
 def _screenshot_playwright(out_path: Path) -> bool:
@@ -269,7 +303,7 @@ def generate_daily_post_with_image(
     """
     Text via generate_daily_post; optional dashboard PNG. Returns (post_text, image_path or None).
     """
-    post_text = generate_daily_post(arc_data, db_connection)
+    post_text, _pt = generate_daily_post(arc_data, db_connection)
     if not post_text:
         return None, None
 

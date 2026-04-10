@@ -1,4 +1,5 @@
 import argparse
+import logging
 import os
 import sys
 import time
@@ -64,12 +65,12 @@ def schedule_daily_post() -> None:
     if not arc:
         print("[DAILY] WARNING: fetch_arc_data failed — no daily post queued")
         return
-    text = generate_daily_post(arc, None)
+    text, post_type = generate_daily_post(arc, None)
     if not text:
         print("[DAILY] WARNING: generate_daily_post returned nothing — skip queue")
         return
     pending_id = str(uuid.uuid4())
-    if not database.insert_pending_daily_post(pending_id, text):
+    if not database.insert_pending_daily_post(pending_id, text, post_type):
         print(f"[DAILY] WARNING: insert pending daily failed id={pending_id}")
         return
     sent = telegram_bot.send_daily_post_approval(text, pending_id)
@@ -135,6 +136,8 @@ def main():
     )
     args = parser.parse_args()
 
+    if not logging.root.handlers:
+        logging.basicConfig(level=logging.INFO, format="%(message)s")
     print("[BOT] AlphaCycle X Bot v2 starting...")
     print("[BOT] Config: .env auto-loaded from folder containing config.py (python-dotenv).")
     print("[BOT] Mode: replies + daily posts require Telegram approval (run telegram_listener.py).")

@@ -1,9 +1,12 @@
 import time
 import random
+from datetime import datetime, timezone
+
 import tweepy
 import config
 import daily_post_engine
 import database
+import growth_engine
 
 
 def oauth_user_credentials_ready() -> bool:
@@ -222,6 +225,22 @@ def post_daily_post(pending_id: str) -> bool:
             database.record_daily_post_topic(
                 daily_post_engine.topic_snippet_from_post(text),
                 post_preview=text[:2000],
+            )
+            pt = (row.get("post_type") or "").strip()
+            if not pt:
+                wd = datetime.now(timezone.utc).weekday()
+                pt = growth_engine.POST_TYPE_BY_WEEKDAY[wd % 7]
+            summary = daily_post_engine.summarize_post_one_sentence(post_text)
+            if not summary:
+                summary = daily_post_engine.topic_snippet_from_post(
+                    post_text, max_len=220
+                )
+            database.save_topic(
+                post_text=post_text,
+                post_type=pt,
+                arc_score=None,
+                topic_summary=summary
+                or daily_post_engine.topic_snippet_from_post(post_text, max_len=200),
             )
             database.set_pending_daily_status(pending_id, "posted")
             print(f"[POSTER] Daily post published: {text[:60]}...")

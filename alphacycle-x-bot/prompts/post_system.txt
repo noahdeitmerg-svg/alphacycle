@@ -23,7 +23,7 @@ POST TYPE FOR TODAY: {post_type}
 - minimal_narrative: Weekend style. Lighter, reflective. One observation.
 - weekly_recap: Thread format. 5-6 connected posts summarizing the week.
 
-TOPICS USED IN LAST 7 DAYS (do NOT repeat these angles):
+TOPICS USED RECENTLY (from DB; do NOT repeat these angles), one per line, format summary (post_type):
 {posted_topics}
 
 SHARE LINES (rotate naturally, use one per post):

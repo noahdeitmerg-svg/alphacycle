@@ -1,15 +1,20 @@
 """
 AlphaCycle content prompt builder: loads master prompts from prompts/*.txt,
-injects ARC context, history, and randomized angles. No API calls here.
+injects ARC context, history, and randomized angles. No HTTP API calls here;
+reads posted-topic history from SQLite via database.get_recent_topics.
 """
 from __future__ import annotations
 
+import logging
 import random
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Sequence
 
 import config
+import database
+
+logger = logging.getLogger(__name__)
 
 _PROMPTS_DIR = Path(__file__).resolve().parent / "prompts"
 
@@ -104,6 +109,16 @@ def _format_posted_topics(posted_topics: Sequence[str] | None) -> str:
     return "\n".join(parts)
 
 
+def _join_posted_topics_lines(lines: list[str]) -> str:
+    """One topic per line: summary (post_type) for post_system.txt {posted_topics}."""
+    clean = [(x or "").strip() for x in lines if (x or "").strip()]
+    if not clean:
+        return (
+            "(none in posted_topics table yet — still avoid repeating stale macro memes.)"
+        )
+    return "\n".join(clean[:40])
+
+
 def _pick_post_type(day_of_week: int) -> str:
     """Monday=0 .. Sunday=6 (datetime.weekday())."""
     return POST_TYPE_BY_WEEKDAY[int(day_of_week) % 7]
@@ -121,6 +136,7 @@ def build_reply_prompt(
     Returns (system_prompt, approach_key) so callers can log the approach after post.
     """
     base = _read_prompt_file("reply_system.txt")
+    logger.info("[GROWTH ENGINE] Prompts loaded successfully")
     approach_key = random.choice(REPLY_APPROACH_KEYS)
     hook_instruction = (
         HOOK_ACTIVE_LABEL
@@ -146,19 +162,22 @@ def build_reply_prompt(
 
 def build_post_prompt(
     arc_data: dict[str, Any] | None,
-    posted_topics: Sequence[str] | None,
     day_of_week: int | None = None,
 ) -> str:
     """
     Build full system-style prompt string for an original-post Claude call.
     day_of_week: Monday=0 .. Sunday=6; default UTC now.
+    Loads recent angles from database.get_recent_topics (posted_topics table),
+    one line per topic: summary (post_type).
     """
     if day_of_week is None:
         day_of_week = datetime.now(timezone.utc).weekday()
     base = _read_prompt_file("post_system.txt")
+    logger.info("[GROWTH ENGINE] Prompts loaded successfully")
     post_type = _pick_post_type(int(day_of_week))
     arc_block = _format_arc_block(arc_data)
-    topics = _format_posted_topics(posted_topics)
+    topic_lines = database.get_recent_topics(days=int(config.TOPIC_LOOKBACK_DAYS))
+    topics = _join_posted_topics_lines(topic_lines)
     for key, val in (
         ("{arc_data_block}", arc_block),
         ("{post_type}", post_type),

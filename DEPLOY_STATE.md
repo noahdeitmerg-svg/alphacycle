@@ -4,6 +4,12 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-04-10) — alphacycle-x-bot: build_post_prompt get_recent_topics + save_topic nach Daily
+- **Datei(en):** alphacycle-x-bot/growth_engine.py (`build_post_prompt` laed `database.get_recent_topics`, Logging), alphacycle-x-bot/daily_post_engine.py (`summarize_post_one_sentence`, `generate_daily_post` -> Tuple + UTC weekday), alphacycle-x-bot/poster.py (`save_topic` nach erfolgreichem Daily), alphacycle-x-bot/database.py (`pending_daily_posts.post_type`), alphacycle-x-bot/bot.py (`insert_pending_daily_post` mit Typ, `logging.basicConfig` INFO), prompts/post_system.txt, permanent-fixes.mdc
+- **Was wurde geaendert:** `{posted_topics}` im Post-Prompt aus Tabelle `posted_topics` (Lookback TOPIC_LOOKBACK_DAYS), Zeilen `summary (type)`; nach Daily-Post auf X: Claude 1-Satz-Summary + `save_topic`; `post_type` beim Queue in DB gespeichert.
+- **Warum:** Keine Wiederholung frueherer Winkel; persistente Topic-Zeilen fuer naechste Prompts.
+- **Status:** deployed
+
 ## Letzter Session-Status (2026-04-10) — alphacycle-x-bot: ARC_API_URL Railway (JSON fix)
 - **Datei(en):** alphacycle-x-bot/config.py (`ARC_API_URL` + `ALPHACYCLE_PUBLIC_BASE` Default Railway; `ARC_API_URL` per `ARC_API_URL` env), alphacycle-x-bot/daily_post_engine.py (JSON-Fetch-Fallback-Host Railway statt alphacycle.app), alphacycle-x-bot/.env.example, .cursor/rules/permanent-fixes.mdc
 - **Was wurde geaendert:** Default Arc-Summary = `https://alphacycle-production.up.railway.app/api/arc-summary` — `alphacycle.app/api/arc-summary` liefert SPA-HTML, Bot brauchte JSON (`Expecting value` auf VPS).
