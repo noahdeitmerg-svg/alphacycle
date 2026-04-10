@@ -69,7 +69,7 @@ TIER_2_ACCOUNTS = [
     "PositiveCrypto",
     "willywoo",
     "ecoinometrics",
-    "coinabormetrics_io",
+    "coinmetrics",
     "stackhodler",
     "therationalroot",
     "BitcoinMagazine",
