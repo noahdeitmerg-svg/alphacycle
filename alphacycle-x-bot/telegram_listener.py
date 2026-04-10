@@ -1,6 +1,6 @@
 """
 Telegram long-polling: POST/SKIP (replies + daily), sichtbare Chat-Bestätigungen,
-Commands /status /ping /help /start, /scan /queuedaily /logbot /logtg, Daily Summary 23:00 UTC.
+Inline-Menue (menu:*), Slash-Befehle, Daily Summary 23:00 UTC.
 Run alongside: python3 bot.py
 """
 import os
@@ -268,6 +268,127 @@ def _build_daily_summary_body() -> str:
     )
 
 
+# Plain text (authorized): show button menu without slash.
+_MENU_TRIGGERS = frozenset(
+    {
+        "menu",
+        "menü",
+        "hilfe",
+        "befehle",
+        "hallo",
+        "hi",
+        "hey",
+        "hello",
+        "start",
+        "help",
+        "?",
+    }
+)
+
+
+def _build_help_body() -> str:
+    return (
+        "AlphaCycle X-Bot — Befehle (Slash)\n\n"
+        "Freigaben: Auf Kandidaten-Nachrichten POST / SKIP; Daily: POST / SKIP.\n\n"
+        "/start /menu — Menue mit Buttons\n"
+        "/status — Metriken\n"
+        "/ping — Listener lebt\n"
+        "/scan — ein Scan-Zyklus (bot.py --once)\n"
+        "/queuedaily — Daily jetzt + Freigabe\n"
+        f"/logbot — Screen-Log ({config.SCREEN_SESSION_BOT})\n"
+        f"/logtg — Screen-Log ({config.SCREEN_SESSION_TG})\n\n"
+        "Hinweis: /scan kann parallel zum laufenden bot.py laufen.\n"
+        "Schreib auch menu oder hilfe fuer die Button-Karte."
+    )
+
+
+def _handle_menu_callback(
+    cq_id: str,
+    raw: str,
+    chat_id,
+    reply_mid: int | None,
+) -> None:
+    """Inline keyboard actions (callback_data menu:...)."""
+    if not raw.startswith("menu:"):
+        return
+
+    def toast(msg: str) -> None:
+        telegram_bot.answer_callback_query(cq_id, text=msg[:200])
+
+    key = raw[5:].strip().lower()
+    if key in ("menu", "start", ""):
+        toast("Menue")
+        telegram_bot.send_main_menu(chat_id)
+        return
+    if key == "help":
+        toast("Hilfe")
+        telegram_bot.send_feedback_message(
+            _build_help_body(),
+            chat_id=chat_id,
+            reply_to_message_id=reply_mid,
+        )
+        return
+    if key == "status":
+        toast("Status")
+        telegram_bot.send_feedback_message(
+            _build_status_body(),
+            chat_id=chat_id,
+            reply_to_message_id=reply_mid,
+        )
+        return
+    if key == "ping":
+        toast("Pong")
+        telegram_bot.send_feedback_message(
+            "pong — Listener antwortet.",
+            chat_id=chat_id,
+            reply_to_message_id=reply_mid,
+        )
+        return
+    if key == "scan":
+        toast("Scan … Ergebnis folgt.")
+        code, out = _run_bot_cli(["--once"])
+        _send_chunks(
+            chat_id,
+            out,
+            reply_to_message_id=reply_mid,
+            prefix=f"Scan (bot.py --once)\nExit {code}\n",
+        )
+        return
+    if key == "queuedaily":
+        toast("Daily … Ergebnis folgt.")
+        code, out = _run_bot_cli(["--queue-daily"])
+        _send_chunks(
+            chat_id,
+            out,
+            reply_to_message_id=reply_mid,
+            prefix=f"Daily (--queue-daily)\nExit {code}\n",
+        )
+        return
+    if key == "logbot":
+        toast(f"Log {config.SCREEN_SESSION_BOT}")
+        _send_chunks(
+            chat_id,
+            _screen_log_tail(config.SCREEN_SESSION_BOT),
+            reply_to_message_id=reply_mid,
+        )
+        return
+    if key == "logtg":
+        toast(f"Log {config.SCREEN_SESSION_TG}")
+        _send_chunks(
+            chat_id,
+            _screen_log_tail(config.SCREEN_SESSION_TG),
+            reply_to_message_id=reply_mid,
+        )
+        return
+
+    toast("Unbekannt")
+    telegram_bot.send_feedback_message(
+        f"Unbekannter Menue-Button: {key!r}",
+        chat_id=chat_id,
+        reply_to_message_id=reply_mid,
+    )
+
+
 def _maybe_send_daily_summary_utc() -> None:
     global _summary_sent_for_utc_date
     now = datetime.now(timezone.utc)
@@ -290,6 +411,10 @@ def _handle_text_command(msg: dict) -> None:
         return
 
     if not text.startswith("/"):
+        low = text.lower().strip()
+        if low != "done" and _authorized_chat(chat_id) and low in _MENU_TRIGGERS:
+            telegram_bot.send_main_menu(chat_id)
+            return
         if text.lower() != "done":
             return
         if not _authorized_chat(chat_id):
@@ -319,21 +444,13 @@ def _handle_text_command(msg: dict) -> None:
 
     cmd = text.split()[0].split("@", 1)[0].lower()
 
-    if cmd in ("/start", "/help"):
-        body = (
-            "AlphaCycle X-Bot (Telegram)\n\n"
-            "Freigaben: POST / SKIP (Replies), Daily: POST / SKIP.\n\n"
-            "Befehle:\n"
-            "/status — Metriken\n"
-            "/ping — Listener lebt\n"
-            "/scan — ein Scan-Zyklus (wie bot.py --once)\n"
-            "/queuedaily — Daily jetzt erzeugen + Telegram-Freigabe\n"
-            f"/logbot — letzte Zeilen Screen-Session {config.SCREEN_SESSION_BOT!r}\n"
-            f"/logtg — letzte Zeilen Screen-Session {config.SCREEN_SESSION_TG!r}\n\n"
-            "Hinweis: Parallel zum laufenden bot.py kann /scan doppelte Arbeit "
-            "ausloesen; bei Bedarf kurz warten."
-        )
-        telegram_bot.send_feedback_message(body, chat_id=chat_id)
+    if cmd in ("/start", "/menu"):
+        telegram_bot.send_main_menu(chat_id)
+        return
+
+    if cmd == "/help":
+        telegram_bot.send_main_menu(chat_id)
+        telegram_bot.send_feedback_message(_build_help_body(), chat_id=chat_id)
         return
 
     if cmd == "/status":
@@ -462,6 +579,10 @@ def poll_loop() -> None:
                 if not _authorized_chat(chat_id):
                     _toast("Nicht autorisiert.")
                     print(f"[LISTENER] Rejected callback chat_id={chat_id!r}")
+                    continue
+
+                if raw.startswith("menu:"):
+                    _handle_menu_callback(cq_id, raw, chat_id, reply_mid)
                     continue
 
                 if raw.startswith("post:"):

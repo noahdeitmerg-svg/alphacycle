@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10 (x-bot restart-screens.sh gegen doppelte screen-Sessions)
+**Zuletzt aktualisiert:** 2026-04-10 (x-bot Telegram Hauptmenue Inline-Buttons)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-10) — alphacycle-x-bot: Telegram Hauptmenue (Inline-Buttons + menu:*)
+- **Datei(en):** alphacycle-x-bot/telegram_bot.py (`send_main_menu`), alphacycle-x-bot/telegram_listener.py (`menu:*`, `_MENU_TRIGGERS`, `/menu`), alphacycle-x-bot/RUN_24_7.md, DEPLOY_STATE.md, .cursor/rules/permanent-fixes.mdc
+- **Was wurde geaendert:** `/start` und `/menu` senden eine Nachricht mit Erklaertext und Inline-Tasten (Status, Ping, Scan, Daily-Queue, Screen-Logs, Menue erneut, Hilfe). Callbacks `menu:…` fuehren dieselben Aktionen wie die Slash-Befehle. `/help` sendet Menue plus Befehlsliste. Schlagwoerter z. B. `menu`, `hilfe`, `hallo` oeffnen das Menue (nur autorisierter Chat).
+- **Warum:** Steuerung komplett ueber tippen ohne Slash merken zu muessen.
+- **Status:** deployed (VPS: git pull, `./restart-screens.sh`)
 
 ## Letzter Session-Status (2026-04-10) — alphacycle-x-bot: restart-screens.sh (mehrere tg/xbot Sockets)
 - **Datei(en):** alphacycle-x-bot/restart-screens.sh, alphacycle-x-bot/RUN_24_7.md, DEPLOY_STATE.md
