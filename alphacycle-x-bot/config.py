@@ -81,7 +81,7 @@ TIER_3_ACCOUNTS = [
     "GameofTrades_",
     "fejau_inc",
     "CryptoHayes",
-    "ChrisBurniske",
+    "cburniske",
     "GlassnodeAlerts",
     "MacroAlf",
 ]

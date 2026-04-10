@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-09 (TRACKED_ACCOUNTS Handle-Fixes)
+**Zuletzt aktualisiert:** 2026-04-09 (TRACKED_ACCOUNTS cburniske)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-09) — alphacycle-x-bot: TIER_3 ChrisBurniske → cburniske
+- **Datei(en):** alphacycle-x-bot/config.py, DEPLOY_STATE.md
+- **Was wurde geaendert:** `ChrisBurniske` durch `cburniske` ersetzt (korrekter X-Handle). `willywoo`, `BitcoinMagazine`, Entfernung `glasabornode` waren bereits im Stand vom letzten Commit.
+- **Warum:** User-verifizierte Handles.
+- **Status:** deployed
 
 ## Letzter Session-Status (2026-04-09) — alphacycle-x-bot: TRACKED_ACCOUNTS Handle-Korrekturen (TIER_2)
 - **Datei(en):** alphacycle-x-bot/config.py
