@@ -4,6 +4,12 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-04-11) — alphacycle-x-bot: growth_engine + Prompt-Templates
+- **Datei(en):** alphacycle-x-bot/growth_engine.py, alphacycle-x-bot/prompts/reply_system.txt, alphacycle-x-bot/prompts/post_system.txt, alphacycle-x-bot/reply_engine.py, alphacycle-x-bot/database.py (get_recent_reply_texts), .cursor/rules/permanent-fixes.mdc (growth_engine Regeln)
+- **Was wurde geaendert:** Zentrale Prompt-Erzeugung: build_reply_prompt (5 Zufalls-Ansaetze, 40% Curiosity Hook, ARC+History+Tweet); build_post_prompt (Wochentag -> Post-Typ, Topics 7d, Share-Lines-Ende); Master-Rules in TXT; reply_engine nutzt growth_engine + letzte 10 Replies aus SQLite; keine API in growth_engine.
+- **Warum:** Operating-Brain / Claude-Pipeline: konsistente Brand-Constraints und Variation; daily_post_engine kann build_post_prompt spaeter nutzen.
+- **Status:** in progress
+
 ## Letzter Session-Status (2026-04-11) — alphacycle-x-bot: test_telegram_post_real.py
 - **Datei(en):** alphacycle-x-bot/test_telegram_post_real.py, RUN_24_7.md
 - **Was wurde geaendert:** Skript fuer Telegram-POST-Test mit echter Tweet-ID (eigener Tweet); Hinweis REPLY_DELAY.

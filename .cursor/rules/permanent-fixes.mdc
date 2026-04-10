@@ -1,6 +1,6 @@
 ---
 description: AlphaCycle permanent fixes - NEVER revert when editing backend or index
-globs: backend/**/*.py, backend/Dockerfile, **/index.html, DEPLOY_STATE.md
+globs: backend/**/*.py, backend/Dockerfile, **/index.html, DEPLOY_STATE.md, alphacycle-x-bot/**/*.py
 alwaysApply: true
 ---
 
@@ -188,3 +188,9 @@ Beim Bearbeiten von backend/fetcher.py, backend/main.py, backend/scoring.py oder
 - **ALWAYS** `config.py` laedt `.env` via `python-dotenv` aus dem Verzeichnis von `config.py` (`load_dotenv(_BASE_DIR / ".env")`); `DB_PATH` = `str(_BASE_DIR / "database.db")` damit SQLite nicht vom cwd abhaengt.
 - **ALWAYS** `scanner.py` nutzt fuer `tweepy.Client` **nur** `TWITTER_BEARER` (keine OAuth1-Felder im Scanner-Client); Lese-Endpoints nutzen App-only Bearer.
 - **TRACKED_ACCOUNTS** darf `id:USER_ID` enthalten (Snowflake), wenn `get_user(username=...)` resource-not-found liefert; Author-String kommt aus `user.data.username`.
+
+## alphacycle-x-bot / growth_engine (Content)
+- **NEVER** API-Calls in `growth_engine.py` — nur Prompt-Bau; Claude bleibt in `reply_engine.py` / spaeter `daily_post_engine.py`.
+- **NEVER** die LOCKED BRAND RULES in `prompts/reply_system.txt` und `prompts/post_system.txt` entfernen oder lockern: keine $BTC/$ETH, keine Hashtags/Emojis, kein Engagement-Bait, keine Preisziele; Replies ohne Woerter "AlphaCycle" und "ARC"; Posts 4-8 Zeilen, Ende mit Share Lines ohne Frage.
+- **ALWAYS** `build_reply_prompt` laed `prompts/reply_system.txt`; `build_post_prompt` laed `prompts/post_system.txt`; Platzhalter `{{...}}` per `replace` fuellen.
+- **ALWAYS** `reply_engine.generate_reply` nutzt `growth_engine.build_reply_prompt` und `database.get_recent_reply_texts(10)` fuer Duplikat-Vermeidung.

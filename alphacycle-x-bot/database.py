@@ -72,6 +72,19 @@ def log_reply(tweet_id: str, author: str, reply_text: str):
     conn.close()
 
 
+def get_recent_reply_texts(limit: int = 10) -> list[str]:
+    """Latest reply bodies for duplicate-avoidance in growth_engine prompts."""
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute(
+        "SELECT reply_text FROM replies ORDER BY replied_at DESC LIMIT ?",
+        (limit,),
+    )
+    rows = [str(r[0]) for r in c.fetchall()]
+    conn.close()
+    return rows
+
+
 def log_scanned(tweet_id: str, author: str, skipped_reason: str = None):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
