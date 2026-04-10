@@ -31,6 +31,29 @@ def _callback_chat_and_message_id(cq: dict) -> tuple[int | str | None, int | Non
     return cid, mid
 
 
+def _parse_manual_meta(text: str) -> tuple[str, str] | tuple[None, None]:
+    """
+    Extract (tweet_id, author) from poster's manual fallback marker line:
+    [MANUAL_REPLY] tweet_id=... author=...
+    """
+    raw = str(text or "")
+    for line in raw.splitlines():
+        s = line.strip()
+        if not s.startswith("[MANUAL_REPLY]"):
+            continue
+        parts = s.replace("[MANUAL_REPLY]", "").strip().split()
+        tweet_id = ""
+        author = ""
+        for p in parts:
+            if p.startswith("tweet_id="):
+                tweet_id = p.split("=", 1)[1].strip()
+            elif p.startswith("author="):
+                author = p.split("=", 1)[1].strip().lstrip("@")
+        if tweet_id and author:
+            return tweet_id, author
+    return None, None
+
+
 def _sql_candidates_found_today() -> int:
     """Rows logged as candidate path (scanned, no skip reason) since UTC midnight."""
     conn = sqlite3.connect(config.DB_PATH)
@@ -154,6 +177,27 @@ def _handle_text_command(msg: dict) -> None:
     """Reply to /status, /ping, /help, /start so the user sees the bot is alive."""
     text = (msg.get("text") or "").strip()
     if not text.startswith("/"):
+        # Manual fallback flow: user replies "done" to copy-paste message.
+        if text.lower() != "done":
+            return
+        reply_msg = msg.get("reply_to_message") or {}
+        src_text = reply_msg.get("text") or ""
+        tweet_id, author = _parse_manual_meta(src_text)
+        if not tweet_id or not author:
+            return
+        row = database.get_pending_by_tweet_id(tweet_id)
+        if row:
+            database.insert_reply_history(
+                row.get("reply_text") or "",
+                author,
+                (row.get("approach") or "") or "manual_copy_paste",
+            )
+            database.set_pending_status(tweet_id, "posted")
+        telegram_bot.send_feedback_message(
+            f"✅ Manual reply logged for @{author} (tweet_id={tweet_id}).",
+            chat_id=msg.get("chat", {}).get("id"),
+            reply_to_message_id=msg.get("message_id"),
+        )
         return
     chat_id = msg.get("chat", {}).get("id")
     if chat_id is None:
@@ -273,15 +317,23 @@ def poll_loop() -> None:
                     print(
                         f"[LOG] telegram approval received: POST tweet_id={tweet_id} (from={from_user})"
                     )
-                    ok = poster.post_reply(tweet_id)
-                    _toast("Reply gesendet." if ok else "Post fehlgeschlagen (Log auf Server).")
-                    if ok:
+                    result = poster.post_reply(tweet_id)
+                    if result == "posted":
+                        _toast("Reply gesendet.")
                         _chat(
                             f"Du hast POST gedrückt (Reply).\n"
                             f"Tweet-ID: {tweet_id}\n"
                             f"Ergebnis: Reply wurde auf X veröffentlicht."
                         )
+                    elif result == "manual":
+                        _toast("API blockiert — manuell posten.")
+                        _chat(
+                            f"Du hast POST gedrückt (Reply).\n"
+                            f"Tweet-ID: {tweet_id}\n"
+                            f"Ergebnis: API blockiert; Copy/Paste-Anleitung wurde gesendet."
+                        )
                     else:
+                        _toast("Post fehlgeschlagen (Log auf Server).")
                         _chat(
                             f"Du hast POST gedrückt (Reply).\n"
                             f"Tweet-ID: {tweet_id}\n"

@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10 (x-bot daily post Haiku-Fallback bei 529)
+**Zuletzt aktualisiert:** 2026-04-10 (x-bot two-stage reply API->manual fallback)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-10) — alphacycle-x-bot: Zwei-Stufen Reply System (API -> Telegram Copy/Paste)
+- **Datei(en):** alphacycle-x-bot/poster.py, alphacycle-x-bot/database.py, alphacycle-x-bot/telegram_listener.py, DEPLOY_STATE.md
+- **Was wurde geaendert:** Reply-Post versucht zuerst X API. Bei 401/403/sonstigem X-Fehler (oder vorherigem Blocklist-Treffer <7 Tage) geht der Bot sofort in einen Telegram-Copy/Paste-Flow mit direktem Tweet-Link + Reply-Text; betroffene Accounts landen in `api_blocked_accounts` (7-Tage-Window, danach Retry). Nach manuellem Post kann per Antwort `done` auf die Copy/Paste-Nachricht die Reply in `reply_history` als gepostet markiert werden.
+- **Warum:** X Anti-Spam blockt Replies auf grosse Accounts; manueller Fallback verhindert, dass starke Replies komplett verloren gehen.
+- **Status:** deployed
 
 ## Letzter Session-Status (2026-04-10) — alphacycle-x-bot: Daily Post Claude 529 sofort Haiku-Fallback
 - **Datei(en):** alphacycle-x-bot/config.py (`CLAUDE_MODEL_DAILY_FALLBACK`, Env, `none` schaltet Fallback aus), alphacycle-x-bot/daily_post_engine.py (`generate_daily_post`: Primary 529 dann sofort Fallback, sonst wie bisher 3 Runden mit 10-20 min Sleep), alphacycle-x-bot/.env.example, DEPLOY_STATE.md, .cursor/rules/permanent-fixes.mdc

@@ -2,6 +2,7 @@ import time
 import random
 from datetime import datetime, timezone
 
+import requests
 import tweepy
 import config
 import daily_post_engine
@@ -17,6 +18,34 @@ def _telegram_post_confirmation(text: str) -> None:
     body = (text or "")[:4096]
     if body:
         telegram_bot.send_feedback_message(body)
+
+
+def _send_manual_copy_paste(author: str, tweet_id: str, reply_text: str) -> None:
+    a = (author or "").strip().lstrip("@")
+    txt = (reply_text or "").strip()
+    body = (
+        "⚠️ API blocked — manual post needed\n\n"
+        f"Reply to: @{a}\n"
+        f"Tweet: https://x.com/{a}/status/{tweet_id}\n\n"
+        "Copy this reply:\n"
+        "─────────────────\n"
+        f"{txt}\n"
+        "─────────────────\n\n"
+        "Tap the tweet link, paste the reply, done.\n\n"
+        f"[MANUAL_REPLY] tweet_id={tweet_id} author={a}"
+    )
+    body = body[:4096]
+    if not config.TELEGRAM_BOT_TOKEN or not config.TELEGRAM_CHAT_ID:
+        return
+    url = f"https://api.telegram.org/bot{config.TELEGRAM_BOT_TOKEN}/sendMessage"
+    payload = {
+        "chat_id": config.TELEGRAM_CHAT_ID,
+        "text": body,
+    }
+    try:
+        requests.post(url, json=payload, timeout=30)
+    except Exception as e:
+        print(f"[POSTER] Telegram manual fallback send failed: {e}")
 
 
 def oauth_user_credentials_ready() -> bool:
@@ -54,12 +83,10 @@ def _enforce_rate_limits() -> bool:
     return True
 
 
-def _post_reply_impl(
-    tweet_id: str, author: str, reply_text: str, approach: str = ""
-) -> bool:
+def _post_reply_impl(tweet_id: str, author: str, reply_text: str, approach: str = "") -> str:
     """Create tweet reply and persist to replies table (used after approval)."""
     if not _enforce_rate_limits():
-        return False
+        return "failed"
 
     delay = random.randint(config.REPLY_DELAY_MIN, config.REPLY_DELAY_MAX)
     print(f"[POSTER] Waiting {delay}s before replying to @{author}...")
@@ -67,14 +94,17 @@ def _post_reply_impl(
 
     if not _enforce_rate_limits():
         print("[POSTER] Hourly or daily limit reached after delay")
-        return False
+        return "failed"
 
     if not oauth_user_credentials_ready():
         print(
             "[POSTER] OAuth 1.0a user credentials missing (API key/secret + access token/secret). "
             "Scanner can still work with TWITTER_BEARER only; posting cannot."
         )
-        return False
+        database.mark_api_blocked_account(author)
+        _send_manual_copy_paste(author, tweet_id, reply_text)
+        print(f"[POSTER] API blocked for @{author}, sent to Telegram for manual post")
+        return "manual"
 
     try:
         client = get_client()
@@ -99,13 +129,20 @@ def _post_reply_impl(
                         author, reply_text, _X_PUBLIC_HANDLE, new_id_str
                     )
                 )
-            return True
+            database.remove_api_blocked_account(author)
+            return "posted"
         print(f"[POSTER] Twitter returned no data for reply to @{author}")
-        return False
+        database.mark_api_blocked_account(author)
+        _send_manual_copy_paste(author, tweet_id, reply_text)
+        print(f"[POSTER] API blocked for @{author}, sent to Telegram for manual post")
+        return "manual"
 
     except tweepy.TooManyRequests:
         print("[POSTER] Twitter rate limit hit — backing off")
-        return False
+        database.mark_api_blocked_account(author)
+        _send_manual_copy_paste(author, tweet_id, reply_text)
+        print(f"[POSTER] API blocked for @{author}, sent to Telegram for manual post")
+        return "manual"
     except tweepy.Unauthorized as e:
         detail = ""
         if getattr(e, "response", None) is not None:
@@ -121,7 +158,10 @@ def _post_reply_impl(
             "(e.g. screen session exports). (2) Access token + secret belong to THIS app and were "
             "regenerated after enabling Read and Write. (3) No wrong copy-paste / extra whitespace."
         )
-        return False
+        database.mark_api_blocked_account(author)
+        _send_manual_copy_paste(author, tweet_id, reply_text)
+        print(f"[POSTER] API blocked for @{author}, sent to Telegram for manual post")
+        return "manual"
     except tweepy.Forbidden as e:
         detail = ""
         if getattr(e, "response", None) is not None:
@@ -136,13 +176,19 @@ def _post_reply_impl(
             "[POSTER] Common cause: reply to a tweet where @you was not mentioned / no prior engagement. "
             "Try another candidate or a standalone tweet for testing."
         )
-        return False
+        database.mark_api_blocked_account(author)
+        _send_manual_copy_paste(author, tweet_id, reply_text)
+        print(f"[POSTER] API blocked for @{author}, sent to Telegram for manual post")
+        return "manual"
     except Exception as e:
         print(f"[POSTER] Error posting reply: {e}")
-        return False
+        database.mark_api_blocked_account(author)
+        _send_manual_copy_paste(author, tweet_id, reply_text)
+        print(f"[POSTER] API blocked for @{author}, sent to Telegram for manual post")
+        return "manual"
 
 
-def post_reply(tweet_id: str) -> bool:
+def post_reply(tweet_id: str) -> str:
     """
     Post a reply for an approved pending row (Telegram POST button).
     Loads reply text and author from pending_replies; enforces hourly/daily limits.
@@ -150,18 +196,18 @@ def post_reply(tweet_id: str) -> bool:
     row = database.get_pending_by_tweet_id(tweet_id)
     if not row:
         print(f"[POSTER] No pending row for tweet_id={tweet_id}")
-        return False
+        return "failed"
 
     status = row["status"]
     if status == "skipped":
         print(f"[POSTER] Tweet {tweet_id} marked skipped — not posting")
-        return False
+        return "failed"
     if status == "posted":
         print(f"[POSTER] Tweet {tweet_id} already posted")
-        return False
+        return "failed"
     if status not in ("pending", "approved"):
         print(f"[POSTER] Cannot post from status={status}")
-        return False
+        return "failed"
 
     author = row["username"]
     reply_text = row["reply_text"]
@@ -172,14 +218,22 @@ def post_reply(tweet_id: str) -> bool:
             row2 = database.get_pending_by_tweet_id(tweet_id)
             if not row2 or row2["status"] != "approved":
                 print(f"[POSTER] Could not lock pending row for tweet_id={tweet_id}")
-                return False
+                return "failed"
 
-    ok = _post_reply_impl(tweet_id, author, reply_text, approach)
-    if ok:
+    if database.is_api_blocked_recent(author, days=7):
+        database.touch_api_blocked_attempt(author)
+        _send_manual_copy_paste(author, tweet_id, reply_text)
+        print(f"[POSTER] API blocked for @{author}, sent to Telegram for manual post")
+        return "manual"
+
+    result = _post_reply_impl(tweet_id, author, reply_text, approach)
+    if result == "posted":
         database.set_pending_status(tweet_id, "posted")
+    elif result == "manual":
+        database.try_transition_pending_status(tweet_id, "approved", "pending")
     else:
         database.try_transition_pending_status(tweet_id, "approved", "pending")
-    return ok
+    return result
 
 
 def _arc_score_int_for_save_topic(row: dict) -> int | None:

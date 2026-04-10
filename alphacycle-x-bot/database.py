@@ -146,6 +146,14 @@ def init_db():
         )
     """)
 
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS api_blocked_accounts (
+            username TEXT PRIMARY KEY,
+            blocked_since DATETIME DEFAULT CURRENT_TIMESTAMP,
+            last_attempt DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
     conn.commit()
     conn.close()
 
@@ -707,3 +715,75 @@ def mark_pending_skipped(tweet_id: str) -> bool:
     conn.commit()
     conn.close()
     return ok
+
+
+def mark_api_blocked_account(username: str) -> None:
+    """Remember account where API posting was blocked; refresh last_attempt."""
+    u = (username or "").strip().lstrip("@")
+    if not u:
+        return
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute(
+        """
+        INSERT INTO api_blocked_accounts (username, blocked_since, last_attempt)
+        VALUES (?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        ON CONFLICT(username) DO UPDATE SET
+            last_attempt = CURRENT_TIMESTAMP
+        """,
+        (u,),
+    )
+    conn.commit()
+    conn.close()
+
+
+def touch_api_blocked_attempt(username: str) -> None:
+    u = (username or "").strip().lstrip("@")
+    if not u:
+        return
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute(
+        """
+        UPDATE api_blocked_accounts
+        SET last_attempt = CURRENT_TIMESTAMP
+        WHERE username = ?
+        """,
+        (u,),
+    )
+    conn.commit()
+    conn.close()
+
+
+def remove_api_blocked_account(username: str) -> None:
+    u = (username or "").strip().lstrip("@")
+    if not u:
+        return
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("DELETE FROM api_blocked_accounts WHERE username = ?", (u,))
+    conn.commit()
+    conn.close()
+
+
+def is_api_blocked_recent(username: str, days: int = 7) -> bool:
+    """True if account is in blocklist and blocked_since is within N days."""
+    u = (username or "").strip().lstrip("@")
+    if not u:
+        return False
+    d = max(1, min(int(days), 365))
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute(
+        """
+        SELECT 1
+        FROM api_blocked_accounts
+        WHERE username = ?
+          AND blocked_since >= datetime('now', ?)
+        LIMIT 1
+        """,
+        (u, f"-{d} days"),
+    )
+    row = c.fetchone()
+    conn.close()
+    return row is not None
