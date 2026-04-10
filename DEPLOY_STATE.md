@@ -4,6 +4,12 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-04-10) — alphacycle-x-bot: post_system CRITICAL STYLE RULES
+- **Datei(en):** alphacycle-x-bot/prompts/post_system.txt (CRITICAL STYLE RULES vor „Write the post now“; RULES-Bullet „at most two data points“ statt „one number“), .cursor/rules/permanent-fixes.mdc
+- **Was wurde geaendert:** Schaerfere Daily-Post-Vorgaben: max zwei Datenpunkte, Dollar voll ausgeschrieben, keine Return-/Win-Rate-Zahlen im Tweet, kein exakter ARC-Score (Zone/Perzentil), Narrativ/Micro-Story, ATH-„new highs“-Check, Insight vor Information.
+- **Warum:** Weniger Daten-Dumps, staerkerer X-Ton.
+- **Status:** deployed
+
 ## Letzter Session-Status (2026-04-10) — alphacycle-x-bot: pending_daily_posts.arc_score + save_topic
 - **Datei(en):** alphacycle-x-bot/database.py (`pending_daily_posts.arc_score` REAL, Insert/Select), alphacycle-x-bot/bot.py (`_arc_score_for_pending`, Insert), alphacycle-x-bot/poster.py (`_arc_score_int_for_save_topic`, Fallback `fetch_arc_data`), .cursor/rules/permanent-fixes.mdc
 - **Was wurde geaendert:** ARC-Rohscore beim Daily-Queue in DB; `save_topic` bekommt gerundeten Integer aus Pending-Zeile oder frischen Fetch.
