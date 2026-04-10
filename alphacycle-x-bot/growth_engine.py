@@ -9,6 +9,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Sequence
 
+import config
+
 _PROMPTS_DIR = Path(__file__).resolve().parent / "prompts"
 
 REPLY_APPROACH_KEYS = (
@@ -121,7 +123,9 @@ def build_reply_prompt(
     base = _read_prompt_file("reply_system.txt")
     approach_key = random.choice(REPLY_APPROACH_KEYS)
     hook_instruction = (
-        HOOK_ACTIVE_LABEL if random.random() < 0.4 else HOOK_INACTIVE_LABEL
+        HOOK_ACTIVE_LABEL
+        if random.random() < float(config.REPLY_HOOK_PROBABILITY)
+        else HOOK_INACTIVE_LABEL
     )
     author = tweet_author.lstrip("@")
     text = tweet_text.strip()

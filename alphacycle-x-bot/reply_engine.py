@@ -15,7 +15,7 @@ def generate_reply(tweet: dict) -> tuple[str | None, str | None]:
         return None, None
 
     arc_data = daily_post_engine.fetch_arc_data() or {}
-    history = database.get_reply_history_texts_for_prompt(10)
+    history = database.get_reply_history_texts_for_prompt(config.MAX_REPLY_HISTORY)
 
     try:
         system, approach_key = build_reply_prompt(

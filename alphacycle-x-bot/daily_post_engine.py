@@ -12,6 +12,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 import anthropic
 import requests
@@ -77,13 +78,22 @@ def _safe_get_json(url: str, session: requests.Session, timeout: float) -> dict[
 
 def fetch_arc_data() -> dict[str, Any] | None:
     """
-    GET https://alphacycle.app/api/arc-summary (or ALPHACYCLE_PUBLIC_BASE), enrich with price / hist / anchor.
+    GET config.ARC_API_URL for arc-summary; same host for cycle/btc, anchor, historical-returns.
     Returns a flat dict for prompts and growth_engine, or None on hard failure of arc-summary.
     """
-    base = config.ALPHACYCLE_PUBLIC_BASE or "https://alphacycle.app"
+    arc_url = (config.ARC_API_URL or "").strip()
+    parsed = urlparse(arc_url)
+    host_base = (
+        f"{parsed.scheme}://{parsed.netloc}".rstrip("/")
+        if parsed.scheme and parsed.netloc
+        else ""
+    )
+    base = host_base or (config.ALPHACYCLE_PUBLIC_BASE or "https://alphacycle.app")
+    if not arc_url:
+        arc_url = f"{base}/api/arc-summary"
     timeout = _ARC_SUMMARY_TIMEOUT
     with requests.Session() as session:
-        summary = _safe_get_json(f"{base}/api/arc-summary", session, timeout)
+        summary = _safe_get_json(arc_url, session, timeout)
         if not summary:
             return None
 

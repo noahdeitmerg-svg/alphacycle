@@ -4,6 +4,15 @@ import config
 import database
 
 
+def _tweet_has_blocked_keyword(tweet_text: str) -> bool:
+    t = (tweet_text or "").lower()
+    for kw in config.BLOCKED_KEYWORDS:
+        s = (kw or "").strip()
+        if s and s.lower() in t:
+            return True
+    return False
+
+
 def get_client() -> tweepy.Client:
     # Reads (get_user, user timeline) use Bearer by default (user_auth=False).
     # Do not pass OAuth1 here: invalid user keys can break lookups; Bearer is enough for public data.
@@ -90,6 +99,11 @@ def scan_tweets() -> list[dict]:
         tweets = get_latest_tweets(account, client)
 
         for tweet in tweets:
+            if _tweet_has_blocked_keyword(tweet["text"]):
+                database.log_scanned(
+                    tweet["id"], tweet["author"], "blocked_keyword"
+                )
+                continue
             if database.already_scanned(tweet["id"]):
                 continue
             if database.already_replied(tweet["id"]):

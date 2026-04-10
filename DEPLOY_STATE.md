@@ -4,6 +4,13 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-04-09) — alphacycle-x-bot: config ARC_API_URL, tiers, scanner blocked
+- **Datei(en):** alphacycle-x-bot/config.py (`ARC_API_URL`, `DAILY_POST_TIME`, `REPLY_HOOK_PROBABILITY`, `MAX_REPLY_HISTORY`, `TOPIC_LOOKBACK_DAYS`, `CLAUDE_MODEL`, `TIER_1/2_ACCOUNTS`, `TRACKED_ACCOUNTS` Union, `BLOCKED_KEYWORDS`), growth_engine.py, reply_engine.py, bot.py, daily_post_engine.py, database.py (`TOPIC_LOOKBACK_DAYS` in daily topics query), scanner.py, .cursor/rules/permanent-fixes.mdc
+- **Was wurde geaendert:** Zentrale Config-Keys laut Spec; `fetch_arc_data` nutzt `ARC_API_URL` + Host-Parsing; Scheduler `DAILY_POST_TIME`; Hook/History aus Config; Daily-Topic-Lookback; Scanner filtert `BLOCKED_KEYWORDS` mit `log_scanned(..., blocked_keyword)`; Track-Liste = Tier-1+2 (ohne fruehere CryptoCapo/CryptoCred/id-Liste).
+- **Warum:** Einheitliche Steuerung; klarere Ziel-Accounts; weniger Hype-Tweets in der Queue.
+- **Hinweis:** „Nur Tier + Accounts mit >10K Followern“ ist noch nicht implementiert (nur Config/Keyword-Filter + Tier-Union).
+- **Status:** deployed
+
 ## Letzter Session-Status (2026-04-09) — alphacycle-x-bot: database reply_history + posted_topics
 - **Datei(en):** alphacycle-x-bot/database.py (`reply_history` Schema tweet_text/had_hook/timestamp, `posted_topics`, `get_recent_replies`, `save_reply`, `get_recent_topics`, `save_topic`, `_upgrade_reply_history_schema`, `insert_reply_history` angepasst), .cursor/rules/permanent-fixes.mdc
 - **Was wurde geaendert:** `reply_history` laut Spec; neue Tabelle `posted_topics`; bestehende Tabellen (replies, scanned, …) unveraendert; Legacy-DBs: fehlende Spalten per ALTER + timestamp aus created_at; Sortierung kompatibel mit/ohne created_at.

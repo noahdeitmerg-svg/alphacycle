@@ -1,6 +1,6 @@
 # database.py — SQLite reply tracking
 import sqlite3
-from config import DB_PATH
+from config import DB_PATH, TOPIC_LOOKBACK_DAYS
 
 
 def _ensure_column(conn, table: str, column: str, coldef: str) -> None:
@@ -436,16 +436,17 @@ def delete_pending_reply(tweet_id: str) -> None:
 
 
 def get_daily_post_topics_last_7_days(conn: sqlite3.Connection | None = None) -> list[str]:
-    """Topic snippets from daily posts recorded in the last 7 days (newest first)."""
+    """Topic snippets from daily posts recorded in the last TOPIC_LOOKBACK_DAYS (newest first)."""
     own = conn is None
     if own:
         conn = sqlite3.connect(DB_PATH)
     try:
+        d = max(1, min(int(TOPIC_LOOKBACK_DAYS), 366))
         c = conn.cursor()
         c.execute(
-            """
+            f"""
             SELECT topic_snippet FROM daily_post_topics
-            WHERE created_at >= datetime('now', '-7 days')
+            WHERE created_at >= datetime('now', '-{d} days')
             ORDER BY created_at DESC
             """
         )

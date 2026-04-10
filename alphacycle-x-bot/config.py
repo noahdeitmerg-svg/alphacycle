@@ -18,27 +18,58 @@ TWITTER_ACCESS_SECRET = (os.getenv("TWITTER_ACCESS_SECRET", "") or "").strip()
 TWITTER_BEARER = (os.getenv("TWITTER_BEARER", "") or "").strip()
 
 CLAUDE_API_KEY = (os.getenv("CLAUDE_API_KEY", "") or "").strip()
-CLAUDE_MODEL = "claude-sonnet-4-20250514"
 
 TELEGRAM_BOT_TOKEN = (os.getenv("TELEGRAM_BOT_TOKEN", "") or "").strip()
 TELEGRAM_CHAT_ID = (os.getenv("TELEGRAM_CHAT_ID", "") or "").strip()
 
+# AlphaCycle API (public JSON; full URL to arc-summary)
+ARC_API_URL = "https://alphacycle.app/api/arc-summary"
 ALPHACYCLE_API = "https://alphacycle-production.up.railway.app"
-# Public site + daily post fetches (arc-summary etc.); override for staging.
+# Public site + ancillary fetches (cycle/btc, etc.); override for staging.
 ALPHACYCLE_PUBLIC_BASE = (os.getenv("ALPHACYCLE_PUBLIC_BASE", "https://alphacycle.app") or "").strip().rstrip("/")
 DAILY_POST_DASHBOARD_URL = (os.getenv("DAILY_POST_DASHBOARD_URL", "https://alphacycle.app") or "").strip()
 
-# Handles: no @. Prefix id:SNOWFLAKE only if you verified it (GET /2/users/:id). Wrong id => not-found.
-# Will Clemente: @WClemente (WClementeIII not found in v2). id from resolve_user.py 2026-04-09.
-TRACKED_ACCOUNTS = [
-    "id:1270906326823186432",
+# Daily Post Schedule (UTC)
+DAILY_POST_TIME = "13:00"
+
+# Growth Engine Settings
+REPLY_HOOK_PROBABILITY = 0.4  # 40% = ca. 2 von 5
+MAX_REPLY_HISTORY = 10
+TOPIC_LOOKBACK_DAYS = 7
+
+# Claude Model
+CLAUDE_MODEL = "claude-sonnet-4-20250514"
+
+# Reply Target Tiers (scanner: TRACKED_ACCOUNTS = union; optional id:SNOWFLAKE per permanent-fixes)
+TIER_1_ACCOUNTS = [
+    "WClemente",
+    "_Checkmatey_",
+    "in2cryptoversee",
     "RaoulGMI",
     "LynAldenContact",
-    "100trillionUSD",
-    "CryptoCapo_",
-    "TechDev_52",
-    "CryptoCred",
+]
+
+TIER_2_ACCOUNTS = [
+    "KobeissiLetter",
     "DylanLeClair",
+    "100trillionUSD",
+    "CryptoCon_",
+    "MacroAlf",
+    "TechDev_52",
+    "PositiveCrypto",
+]
+
+TRACKED_ACCOUNTS = list(dict.fromkeys(TIER_1_ACCOUNTS + TIER_2_ACCOUNTS))
+
+# Scanner: skip obvious engagement-bait / hype phrasing (substring match, case-insensitive).
+BLOCKED_KEYWORDS = [
+    "LFG",
+    "wagmi",
+    "to the moon",
+    "100x",
+    "BUY NOW",
+    "FULL SEND",
+    "PARABOLIC",
 ]
 
 MAX_REPLIES_PER_HOUR = 5

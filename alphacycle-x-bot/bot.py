@@ -15,7 +15,7 @@ import reply_engine
 
 
 def _configure_schedule_utc() -> None:
-    """Make schedule.every().day.at('13:00') fire at 13:00 UTC on Unix (tzset)."""
+    """Make schedule.every().day.at(DAILY_POST_TIME) fire at that clock time in the process TZ (tzset for UTC)."""
     if sys.platform != "win32" and hasattr(time, "tzset"):
         os.environ["TZ"] = "UTC"
         time.tzset()
@@ -143,7 +143,7 @@ def main():
     print(f"[BOT] Limits: {config.MAX_REPLIES_PER_HOUR}/hr, {config.MAX_REPLIES_PER_DAY}/day")
     print(f"[BOT] Delay: {config.REPLY_DELAY_MIN}-{config.REPLY_DELAY_MAX}s per reply")
     print(
-        "[BOT] Daily post: schedule 13:00 — on Linux UTC via TZ=UTC+tzset; "
+        f"[BOT] Daily post: schedule {config.DAILY_POST_TIME} — on Linux UTC via TZ=UTC+tzset; "
         "else verify server timezone matches intent (10:00 BRT = 13:00 UTC)."
     )
 
@@ -165,8 +165,11 @@ def main():
         return
 
     _configure_schedule_utc()
-    schedule.every().day.at("13:00").do(schedule_daily_post)
-    print("[BOT] Daily post job registered: every day at 13:00 (local TZ; see note above for UTC).")
+    schedule.every().day.at(config.DAILY_POST_TIME).do(schedule_daily_post)
+    print(
+        f"[BOT] Daily post job registered: every day at {config.DAILY_POST_TIME} "
+        "(local TZ; see note above for UTC)."
+    )
 
     next_scan_at = 0.0
     while True:
