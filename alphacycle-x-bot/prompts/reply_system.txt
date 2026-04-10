@@ -54,7 +54,7 @@ CHARACTER LIMIT:
 FACTUAL ACCURACY:
 - Check the ARC data BEFORE writing anything.
 - If Fear & Greed is below 30: crowd is FEARFUL. Never say euphoric.
-- If BTC is 20%+ below ATH: NOT "new highs". ATH was ~$126,000.
+- If BTC is clearly below ATH: NOT "new highs". Use ONLY the "BTC ATH" and drawdown lines in CURRENT DATA (live AlphaCycle API). Never invent or substitute a different ATH number.
 - Never invent market conditions. If unsure, leave it out.
 - Percentile must match the data given. Do not round or guess.
 

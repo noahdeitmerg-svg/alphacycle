@@ -120,8 +120,9 @@ def fetch_arc_data() -> dict[str, Any] | None:
             return None
 
         btc_j = _safe_get_json(f"{base}/api/cycle/btc", session, timeout)
-        btc_price = None
-        if btc_j:
+        btc_price = summary.get("btc_price")
+        btc_ath = summary.get("btc_ath")
+        if btc_j and btc_j.get("current_price") is not None:
             btc_price = btc_j.get("current_price")
 
         anchor = _safe_get_json(f"{base}/api/cycle-anchor", session, timeout)
@@ -170,6 +171,7 @@ def fetch_arc_data() -> dict[str, Any] | None:
             "zone": zone_name,
             "phase": phase_group,
             "btc_price": btc_price,
+            "btc_ath": btc_ath,
             "percentile": summary.get("arc_percentile"),
             "position": summary.get("position"),
             "allocation": summary.get("allocation"),

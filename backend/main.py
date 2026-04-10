@@ -1021,6 +1021,8 @@ async def get_arc_summary(request: Request):
     btc_price = float(btc_prices[-1]) if btc_prices else 0.0
     eth_price = float(eth_prices[-1]) if eth_prices else 0.0
     eth_btc_ratio = eth_price / btc_price if btc_price > 0 else None
+    ath_for_summary = max(btc_prices) if btc_prices else btc_price
+    ath_for_summary = safe_float(raw.get("btc_market", {}).get("ath", ath_for_summary)) or ath_for_summary
     out = {
         "arc_score":   current_arc,
         "arc_display": round(arc_display_score(current_arc), 1),
@@ -1045,6 +1047,8 @@ async def get_arc_summary(request: Request):
         "days_since_top": compute_days_since_top(),
         "cycle_top_date": TENTATIVE_CYCLE_TOP.isoformat(),
         "cycle_top_confirmed": False,
+        "btc_price": round(btc_price, 0),
+        "btc_ath": round(ath_for_summary, 2),
     }
     # Phase for phase-coherent position/allocation (same inputs as /api/analyzer)
     phase = None

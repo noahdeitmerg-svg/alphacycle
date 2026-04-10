@@ -66,6 +66,23 @@ def _format_arc_block(arc_data: dict[str, Any] | None) -> str:
     bp = a.get("btc_price")
     if bp is not None and bp != "" and bp != "?":
         lines.append(f"BTC price (USD, snapshot): {bp}")
+    ath = a.get("btc_ath")
+    if ath is not None and str(ath).strip() not in ("", "?", "0", "0.0"):
+        try:
+            av = float(ath)
+            if av > 0:
+                lines.append(f"BTC ATH (USD, AlphaCycle API snapshot): {av:,.0f}")
+        except (TypeError, ValueError):
+            pass
+    if bp is not None and ath is not None:
+        try:
+            pv = float(bp)
+            av = float(ath)
+            if av > 0 and pv > 0:
+                dd_pct = (pv - av) / av * 100.0
+                lines.append(f"Drawdown from ATH (vs snapshot above): {round(dd_pct, 1)}%")
+        except (TypeError, ValueError):
+            pass
     pos = a.get("position")
     if pos is not None and pos != "":
         lines.append(f"Suggested position (context): {pos}")

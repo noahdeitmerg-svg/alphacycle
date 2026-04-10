@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10 (x-bot reply_system ATH 126k)
+**Zuletzt aktualisiert:** 2026-04-10 (arc-summary btc_ath + x-bot prompt)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-10) — arc-summary btc_price/btc_ath + Reply-Prompt aus API
+- **Datei(en):** backend/main.py (`/api/arc-summary` Felder `btc_price`, `btc_ath` wie Cache/Kraken+btc_market.ath), alphacycle-x-bot/daily_post_engine.py (`btc_ath` durchreichen), alphacycle-x-bot/growth_engine.py (`_format_arc_block`), alphacycle-x-bot/prompts/reply_system.txt, DEPLOY_STATE.md, .cursor/rules/permanent-fixes.mdc
+- **Was wurde geaendert:** ATH/Spot kommen aus demselben Backend wie das Dashboard; `{arc_data_block}` enthaelt explizite Zeilen fuer ATH und Drawdown %. Reply-Prompt verweist nur noch auf CURRENT DATA, keine feste USD-Zahl.
+- **Warum:** ATH aendert sich; eine Quelle (API) vermeidet Drift.
+- **Status:** deployed (Railway Backend deploy + VPS x-bot git pull / restart-screens)
 
 ## Letzter Session-Status (2026-04-10) — alphacycle-x-bot: reply_system ATH Referenz 126k
 - **Datei(en):** alphacycle-x-bot/prompts/reply_system.txt, DEPLOY_STATE.md
