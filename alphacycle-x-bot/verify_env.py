@@ -26,6 +26,12 @@ def main() -> None:
         print("Hint: API secret often ~50 chars; check for truncated line in .env.")
     if config.TWITTER_ACCESS_SECRET and len(config.TWITTER_ACCESS_SECRET) < 40:
         print("Hint: Access token secret often ~45 chars; check .env single-line value.")
+    if not config.TELEGRAM_BOT_TOKEN or not config.TELEGRAM_CHAT_ID:
+        print(
+            "Hint: TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID must be set in .env for approval queue "
+            "(get token from @BotFather; chat id e.g. from @userinfobot). After editing .env, git pull "
+            "ensures verify_env shows both lines."
+        )
     print("Server UTC now:", datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%SZ"))
     print("If get_me 401: run `timedatectl` / sync NTP; in X Portal regenerate Key+Secret AND Access+Secret for same app.")
 

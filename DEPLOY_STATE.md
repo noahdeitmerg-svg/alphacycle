@@ -4,6 +4,12 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-04-11) — alphacycle-x-bot: verify_env Telegram-Hinweis
+- **Datei(en):** alphacycle-x-bot/verify_env.py
+- **Was wurde geaendert:** Hinweis wenn TELEGRAM_* fehlen; Erinnerung git pull fuer aktuelle verify_env mit Telegram-Zeilen.
+- **Warum:** VPS zeigte alte verify_env-Ausgabe ohne TELEGRAM len-Zeilen.
+- **Status:** in progress
+
 ## Letzter Session-Status (2026-04-11) — alphacycle-x-bot: 24/7 Runbook + systemd
 - **Datei(en):** alphacycle-x-bot/RUN_24_7.md, alphacycle-x-bot/systemd/*.service, alphacycle-x-bot/start.sh (Kommentar)
 - **Was wurde geaendert:** Dokumentation: Bot laeuft rund um die Uhr mit zwei Prozessen; X-Replies nur nach Telegram-POST; systemd-Unit-Vorlagen mit WorkingDirectory; screen-Alternative.
