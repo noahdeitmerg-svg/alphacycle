@@ -68,6 +68,16 @@ def init_db():
         )
     """)
 
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS pending_daily_posts (
+            id TEXT PRIMARY KEY,
+            post_text TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'pending',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
     conn.commit()
     conn.close()
 
@@ -292,6 +302,94 @@ def get_daily_post_topics_last_7_days(conn: sqlite3.Connection | None = None) ->
     finally:
         if own:
             conn.close()
+
+
+def insert_pending_daily_post(pending_id: str, post_text: str) -> bool:
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute(
+        """
+        INSERT OR IGNORE INTO pending_daily_posts (id, post_text, status)
+        VALUES (?, ?, 'pending')
+        """,
+        (pending_id, post_text),
+    )
+    ok = c.rowcount > 0
+    conn.commit()
+    conn.close()
+    return ok
+
+
+def get_pending_daily_post(pending_id: str) -> dict | None:
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    c.execute(
+        "SELECT id, post_text, status FROM pending_daily_posts WHERE id = ?",
+        (pending_id,),
+    )
+    row = c.fetchone()
+    conn.close()
+    if not row:
+        return None
+    return dict(row)
+
+
+def set_pending_daily_status(pending_id: str, status: str) -> None:
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute(
+        """
+        UPDATE pending_daily_posts
+        SET status = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+        """,
+        (status, pending_id),
+    )
+    conn.commit()
+    conn.close()
+
+
+def try_transition_daily_status(pending_id: str, from_status: str, to_status: str) -> bool:
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute(
+        """
+        UPDATE pending_daily_posts
+        SET status = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ? AND status = ?
+        """,
+        (to_status, pending_id, from_status),
+    )
+    ok = c.rowcount > 0
+    conn.commit()
+    conn.close()
+    return ok
+
+
+def mark_daily_post_skipped(pending_id: str) -> bool:
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute(
+        """
+        UPDATE pending_daily_posts
+        SET status = 'skipped', updated_at = CURRENT_TIMESTAMP
+        WHERE id = ? AND status IN ('pending', 'approved')
+        """,
+        (pending_id,),
+    )
+    ok = c.rowcount > 0
+    conn.commit()
+    conn.close()
+    return ok
+
+
+def delete_pending_daily_post(pending_id: str) -> None:
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("DELETE FROM pending_daily_posts WHERE id = ?", (pending_id,))
+    conn.commit()
+    conn.close()
 
 
 def record_daily_post_topic(

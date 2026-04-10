@@ -4,6 +4,12 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-04-09) — alphacycle-x-bot: Daily Post Scheduler + pending_daily_posts
+- **Datei(en):** alphacycle-x-bot/bot.py (`schedule`, `schedule_daily_post`, 60s loop + `SCAN_INTERVAL_SECONDS` fuer `run_cycle`), alphacycle-x-bot/database.py (`pending_daily_posts`, CRUD), alphacycle-x-bot/telegram_bot.py (`send_daily_post_approval`), alphacycle-x-bot/telegram_listener.py (`dpost:`/`dskip:`), alphacycle-x-bot/poster.py (`post_daily_post`, `record_daily_post_topic`), alphacycle-x-bot/requirements.txt (`schedule`), .cursor/rules/permanent-fixes.mdc
+- **Was wurde geaendert:** Taeglich 13:00 (UTC wenn TZ=UTC/tzset): `fetch_arc_data` + `generate_daily_post`, Telegram-Freigabe, POST via `create_tweet` ohne Reply; SKIP loggt/ueberspringt; bei `fetch_arc_data` None nur Warning kein Queue.
+- **Warum:** Daily Post zusaetzlich zum Reply-Scanner ohne Auto-Post.
+- **Status:** in progress
+
 ## Letzter Session-Status (2026-04-09) — alphacycle-x-bot: reply_engine + reply_history + approach
 - **Datei(en):** alphacycle-x-bot/reply_engine.py, alphacycle-x-bot/growth_engine.py (`build_reply_prompt` -> tuple mit `approach_key`), alphacycle-x-bot/database.py (`reply_history`, `get_reply_history_texts_for_prompt`, `insert_reply_history`, `pending_replies.approach`), alphacycle-x-bot/bot.py (`daily_post_engine.fetch_arc_data`, `generate_reply` Tuple, `insert_pending_reply` mit approach), alphacycle-x-bot/poster.py (`insert_reply_history` nach Post), .cursor/rules/permanent-fixes.mdc
 - **Was wurde geaendert:** Reply-Prompt nur noch via `build_reply_prompt`; ARC aus `fetch_arc_data`; History aus `reply_history` (Fallback `replies`); nach erfolgreichem Post Eintrag in `reply_history` inkl. Approach; Approach in `pending_replies` fuer Telegram-Queue.

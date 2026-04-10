@@ -2,6 +2,7 @@ import time
 import random
 import tweepy
 import config
+import daily_post_engine
 import database
 
 
@@ -156,3 +157,93 @@ def post_reply(tweet_id: str) -> bool:
     else:
         database.try_transition_pending_status(tweet_id, "approved", "pending")
     return ok
+
+
+def post_daily_post(pending_id: str) -> bool:
+    """
+    Post an approved daily original tweet (Telegram dpost: button).
+    Does not use in_reply_to; records topic via record_daily_post_topic on success.
+    """
+    row = database.get_pending_daily_post(pending_id)
+    if not row:
+        print(f"[POSTER] No pending daily post for id={pending_id}")
+        return False
+
+    status = row["status"]
+    if status == "skipped":
+        print(f"[POSTER] Daily post {pending_id} skipped — not posting")
+        return False
+    if status == "posted":
+        print(f"[POSTER] Daily post {pending_id} already posted")
+        return False
+    if status not in ("pending", "approved"):
+        print(f"[POSTER] Cannot post daily from status={status}")
+        return False
+
+    post_text = (row["post_text"] or "").strip()
+    if not post_text:
+        print("[POSTER] Empty daily post text")
+        return False
+
+    if status == "pending":
+        if not database.try_transition_daily_status(pending_id, "pending", "approved"):
+            row2 = database.get_pending_daily_post(pending_id)
+            if not row2 or row2["status"] != "approved":
+                print(f"[POSTER] Could not lock daily pending id={pending_id}")
+                return False
+
+    if not _enforce_rate_limits():
+        database.try_transition_daily_status(pending_id, "approved", "pending")
+        return False
+
+    delay = random.randint(30, 120)
+    print(f"[POSTER] Waiting {delay}s before daily post...")
+    time.sleep(delay)
+
+    if not _enforce_rate_limits():
+        print("[POSTER] Hourly or daily limit reached after delay (daily)")
+        database.try_transition_daily_status(pending_id, "approved", "pending")
+        return False
+
+    if not oauth_user_credentials_ready():
+        print("[POSTER] OAuth missing — cannot post daily")
+        database.try_transition_daily_status(pending_id, "approved", "pending")
+        return False
+
+    text = post_text
+    if len(text) > 280:
+        text = text[:277] + "..."
+
+    try:
+        client = get_client()
+        response = client.create_tweet(text=text, user_auth=True)
+
+        if response.data:
+            database.record_daily_post_topic(
+                daily_post_engine.topic_snippet_from_post(text),
+                post_preview=text[:2000],
+            )
+            database.set_pending_daily_status(pending_id, "posted")
+            print(f"[POSTER] Daily post published: {text[:60]}...")
+            print(f"[LOG] daily post posted pending_id={pending_id}")
+            return True
+        print("[POSTER] Twitter returned no data for daily post")
+        database.try_transition_daily_status(pending_id, "approved", "pending")
+        return False
+
+    except tweepy.TooManyRequests:
+        print("[POSTER] Twitter rate limit (daily post)")
+        database.try_transition_daily_status(pending_id, "approved", "pending")
+        return False
+    except tweepy.Unauthorized as e:
+        print(f"[POSTER] 401 Unauthorized (daily post): {e}")
+        database.try_transition_daily_status(pending_id, "approved", "pending")
+        return False
+    except tweepy.Forbidden as e:
+        print(f"[POSTER] 403 Forbidden (daily post): {e}")
+        database.try_transition_daily_status(pending_id, "approved", "pending")
+        return False
+    except Exception as e:
+        print(f"[POSTER] Error posting daily tweet: {e}")
+        database.try_transition_daily_status(pending_id, "approved", "pending")
+        return False

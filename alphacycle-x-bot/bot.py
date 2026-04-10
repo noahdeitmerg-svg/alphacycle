@@ -1,12 +1,24 @@
 import argparse
-import time
+import os
 import sys
+import time
+import uuid
+
+import schedule
+
 import database
-import daily_post_engine
-import scanner
-import reply_engine
 import telegram_bot
 import config
+from daily_post_engine import fetch_arc_data, generate_daily_post
+import scanner
+import reply_engine
+
+
+def _configure_schedule_utc() -> None:
+    """Make schedule.every().day.at('13:00') fire at 13:00 UTC on Unix (tzset)."""
+    if sys.platform != "win32" and hasattr(time, "tzset"):
+        os.environ["TZ"] = "UTC"
+        time.tzset()
 
 
 def preflight_check() -> bool:
@@ -43,6 +55,29 @@ def _tweet_url(username: str, tweet_id: str) -> str:
     return f"https://x.com/{u}/status/{tweet_id}"
 
 
+def schedule_daily_post() -> None:
+    """
+    Daily 13:00 (UTC if TZ=UTC / tzset on Linux): fetch ARC, generate post, queue Telegram approval.
+    """
+    print("[DAILY] schedule_daily_post triggered")
+    arc = fetch_arc_data()
+    if not arc:
+        print("[DAILY] WARNING: fetch_arc_data failed — no daily post queued")
+        return
+    text = generate_daily_post(arc, None)
+    if not text:
+        print("[DAILY] WARNING: generate_daily_post returned nothing — skip queue")
+        return
+    pending_id = str(uuid.uuid4())
+    if not database.insert_pending_daily_post(pending_id, text):
+        print(f"[DAILY] WARNING: insert pending daily failed id={pending_id}")
+        return
+    sent = telegram_bot.send_daily_post_approval(text, pending_id)
+    if not sent:
+        database.delete_pending_daily_post(pending_id)
+        print("[DAILY] Telegram send failed — removed pending daily row")
+
+
 def run_cycle():
     print("\n" + "=" * 50)
     print("[BOT] Starting scan cycle...")
@@ -52,7 +87,7 @@ def run_cycle():
         print("[BOT] No candidates — sleeping.")
         return
 
-    arc = daily_post_engine.fetch_arc_data()
+    arc = fetch_arc_data()
     if not arc:
         print("[BOT] No ARC data — skipping cycle.")
         return
@@ -102,11 +137,15 @@ def main():
 
     print("[BOT] AlphaCycle X Bot v2 starting...")
     print("[BOT] Config: .env auto-loaded from folder containing config.py (python-dotenv).")
-    print("[BOT] Mode: replies require Telegram approval (run telegram_listener.py).")
+    print("[BOT] Mode: replies + daily posts require Telegram approval (run telegram_listener.py).")
     print(f"[BOT] Tracking: {', '.join(config.TRACKED_ACCOUNTS)}")
-    print(f"[BOT] Interval: {config.SCAN_INTERVAL_SECONDS}s")
+    print(f"[BOT] Scan interval: {config.SCAN_INTERVAL_SECONDS}s (checked each 60s tick)")
     print(f"[BOT] Limits: {config.MAX_REPLIES_PER_HOUR}/hr, {config.MAX_REPLIES_PER_DAY}/day")
     print(f"[BOT] Delay: {config.REPLY_DELAY_MIN}-{config.REPLY_DELAY_MAX}s per reply")
+    print(
+        "[BOT] Daily post: schedule 13:00 — on Linux UTC via TZ=UTC+tzset; "
+        "else verify server timezone matches intent (10:00 BRT = 13:00 UTC)."
+    )
 
     if not preflight_check():
         print("[BOT] Preflight failed — add secrets to .env next to config.py and retry.")
@@ -125,17 +164,26 @@ def main():
             print(f"[BOT] Cycle error: {e}")
         return
 
+    _configure_schedule_utc()
+    schedule.every().day.at("13:00").do(schedule_daily_post)
+    print("[BOT] Daily post job registered: every day at 13:00 (local TZ; see note above for UTC).")
+
+    next_scan_at = 0.0
     while True:
         try:
-            run_cycle()
+            schedule.run_pending()
+            now = time.monotonic()
+            if now >= next_scan_at:
+                try:
+                    run_cycle()
+                except Exception as e:
+                    print(f"[BOT] Cycle error: {e}")
+                next_scan_at = now + float(config.SCAN_INTERVAL_SECONDS)
         except KeyboardInterrupt:
             print("\n[BOT] Stopped.")
             sys.exit(0)
-        except Exception as e:
-            print(f"[BOT] Cycle error: {e}")
 
-        print(f"[BOT] Sleeping {config.SCAN_INTERVAL_SECONDS}s...")
-        time.sleep(config.SCAN_INTERVAL_SECONDS)
+        time.sleep(60)
 
 
 if __name__ == "__main__":

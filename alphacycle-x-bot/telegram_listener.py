@@ -118,6 +118,34 @@ def poll_loop() -> None:
                             cq_id,
                             "Kein offener Eintrag (schon erledigt oder alter Button).",
                         )
+                elif raw.startswith("dpost:"):
+                    pending_id = raw[6:].strip()
+                    if not pending_id:
+                        telegram_bot.answer_callback_query(cq_id, "Fehler: leere pending_id")
+                        continue
+                    print(
+                        f"[LOG] telegram daily: POST pending_id={pending_id} (from={from_user})"
+                    )
+                    ok = poster.post_daily_post(pending_id)
+                    telegram_bot.answer_callback_query(
+                        cq_id,
+                        "Daily post gesendet." if ok else "Daily post fehlgeschlagen (Log).",
+                    )
+                elif raw.startswith("dskip:"):
+                    pending_id = raw[6:].strip()
+                    if not pending_id:
+                        telegram_bot.answer_callback_query(cq_id, "Fehler: leere pending_id")
+                        continue
+                    print(
+                        f"[LOG] telegram daily: SKIP pending_id={pending_id} (from={from_user})"
+                    )
+                    if database.mark_daily_post_skipped(pending_id):
+                        telegram_bot.answer_callback_query(cq_id, "Daily skip gespeichert.")
+                    else:
+                        telegram_bot.answer_callback_query(
+                            cq_id,
+                            "Kein offener Daily-Eintrag.",
+                        )
                 else:
                     telegram_bot.answer_callback_query(cq_id, "Unbekannter Button.")
 
