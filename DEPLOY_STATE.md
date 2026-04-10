@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-09
+**Zuletzt aktualisiert:** 2026-04-09 (reply_system Master-Prompt)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-09) — alphacycle-x-bot: reply_system.txt komplett ersetzt (Master-Reply-Prompt)
+- **Datei(en):** alphacycle-x-bot/prompts/reply_system.txt (voller Ersatz: CURRENT MARKET CONTEXT, erweiterte Approaches, Hook-Phrasen 40/60, FACTUAL ACCURACY, CRITICAL REPLY RULES, Beispiele, ANTI-AI, FINAL TEST; Platzhalter `{arc_data_block}` `{approach}` `{hook_instruction}` `{tweet_author}` `{tweet_text}` `{reply_history}` unveraendert), .cursor/rules/permanent-fixes.mdc
+- **Was wurde geaendert:** Reply-Operating-Brain 1:1 wie Spec; laenger; `build_reply_prompt`/`growth_engine` unveraendert (ACTIVE/INACTIVE fuer `{hook_instruction}`).
+- **Warum:** Schärfere X-Replies, Profil-Curiosity, weniger AI-Ton.
+- **Status:** deployed
 
 ## Letzter Session-Status (2026-04-10) — alphacycle-x-bot: post_system.txt komplett ersetzt (Master-Prompt)
 - **Datei(en):** alphacycle-x-bot/prompts/post_system.txt (voller Ersatz: Identity, ARC-Zonen, Three Lens, CURRENT MARKET CONTEXT, FACTUAL ACCURACY, Narrativ-Arc, Share Lines, Zone Taglines, CRITICAL STYLE, ABSOLUTE PROHIBITIONS, Beispiel-Posts, FINAL TEST; Platzhalter `{arc_data_block}` `{post_type}` `{posted_topics}` unveraendert), .cursor/rules/permanent-fixes.mdc
