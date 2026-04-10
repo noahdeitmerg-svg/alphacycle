@@ -4,6 +4,12 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-04-10) — alphacycle-x-bot: pending_daily_posts.arc_score + save_topic
+- **Datei(en):** alphacycle-x-bot/database.py (`pending_daily_posts.arc_score` REAL, Insert/Select), alphacycle-x-bot/bot.py (`_arc_score_for_pending`, Insert), alphacycle-x-bot/poster.py (`_arc_score_int_for_save_topic`, Fallback `fetch_arc_data`), .cursor/rules/permanent-fixes.mdc
+- **Was wurde geaendert:** ARC-Rohscore beim Daily-Queue in DB; `save_topic` bekommt gerundeten Integer aus Pending-Zeile oder frischen Fetch.
+- **Warum:** posted_topics.arc_score fuer Auswertung/Prompt-Kontext statt immer NULL.
+- **Status:** deployed
+
 ## Letzter Session-Status (2026-04-10) — alphacycle-x-bot: build_post_prompt get_recent_topics + save_topic nach Daily
 - **Datei(en):** alphacycle-x-bot/growth_engine.py (`build_post_prompt` laed `database.get_recent_topics`, Logging), alphacycle-x-bot/daily_post_engine.py (`summarize_post_one_sentence`, `generate_daily_post` -> Tuple + UTC weekday), alphacycle-x-bot/poster.py (`save_topic` nach erfolgreichem Daily), alphacycle-x-bot/database.py (`pending_daily_posts.post_type`), alphacycle-x-bot/bot.py (`insert_pending_daily_post` mit Typ, `logging.basicConfig` INFO), prompts/post_system.txt, permanent-fixes.mdc
 - **Was wurde geaendert:** `{posted_topics}` im Post-Prompt aus Tabelle `posted_topics` (Lookback TOPIC_LOOKBACK_DAYS), Zeilen `summary (type)`; nach Daily-Post auf X: Claude 1-Satz-Summary + `save_topic`; `post_type` beim Queue in DB gespeichert.

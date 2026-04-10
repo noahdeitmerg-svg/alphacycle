@@ -132,6 +132,7 @@ def init_db():
         )
     """)
     _ensure_column(conn, "pending_daily_posts", "post_type", "TEXT DEFAULT ''")
+    _ensure_column(conn, "pending_daily_posts", "arc_score", "REAL")
 
     conn.commit()
     conn.close()
@@ -458,16 +459,19 @@ def get_daily_post_topics_last_7_days(conn: sqlite3.Connection | None = None) ->
 
 
 def insert_pending_daily_post(
-    pending_id: str, post_text: str, post_type: str = ""
+    pending_id: str,
+    post_text: str,
+    post_type: str = "",
+    arc_score: float | int | None = None,
 ) -> bool:
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute(
         """
-        INSERT OR IGNORE INTO pending_daily_posts (id, post_text, status, post_type)
-        VALUES (?, ?, 'pending', ?)
+        INSERT OR IGNORE INTO pending_daily_posts (id, post_text, status, post_type, arc_score)
+        VALUES (?, ?, 'pending', ?, ?)
         """,
-        (pending_id, post_text, post_type or ""),
+        (pending_id, post_text, post_type or "", arc_score),
     )
     ok = c.rowcount > 0
     conn.commit()
@@ -480,7 +484,10 @@ def get_pending_daily_post(pending_id: str) -> dict | None:
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
     c.execute(
-        "SELECT id, post_text, status, post_type FROM pending_daily_posts WHERE id = ?",
+        """
+        SELECT id, post_text, status, post_type, arc_score
+        FROM pending_daily_posts WHERE id = ?
+        """,
         (pending_id,),
     )
     row = c.fetchone()

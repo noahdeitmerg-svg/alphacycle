@@ -162,6 +162,26 @@ def post_reply(tweet_id: str) -> bool:
     return ok
 
 
+def _arc_score_int_for_save_topic(row: dict) -> int | None:
+    """ARC at queue time from pending row; else one fresh fetch_arc_data for save_topic."""
+    v = row.get("arc_score")
+    if v is not None and v != "":
+        try:
+            return int(round(float(v)))
+        except (TypeError, ValueError):
+            pass
+    arc = daily_post_engine.fetch_arc_data()
+    if not arc:
+        return None
+    raw = arc.get("arc_score")
+    if raw is None:
+        return None
+    try:
+        return int(round(float(raw)))
+    except (TypeError, ValueError):
+        return None
+
+
 def post_daily_post(pending_id: str) -> bool:
     """
     Post an approved daily original tweet (Telegram dpost: button).
@@ -235,10 +255,11 @@ def post_daily_post(pending_id: str) -> bool:
                 summary = daily_post_engine.topic_snippet_from_post(
                     post_text, max_len=220
                 )
+            arc_for_topic = _arc_score_int_for_save_topic(row)
             database.save_topic(
                 post_text=post_text,
                 post_type=pt,
-                arc_score=None,
+                arc_score=arc_for_topic,
                 topic_summary=summary
                 or daily_post_engine.topic_snippet_from_post(post_text, max_len=200),
             )

@@ -56,6 +56,19 @@ def _tweet_url(username: str, tweet_id: str) -> str:
     return f"https://x.com/{u}/status/{tweet_id}"
 
 
+def _arc_score_for_pending(arc: dict | None) -> float | None:
+    """Raw ARC score from fetch_arc_data for pending_daily_posts.arc_score (REAL)."""
+    if not arc:
+        return None
+    v = arc.get("arc_score")
+    if v is None:
+        return None
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return None
+
+
 def schedule_daily_post() -> None:
     """
     Daily 13:00 (UTC if TZ=UTC / tzset on Linux): fetch ARC, generate post, queue Telegram approval.
@@ -70,7 +83,10 @@ def schedule_daily_post() -> None:
         print("[DAILY] WARNING: generate_daily_post returned nothing — skip queue")
         return
     pending_id = str(uuid.uuid4())
-    if not database.insert_pending_daily_post(pending_id, text, post_type):
+    arc_snap = _arc_score_for_pending(arc)
+    if not database.insert_pending_daily_post(
+        pending_id, text, post_type, arc_snap
+    ):
         print(f"[DAILY] WARNING: insert pending daily failed id={pending_id}")
         return
     sent = telegram_bot.send_daily_post_approval(text, pending_id)
