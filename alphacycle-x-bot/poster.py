@@ -1,3 +1,4 @@
+import logging
 import time
 import random
 from datetime import datetime, timezone
@@ -11,6 +12,7 @@ import growth_engine
 import telegram_bot
 
 _X_PUBLIC_HANDLE = "Real_AlphaCycle"
+logger = logging.getLogger(__name__)
 
 
 def _telegram_post_confirmation(text: str) -> None:
@@ -20,32 +22,72 @@ def _telegram_post_confirmation(text: str) -> None:
         telegram_bot.send_feedback_message(body)
 
 
-def _send_manual_copy_paste(author: str, tweet_id: str, reply_text: str) -> None:
+def _send_manual_copy_paste_raw(body: str) -> bool:
+    """Backup if telegram_bot.send_feedback_message fails."""
+    if not config.TELEGRAM_BOT_TOKEN or not config.TELEGRAM_CHAT_ID:
+        return False
+    url = f"https://api.telegram.org/bot{config.TELEGRAM_BOT_TOKEN}/sendMessage"
+    try:
+        r = requests.post(
+            url,
+            json={"chat_id": config.TELEGRAM_CHAT_ID, "text": (body or "")[:4096]},
+            timeout=45,
+        )
+        if not r.ok:
+            logger.error(
+                "[POSTER] Raw Telegram fallback HTTP %s: %s",
+                r.status_code,
+                r.text[:300],
+            )
+            return False
+        return bool(r.json().get("ok"))
+    except Exception as e:
+        logger.error("[POSTER] Raw Telegram fallback error: %s", e)
+        return False
+
+
+def _send_manual_copy_paste(
+    author: str,
+    tweet_id: str,
+    reply_text: str,
+    *,
+    headline: str = "API blocked — copy & paste:",
+) -> bool:
+    """
+    Telegram copy-paste instructions. Uses send_feedback_message + raw HTTP backup.
+    [MANUAL_REPLY] line must stay for the done reply flow.
+    """
     a = (author or "").strip().lstrip("@")
     txt = (reply_text or "").strip()
     body = (
-        "⚠️ API blocked — manual post needed\n\n"
-        f"Reply to: @{a}\n"
+        f"⚠️ {headline}\n\n"
         f"Tweet: https://x.com/{a}/status/{tweet_id}\n\n"
-        "Copy this reply:\n"
-        "─────────────────\n"
+        "Reply:\n"
+        "──────────────\n"
         f"{txt}\n"
-        "─────────────────\n\n"
-        "Tap the tweet link, paste the reply, done.\n\n"
+        "──────────────\n\n"
+        "1. Tap tweet link\n"
+        "2. Long-press reply text above → copy\n"
+        "3. Paste in X → post\n\n"
         f"[MANUAL_REPLY] tweet_id={tweet_id} author={a}"
     )
-    body = body[:4096]
-    if not config.TELEGRAM_BOT_TOKEN or not config.TELEGRAM_CHAT_ID:
-        return
-    url = f"https://api.telegram.org/bot{config.TELEGRAM_BOT_TOKEN}/sendMessage"
-    payload = {
-        "chat_id": config.TELEGRAM_CHAT_ID,
-        "text": body,
-    }
-    try:
-        requests.post(url, json=payload, timeout=30)
-    except Exception as e:
-        print(f"[POSTER] Telegram manual fallback send failed: {e}")
+    if len(body) > 4096:
+        cut = 4096 - 120
+        body = (
+            f"⚠️ {headline}\n\n"
+            f"Tweet: https://x.com/{a}/status/{tweet_id}\n\n"
+            "Reply (truncated — see DB pending):\n"
+            "──────────────\n"
+            f"{txt[:cut]}\n"
+            "──────────────\n\n"
+            f"[MANUAL_REPLY] tweet_id={tweet_id} author={a}"
+        )[:4096]
+
+    ok = telegram_bot.send_feedback_message(body)
+    if ok:
+        return True
+    logger.warning("[POSTER] send_feedback_message failed; trying raw Telegram")
+    return _send_manual_copy_paste_raw(body)
 
 
 def oauth_user_credentials_ready() -> bool:
@@ -86,7 +128,21 @@ def _enforce_rate_limits() -> bool:
 def _post_reply_impl(tweet_id: str, author: str, reply_text: str, approach: str = "") -> str:
     """Create tweet reply and persist to replies table (used after approval)."""
     if not _enforce_rate_limits():
-        return "failed"
+        print("[POSTER] Hourly or daily limit reached before reply delay")
+        logger.warning(
+            "[POSTER] Bot reply limit (hourly/daily); manual Telegram for @%s tweet_id=%s",
+            author,
+            tweet_id,
+        )
+        ok = _send_manual_copy_paste(
+            author,
+            tweet_id,
+            reply_text,
+            headline="Bot reply limit (hourly/daily) — copy & paste:",
+        )
+        if not ok:
+            logger.error("[POSTER] Manual Telegram copy-paste failed (limit path)")
+        return "manual"
 
     delay = random.randint(config.REPLY_DELAY_MIN, config.REPLY_DELAY_MAX)
     print(f"[POSTER] Waiting {delay}s before replying to @{author}...")
@@ -94,15 +150,36 @@ def _post_reply_impl(tweet_id: str, author: str, reply_text: str, approach: str 
 
     if not _enforce_rate_limits():
         print("[POSTER] Hourly or daily limit reached after delay")
-        return "failed"
+        logger.warning(
+            "[POSTER] Bot reply limit after delay; manual Telegram for @%s tweet_id=%s",
+            author,
+            tweet_id,
+        )
+        ok = _send_manual_copy_paste(
+            author,
+            tweet_id,
+            reply_text,
+            headline="Bot reply limit (hourly/daily) — copy & paste:",
+        )
+        if not ok:
+            logger.error("[POSTER] Manual Telegram copy-paste failed (limit-after-delay path)")
+        return "manual"
 
     if not oauth_user_credentials_ready():
         print(
             "[POSTER] OAuth 1.0a user credentials missing (API key/secret + access token/secret). "
             "Scanner can still work with TWITTER_BEARER only; posting cannot."
         )
+        logger.warning("[POSTER] OAuth missing for @%s tweet_id=%s; manual Telegram", author, tweet_id)
         database.mark_api_blocked_account(author)
-        _send_manual_copy_paste(author, tweet_id, reply_text)
+        ok = _send_manual_copy_paste(
+            author,
+            tweet_id,
+            reply_text,
+            headline="OAuth not configured — copy & paste:",
+        )
+        if not ok:
+            logger.error("[POSTER] Manual Telegram copy-paste failed (OAuth path)")
         print(f"[POSTER] API blocked for @{author}, sent to Telegram for manual post")
         return "manual"
 
@@ -132,15 +209,21 @@ def _post_reply_impl(tweet_id: str, author: str, reply_text: str, approach: str 
             database.remove_api_blocked_account(author)
             return "posted"
         print(f"[POSTER] Twitter returned no data for reply to @{author}")
+        logger.warning("[POSTER] create_tweet empty response @%s tweet_id=%s", author, tweet_id)
         database.mark_api_blocked_account(author)
-        _send_manual_copy_paste(author, tweet_id, reply_text)
+        ok = _send_manual_copy_paste(author, tweet_id, reply_text)
+        if not ok:
+            logger.error("[POSTER] Manual Telegram copy-paste failed (empty response path)")
         print(f"[POSTER] API blocked for @{author}, sent to Telegram for manual post")
         return "manual"
 
     except tweepy.TooManyRequests:
         print("[POSTER] Twitter rate limit hit — backing off")
+        logger.warning("[POSTER] X API 429 TooManyRequests @%s tweet_id=%s", author, tweet_id)
         database.mark_api_blocked_account(author)
-        _send_manual_copy_paste(author, tweet_id, reply_text)
+        ok = _send_manual_copy_paste(author, tweet_id, reply_text)
+        if not ok:
+            logger.error("[POSTER] Manual Telegram copy-paste failed (429 path)")
         print(f"[POSTER] API blocked for @{author}, sent to Telegram for manual post")
         return "manual"
     except tweepy.Unauthorized as e:
@@ -151,6 +234,7 @@ def _post_reply_impl(tweet_id: str, author: str, reply_text: str, approach: str 
             except Exception:
                 detail = str(e.response)
         print(f"[POSTER] 401 Unauthorized (OAuth 1.0a user context): {e}")
+        logger.warning("[POSTER] X API 401 @%s tweet_id=%s: %s", author, tweet_id, e)
         if detail:
             print(f"[POSTER] Response body: {detail}")
         print(
@@ -159,7 +243,9 @@ def _post_reply_impl(tweet_id: str, author: str, reply_text: str, approach: str 
             "regenerated after enabling Read and Write. (3) No wrong copy-paste / extra whitespace."
         )
         database.mark_api_blocked_account(author)
-        _send_manual_copy_paste(author, tweet_id, reply_text)
+        ok = _send_manual_copy_paste(author, tweet_id, reply_text)
+        if not ok:
+            logger.error("[POSTER] Manual Telegram copy-paste failed (401 path)")
         print(f"[POSTER] API blocked for @{author}, sent to Telegram for manual post")
         return "manual"
     except tweepy.Forbidden as e:
@@ -170,6 +256,7 @@ def _post_reply_impl(tweet_id: str, author: str, reply_text: str, approach: str 
             except Exception:
                 detail = str(e.response)
         print(f"[POSTER] 403 Forbidden (X policy, not OAuth): {e}")
+        logger.warning("[POSTER] X API 403 @%s tweet_id=%s: %s", author, tweet_id, e)
         if detail:
             print(f"[POSTER] Response body: {detail}")
         print(
@@ -177,13 +264,18 @@ def _post_reply_impl(tweet_id: str, author: str, reply_text: str, approach: str 
             "Try another candidate or a standalone tweet for testing."
         )
         database.mark_api_blocked_account(author)
-        _send_manual_copy_paste(author, tweet_id, reply_text)
+        ok = _send_manual_copy_paste(author, tweet_id, reply_text)
+        if not ok:
+            logger.error("[POSTER] Manual Telegram copy-paste failed (403 path)")
         print(f"[POSTER] API blocked for @{author}, sent to Telegram for manual post")
         return "manual"
     except Exception as e:
         print(f"[POSTER] Error posting reply: {e}")
+        logger.warning("[POSTER] Reply post exception @%s tweet_id=%s: %s", author, tweet_id, e)
         database.mark_api_blocked_account(author)
-        _send_manual_copy_paste(author, tweet_id, reply_text)
+        ok = _send_manual_copy_paste(author, tweet_id, reply_text)
+        if not ok:
+            logger.error("[POSTER] Manual Telegram copy-paste failed (generic exception path)")
         print(f"[POSTER] API blocked for @{author}, sent to Telegram for manual post")
         return "manual"
 
@@ -222,11 +314,28 @@ def post_reply(tweet_id: str) -> str:
 
     if database.is_api_blocked_recent(author, days=7):
         database.touch_api_blocked_attempt(author)
-        _send_manual_copy_paste(author, tweet_id, reply_text)
+        logger.info("[POSTER] Skipping X API (api_blocked_recent) @%s tweet_id=%s", author, tweet_id)
+        ok = _send_manual_copy_paste(author, tweet_id, reply_text)
+        if not ok:
+            logger.error("[POSTER] Manual Telegram copy-paste failed (pre-blocklist path)")
         print(f"[POSTER] API blocked for @{author}, sent to Telegram for manual post")
         return "manual"
 
     result = _post_reply_impl(tweet_id, author, reply_text, approach)
+    if result == "failed":
+        logger.error(
+            "[POSTER] Unexpected failed from _post_reply_impl tweet_id=%s @%s",
+            tweet_id,
+            author,
+        )
+        ok = _send_manual_copy_paste(
+            author,
+            tweet_id,
+            reply_text,
+            headline="Reply post failed — copy & paste:",
+        )
+        if ok:
+            result = "manual"
     if result == "posted":
         database.set_pending_status(tweet_id, "posted")
     elif result == "manual":
