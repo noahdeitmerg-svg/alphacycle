@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10 (x-bot bot_runtime + --queue-daily)
+**Zuletzt aktualisiert:** 2026-04-10 (x-bot daily post Haiku-Fallback bei 529)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-10) — alphacycle-x-bot: Daily Post Claude 529 sofort Haiku-Fallback
+- **Datei(en):** alphacycle-x-bot/config.py (`CLAUDE_MODEL_DAILY_FALLBACK`, Env, `none` schaltet Fallback aus), alphacycle-x-bot/daily_post_engine.py (`generate_daily_post`: Primary 529 dann sofort Fallback, sonst wie bisher 3 Runden mit 10-20 min Sleep), alphacycle-x-bot/.env.example, DEPLOY_STATE.md, .cursor/rules/permanent-fixes.mdc
+- **Was wurde geaendert:** Anthropic 529 ist Server-Ueberlast, kein App-Bug; bei Ueberlast auf Sonnet wird unmittelbar ein zweites Modell versucht, damit der Daily-Post nicht nur stundenlang wartet.
+- **Warum:** Hauefig nur eine Modell-Sparte ueberlastet; Fallback erhoeht Erfolgsquote ohne Reply-Pipeline zu aendern.
+- **Status:** deployed (VPS: git pull + Screen neu starten)
 
 ## Letzter Session-Status (2026-04-10) — alphacycle-x-bot: bot_runtime Status + --queue-daily
 - **Datei(en):** alphacycle-x-bot/database.py (`bot_runtime`, `set_bot_booted_now`, `record_scan_cycle_finished`, `get_bot_runtime_status`), alphacycle-x-bot/bot.py (`run_cycle` finally, `set_bot_booted_now`, CLI `--queue-daily`), alphacycle-x-bot/telegram_listener.py (`/status` nutzt DB), DEPLOY_STATE.md, .cursor/rules/permanent-fixes.mdc

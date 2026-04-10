@@ -46,6 +46,15 @@ TOPIC_LOOKBACK_DAYS = 7
 
 # Claude Model
 CLAUDE_MODEL = "claude-sonnet-4-20250514"
+# Daily post only: if Sonnet returns 529 overloaded, try this model immediately (often different capacity).
+# Set CLAUDE_MODEL_DAILY_FALLBACK=none (or off/false/0) to disable fallback (primary + long sleeps only).
+_CLAUDE_FB = (os.getenv("CLAUDE_MODEL_DAILY_FALLBACK") or "").strip()
+if _CLAUDE_FB.lower() in ("none", "off", "false", "0"):
+    CLAUDE_MODEL_DAILY_FALLBACK = ""
+elif _CLAUDE_FB:
+    CLAUDE_MODEL_DAILY_FALLBACK = _CLAUDE_FB
+else:
+    CLAUDE_MODEL_DAILY_FALLBACK = "claude-3-5-haiku-20241022"
 
 # ============================================================
 # TRACKED ACCOUNTS — AlphaCycle Reply Targets

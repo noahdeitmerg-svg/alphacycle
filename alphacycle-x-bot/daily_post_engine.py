@@ -247,6 +247,15 @@ def generate_daily_post(
         "no $BTC tickers, end with Share Lines). No preamble."
     )
 
+    def _call_model(client: anthropic.Anthropic, model_name: str) -> str:
+        response = client.messages.create(
+            model=model_name,
+            max_tokens=900,
+            system=system_prompt,
+            messages=[{"role": "user", "content": user_msg}],
+        )
+        return (response.content[0].text or "").strip()
+
     for attempt in range(_DAILY_POST_OVERLOAD_MAX_ATTEMPTS):
         if attempt > 0:
             pause = random.randint(
@@ -259,22 +268,56 @@ def generate_daily_post(
                 _DAILY_POST_OVERLOAD_MAX_ATTEMPTS,
             )
             time.sleep(pause)
+
+        client = anthropic.Anthropic(api_key=config.CLAUDE_API_KEY)
+        primary_overloaded = False
+
         try:
-            client = anthropic.Anthropic(api_key=config.CLAUDE_API_KEY)
-            response = client.messages.create(
-                model=config.CLAUDE_MODEL,
-                max_tokens=900,
-                system=system_prompt,
-                messages=[{"role": "user", "content": user_msg}],
-            )
-            text = response.content[0].text.strip()
-            logger.info("generate_daily_post: generated %s chars", len(text))
-            return text, post_type
+            text = _call_model(client, config.CLAUDE_MODEL)
+            if text:
+                logger.info("generate_daily_post: generated %s chars", len(text))
+                return text, post_type
         except Exception as e:
-            if _is_claude_overloaded(e) and attempt < _DAILY_POST_OVERLOAD_MAX_ATTEMPTS - 1:
-                continue
-            logger.error("generate_daily_post: Claude API error: %s", e)
-            return None, post_type
+            if _is_claude_overloaded(e):
+                primary_overloaded = True
+                logger.warning(
+                    "generate_daily_post: primary model overloaded (%s)",
+                    config.CLAUDE_MODEL,
+                )
+            else:
+                logger.error("generate_daily_post: Claude API error: %s", e)
+                return None, post_type
+
+        fb = (config.CLAUDE_MODEL_DAILY_FALLBACK or "").strip()
+        if primary_overloaded and fb and fb != config.CLAUDE_MODEL:
+            try:
+                text = _call_model(client, fb)
+                if text:
+                    logger.warning(
+                        "generate_daily_post: succeeded with fallback model %s (primary was 529)",
+                        fb,
+                    )
+                    logger.info("generate_daily_post: generated %s chars", len(text))
+                    return text, post_type
+            except Exception as e2:
+                if _is_claude_overloaded(e2):
+                    logger.warning(
+                        "generate_daily_post: fallback model also overloaded (%s)",
+                        fb,
+                    )
+                else:
+                    logger.error(
+                        "generate_daily_post: Claude API error (fallback): %s", e2
+                    )
+                    return None, post_type
+
+        if attempt < _DAILY_POST_OVERLOAD_MAX_ATTEMPTS - 1:
+            continue
+        logger.error(
+            "generate_daily_post: exhausted attempts after overload/empty (%s rounds)",
+            _DAILY_POST_OVERLOAD_MAX_ATTEMPTS,
+        )
+        return None, post_type
 
 
 def _screenshot_playwright(out_path: Path) -> bool:
