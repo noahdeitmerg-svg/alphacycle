@@ -112,15 +112,50 @@ def send_daily_post_approval(post_text: str, pending_id: str) -> bool:
         return False
 
 
-def answer_callback_query(callback_query_id: str, text: str | None = None) -> None:
+def answer_callback_query(
+    callback_query_id: str,
+    text: str | None = None,
+    show_alert: bool = False,
+) -> None:
     if not config.TELEGRAM_BOT_TOKEN:
         return
     url = f"{_api_base()}/answerCallbackQuery"
     payload: dict = {"callback_query_id": callback_query_id}
     if text:
         payload["text"] = text[:200]
-        payload["show_alert"] = False
+        payload["show_alert"] = show_alert
     try:
         requests.post(url, json=payload, timeout=15)
     except Exception as e:
         print(f"[TELEGRAM] answerCallbackQuery error: {e}")
+
+
+def send_feedback_message(
+    text: str,
+    chat_id: int | str | None = None,
+    reply_to_message_id: int | None = None,
+) -> bool:
+    """
+    Visible chat message (stays in history). Use after button presses so the user
+    sees what happened beyond the short callback toast.
+    """
+    cid = chat_id if chat_id is not None else config.TELEGRAM_CHAT_ID
+    if not config.TELEGRAM_BOT_TOKEN or not cid:
+        return False
+    payload: dict = {
+        "chat_id": cid,
+        "text": (text or "")[:4096],
+    }
+    if reply_to_message_id is not None:
+        payload["reply_to_message_id"] = reply_to_message_id
+    url = f"{_api_base()}/sendMessage"
+    try:
+        r = requests.post(url, json=payload, timeout=30)
+        if not r.ok:
+            print(f"[TELEGRAM] send_feedback_message failed: {r.status_code} {r.text[:400]}")
+            return False
+        data = r.json()
+        return bool(data.get("ok"))
+    except Exception as e:
+        print(f"[TELEGRAM] send_feedback_message error: {e}")
+        return False

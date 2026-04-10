@@ -4,6 +4,12 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-04-10) — alphacycle-x-bot: Telegram Chat-Feedback + Commands
+- **Datei(en):** alphacycle-x-bot/telegram_bot.py (`send_feedback_message`, `answer_callback_query` show_alert-Param), alphacycle-x-bot/telegram_listener.py (Bestätigungsnachricht als Reply auf Freigabe-Karte; /status /ping /help /start)
+- **Was wurde geaendert:** Nach jedem Button-Druck zusätzliche sichtbare Nachricht im Chat (wer was gedrückt hat, Tweet-ID/Pending-ID, Ergebnis); kurzer Callback-Toast unveraendert.
+- **Warum:** Nutzer wollte klare Rueckmeldung neben dem kurzen Toast oben.
+- **Status:** deployed
+
 ## Letzter Session-Status (2026-04-09) — alphacycle-x-bot: config ARC_API_URL, tiers, scanner blocked
 - **Datei(en):** alphacycle-x-bot/config.py (`ARC_API_URL`, `DAILY_POST_TIME`, `REPLY_HOOK_PROBABILITY`, `MAX_REPLY_HISTORY`, `TOPIC_LOOKBACK_DAYS`, `CLAUDE_MODEL`, `TIER_1/2_ACCOUNTS`, `TRACKED_ACCOUNTS` Union, `BLOCKED_KEYWORDS`), growth_engine.py, reply_engine.py, bot.py, daily_post_engine.py, database.py (`TOPIC_LOOKBACK_DAYS` in daily topics query), scanner.py, .cursor/rules/permanent-fixes.mdc
 - **Was wurde geaendert:** Zentrale Config-Keys laut Spec; `fetch_arc_data` nutzt `ARC_API_URL` + Host-Parsing; Scheduler `DAILY_POST_TIME`; Hook/History aus Config; Daily-Topic-Lookback; Scanner filtert `BLOCKED_KEYWORDS` mit `log_scanned(..., blocked_keyword)`; Track-Liste = Tier-1+2 (ohne fruehere CryptoCapo/CryptoCred/id-Liste).
