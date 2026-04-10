@@ -48,8 +48,8 @@ def generate_reply(tweet: dict) -> tuple[str | None, str | None]:
             print("[REPLY_ENGINE] Skipped — not relevant to ARC")
             return None, None
 
-        if len(reply) > 280:
-            reply = reply[:277] + "..."
+        if len(reply) > 270:
+            reply = reply[:270]
 
         print(f"[REPLY_ENGINE] Generated: {reply}")
         return reply, approach_key

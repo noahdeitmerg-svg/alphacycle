@@ -301,6 +301,48 @@ def get_recent_reply_texts(limit: int = 10) -> list[str]:
     return rows
 
 
+def _norm_reply_author(username: str | None) -> str:
+    return (username or "").strip().lstrip("@").lower()
+
+
+def is_author_spacing_ok_for_reply(username: str) -> bool:
+    """
+    Uses reply_history (newest first): allow a candidate for `username` only if
+    the last reply to that author is not the most recent row, and at least two
+    distinct other authors appear in rows more recent than that last reply.
+    Empty history => allow.
+    """
+    target = _norm_reply_author(username)
+    if not target:
+        return False
+    conn = sqlite3.connect(DB_PATH)
+    try:
+        c = conn.cursor()
+        ob = _reply_history_order_by_clause(conn)
+        c.execute(
+            f"SELECT tweet_author FROM reply_history ORDER BY {ob} LIMIT 200",
+        )
+        rows = [_norm_reply_author(r[0]) for r in c.fetchall()]
+    finally:
+        conn.close()
+
+    if not rows:
+        return True
+
+    idx = None
+    for i, a in enumerate(rows):
+        if a == target:
+            idx = i
+            break
+    if idx is None:
+        return True
+    if idx == 0:
+        return False
+    before = rows[:idx]
+    others = {a for a in before if a and a != target}
+    return len(others) >= 2
+
+
 def get_reply_history_texts_for_prompt(limit: int = 10) -> list[str]:
     """
     Last N reply bodies from reply_history (newest first), then fill from replies

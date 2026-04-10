@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10 (x-bot Telegram Hauptmenue Inline-Buttons)
+**Zuletzt aktualisiert:** 2026-04-10 (x-bot reply_system 270 + author spacing)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-10) — alphacycle-x-bot: reply_system.txt komplett + Reply-Abstand pro Account
+- **Datei(en):** alphacycle-x-bot/prompts/reply_system.txt (voller Ersatz), alphacycle-x-bot/database.py (`is_author_spacing_ok_for_reply` via `reply_history`), alphacycle-x-bot/scanner.py (`author_spacing` Skip), alphacycle-x-bot/reply_engine.py (Clip 270 Zeichen), DEPLOY_STATE.md, .cursor/rules/permanent-fixes.mdc
+- **Was wurde geaendert:** Neuer Master-Reply-Prompt: 270-Zeichen-Regel, Banned-Words, Bar-Test, Good/Bad Beispiele, erste Satz auf deren Tweet, ATH/F&G-Checks im Text; keine AlphaCycle/ARC im Output. Scanner: kein Candidate fuer einen Account bis mindestens zwei **andere** Accounts in neueren `reply_history`-Zeilen seit dem letzten Reply an diesen Account. Engine clippt auf 270 Zeichen.
+- **Warum:** Weniger kaputte/abgeschnittene Replies, weniger akademischer Ton, kein Spam auf denselben Handle hintereinander.
+- **Status:** deployed (VPS: git pull, `./restart-screens.sh`)
 
 ## Letzter Session-Status (2026-04-10) — alphacycle-x-bot: Telegram Hauptmenue (Inline-Buttons + menu:*)
 - **Datei(en):** alphacycle-x-bot/telegram_bot.py (`send_main_menu`), alphacycle-x-bot/telegram_listener.py (`menu:*`, `_MENU_TRIGGERS`, `/menu`), alphacycle-x-bot/RUN_24_7.md, DEPLOY_STATE.md, .cursor/rules/permanent-fixes.mdc

@@ -109,6 +109,11 @@ def scan_tweets() -> list[dict]:
             if database.already_replied(tweet["id"]):
                 database.log_scanned(tweet["id"], tweet["author"], "already_replied")
                 continue
+            if not database.is_author_spacing_ok_for_reply(tweet["author"]):
+                database.log_scanned(
+                    tweet["id"], tweet["author"], "author_spacing"
+                )
+                continue
 
             database.log_scanned(tweet["id"], tweet["author"])
             candidates.append(tweet)
