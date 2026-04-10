@@ -7,6 +7,7 @@ and successful publish, call database.record_daily_post_topic(...) so posted_top
 from __future__ import annotations
 
 import logging
+import random
 import re
 import time
 from datetime import datetime, timezone
@@ -26,6 +27,25 @@ logger = logging.getLogger(__name__)
 _BASE_DIR = Path(__file__).resolve().parent
 _SCREENSHOT_DIR = _BASE_DIR / "artifacts"
 _ARC_SUMMARY_TIMEOUT = 10
+
+# Claude 529 overloaded: wait 10-20 min between retries (up to 3 attempts total).
+_DAILY_POST_OVERLOAD_MIN_SLEEP = 600
+_DAILY_POST_OVERLOAD_MAX_SLEEP = 1200
+_DAILY_POST_OVERLOAD_MAX_ATTEMPTS = 3
+
+
+def _is_claude_overloaded(exc: BaseException) -> bool:
+    """HTTP 529 / overloaded_error from Anthropic messages API."""
+    code = getattr(exc, "status_code", None)
+    if code == 529:
+        return True
+    body = getattr(exc, "body", None)
+    if isinstance(body, dict):
+        err = body.get("error")
+        if isinstance(err, dict) and err.get("type") == "overloaded_error":
+            return True
+    msg = str(exc).lower()
+    return "529" in msg and ("overload" in msg or "overloaded" in msg)
 
 
 def _zone_hist_key(arc_score: float) -> str:
@@ -227,20 +247,34 @@ def generate_daily_post(
         "no $BTC tickers, end with Share Lines). No preamble."
     )
 
-    try:
-        client = anthropic.Anthropic(api_key=config.CLAUDE_API_KEY)
-        response = client.messages.create(
-            model=config.CLAUDE_MODEL,
-            max_tokens=900,
-            system=system_prompt,
-            messages=[{"role": "user", "content": user_msg}],
-        )
-        text = response.content[0].text.strip()
-        logger.info("generate_daily_post: generated %s chars", len(text))
-        return text, post_type
-    except Exception as e:
-        logger.error("generate_daily_post: Claude API error: %s", e)
-        return None, post_type
+    for attempt in range(_DAILY_POST_OVERLOAD_MAX_ATTEMPTS):
+        if attempt > 0:
+            pause = random.randint(
+                _DAILY_POST_OVERLOAD_MIN_SLEEP, _DAILY_POST_OVERLOAD_MAX_SLEEP
+            )
+            logger.warning(
+                "generate_daily_post: Claude overloaded, sleeping %ss then retry %s/%s",
+                pause,
+                attempt + 1,
+                _DAILY_POST_OVERLOAD_MAX_ATTEMPTS,
+            )
+            time.sleep(pause)
+        try:
+            client = anthropic.Anthropic(api_key=config.CLAUDE_API_KEY)
+            response = client.messages.create(
+                model=config.CLAUDE_MODEL,
+                max_tokens=900,
+                system=system_prompt,
+                messages=[{"role": "user", "content": user_msg}],
+            )
+            text = response.content[0].text.strip()
+            logger.info("generate_daily_post: generated %s chars", len(text))
+            return text, post_type
+        except Exception as e:
+            if _is_claude_overloaded(e) and attempt < _DAILY_POST_OVERLOAD_MAX_ATTEMPTS - 1:
+                continue
+            logger.error("generate_daily_post: Claude API error: %s", e)
+            return None, post_type
 
 
 def _screenshot_playwright(out_path: Path) -> bool:

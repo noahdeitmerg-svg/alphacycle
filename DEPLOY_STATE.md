@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-09 (x-bot Telegram Status + Summary)
+**Zuletzt aktualisiert:** 2026-04-09 (daily_post Claude 529 retry)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-09) — alphacycle-x-bot: generate_daily_post Retry bei Claude 529 overloaded
+- **Datei(en):** alphacycle-x-bot/daily_post_engine.py, DEPLOY_STATE.md, .cursor/rules/permanent-fixes.mdc
+- **Was wurde geaendert:** `generate_daily_post`: bis zu 3 Anthropic `messages.create`-Versuche; bei 529/overloaded_error Pause random 600-1200s (10-20 min) vor erneutem Versuch. Andere API-Fehler: sofortiger Abbruch wie bisher.
+- **Warum:** Hauefiger `overloaded_error` loeste leere Daily-Queue aus; Scheduler-Job kann waehrend der Pause blockieren (einmal taeglich akzeptabel).
+- **Status:** deployed
 
 ## Letzter Session-Status (2026-04-09) — alphacycle-x-bot: Telegram Post-Bestaetigung + /status + Daily Summary 23:00 UTC
 - **Datei(en):** alphacycle-x-bot/poster.py, alphacycle-x-bot/telegram_listener.py, DEPLOY_STATE.md, .cursor/rules/permanent-fixes.mdc
