@@ -4,6 +4,12 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-04-09) — alphacycle-x-bot: reply_engine + reply_history + approach
+- **Datei(en):** alphacycle-x-bot/reply_engine.py, alphacycle-x-bot/growth_engine.py (`build_reply_prompt` -> tuple mit `approach_key`), alphacycle-x-bot/database.py (`reply_history`, `get_reply_history_texts_for_prompt`, `insert_reply_history`, `pending_replies.approach`), alphacycle-x-bot/bot.py (`daily_post_engine.fetch_arc_data`, `generate_reply` Tuple, `insert_pending_reply` mit approach), alphacycle-x-bot/poster.py (`insert_reply_history` nach Post), .cursor/rules/permanent-fixes.mdc
+- **Was wurde geaendert:** Reply-Prompt nur noch via `build_reply_prompt`; ARC aus `fetch_arc_data`; History aus `reply_history` (Fallback `replies`); nach erfolgreichem Post Eintrag in `reply_history` inkl. Approach; Approach in `pending_replies` fuer Telegram-Queue.
+- **Warum:** Growth-Engine-Integration laut Spec; Ansatz-Logging fuer Prompt-Historie.
+- **Status:** in progress
+
 ## Letzter Session-Status (2026-04-09) — alphacycle-x-bot: daily_post_engine + daily_post_topics
 - **Datei(en):** alphacycle-x-bot/daily_post_engine.py, alphacycle-x-bot/database.py (`daily_post_topics`, `get_daily_post_topics_last_7_days`, `record_daily_post_topic`), alphacycle-x-bot/config.py (`ALPHACYCLE_PUBLIC_BASE`, `DAILY_POST_DASHBOARD_URL`), alphacycle-x-bot/growth_engine.py (`_format_arc_block` Zusatzzeilen), alphacycle-x-bot/requirements.txt (Kommentar optional Playwright/Selenium), `.gitignore` (`alphacycle-x-bot/artifacts/`), .cursor/rules/permanent-fixes.mdc
 - **Was wurde geaendert:** Taeglicher Post: `fetch_arc_data()` (GET arc-summary auf alphacycle.app-Basis, Preis cycle/btc, optional cycle-anchor + historical-returns fuer return_12m/win_rate), `generate_daily_post` mit `build_post_prompt` + Claude Sonnet, `generate_daily_post_with_image` mit optionalem Playwright- dann Selenium-Screenshot; kein Auto-Post — nach Telegram-Freigabe `record_daily_post_topic` aufrufen.

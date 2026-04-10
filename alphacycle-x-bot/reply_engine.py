@@ -1,36 +1,32 @@
 import anthropic
-import requests
 import config
+import daily_post_engine
 import database
-import growth_engine
+from growth_engine import build_reply_prompt
 
 
-def fetch_arc_context() -> dict:
-    try:
-        resp = requests.get(f"{config.ALPHACYCLE_API}/api/arc-summary", timeout=10)
-        resp.raise_for_status()
-        return resp.json()
-    except Exception as e:
-        print(f"[REPLY_ENGINE] ARC fetch failed: {e}")
-        return {}
-
-
-def generate_reply(tweet: dict, arc_context: dict) -> str | None:
+def generate_reply(tweet: dict) -> tuple[str | None, str | None]:
+    """
+    Build prompt via growth_engine + live ARC from daily_post_engine; call Claude.
+    Returns (reply_text, approach_key). approach_key is for reply_history after X post.
+    """
     if not config.CLAUDE_API_KEY:
         print("[REPLY_ENGINE] No Claude API key set")
-        return None
+        return None, None
+
+    arc_data = daily_post_engine.fetch_arc_data() or {}
+    history = database.get_reply_history_texts_for_prompt(10)
 
     try:
-        history = database.get_recent_reply_texts(10)
-        system = growth_engine.build_reply_prompt(
+        system, approach_key = build_reply_prompt(
             tweet.get("text") or "",
             tweet.get("author") or "",
             history,
-            arc_context,
+            arc_data,
         )
     except Exception as e:
-        print(f"[REPLY_ENGINE] growth_engine.build_reply_prompt failed: {e}")
-        return None
+        print(f"[REPLY_ENGINE] build_reply_prompt failed: {e}")
+        return None, None
 
     user_msg = (
         "If the tweet is off-topic for cycle / liquidity / structural regime, output exactly SKIP. "
@@ -50,14 +46,14 @@ def generate_reply(tweet: dict, arc_context: dict) -> str | None:
 
         if reply == "SKIP":
             print("[REPLY_ENGINE] Skipped — not relevant to ARC")
-            return None
+            return None, None
 
         if len(reply) > 280:
             reply = reply[:277] + "..."
 
         print(f"[REPLY_ENGINE] Generated: {reply}")
-        return reply
+        return reply, approach_key
 
     except Exception as e:
         print(f"[REPLY_ENGINE] Claude error: {e}")
-        return None
+        return None, None

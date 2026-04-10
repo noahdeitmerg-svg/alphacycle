@@ -40,7 +40,9 @@ def _enforce_rate_limits() -> bool:
     return True
 
 
-def _post_reply_impl(tweet_id: str, author: str, reply_text: str) -> bool:
+def _post_reply_impl(
+    tweet_id: str, author: str, reply_text: str, approach: str = ""
+) -> bool:
     """Create tweet reply and persist to replies table (used after approval)."""
     if not _enforce_rate_limits():
         return False
@@ -70,6 +72,7 @@ def _post_reply_impl(tweet_id: str, author: str, reply_text: str) -> bool:
 
         if response.data:
             database.log_reply(tweet_id, author, reply_text)
+            database.insert_reply_history(reply_text, author, approach or "")
             print(f"[POSTER] Reply posted to @{author}: {reply_text[:60]}...")
             print(f"[LOG] reply posted tweet_id={tweet_id}")
             return True
@@ -138,6 +141,7 @@ def post_reply(tweet_id: str) -> bool:
 
     author = row["username"]
     reply_text = row["reply_text"]
+    approach = row.get("approach") or ""
 
     if status == "pending":
         if not database.try_transition_pending_status(tweet_id, "pending", "approved"):
@@ -146,7 +150,7 @@ def post_reply(tweet_id: str) -> bool:
                 print(f"[POSTER] Could not lock pending row for tweet_id={tweet_id}")
                 return False
 
-    ok = _post_reply_impl(tweet_id, author, reply_text)
+    ok = _post_reply_impl(tweet_id, author, reply_text, approach)
     if ok:
         database.set_pending_status(tweet_id, "posted")
     else:

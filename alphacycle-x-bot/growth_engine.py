@@ -112,10 +112,11 @@ def build_reply_prompt(
     tweet_author: str,
     reply_history: Sequence[str] | None,
     arc_data: dict[str, Any] | None,
-) -> str:
+) -> tuple[str, str]:
     """
     Build full system-style prompt string for a reply-generation Claude call.
     Randomly picks 1 of 5 approaches; 40% chance hook = ACTIVE (see reply_system.txt).
+    Returns (system_prompt, approach_key) so callers can log the approach after post.
     """
     base = _read_prompt_file("reply_system.txt")
     approach_key = random.choice(REPLY_APPROACH_KEYS)
@@ -136,7 +137,7 @@ def build_reply_prompt(
         ("{reply_history}", history),
     ):
         base = base.replace(key, val)
-    return base
+    return base, approach_key
 
 
 def build_post_prompt(

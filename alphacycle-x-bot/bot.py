@@ -2,6 +2,7 @@ import argparse
 import time
 import sys
 import database
+import daily_post_engine
 import scanner
 import reply_engine
 import telegram_bot
@@ -51,7 +52,7 @@ def run_cycle():
         print("[BOT] No candidates — sleeping.")
         return
 
-    arc = reply_engine.fetch_arc_context()
+    arc = daily_post_engine.fetch_arc_data()
     if not arc:
         print("[BOT] No ARC data — skipping cycle.")
         return
@@ -63,14 +64,14 @@ def run_cycle():
         if database.already_replied(tweet["id"]):
             continue
 
-        reply_text = reply_engine.generate_reply(tweet, arc)
+        reply_text, approach_key = reply_engine.generate_reply(tweet)
         if not reply_text:
             database.log_scanned(tweet["id"], tweet["author"], "no_reply_generated")
             continue
 
         tw_url = _tweet_url(tweet["author"], tweet["id"])
         if not database.insert_pending_reply(
-            tweet["id"], tw_url, tweet["author"], reply_text
+            tweet["id"], tw_url, tweet["author"], reply_text, approach_key or ""
         ):
             print(f"[BOT] Pending row already exists for tweet {tweet['id']} — skip duplicate queue")
             continue

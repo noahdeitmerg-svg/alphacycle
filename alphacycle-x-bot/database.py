@@ -3,6 +3,14 @@ import sqlite3
 from config import DB_PATH
 
 
+def _ensure_column(conn, table: str, column: str, coldef: str) -> None:
+    c = conn.cursor()
+    c.execute(f"PRAGMA table_info({table})")
+    names = [row[1] for row in c.fetchall()]
+    if column not in names:
+        c.execute(f"ALTER TABLE {table} ADD COLUMN {column} {coldef}")
+
+
 def init_db():
     """Create tables if they don't exist."""
     conn = sqlite3.connect(DB_PATH)
@@ -34,8 +42,20 @@ def init_db():
             username TEXT NOT NULL,
             reply_text TEXT NOT NULL,
             status TEXT NOT NULL DEFAULT 'pending',
+            approach TEXT DEFAULT '',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    _ensure_column(conn, "pending_replies", "approach", "TEXT DEFAULT ''")
+
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS reply_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            reply_text TEXT NOT NULL,
+            tweet_author TEXT NOT NULL,
+            approach TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
 
@@ -94,6 +114,51 @@ def get_recent_reply_texts(limit: int = 10) -> list[str]:
     return rows
 
 
+def get_reply_history_texts_for_prompt(limit: int = 10) -> list[str]:
+    """
+    Last N reply bodies from reply_history (newest first), then fill from replies
+    if needed so prompts stay useful on fresh DBs.
+    """
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute(
+        """
+        SELECT reply_text FROM reply_history
+        ORDER BY created_at DESC
+        LIMIT ?
+        """,
+        (limit,),
+    )
+    hist = [str(r[0]) for r in c.fetchall()]
+    conn.close()
+    if len(hist) >= limit:
+        return hist[:limit]
+    seen = set(hist)
+    for t in get_recent_reply_texts(max(limit * 2, 20)):
+        if t in seen:
+            continue
+        seen.add(t)
+        hist.append(t)
+        if len(hist) >= limit:
+            break
+    return hist[:limit]
+
+
+def insert_reply_history(reply_text: str, tweet_author: str, approach: str) -> None:
+    """Log a posted reply for prompt duplicate-avoidance (after successful X post)."""
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute(
+        """
+        INSERT INTO reply_history (reply_text, tweet_author, approach)
+        VALUES (?, ?, ?)
+        """,
+        (reply_text, tweet_author, approach or ""),
+    )
+    conn.commit()
+    conn.close()
+
+
 def log_scanned(tweet_id: str, author: str, skipped_reason: str = None):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
@@ -132,16 +197,17 @@ def insert_pending_reply(
     tweet_url: str,
     username: str,
     reply_text: str,
+    approach: str = "",
 ) -> bool:
     """Insert a new pending row. Returns True if inserted, False if tweet_id already exists."""
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute(
         """
-        INSERT OR IGNORE INTO pending_replies (tweet_id, tweet_url, username, reply_text, status)
-        VALUES (?, ?, ?, ?, 'pending')
+        INSERT OR IGNORE INTO pending_replies (tweet_id, tweet_url, username, reply_text, status, approach)
+        VALUES (?, ?, ?, ?, 'pending', ?)
         """,
-        (tweet_id, tweet_url, username, reply_text),
+        (tweet_id, tweet_url, username, reply_text, approach or ""),
     )
     inserted = c.rowcount > 0
     conn.commit()
@@ -154,7 +220,11 @@ def get_pending_by_tweet_id(tweet_id: str) -> dict | None:
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
     c.execute(
-        "SELECT tweet_id, tweet_url, username, reply_text, status FROM pending_replies WHERE tweet_id = ?",
+        """
+        SELECT tweet_id, tweet_url, username, reply_text, status,
+               COALESCE(approach, '') AS approach
+        FROM pending_replies WHERE tweet_id = ?
+        """,
         (tweet_id,),
     )
     row = c.fetchone()
