@@ -4,6 +4,12 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-04-10) — alphacycle-x-bot: post_system CRITICAL STYLE (Erweiterung)
+- **Datei(en):** alphacycle-x-bot/prompts/post_system.txt, .cursor/rules/permanent-fixes.mdc
+- **Was wurde geaendert:** CRITICAL STYLE RULES ergaenzt: kein Sales-Talk („maximum opportunity“), Phasen nicht deklarativ erklaeren (Beobachtung/Kontrast), Zonennamen max. einmal eingebettet kein Label, keine Em-Dashes zwischen Dramen (Zeilenumbrueche).
+- **Warum:** Analysten-Ton, weniger Broschuere, klarere X-Lesbarkeit.
+- **Status:** deployed
+
 ## Letzter Session-Status (2026-04-10) — alphacycle-x-bot: post_system CRITICAL STYLE RULES
 - **Datei(en):** alphacycle-x-bot/prompts/post_system.txt (CRITICAL STYLE RULES vor „Write the post now“; RULES-Bullet „at most two data points“ statt „one number“), .cursor/rules/permanent-fixes.mdc
 - **Was wurde geaendert:** Schaerfere Daily-Post-Vorgaben: max zwei Datenpunkte, Dollar voll ausgeschrieben, keine Return-/Win-Rate-Zahlen im Tweet, kein exakter ARC-Score (Zone/Perzentil), Narrativ/Micro-Story, ATH-„new highs“-Check, Insight vor Information.
