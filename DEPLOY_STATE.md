@@ -1,8 +1,15 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-09 (reply_system Master-Prompt)
+**Zuletzt aktualisiert:** 2026-04-09 (TRACKED_ACCOUNTS 25 + BLOCKED_KEYWORDS)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-09) — alphacycle-x-bot: TRACKED_ACCOUNTS 25 + TIER_3 + BLOCKED_KEYWORDS
+- **Datei(en):** alphacycle-x-bot/config.py
+- **Was wurde geaendert:** TIER_1 (5), TIER_2 (12), neu TIER_3 (8); `TRACKED_ACCOUNTS` = Summe aller drei (25); `BLOCKED_KEYWORDS` erweitert (u.a. 1000x, PUMP, giveaway, airdrop, presale, whitelist, JOIN NOW, FREE MINT, LAST CHANCE). Scanner/Reply-Code unveraendert.
+- **Warum:** Fokussierte Reply-Ziele laut Produktliste; mehr Noise-Filter.
+- **Deploy-Hinweis:** Mehrere Handles vor Live-Betrieb in X pruefen (woonomic, ecoinometrics, coinmetrics, stackhodler, therationalroot, TXMCtrades, MacroCharts, GameofTrades_, fejau_inc, CryptoHayes, ChrisBurniske, MacroAlf; TIER_2-Eintrag `glasabornode` auf Schreibweise pruefen). Verifiziert laut Nutzerliste: RaoulGMI, LynAldenContact, KobeissiLetter, 100trillionUSD, WClemente, _Checkmatey_, in2cryptoversee, DylanLeClair, CryptoCon_, TechDev_52, PositiveCrypto, GlassnodeAlerts.
+- **Status:** deployed
 
 ## Letzter Session-Status (2026-04-09) — alphacycle-x-bot: reply_system.txt komplett ersetzt (Master-Reply-Prompt)
 - **Datei(en):** alphacycle-x-bot/prompts/reply_system.txt (voller Ersatz: CURRENT MARKET CONTEXT, erweiterte Approaches, Hook-Phrasen 40/60, FACTUAL ACCURACY, CRITICAL REPLY RULES, Beispiele, ANTI-AI, FINAL TEST; Platzhalter `{arc_data_block}` `{approach}` `{hook_instruction}` `{tweet_author}` `{tweet_text}` `{reply_history}` unveraendert), .cursor/rules/permanent-fixes.mdc

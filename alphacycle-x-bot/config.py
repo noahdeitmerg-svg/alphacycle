@@ -47,36 +47,54 @@ TOPIC_LOOKBACK_DAYS = 7
 # Claude Model
 CLAUDE_MODEL = "claude-sonnet-4-20250514"
 
-# Reply Target Tiers (scanner: TRACKED_ACCOUNTS = union; optional id:SNOWFLAKE per permanent-fixes)
+# ============================================================
+# TRACKED ACCOUNTS — AlphaCycle Reply Targets
+# 25 Accounts total. Budget: ~1200 API calls/day at 30min intervals.
+# ============================================================
+
 TIER_1_ACCOUNTS = [
-    "WClemente",
-    "_Checkmatey_",
-    "in2cryptoversee",
     "RaoulGMI",
     "LynAldenContact",
+    "KobeissiLetter",
+    "100trillionUSD",
+    "WClemente",
 ]
 
 TIER_2_ACCOUNTS = [
-    "KobeissiLetter",
+    "_Checkmatey_",
+    "in2cryptoversee",
     "DylanLeClair",
-    "100trillionUSD",
     "CryptoCon_",
-    "MacroAlf",
     "TechDev_52",
     "PositiveCrypto",
+    "woonomic",
+    "glasabornode",
+    "ecoinometrics",
+    "coinmetrics",
+    "stackhodler",
+    "therationalroot",
 ]
 
-TRACKED_ACCOUNTS = list(dict.fromkeys(TIER_1_ACCOUNTS + TIER_2_ACCOUNTS))
+TIER_3_ACCOUNTS = [
+    "TXMCtrades",
+    "MacroCharts",
+    "GameofTrades_",
+    "fejau_inc",
+    "CryptoHayes",
+    "ChrisBurniske",
+    "GlassnodeAlerts",
+    "MacroAlf",
+]
 
-# Scanner: skip obvious engagement-bait / hype phrasing (substring match, case-insensitive).
+# Combined list for scanner
+TRACKED_ACCOUNTS = TIER_1_ACCOUNTS + TIER_2_ACCOUNTS + TIER_3_ACCOUNTS
+
+# Blocked keywords — skip tweets containing these
 BLOCKED_KEYWORDS = [
-    "LFG",
-    "wagmi",
-    "to the moon",
-    "100x",
-    "BUY NOW",
-    "FULL SEND",
-    "PARABOLIC",
+    "LFG", "wagmi", "to the moon", "100x", "1000x",
+    "BUY NOW", "FULL SEND", "PARABOLIC", "PUMP",
+    "giveaway", "airdrop", "presale", "whitelist",
+    "JOIN NOW", "FREE MINT", "LAST CHANCE",
 ]
 
 MAX_REPLIES_PER_HOUR = 5
