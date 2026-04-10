@@ -11,6 +11,46 @@ def _ensure_column(conn, table: str, column: str, coldef: str) -> None:
         c.execute(f"ALTER TABLE {table} ADD COLUMN {column} {coldef}")
 
 
+def _reply_history_order_by_clause(conn) -> str:
+    c = conn.cursor()
+    c.execute("PRAGMA table_info(reply_history)")
+    cols = {row[1] for row in c.fetchall()}
+    if not cols:
+        return "id DESC"
+    if "timestamp" in cols and "created_at" in cols:
+        return "COALESCE(timestamp, created_at) DESC"
+    if "timestamp" in cols:
+        return "timestamp DESC"
+    return "created_at DESC"
+
+
+def _upgrade_reply_history_schema(conn) -> None:
+    """
+    Legacy reply_history had reply_text, tweet_author, approach, created_at.
+    New shape adds tweet_text, had_hook, timestamp. Additive only.
+    """
+    c = conn.cursor()
+    c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='reply_history'")
+    if not c.fetchone():
+        return
+    c.execute("PRAGMA table_info(reply_history)")
+    cols = {row[1] for row in c.fetchall()}
+    if "tweet_text" not in cols:
+        c.execute(
+            "ALTER TABLE reply_history ADD COLUMN tweet_text TEXT NOT NULL DEFAULT ''"
+        )
+    if "had_hook" not in cols:
+        c.execute(
+            "ALTER TABLE reply_history ADD COLUMN had_hook INTEGER NOT NULL DEFAULT 0"
+        )
+    if "timestamp" not in cols:
+        c.execute("ALTER TABLE reply_history ADD COLUMN timestamp DATETIME")
+        if "created_at" in cols:
+            c.execute(
+                "UPDATE reply_history SET timestamp = created_at WHERE timestamp IS NULL"
+            )
+
+
 def init_db():
     """Create tables if they don't exist."""
     conn = sqlite3.connect(DB_PATH)
@@ -52,10 +92,24 @@ def init_db():
     c.execute("""
         CREATE TABLE IF NOT EXISTS reply_history (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            reply_text TEXT NOT NULL,
             tweet_author TEXT NOT NULL,
+            tweet_text TEXT NOT NULL,
+            reply_text TEXT NOT NULL,
             approach TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            had_hook BOOLEAN NOT NULL DEFAULT 0,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    _upgrade_reply_history_schema(conn)
+
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS posted_topics (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            post_text TEXT NOT NULL,
+            post_type TEXT NOT NULL,
+            arc_score INTEGER,
+            topic_summary TEXT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     """)
 
@@ -131,12 +185,9 @@ def get_reply_history_texts_for_prompt(limit: int = 10) -> list[str]:
     """
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
+    ob = _reply_history_order_by_clause(conn)
     c.execute(
-        """
-        SELECT reply_text FROM reply_history
-        ORDER BY created_at DESC
-        LIMIT ?
-        """,
+        f"SELECT reply_text FROM reply_history ORDER BY {ob} LIMIT ?",
         (limit,),
     )
     hist = [str(r[0]) for r in c.fetchall()]
@@ -160,10 +211,110 @@ def insert_reply_history(reply_text: str, tweet_author: str, approach: str) -> N
     c = conn.cursor()
     c.execute(
         """
-        INSERT INTO reply_history (reply_text, tweet_author, approach)
-        VALUES (?, ?, ?)
+        INSERT INTO reply_history (tweet_author, tweet_text, reply_text, approach, had_hook)
+        VALUES (?, ?, ?, ?, 0)
         """,
-        (reply_text, tweet_author, approach or ""),
+        (tweet_author, "", reply_text, approach or ""),
+    )
+    conn.commit()
+    conn.close()
+
+
+def get_recent_replies(limit: int = 10) -> list[dict]:
+    """Latest rows from reply_history for analytics / richer prompts."""
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    ob = _reply_history_order_by_clause(conn)
+    c.execute(
+        f"""
+        SELECT reply_text, approach, tweet_author
+        FROM reply_history
+        ORDER BY {ob}
+        LIMIT ?
+        """,
+        (limit,),
+    )
+    rows = [dict(r) for r in c.fetchall()]
+    conn.close()
+    return rows
+
+
+def save_reply(
+    tweet_author: str,
+    tweet_text: str,
+    reply_text: str,
+    approach: str,
+    had_hook: bool = False,
+) -> None:
+    """Full reply_history row (e.g. after post with original tweet + hook flag)."""
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    hook_int = 1 if had_hook else 0
+    c.execute(
+        """
+        INSERT INTO reply_history (tweet_author, tweet_text, reply_text, approach, had_hook)
+        VALUES (?, ?, ?, ?, ?)
+        """,
+        (
+            tweet_author,
+            tweet_text or "",
+            reply_text,
+            approach or "",
+            hook_int,
+        ),
+    )
+    conn.commit()
+    conn.close()
+
+
+def get_recent_topics(days: int = 7) -> list[str]:
+    """Lines like 'topic_summary (post_type)' from posted_topics in the last N days."""
+    d = max(1, min(int(days), 366))
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute(
+        f"""
+        SELECT topic_summary, post_type FROM posted_topics
+        WHERE timestamp > datetime('now', '-{d} days')
+        ORDER BY timestamp DESC
+        """
+    )
+    out: list[str] = []
+    for row in c.fetchall():
+        summary, ptype = row[0], row[1]
+        s = (summary or "").strip()
+        p = (ptype or "").strip()
+        if s and p:
+            out.append(f"{s} ({p})")
+        elif s:
+            out.append(s)
+        elif p:
+            out.append(p)
+    conn.close()
+    return out
+
+
+def save_topic(
+    post_text: str,
+    post_type: str,
+    arc_score: int | None = None,
+    topic_summary: str | None = None,
+) -> None:
+    """Insert into posted_topics (e.g. after Claude summary of a published daily post)."""
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute(
+        """
+        INSERT INTO posted_topics (post_text, post_type, arc_score, topic_summary)
+        VALUES (?, ?, ?, ?)
+        """,
+        (
+            post_text or "",
+            post_type or "",
+            arc_score,
+            topic_summary,
+        ),
     )
     conn.commit()
     conn.close()
