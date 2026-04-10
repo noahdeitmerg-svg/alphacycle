@@ -4,6 +4,12 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-04-11) — alphacycle-x-bot: Telegram SKIP fix (webhook + feedback)
+- **Datei(en):** alphacycle-x-bot/telegram_listener.py, database.py (mark_pending_skipped approved), RUN_24_7.md
+- **Was wurde geaendert:** Beim Listener-Start deleteWebhook damit getUpdates Callbacks sieht; Toast-Text nach SKIP/POST; Logging callback data; SKIP auch aus status approved; Troubleshooting in RUN_24_7.
+- **Warum:** SKIP wirkte ohne Reaktion wenn Webhook aktiv oder Listener aus; Nutzer braucht sichtbares Feedback.
+- **Status:** in progress
+
 ## Letzter Session-Status (2026-04-11) — alphacycle-x-bot: 30min Scan, Telegram-Test, SSH-PS1
 - **Datei(en):** alphacycle-x-bot/config.py (SCAN default 1800s), .env.example, test_telegram_approval.py, ssh-from-windows.ps1, RUN_24_7.md
 - **Was wurde geaendert:** Scan-Intervall Standard 30 Min (Credits); test_telegram_approval.py fuer SKIP-Test; PowerShell-Vorlage fuer ssh root@IP mit Passwort.

@@ -183,14 +183,14 @@ def delete_pending_reply(tweet_id: str) -> None:
 
 
 def mark_pending_skipped(tweet_id: str) -> bool:
-    """Set status to skipped if currently pending. Returns True if updated."""
+    """Set status to skipped if pending or approved. Returns True if updated."""
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute(
         """
         UPDATE pending_replies
         SET status = 'skipped', updated_at = CURRENT_TIMESTAMP
-        WHERE tweet_id = ? AND status = 'pending'
+        WHERE tweet_id = ? AND status IN ('pending', 'approved')
         """,
         (tweet_id,),
     )

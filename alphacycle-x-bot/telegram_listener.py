@@ -24,6 +24,32 @@ def preflight() -> bool:
     return True
 
 
+def ensure_polling_mode() -> None:
+    """
+    Webhook and getUpdates cannot be used together. If a webhook is set,
+    button callbacks never reach this listener.
+    """
+    base = _api_base()
+    try:
+        info = requests.get(f"{base}/getWebhookInfo", timeout=15).json()
+        wh_url = (info.get("result") or {}).get("url") or ""
+        if wh_url:
+            print(f"[LISTENER] Active webhook blocks getUpdates: {wh_url!r} — removing...")
+        else:
+            print("[LISTENER] No webhook set (OK for long polling).")
+        dr = requests.post(
+            f"{base}/deleteWebhook",
+            json={"drop_pending_updates": False},
+            timeout=15,
+        ).json()
+        if not dr.get("ok"):
+            print(f"[LISTENER] deleteWebhook warning: {dr}")
+        else:
+            print("[LISTENER] deleteWebhook OK — polling enabled.")
+    except Exception as e:
+        print(f"[LISTENER] ensure_polling_mode error: {e}")
+
+
 def poll_loop() -> None:
     offset = 0
     print("[LISTENER] Telegram callback listener started (getUpdates long polling).")
@@ -35,7 +61,6 @@ def poll_loop() -> None:
                 params={
                     "offset": offset,
                     "timeout": 50,
-                    "allowed_updates": ["callback_query"],
                 },
                 timeout=55,
             )
@@ -59,30 +84,43 @@ def poll_loop() -> None:
                 from_user = (cq.get("from") or {}).get("username") or cq.get("from", {}).get(
                     "id", "?"
                 )
-
-                telegram_bot.answer_callback_query(cq_id)
+                print(f"[LISTENER] callback_query data={raw!r} from={from_user}")
 
                 if raw.startswith("post:"):
                     tweet_id = raw[5:].strip()
                     if not tweet_id:
+                        telegram_bot.answer_callback_query(cq_id, "Fehler: leere tweet_id")
                         continue
                     print(
                         f"[LOG] telegram approval received: POST tweet_id={tweet_id} (from={from_user})"
                     )
-                    poster.post_reply(tweet_id)
+                    ok = poster.post_reply(tweet_id)
+                    telegram_bot.answer_callback_query(
+                        cq_id,
+                        "Reply gesendet." if ok else "Post fehlgeschlagen (Log auf Server).",
+                    )
                 elif raw.startswith("skip:"):
                     tweet_id = raw[5:].strip()
                     if not tweet_id:
+                        telegram_bot.answer_callback_query(cq_id, "Fehler: leere tweet_id")
                         continue
                     print(
                         f"[LOG] telegram approval received: SKIP tweet_id={tweet_id} (from={from_user})"
                     )
                     if database.mark_pending_skipped(tweet_id):
                         print(f"[LOG] reply skipped tweet_id={tweet_id}")
+                        telegram_bot.answer_callback_query(cq_id, "Skip gespeichert.")
                     else:
                         print(
                             f"[LISTENER] Skip ignored (no pending row or already finalized) tweet_id={tweet_id}"
                         )
+                        telegram_bot.answer_callback_query(
+                            cq_id,
+                            "Kein offener Eintrag (schon erledigt oder alter Button).",
+                        )
+                else:
+                    telegram_bot.answer_callback_query(cq_id, "Unbekannter Button.")
+
         except KeyboardInterrupt:
             print("\n[LISTENER] Stopped.")
             sys.exit(0)
@@ -95,6 +133,7 @@ def main() -> None:
     database.init_db()
     if not preflight():
         sys.exit(1)
+    ensure_polling_mode()
     poll_loop()
 
 
