@@ -8,7 +8,7 @@
 - **Datei(en):** alphacycle-x-bot/database.py (`reply_history` Schema tweet_text/had_hook/timestamp, `posted_topics`, `get_recent_replies`, `save_reply`, `get_recent_topics`, `save_topic`, `_upgrade_reply_history_schema`, `insert_reply_history` angepasst), .cursor/rules/permanent-fixes.mdc
 - **Was wurde geaendert:** `reply_history` laut Spec; neue Tabelle `posted_topics`; bestehende Tabellen (replies, scanned, …) unveraendert; Legacy-DBs: fehlende Spalten per ALTER + timestamp aus created_at; Sortierung kompatibel mit/ohne created_at.
 - **Warum:** Reichere Reply-Logs und Topic-Tracking fuer Posts (topic_summary spaeter via Claude).
-- **Status:** in progress
+- **Status:** deployed
 
 ## Letzter Session-Status (2026-04-09) — alphacycle-x-bot: Daily Post Scheduler + pending_daily_posts
 - **Datei(en):** alphacycle-x-bot/bot.py (`schedule`, `schedule_daily_post`, 60s loop + `SCAN_INTERVAL_SECONDS` fuer `run_cycle`), alphacycle-x-bot/database.py (`pending_daily_posts`, CRUD), alphacycle-x-bot/telegram_bot.py (`send_daily_post_approval`), alphacycle-x-bot/telegram_listener.py (`dpost:`/`dskip:`), alphacycle-x-bot/poster.py (`post_daily_post`, `record_daily_post_topic`), alphacycle-x-bot/requirements.txt (`schedule`), .cursor/rules/permanent-fixes.mdc
