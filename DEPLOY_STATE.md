@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10 (x-bot Telegram: Scan, Daily, Screen-Logs)
+**Zuletzt aktualisiert:** 2026-04-10 (x-bot restart-screens.sh gegen doppelte screen-Sessions)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-10) — alphacycle-x-bot: restart-screens.sh (mehrere tg/xbot Sockets)
+- **Datei(en):** alphacycle-x-bot/restart-screens.sh, alphacycle-x-bot/RUN_24_7.md, DEPLOY_STATE.md
+- **Was wurde geaendert:** Skript beendet alle Screen-Sockets der Form `*.xbot` und `*.tg` per eindeutiger ID (`12345.tg`), startet danach genau eine `xbot`- und eine `tg`-Session — vermeidet GNU-Screen-Meldung „several suitable screens“ wenn `screen -S tg -X quit` mehrdeutig war.
+- **Warum:** Nach fehlgeschlagenem Quit stapelten sich mehrere `tg`-Prozesse; `/logtg` und Telegram-Callbacks verhalten sich dann unklar.
+- **Status:** deployed (VPS: git pull, `chmod +x restart-screens.sh`, `./restart-screens.sh`)
 
 ## Letzter Session-Status (2026-04-10) — alphacycle-x-bot: Telegram ohne Laptop (/scan, /queuedaily, /logbot, /logtg)
 - **Datei(en):** alphacycle-x-bot/telegram_listener.py, alphacycle-x-bot/config.py (`SCREEN_SESSION_BOT` / `SCREEN_SESSION_TG`), alphacycle-x-bot/.env.example, DEPLOY_STATE.md, .cursor/rules/permanent-fixes.mdc
