@@ -4,6 +4,12 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-04-11) — alphacycle-x-bot: test_telegram_post_real.py
+- **Datei(en):** alphacycle-x-bot/test_telegram_post_real.py, RUN_24_7.md
+- **Was wurde geaendert:** Skript fuer Telegram-POST-Test mit echter Tweet-ID (eigener Tweet); Hinweis REPLY_DELAY.
+- **Warum:** SKIP-Test nutzt Fake-ID; POST braucht echte status-ID.
+- **Status:** in progress
+
 ## Letzter Session-Status (2026-04-11) — alphacycle-x-bot: Telegram SKIP fix (webhook + feedback)
 - **Datei(en):** alphacycle-x-bot/telegram_listener.py, database.py (mark_pending_skipped approved), RUN_24_7.md
 - **Was wurde geaendert:** Beim Listener-Start deleteWebhook damit getUpdates Callbacks sieht; Toast-Text nach SKIP/POST; Logging callback data; SKIP auch aus status approved; Troubleshooting in RUN_24_7.
