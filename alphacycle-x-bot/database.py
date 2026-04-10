@@ -343,6 +343,33 @@ def is_author_spacing_ok_for_reply(username: str) -> bool:
     return len(others) >= 2
 
 
+def count_replies_to_author_today_utc(username: str) -> int:
+    """
+    Rows in reply_history for this author (normalized handle) whose timestamp
+    falls on the current UTC calendar day. Used for max 2 replies per account per day.
+    """
+    target = _norm_reply_author(username)
+    if not target:
+        return 0
+    day = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    conn = sqlite3.connect(DB_PATH)
+    try:
+        c = conn.cursor()
+        c.execute(
+            """
+            SELECT COUNT(*) FROM reply_history
+            WHERE lower(trim(replace(replace(tweet_author, '@', ''), ' ', ''))) = ?
+              AND timestamp IS NOT NULL
+              AND TRIM(timestamp) != ''
+              AND substr(TRIM(REPLACE(REPLACE(timestamp, 'T', ' '), 'Z', '')), 1, 10) = ?
+            """,
+            (target, day),
+        )
+        return int(c.fetchone()[0] or 0)
+    finally:
+        conn.close()
+
+
 def get_reply_history_texts_for_prompt(limit: int = 10) -> list[str]:
     """
     Last N reply bodies from reply_history (newest first), then fill from replies

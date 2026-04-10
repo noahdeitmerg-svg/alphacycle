@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10 (arc-summary btc_ath + x-bot prompt)
+**Zuletzt aktualisiert:** 2026-04-10 (x-bot reply_system bans + logic + 2/day cap)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-10) — x-bot: reply_system Banned+LOGIC, max 2 Replies/Account/Tag (UTC)
+- **Datei(en):** alphacycle-x-bot/prompts/reply_system.txt (BANNED erweitert; LOGIC CHECK nach FACTUAL), alphacycle-x-bot/database.py (`count_replies_to_author_today_utc`), alphacycle-x-bot/scanner.py (Skip + Log `[SCANNER] Skipping @...`), DEPLOY_STATE.md, .cursor/rules/permanent-fixes.mdc
+- **Was wurde geaendert:** Prompt: keine "flip the script" / "speaks volumes" etc.; Logik-Regeln gegen widersprüchliche oder falsche Ironie (bullish an Tiefs = smart). Scanner: `reply_history` zaehlt pro Autor pro **UTC-Kalendertag**; ab 2 Eintraegen kein neuer Candidate, `skipped_reason` `daily_reply_limit`.
+- **Warum:** Weniger Tone-Deafness; weniger Spam pro Handle pro Tag.
+- **Status:** deployed (VPS: git pull + restart-screens; Railway nur wenn Backend betroffen — hier nicht)
 
 ## Letzter Session-Status (2026-04-10) — arc-summary btc_price/btc_ath + Reply-Prompt aus API
 - **Datei(en):** backend/main.py (`/api/arc-summary` Felder `btc_price`, `btc_ath` wie Cache/Kraken+btc_market.ath), alphacycle-x-bot/daily_post_engine.py (`btc_ath` durchreichen), alphacycle-x-bot/growth_engine.py (`_format_arc_block`), alphacycle-x-bot/prompts/reply_system.txt, DEPLOY_STATE.md, .cursor/rules/permanent-fixes.mdc

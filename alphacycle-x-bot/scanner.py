@@ -114,6 +114,14 @@ def scan_tweets() -> list[dict]:
                     tweet["id"], tweet["author"], "author_spacing"
                 )
                 continue
+            if database.count_replies_to_author_today_utc(tweet["author"]) >= 2:
+                print(
+                    f"[SCANNER] Skipping @{tweet['author']} — daily reply limit reached"
+                )
+                database.log_scanned(
+                    tweet["id"], tweet["author"], "daily_reply_limit"
+                )
+                continue
 
             database.log_scanned(tweet["id"], tweet["author"])
             candidates.append(tweet)
