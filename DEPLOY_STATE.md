@@ -4,6 +4,12 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-04-11) — alphacycle-x-bot: post_system.txt Daily Post Prompt
+- **Datei(en):** alphacycle-x-bot/prompts/post_system.txt (Master-Systemprompt exakt laut Spec), alphacycle-x-bot/growth_engine.py (`POST_TYPE_BY_WEEKDAY`, `build_post_prompt` mit `{arc_data_block}`/`{post_type}`/`{posted_topics}`), permanent-fixes.mdc
+- **Was wurde geaendert:** Post-Prompt mit SHARE LINES, 7 Post-Typen, Regeln; Wochentag-Mapping Mo-So auf contrarian_signal … weekly_recap; alte `POST_TYPE_SPECS`/`{{...}}`-Platzhalter entfernt.
+- **Warum:** Operating-Brain Vorgabe fuer Daily Posts; konsistent mit reply_system-Stil.
+- **Status:** in progress
+
 ## Letzter Session-Status (2026-04-11) — alphacycle-x-bot: reply_system.txt Cycle Intelligence Desk
 - **Datei(en):** alphacycle-x-bot/prompts/reply_system.txt (Master-Systemprompt exakt laut Spec), alphacycle-x-bot/growth_engine.py (Platzhalter-Replace, HOOK ACTIVE/INACTIVE 40%), alphacycle-x-bot/reply_engine.py (User-Hinweis SKIP), permanent-fixes.mdc
 - **Was wurde geaendert:** Neuer Reply-Systemtext mit IDENTITY, ARC-Komponenten, 5 Ansaetze, Curiosity-Hook-Regeln; growth_engine ohne str.format auf Volltext (Tweet kann `{` enthalten).

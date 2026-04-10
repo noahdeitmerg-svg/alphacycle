@@ -22,40 +22,16 @@ REPLY_APPROACH_KEYS = (
 HOOK_ACTIVE_LABEL = "ACTIVE"
 HOOK_INACTIVE_LABEL = "INACTIVE"
 
-POST_TYPE_SPECS: dict[str, str] = {
-    "contrarian_signal": (
-        "contrarian_signal: One contrarian structural take vs crowd narrative. "
-        "4-8 lines, end with share lines, not a question."
-    ),
-    "narrative": (
-        "narrative: Tight story arc about regime shift or mispriced risk. "
-        "4-8 lines, share lines at the end."
-    ),
-    "structural_insight": (
-        "structural_insight: One clear framework insight (liquidity / cycle / risk). "
-        "4-8 lines, share lines at the end."
-    ),
-    "contrast": (
-        "contrast: Juxtapose two popular beliefs; resolve with structure not hype. "
-        "4-8 lines, share lines at the end."
-    ),
-    "educational_thread": (
-        "educational_thread: Micro-thread in one post (numbered lines allowed 1-4). "
-        "Teach one idea; 4-8 lines; share lines at the end."
-    ),
-    "chart_post": (
-        "chart_post: Describe what a chart would show conceptually (no image generation). "
-        "4-8 lines; focus on axes of regime; share lines at the end."
-    ),
-    "minimal_narrative": (
-        "minimal_narrative: Shorter tone day — still 4-8 lines but tighter; "
-        "one idea; share lines at the end."
-    ),
-    "weekly_recap": (
-        "weekly_recap: Summarize the week in regime terms (no price calls). "
-        "4-8 lines; share lines at the end."
-    ),
-}
+# Monday=0 .. Sunday=6; keys must match bullets in prompts/post_system.txt
+POST_TYPE_BY_WEEKDAY: tuple[str, ...] = (
+    "contrarian_signal",
+    "structural_insight",
+    "contrast",
+    "cycle_pattern",
+    "narrative",
+    "minimal_narrative",
+    "weekly_recap",
+)
 
 
 def _read_prompt_file(name: str) -> str:
@@ -106,23 +82,8 @@ def _format_posted_topics(posted_topics: Sequence[str] | None) -> str:
 
 
 def _pick_post_type(day_of_week: int) -> str:
-    """
-    day_of_week: Monday=0 .. Sunday=6 (datetime.weekday()).
-    MO / DI / MI / DO / FR / SA / SO mapping per spec.
-    """
-    if day_of_week == 0:  # Monday
-        return random.choice(["contrarian_signal", "narrative"])
-    if day_of_week == 1:  # Tuesday
-        return "structural_insight"
-    if day_of_week == 2:  # Wednesday
-        return random.choice(["contrast", "educational_thread"])
-    if day_of_week == 3:  # Thursday
-        return "chart_post"
-    if day_of_week == 4:  # Friday
-        return random.choice(["contrast", "narrative"])
-    if day_of_week == 5:  # Saturday
-        return "minimal_narrative"
-    return "weekly_recap"  # Sunday
+    """Monday=0 .. Sunday=6 (datetime.weekday())."""
+    return POST_TYPE_BY_WEEKDAY[int(day_of_week) % 7]
 
 
 def build_reply_prompt(
@@ -169,11 +130,13 @@ def build_post_prompt(
     if day_of_week is None:
         day_of_week = datetime.now(timezone.utc).weekday()
     base = _read_prompt_file("post_system.txt")
-    post_key = _pick_post_type(int(day_of_week) % 7)
-    post_instruction = POST_TYPE_SPECS[post_key]
-    type_header = f"Selected type key: {post_key}\n{post_instruction}"
-    return (
-        base.replace("{{ARC_CONTEXT}}", _format_arc_block(arc_data))
-        .replace("{{POSTED_TOPICS}}", _format_posted_topics(posted_topics))
-        .replace("{{POST_TYPE_INSTRUCTION}}", type_header)
-    )
+    post_type = _pick_post_type(int(day_of_week))
+    arc_block = _format_arc_block(arc_data)
+    topics = _format_posted_topics(posted_topics)
+    for key, val in (
+        ("{arc_data_block}", arc_block),
+        ("{post_type}", post_type),
+        ("{posted_topics}", topics),
+    ):
+        base = base.replace(key, val)
+    return base
