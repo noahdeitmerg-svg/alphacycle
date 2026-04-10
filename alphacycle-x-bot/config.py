@@ -67,12 +67,12 @@ TIER_2_ACCOUNTS = [
     "CryptoCon_",
     "TechDev_52",
     "PositiveCrypto",
-    "woonomic",
-    "glasabornode",
+    "willywoo",
     "ecoinometrics",
-    "coinmetrics",
+    "coinabormetrics_io",
     "stackhodler",
     "therationalroot",
+    "BitcoinMagazine",
 ]
 
 TIER_3_ACCOUNTS = [

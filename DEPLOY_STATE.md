@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-09 (TRACKED_ACCOUNTS 25 + BLOCKED_KEYWORDS)
+**Zuletzt aktualisiert:** 2026-04-09 (TRACKED_ACCOUNTS Handle-Fixes)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-09) — alphacycle-x-bot: TRACKED_ACCOUNTS Handle-Korrekturen (TIER_2)
+- **Datei(en):** alphacycle-x-bot/config.py
+- **Was wurde geaendert:** `glasabornode` entfernt (Tippfehler/nicht existent). Ersatz: `BitcoinMagazine`. `woonomic` → `willywoo` (oeffentliche X-Einbettungen Maerz 2026 zeigen @willywoo fuer Willy Woo; „woaboronomic“ im Ticket keine plausibler Handle — bei API-404 auf VPS ggf. `woonomic` oder `id:USER_ID` einsetzen). `coinmetrics` → `coinabormetrics_io` laut Vorgabe (offizieller CM-Account ist @coinmetrics; wenn Lookup scheitert, Handle pruefen oder `id:`).
+- **Warum:** Scanner soll nur gueltige Accounts tracken; gleich 25 Eintraege (5+12+8).
+- **Status:** deployed
 
 ## Letzter Session-Status (2026-04-09) — alphacycle-x-bot: TRACKED_ACCOUNTS 25 + TIER_3 + BLOCKED_KEYWORDS
 - **Datei(en):** alphacycle-x-bot/config.py
