@@ -1,0 +1,15 @@
+[Unit]
+Description=AlphaCycle X Bot (scan, generate reply, queue Telegram approval)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# MUST match the directory that contains bot.py, config.py, and .env
+WorkingDirectory=/root/alphacycle-repo/alphacycle-x-bot
+ExecStart=/usr/bin/python3 bot.py
+Restart=always
+RestartSec=15
+
+[Install]
+WantedBy=multi-user.target

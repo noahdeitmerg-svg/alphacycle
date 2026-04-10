@@ -4,6 +4,12 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-04-11) — alphacycle-x-bot: 24/7 Runbook + systemd
+- **Datei(en):** alphacycle-x-bot/RUN_24_7.md, alphacycle-x-bot/systemd/*.service, alphacycle-x-bot/start.sh (Kommentar)
+- **Was wurde geaendert:** Dokumentation: Bot laeuft rund um die Uhr mit zwei Prozessen; X-Replies nur nach Telegram-POST; systemd-Unit-Vorlagen mit WorkingDirectory; screen-Alternative.
+- **Warum:** Klare Betriebsanleitung ohne automatische X-Posts ohne Nutzer-Bestätigung.
+- **Status:** in progress
+
 ## Letzter Session-Status (2026-04-11) — alphacycle-x-bot: Telegram-Genehmigung + pending_replies
 - **Datei(en):** alphacycle-x-bot/config.py, database.py, poster.py, bot.py, telegram_bot.py, telegram_listener.py, .env.example, start.sh, start-listener.sh, verify_env.py
 - **Was wurde geaendert:** Replies nicht mehr auto-posten; SQLite-Tabelle `pending_replies` (pending/approved/skipped/posted); `sendMessage` mit Inline-Buttons POST/SKIP; `telegram_listener.py` pollt `getUpdates`; `poster.post_reply(tweet_id)` laed Text aus DB; Limits 5/h und 20/Tag in config + Enforcement in poster; Logging fuer Telegram und Post.

@@ -1,0 +1,15 @@
+[Unit]
+Description=AlphaCycle X Bot Telegram listener (POST/SKIP callbacks)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# MUST be the same WorkingDirectory as alphacycle-x-bot.service (same .env / database.db)
+WorkingDirectory=/root/alphacycle-repo/alphacycle-x-bot
+ExecStart=/usr/bin/python3 telegram_listener.py
+Restart=always
+RestartSec=15
+
+[Install]
+WantedBy=multi-user.target
