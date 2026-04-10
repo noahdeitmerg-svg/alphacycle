@@ -39,6 +39,15 @@ def init_db():
         )
     """)
 
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS daily_post_topics (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            topic_snippet TEXT NOT NULL,
+            post_preview TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
     conn.commit()
     conn.close()
 
@@ -193,6 +202,50 @@ def delete_pending_reply(tweet_id: str) -> None:
     c.execute("DELETE FROM pending_replies WHERE tweet_id = ?", (tweet_id,))
     conn.commit()
     conn.close()
+
+
+def get_daily_post_topics_last_7_days(conn: sqlite3.Connection | None = None) -> list[str]:
+    """Topic snippets from daily posts recorded in the last 7 days (newest first)."""
+    own = conn is None
+    if own:
+        conn = sqlite3.connect(DB_PATH)
+    try:
+        c = conn.cursor()
+        c.execute(
+            """
+            SELECT topic_snippet FROM daily_post_topics
+            WHERE created_at >= datetime('now', '-7 days')
+            ORDER BY created_at DESC
+            """
+        )
+        return [str(r[0]) for r in c.fetchall()]
+    finally:
+        if own:
+            conn.close()
+
+
+def record_daily_post_topic(
+    topic_snippet: str,
+    post_preview: str = "",
+    conn: sqlite3.Connection | None = None,
+) -> None:
+    """
+    Persist a topic line after a daily post was approved and published (e.g. via Telegram).
+    Keeps growth_engine posted_topics history accurate.
+    """
+    own = conn is None
+    if own:
+        conn = sqlite3.connect(DB_PATH)
+    try:
+        c = conn.cursor()
+        c.execute(
+            "INSERT INTO daily_post_topics (topic_snippet, post_preview) VALUES (?, ?)",
+            ((topic_snippet or "")[:500], (post_preview or "")[:2000]),
+        )
+        conn.commit()
+    finally:
+        if own:
+            conn.close()
 
 
 def mark_pending_skipped(tweet_id: str) -> bool:

@@ -24,6 +24,9 @@ TELEGRAM_BOT_TOKEN = (os.getenv("TELEGRAM_BOT_TOKEN", "") or "").strip()
 TELEGRAM_CHAT_ID = (os.getenv("TELEGRAM_CHAT_ID", "") or "").strip()
 
 ALPHACYCLE_API = "https://alphacycle-production.up.railway.app"
+# Public site + daily post fetches (arc-summary etc.); override for staging.
+ALPHACYCLE_PUBLIC_BASE = (os.getenv("ALPHACYCLE_PUBLIC_BASE", "https://alphacycle.app") or "").strip().rstrip("/")
+DAILY_POST_DASHBOARD_URL = (os.getenv("DAILY_POST_DASHBOARD_URL", "https://alphacycle.app") or "").strip()
 
 # Handles: no @. Prefix id:SNOWFLAKE only if you verified it (GET /2/users/:id). Wrong id => not-found.
 # Will Clemente: @WClemente (WClementeIII not found in v2). id from resolve_user.py 2026-04-09.

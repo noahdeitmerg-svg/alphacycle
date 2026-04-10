@@ -45,8 +45,8 @@ def _format_arc_block(arc_data: dict[str, Any] | None) -> str:
     a = arc_data or {}
     raw = a.get("arc_score", "?")
     disp = a.get("arc_display", raw)
-    zone = a.get("zone_name", "?")
-    phase = a.get("phase_group", "?")
+    zone = a.get("zone_name", a.get("zone", "?"))
+    phase = a.get("phase_group", a.get("phase", "?"))
     pct = a.get("percentile", a.get("arc_percentile", "?"))
     fg = a.get("fear_greed", a.get("fear_greed_index", a.get("fear_greed_value", "?")))
     lines = [
@@ -56,6 +56,27 @@ def _format_arc_block(arc_data: dict[str, Any] | None) -> str:
         f"Percentile (if available): {pct}",
         f"Sentiment proxy — Fear and Greed (if available): {fg}",
     ]
+    bp = a.get("btc_price")
+    if bp is not None and bp != "" and bp != "?":
+        lines.append(f"BTC price (USD, snapshot): {bp}")
+    pos = a.get("position")
+    if pos is not None and pos != "":
+        lines.append(f"Suggested position (context): {pos}")
+    alloc = a.get("allocation")
+    if alloc is not None and alloc != "":
+        lines.append(f"Allocation band (context): {alloc}")
+    r12 = a.get("return_12m")
+    if r12 is not None and r12 != "":
+        lines.append(f"Zone 12M return context (historical avg %): {r12}")
+    wr = a.get("win_rate")
+    if wr is not None and wr != "":
+        lines.append(f"Zone 12M win rate context (%): {wr}")
+    dst = a.get("days_since_top")
+    if dst is not None and dst != "":
+        lines.append(f"Days since cycle top (model): {dst}")
+    eb = a.get("est_bottom")
+    if eb is not None and eb != "":
+        lines.append(f"Estimated bottom / cycle timing note: {eb}")
     return "\n".join(lines)
 
 

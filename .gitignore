@@ -11,3 +11,4 @@ venv/
 .idea/
 .vscode/
 alphacycle-x-bot/database.db
+alphacycle-x-bot/artifacts/

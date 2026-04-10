@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-11
+**Zuletzt aktualisiert:** 2026-04-09
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-09) — alphacycle-x-bot: daily_post_engine + daily_post_topics
+- **Datei(en):** alphacycle-x-bot/daily_post_engine.py, alphacycle-x-bot/database.py (`daily_post_topics`, `get_daily_post_topics_last_7_days`, `record_daily_post_topic`), alphacycle-x-bot/config.py (`ALPHACYCLE_PUBLIC_BASE`, `DAILY_POST_DASHBOARD_URL`), alphacycle-x-bot/growth_engine.py (`_format_arc_block` Zusatzzeilen), alphacycle-x-bot/requirements.txt (Kommentar optional Playwright/Selenium), `.gitignore` (`alphacycle-x-bot/artifacts/`), .cursor/rules/permanent-fixes.mdc
+- **Was wurde geaendert:** Taeglicher Post: `fetch_arc_data()` (GET arc-summary auf alphacycle.app-Basis, Preis cycle/btc, optional cycle-anchor + historical-returns fuer return_12m/win_rate), `generate_daily_post` mit `build_post_prompt` + Claude Sonnet, `generate_daily_post_with_image` mit optionalem Playwright- dann Selenium-Screenshot; kein Auto-Post — nach Telegram-Freigabe `record_daily_post_topic` aufrufen.
+- **Warum:** Operating-Brain Daily-Post-Pipeline mit Topic-Historie 7 Tage und optionalem Dashboard-Bild.
+- **Status:** in progress
 
 ## Letzter Session-Status (2026-04-11) — alphacycle-x-bot: post_system.txt Daily Post Prompt
 - **Datei(en):** alphacycle-x-bot/prompts/post_system.txt (Master-Systemprompt exakt laut Spec), alphacycle-x-bot/growth_engine.py (`POST_TYPE_BY_WEEKDAY`, `build_post_prompt` mit `{arc_data_block}`/`{post_type}`/`{posted_topics}`), permanent-fixes.mdc
