@@ -7,6 +7,16 @@ import config
 import daily_post_engine
 import database
 import growth_engine
+import telegram_bot
+
+_X_PUBLIC_HANDLE = "Real_AlphaCycle"
+
+
+def _telegram_post_confirmation(text: str) -> None:
+    """Best-effort; posting already succeeded on X."""
+    body = (text or "")[:4096]
+    if body:
+        telegram_bot.send_feedback_message(body)
 
 
 def oauth_user_credentials_ready() -> bool:
@@ -75,10 +85,20 @@ def _post_reply_impl(
         )
 
         if response.data:
+            new_id = getattr(response.data, "id", None)
+            if new_id is None and isinstance(response.data, dict):
+                new_id = response.data.get("id")
+            new_id_str = str(new_id) if new_id is not None else ""
             database.log_reply(tweet_id, author, reply_text)
             database.insert_reply_history(reply_text, author, approach or "")
             print(f"[POSTER] Reply posted to @{author}: {reply_text[:60]}...")
             print(f"[LOG] reply posted tweet_id={tweet_id}")
+            if new_id_str:
+                _telegram_post_confirmation(
+                    "\u2705 Posted reply to @{}\n{}\nLink: https://x.com/{}/status/{}".format(
+                        author, reply_text, _X_PUBLIC_HANDLE, new_id_str
+                    )
+                )
             return True
         print(f"[POSTER] Twitter returned no data for reply to @{author}")
         return False
@@ -242,6 +262,10 @@ def post_daily_post(pending_id: str) -> bool:
         response = client.create_tweet(text=text, user_auth=True)
 
         if response.data:
+            new_id = getattr(response.data, "id", None)
+            if new_id is None and isinstance(response.data, dict):
+                new_id = response.data.get("id")
+            new_id_str = str(new_id) if new_id is not None else ""
             database.record_daily_post_topic(
                 daily_post_engine.topic_snippet_from_post(text),
                 post_preview=text[:2000],
@@ -266,6 +290,12 @@ def post_daily_post(pending_id: str) -> bool:
             database.set_pending_daily_status(pending_id, "posted")
             print(f"[POSTER] Daily post published: {text[:60]}...")
             print(f"[LOG] daily post posted pending_id={pending_id}")
+            if new_id_str:
+                _telegram_post_confirmation(
+                    "\u2705 Daily post live\n{}\nLink: https://x.com/{}/status/{}".format(
+                        text, _X_PUBLIC_HANDLE, new_id_str
+                    )
+                )
             return True
         print("[POSTER] Twitter returned no data for daily post")
         database.try_transition_daily_status(pending_id, "approved", "pending")

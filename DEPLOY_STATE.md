@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-09 (TRACKED_ACCOUNTS coinmetrics)
+**Zuletzt aktualisiert:** 2026-04-09 (x-bot Telegram Status + Summary)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-09) — alphacycle-x-bot: Telegram Post-Bestaetigung + /status + Daily Summary 23:00 UTC
+- **Datei(en):** alphacycle-x-bot/poster.py, alphacycle-x-bot/telegram_listener.py, DEPLOY_STATE.md, .cursor/rules/permanent-fixes.mdc
+- **Was wurde geaendert:** Nach erfolgreichem Reply/Daily-Post: Telegram an TELEGRAM_CHAT_ID mit Link `x.com/Real_AlphaCycle/status/{neue_tweet_id}` (ID aus create_tweet-Response). `/status` liefert Metriken aus SQLite (replies today/hour, candidates aus `scanned` ohne skip reason, next daily UTC) sowie n/a fuer Uptime/Scans/Last scan (kein bot.py-State). Jeden UTC-Tag um 23:00 automatisch Daily Summary (Posts aus `posted_topics`, Replies, Impressions n/a, Candidates).
+- **Warum:** Betriebstransparenz ohne zusaetzliche DB-Aenderungen.
+- **Status:** deployed
 
 ## Letzter Session-Status (2026-04-09) — alphacycle-x-bot: TIER_2 coinabormetrics_io → coinmetrics
 - **Datei(en):** alphacycle-x-bot/config.py, DEPLOY_STATE.md

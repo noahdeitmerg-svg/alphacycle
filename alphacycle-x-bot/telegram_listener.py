@@ -1,10 +1,12 @@
 """
 Telegram long-polling: POST/SKIP (replies + daily), sichtbare Chat-Bestätigungen,
-Commands /status /ping /help /start.
+Commands /status /ping /help /start, Daily Summary 23:00 UTC.
 Run alongside: python3 bot.py
 """
+import sqlite3
 import sys
 import time
+from datetime import datetime, timedelta, timezone
 
 import requests
 
@@ -12,6 +14,9 @@ import config
 import database
 import poster
 import telegram_bot
+
+# UTC calendar day (YYYY-MM-DD) for which we already sent the 23:00 summary.
+_summary_sent_for_utc_date: str | None = None
 
 
 def _api_base() -> str:
@@ -24,6 +29,117 @@ def _callback_chat_and_message_id(cq: dict) -> tuple[int | str | None, int | Non
     cid = chat.get("id")
     mid = msg.get("message_id")
     return cid, mid
+
+
+def _sql_candidates_found_today() -> int:
+    """Rows logged as candidate path (scanned, no skip reason) since UTC midnight."""
+    conn = sqlite3.connect(config.DB_PATH)
+    try:
+        c = conn.cursor()
+        c.execute(
+            """
+            SELECT COUNT(*) FROM scanned
+            WHERE scanned_at >= datetime('now', 'start of day')
+            AND (skipped_reason IS NULL OR skipped_reason = '')
+            """
+        )
+        return int(c.fetchone()[0])
+    finally:
+        conn.close()
+
+
+def _sql_daily_posts_today() -> int:
+    """Original daily posts recorded in posted_topics since UTC midnight."""
+    conn = sqlite3.connect(config.DB_PATH)
+    try:
+        c = conn.cursor()
+        c.execute(
+            """
+            SELECT COUNT(*) FROM posted_topics
+            WHERE timestamp >= datetime('now', 'start of day')
+            """
+        )
+        return int(c.fetchone()[0])
+    finally:
+        conn.close()
+
+
+def _next_daily_post_time_str() -> str:
+    """Next calendar run of DAILY_POST_TIME in UTC (bot.py uses TZ=UTC on Linux)."""
+    raw = (config.DAILY_POST_TIME or "13:00").strip()
+    parts = raw.split(":")
+    try:
+        h = max(0, min(23, int(parts[0])))
+    except (ValueError, IndexError):
+        h = 13
+    try:
+        m = max(0, min(59, int(parts[1]))) if len(parts) > 1 else 0
+    except (ValueError, IndexError):
+        m = 0
+    now = datetime.now(timezone.utc)
+    target = now.replace(hour=h, minute=m, second=0, microsecond=0)
+    if target <= now:
+        target += timedelta(days=1)
+    return target.strftime("%Y-%m-%d %H:%M UTC")
+
+
+def _build_status_body() -> str:
+    lines = [
+        "AlphaCycle Bot Status:",
+        "Uptime: n/a",
+        "Scans today: n/a",
+    ]
+    try:
+        rtd = database.replies_today()
+        rlh = database.replies_last_hour()
+        lines.append(f"Replies today: {rtd}/{config.MAX_REPLIES_PER_DAY}")
+        lines.append(f"Replies this hour: {rlh}/{config.MAX_REPLIES_PER_HOUR}")
+    except Exception:
+        lines.append("Replies today: n/a")
+        lines.append("Replies this hour: n/a")
+    lines.append(f"Next daily post: {_next_daily_post_time_str()}")
+    lines.append("Last scan: n/a")
+    try:
+        lines.append(f"Candidates found today: {_sql_candidates_found_today()}")
+    except Exception:
+        lines.append("Candidates found today: n/a")
+    return "\n".join(lines)
+
+
+def _build_daily_summary_body() -> str:
+    try:
+        posts = _sql_daily_posts_today()
+    except Exception:
+        posts = "n/a"
+    try:
+        replies = database.replies_today()
+    except Exception:
+        replies = "n/a"
+    try:
+        cand = _sql_candidates_found_today()
+    except Exception:
+        cand = "n/a"
+    return (
+        "Daily Summary:\n"
+        f"Posts: {posts}\n"
+        f"Replies: {replies}\n"
+        "Impressions: n/a (manual check)\n"
+        f"Candidates scanned: {cand}"
+    )
+
+
+def _maybe_send_daily_summary_utc() -> None:
+    global _summary_sent_for_utc_date
+    now = datetime.now(timezone.utc)
+    today = now.strftime("%Y-%m-%d")
+    if now.hour != 23:
+        return
+    if _summary_sent_for_utc_date == today:
+        return
+    body = _build_daily_summary_body()
+    if telegram_bot.send_feedback_message(body):
+        _summary_sent_for_utc_date = today
+        print(f"[LISTENER] Daily summary sent for UTC date {today}")
 
 
 def _handle_text_command(msg: dict) -> None:
@@ -43,14 +159,10 @@ def _handle_text_command(msg: dict) -> None:
             "POST = auf X veröffentlichen\n"
             "SKIP = verwerfen\n\n"
             "Daily-Posts: eigene Karte mit POST/SKIP.\n\n"
-            "Befehle: /status — /ping"
+            "Befehle: /status (Metriken), /ping"
         )
     elif cmd == "/status":
-        body = (
-            "Listener: aktiv (Long-Polling).\n"
-            "Callbacks: post:/skip: (Replies), dpost:/dskip: (Daily).\n"
-            "Hinweis: bot.py separat starten (Scanner + Warteschlange)."
-        )
+        body = _build_status_body()
     elif cmd == "/ping":
         body = "pong — Listener antwortet."
     else:
@@ -97,6 +209,7 @@ def poll_loop() -> None:
     print("[LISTENER] Telegram callback listener started (getUpdates long polling).")
     while True:
         try:
+            _maybe_send_daily_summary_utc()
             url = f"{_api_base()}/getUpdates"
             r = requests.get(
                 url,
