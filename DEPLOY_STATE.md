@@ -4,6 +4,12 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-04-10) — alphacycle-x-bot: post_system.txt komplett ersetzt (Master-Prompt)
+- **Datei(en):** alphacycle-x-bot/prompts/post_system.txt (voller Ersatz: Identity, ARC-Zonen, Three Lens, CURRENT MARKET CONTEXT, FACTUAL ACCURACY, Narrativ-Arc, Share Lines, Zone Taglines, CRITICAL STYLE, ABSOLUTE PROHIBITIONS, Beispiel-Posts, FINAL TEST; Platzhalter `{arc_data_block}` `{post_type}` `{posted_topics}` unveraendert), .cursor/rules/permanent-fixes.mdc
+- **Was wurde geaendert:** Operating-Brain Daily-Post-Prompt 1:1 wie Spec; deutlich laenger; Hinweis: Zeile „LAST 7 DAYS“ im Text, technisch weiter `get_recent_topics(TOPIC_LOOKBACK_DAYS)`.
+- **Warum:** Einheitlicher, schaerferer Daily-Post-Stil inkl. Beispiele und Kontextblock.
+- **Status:** deployed
+
 ## Letzter Session-Status (2026-04-10) — alphacycle-x-bot: post_system Fakten-Sicherung
 - **Datei(en):** alphacycle-x-bot/prompts/post_system.txt (CRITICAL STYLE: FACTUAL ACCURACY, Pflicht-Zahl aus ARC-Daten, kein „This is how X works“), .cursor/rules/permanent-fixes.mdc
 - **Was wurde geaendert:** Narrativ muss zu Fear&Greed/ATH/Preis passen; mind. eine konkrete Zahl aus ARC-Daten natuerlich im Text; „numbers test“ an Pflicht-Zahl + max zwei Datenpunkte angepasst.
