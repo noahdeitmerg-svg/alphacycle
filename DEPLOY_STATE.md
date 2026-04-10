@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10 (x-bot post_system CRITICAL STYLE sharpen)
+**Zuletzt aktualisiert:** 2026-04-10 (x-bot Telegram: Scan, Daily, Screen-Logs)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-10) — alphacycle-x-bot: Telegram ohne Laptop (/scan, /queuedaily, /logbot, /logtg)
+- **Datei(en):** alphacycle-x-bot/telegram_listener.py, alphacycle-x-bot/config.py (`SCREEN_SESSION_BOT` / `SCREEN_SESSION_TG`), alphacycle-x-bot/.env.example, DEPLOY_STATE.md, .cursor/rules/permanent-fixes.mdc
+- **Was wurde geaendert:** Slash-Befehle nur fuer `TELEGRAM_CHAT_ID`: `/scan` startet `bot.py --once`, `/queuedaily` startet `bot.py --queue-daily`, `/logbot` und `/logtg` holen Scrollback per `screen -S ... -X hardcopy -h` (Session-Namen per Env, Default xbot/tg). Callbacks POST/SKIP/dpost/dskip ebenfalls nur autorisierte Chat-ID. `done`-Flow nur autorisiert. Hilfe-Text erweitert.
+- **Warum:** Betrieb komplett vom Handy in Telegram ohne SSH/screen -r zum Lesen der Logs.
+- **Status:** deployed (VPS: git pull, beide Screen-Sessions neu starten falls noetig; `.env` optional `SCREEN_SESSION_BOT` / `SCREEN_SESSION_TG` wenn andere Session-Namen)
 
 ## Letzter Session-Status (2026-04-10) — alphacycle-x-bot: post_system.txt CRITICAL STYLE (deklarativ + Datenpunkt-Zaehlung)
 - **Datei(en):** alphacycle-x-bot/prompts/post_system.txt, DEPLOY_STATE.md, .cursor/rules/permanent-fixes.mdc

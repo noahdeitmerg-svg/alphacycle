@@ -1,12 +1,17 @@
 """
 Telegram long-polling: POST/SKIP (replies + daily), sichtbare Chat-Bestätigungen,
-Commands /status /ping /help /start, Daily Summary 23:00 UTC.
+Commands /status /ping /help /start, /scan /queuedaily /logbot /logtg, Daily Summary 23:00 UTC.
 Run alongside: python3 bot.py
 """
+import os
+import re
 import sqlite3
+import subprocess
 import sys
+import tempfile
 import time
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 import requests
 
@@ -137,6 +142,110 @@ def _build_status_body() -> str:
     return "\n".join(lines)
 
 
+def _authorized_chat(chat_id) -> bool:
+    """Only TELEGRAM_CHAT_ID may use commands and callbacks (when CHAT_ID is set)."""
+    if chat_id is None:
+        return False
+    cid = str(config.TELEGRAM_CHAT_ID or "").strip()
+    if not cid:
+        return True
+    return str(chat_id).strip() == cid
+
+
+def _send_chunks(
+    chat_id: int | str,
+    text: str,
+    reply_to_message_id: int | None = None,
+    prefix: str = "",
+) -> None:
+    """Telegram sendMessage max 4096; send_feedback_message truncates internally."""
+    body = (prefix + (text or "")).strip() or "(empty)"
+    limit = 4000
+    first = True
+    for i in range(0, len(body), limit):
+        chunk = body[i : i + limit]
+        telegram_bot.send_feedback_message(
+            chunk,
+            chat_id=chat_id,
+            reply_to_message_id=reply_to_message_id if first else None,
+        )
+        first = False
+
+
+def _run_bot_cli(extra_args: list[str]) -> tuple[int, str]:
+    """Run bot.py as subprocess (same venv/cwd as listener)."""
+    root = Path(__file__).resolve().parent
+    bot_py = root / "bot.py"
+    timeout_s = 7200 if "--queue-daily" in extra_args else 3600
+    cmd = [sys.executable, "-u", str(bot_py)] + extra_args
+    try:
+        r = subprocess.run(
+            cmd,
+            cwd=str(root),
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=timeout_s,
+            env=os.environ.copy(),
+        )
+    except subprocess.TimeoutExpired as e:
+        tail_out = (e.stdout or "")[-2500:]
+        tail_err = (e.stderr or "")[-2500:]
+        return -1, f"Timeout after {timeout_s}s.\n{tail_out}\n{tail_err}"
+    except OSError as e:
+        return -1, f"Subprocess error: {e}"
+    out = (r.stdout or "").rstrip()
+    err = (r.stderr or "").rstrip()
+    combined = out
+    if err:
+        combined = (out + "\n" + err).strip() if out else err
+    return r.returncode, combined or "(no output)"
+
+
+def _screen_log_tail(session: str, max_lines: int = 150) -> str:
+    """
+    GNU screen scrollback via hardcopy -h (needs screen session name, e.g. screen -S xbot).
+    """
+    if not session:
+        return "(empty screen session name)"
+    fd, path = tempfile.mkstemp(prefix="ac_scr_", suffix=".txt")
+    os.close(fd)
+    tmp = Path(path)
+    try:
+        r = subprocess.run(
+            ["screen", "-S", session, "-X", "hardcopy", "-h", str(tmp)],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=20,
+        )
+        if r.returncode != 0:
+            err = (r.stderr or r.stdout or "").strip()
+            return (
+                f"screen hardcopy failed for session {session!r} (code {r.returncode}). "
+                f"{err or 'Is screen installed and the session name correct? Set SCREEN_SESSION_BOT / SCREEN_SESSION_TG in .env.'}"
+            )
+        raw = tmp.read_text(encoding="utf-8", errors="replace")
+        raw = re.sub(r"\x1b\[[0-9;?]*[a-zA-Z]", "", raw)
+        lines = raw.splitlines()
+        tail = lines[-max_lines:] if len(lines) > max_lines else lines
+        text = "\n".join(tail).strip()
+        if not text:
+            return f"(no scrollback captured for session {session!r})"
+        return f"--- screen -S {session} (last {len(tail)} lines) ---\n{text}"
+    except FileNotFoundError:
+        return "(screen binary not found on this host)"
+    except OSError as e:
+        return f"(screen log error: {e})"
+    finally:
+        try:
+            tmp.unlink(missing_ok=True)
+        except OSError:
+            pass
+
+
 def _build_daily_summary_body() -> str:
     try:
         posts = _sql_daily_posts_today()
@@ -174,11 +283,16 @@ def _maybe_send_daily_summary_utc() -> None:
 
 
 def _handle_text_command(msg: dict) -> None:
-    """Reply to /status, /ping, /help, /start so the user sees the bot is alive."""
+    """Slash-commands, manual 'done', and remote bot control (authorized chat only)."""
     text = (msg.get("text") or "").strip()
+    chat_id = msg.get("chat", {}).get("id")
+    if chat_id is None:
+        return
+
     if not text.startswith("/"):
-        # Manual fallback flow: user replies "done" to copy-paste message.
         if text.lower() != "done":
+            return
+        if not _authorized_chat(chat_id):
             return
         reply_msg = msg.get("reply_to_message") or {}
         src_text = reply_msg.get("text") or ""
@@ -194,33 +308,70 @@ def _handle_text_command(msg: dict) -> None:
             )
             database.set_pending_status(tweet_id, "posted")
         telegram_bot.send_feedback_message(
-            f"✅ Manual reply logged for @{author} (tweet_id={tweet_id}).",
-            chat_id=msg.get("chat", {}).get("id"),
+            f"OK: manual reply logged for @{author} (tweet_id={tweet_id}).",
+            chat_id=chat_id,
             reply_to_message_id=msg.get("message_id"),
         )
         return
-    chat_id = msg.get("chat", {}).get("id")
-    if chat_id is None:
+
+    if not _authorized_chat(chat_id):
         return
+
     cmd = text.split()[0].split("@", 1)[0].lower()
 
     if cmd in ("/start", "/help"):
         body = (
-            "AlphaCycle X-Bot (Telegram-Listener)\n\n"
-            "Auf Freigabe-Nachrichten:\n"
-            "POST = auf X veröffentlichen\n"
-            "SKIP = verwerfen\n\n"
-            "Daily-Posts: eigene Karte mit POST/SKIP.\n\n"
-            "Befehle: /status (Metriken), /ping"
+            "AlphaCycle X-Bot (Telegram)\n\n"
+            "Freigaben: POST / SKIP (Replies), Daily: POST / SKIP.\n\n"
+            "Befehle:\n"
+            "/status — Metriken\n"
+            "/ping — Listener lebt\n"
+            "/scan — ein Scan-Zyklus (wie bot.py --once)\n"
+            "/queuedaily — Daily jetzt erzeugen + Telegram-Freigabe\n"
+            f"/logbot — letzte Zeilen Screen-Session {config.SCREEN_SESSION_BOT!r}\n"
+            f"/logtg — letzte Zeilen Screen-Session {config.SCREEN_SESSION_TG!r}\n\n"
+            "Hinweis: Parallel zum laufenden bot.py kann /scan doppelte Arbeit "
+            "ausloesen; bei Bedarf kurz warten."
         )
-    elif cmd == "/status":
-        body = _build_status_body()
-    elif cmd == "/ping":
-        body = "pong — Listener antwortet."
-    else:
+        telegram_bot.send_feedback_message(body, chat_id=chat_id)
         return
 
-    telegram_bot.send_feedback_message(body, chat_id=chat_id)
+    if cmd == "/status":
+        telegram_bot.send_feedback_message(_build_status_body(), chat_id=chat_id)
+        return
+    if cmd == "/ping":
+        telegram_bot.send_feedback_message("pong — Listener antwortet.", chat_id=chat_id)
+        return
+
+    if cmd == "/scan":
+        telegram_bot.send_feedback_message(
+            "Starte einen Scan-Zyklus (bot.py --once) ...",
+            chat_id=chat_id,
+        )
+        code, out = _run_bot_cli(["--once"])
+        head = f"Exit {code}\n"
+        _send_chunks(chat_id, out, prefix=head)
+        return
+
+    if cmd in ("/queuedaily", "/queue_daily", "/dailyqueue"):
+        telegram_bot.send_feedback_message(
+            "Daily-Post wird erzeugt und zur Freigabe gesendet (bot.py --queue-daily) ...",
+            chat_id=chat_id,
+        )
+        code, out = _run_bot_cli(["--queue-daily"])
+        head = f"Exit {code}\n"
+        _send_chunks(chat_id, out, prefix=head)
+        return
+
+    if cmd in ("/logbot", "/log_xbot", "/screenbot"):
+        log_text = _screen_log_tail(config.SCREEN_SESSION_BOT)
+        _send_chunks(chat_id, log_text)
+        return
+
+    if cmd in ("/logtg", "/log_tg", "/screentg", "/screen_tg"):
+        log_text = _screen_log_tail(config.SCREEN_SESSION_TG)
+        _send_chunks(chat_id, log_text)
+        return
 
 
 def preflight() -> bool:
@@ -307,6 +458,11 @@ def poll_loop() -> None:
                         chat_id=chat_id,
                         reply_to_message_id=reply_mid,
                     )
+
+                if not _authorized_chat(chat_id):
+                    _toast("Nicht autorisiert.")
+                    print(f"[LISTENER] Rejected callback chat_id={chat_id!r}")
+                    continue
 
                 if raw.startswith("post:"):
                     tweet_id = raw[5:].strip()

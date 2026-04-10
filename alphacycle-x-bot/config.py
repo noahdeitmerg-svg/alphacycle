@@ -21,6 +21,9 @@ CLAUDE_API_KEY = (os.getenv("CLAUDE_API_KEY", "") or "").strip()
 
 TELEGRAM_BOT_TOKEN = (os.getenv("TELEGRAM_BOT_TOKEN", "") or "").strip()
 TELEGRAM_CHAT_ID = (os.getenv("TELEGRAM_CHAT_ID", "") or "").strip()
+# screen -S <name> for /logbot and /logtg (Telegram tail of scrollback via hardcopy -h).
+SCREEN_SESSION_BOT = (os.getenv("SCREEN_SESSION_BOT", "xbot") or "xbot").strip()
+SCREEN_SESSION_TG = (os.getenv("SCREEN_SESSION_TG", "tg") or "tg").strip()
 
 # AlphaCycle API: must be JSON (FastAPI). alphacycle.app/api/* often serves the SPA (HTML) — use Railway.
 _DEFAULT_ARC_API_URL = "https://alphacycle-production.up.railway.app/api/arc-summary"
