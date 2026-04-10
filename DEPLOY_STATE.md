@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10 (x-bot reply_system 270 + author spacing)
+**Zuletzt aktualisiert:** 2026-04-10 (x-bot reply_system ATH 126k)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-10) — alphacycle-x-bot: reply_system ATH Referenz 126k
+- **Datei(en):** alphacycle-x-bot/prompts/reply_system.txt, DEPLOY_STATE.md
+- **Was wurde geaendert:** FACTUAL ACCURACY Zeile: ATH von ~108k auf ~126k USD (Cycle-Top Okt 2025).
+- **Warum:** Nutzerkorrektur; konsistent mit ca. 126k ATH.
+- **Status:** deployed (VPS: git pull + restart-screens)
 
 ## Letzter Session-Status (2026-04-10) — alphacycle-x-bot: reply_system.txt komplett + Reply-Abstand pro Account
 - **Datei(en):** alphacycle-x-bot/prompts/reply_system.txt (voller Ersatz), alphacycle-x-bot/database.py (`is_author_spacing_ok_for_reply` via `reply_history`), alphacycle-x-bot/scanner.py (`author_spacing` Skip), alphacycle-x-bot/reply_engine.py (Clip 270 Zeichen), DEPLOY_STATE.md, .cursor/rules/permanent-fixes.mdc
