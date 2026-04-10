@@ -27,6 +27,18 @@ def init_db():
         )
     """)
 
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS pending_replies (
+            tweet_id TEXT PRIMARY KEY,
+            tweet_url TEXT NOT NULL,
+            username TEXT NOT NULL,
+            reply_text TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'pending',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
     conn.commit()
     conn.close()
 
@@ -91,3 +103,98 @@ def replies_today() -> int:
     count = c.fetchone()[0]
     conn.close()
     return count
+
+
+def insert_pending_reply(
+    tweet_id: str,
+    tweet_url: str,
+    username: str,
+    reply_text: str,
+) -> bool:
+    """Insert a new pending row. Returns True if inserted, False if tweet_id already exists."""
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute(
+        """
+        INSERT OR IGNORE INTO pending_replies (tweet_id, tweet_url, username, reply_text, status)
+        VALUES (?, ?, ?, ?, 'pending')
+        """,
+        (tweet_id, tweet_url, username, reply_text),
+    )
+    inserted = c.rowcount > 0
+    conn.commit()
+    conn.close()
+    return inserted
+
+
+def get_pending_by_tweet_id(tweet_id: str) -> dict | None:
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    c.execute(
+        "SELECT tweet_id, tweet_url, username, reply_text, status FROM pending_replies WHERE tweet_id = ?",
+        (tweet_id,),
+    )
+    row = c.fetchone()
+    conn.close()
+    if not row:
+        return None
+    return dict(row)
+
+
+def set_pending_status(tweet_id: str, status: str) -> None:
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute(
+        """
+        UPDATE pending_replies
+        SET status = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE tweet_id = ?
+        """,
+        (status, tweet_id),
+    )
+    conn.commit()
+    conn.close()
+
+
+def try_transition_pending_status(tweet_id: str, from_status: str, to_status: str) -> bool:
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute(
+        """
+        UPDATE pending_replies
+        SET status = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE tweet_id = ? AND status = ?
+        """,
+        (to_status, tweet_id, from_status),
+    )
+    ok = c.rowcount > 0
+    conn.commit()
+    conn.close()
+    return ok
+
+
+def delete_pending_reply(tweet_id: str) -> None:
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("DELETE FROM pending_replies WHERE tweet_id = ?", (tweet_id,))
+    conn.commit()
+    conn.close()
+
+
+def mark_pending_skipped(tweet_id: str) -> bool:
+    """Set status to skipped if currently pending. Returns True if updated."""
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute(
+        """
+        UPDATE pending_replies
+        SET status = 'skipped', updated_at = CURRENT_TIMESTAMP
+        WHERE tweet_id = ? AND status = 'pending'
+        """,
+        (tweet_id,),
+    )
+    ok = c.rowcount > 0
+    conn.commit()
+    conn.close()
+    return ok

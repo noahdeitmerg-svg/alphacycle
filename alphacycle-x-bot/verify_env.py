@@ -18,6 +18,8 @@ def main() -> None:
     _line("TWITTER_ACCESS_TOKEN", config.TWITTER_ACCESS_TOKEN)
     _line("TWITTER_ACCESS_SECRET", config.TWITTER_ACCESS_SECRET)
     _line("CLAUDE_API_KEY", config.CLAUDE_API_KEY)
+    _line("TELEGRAM_BOT_TOKEN", config.TELEGRAM_BOT_TOKEN)
+    _line("TELEGRAM_CHAT_ID", config.TELEGRAM_CHAT_ID)
     if config.TWITTER_BEARER and len(config.TWITTER_BEARER) < 80:
         print("Hint: Bearer usually long; len<80 may be truncated in .env (line break?).")
     if config.TWITTER_API_SECRET and len(config.TWITTER_API_SECRET) < 40:

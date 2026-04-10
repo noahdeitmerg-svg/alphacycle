@@ -20,6 +20,9 @@ TWITTER_BEARER = (os.getenv("TWITTER_BEARER", "") or "").strip()
 CLAUDE_API_KEY = (os.getenv("CLAUDE_API_KEY", "") or "").strip()
 CLAUDE_MODEL = "claude-sonnet-4-20250514"
 
+TELEGRAM_BOT_TOKEN = (os.getenv("TELEGRAM_BOT_TOKEN", "") or "").strip()
+TELEGRAM_CHAT_ID = (os.getenv("TELEGRAM_CHAT_ID", "") or "").strip()
+
 ALPHACYCLE_API = "https://alphacycle-production.up.railway.app"
 
 # Handles: no @. Prefix id:SNOWFLAKE only if you verified it (GET /2/users/:id). Wrong id => not-found.
@@ -35,8 +38,8 @@ TRACKED_ACCOUNTS = [
     "DylanLeClair",
 ]
 
-MAX_REPLIES_PER_HOUR = 3
-MAX_REPLIES_PER_DAY = 15
+MAX_REPLIES_PER_HOUR = 5
+MAX_REPLIES_PER_DAY = 20
 SCAN_INTERVAL_SECONDS = int(os.getenv("SCAN_INTERVAL_SECONDS", "300"))
 
 REPLY_DELAY_MIN = 360
