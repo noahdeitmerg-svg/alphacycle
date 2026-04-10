@@ -19,37 +19,8 @@ REPLY_APPROACH_KEYS = (
     "short_data_drop",
 )
 
-REPLY_APPROACH_INSTRUCTIONS: dict[str, str] = {
-    "agree_and_deepen": (
-        "Angle A — agree_and_deepen: Acknowledge one specific point in their tweet, "
-        "then add one layer from the structural / regime lens. Stay concise."
-    ),
-    "reframe_with_data": (
-        "Angle B — reframe_with_data: Take their claim and reframe it using "
-        "liquidity, regime, or cycle structure — without sounding argumentative."
-    ),
-    "historical_parallel": (
-        "Angle C — historical_parallel: One tight parallel to a prior cycle phase "
-        "(no dates spam); focus on structure, not nostalgia."
-    ),
-    "respectful_counter": (
-        "Angle D — respectful_counter: Offer a measured counter-angle tied to risk "
-        "regime — no personal attack, no thread-war tone."
-    ),
-    "short_data_drop": (
-        "Angle E — short_data_drop: One crisp regime fact from the data block, "
-        "connected to their tweet in a single logical hop."
-    ),
-}
-
-CURIOSITY_HOOK_YES = (
-    "Include a light curiosity hook: one short phrase that implies there is more "
-    "to the framework without explaining it (no clickbait, no questions to the reader)."
-)
-
-CURIOSITY_HOOK_NO = (
-    "Do not add a separate curiosity hook; keep a single cohesive, self-contained reply."
-)
+HOOK_ACTIVE_LABEL = "ACTIVE"
+HOOK_INACTIVE_LABEL = "INACTIVE"
 
 POST_TYPE_SPECS: dict[str, str] = {
     "contrarian_signal": (
@@ -103,11 +74,11 @@ def _format_arc_block(arc_data: dict[str, Any] | None) -> str:
     pct = a.get("percentile", a.get("arc_percentile", "?"))
     fg = a.get("fear_greed", a.get("fear_greed_index", a.get("fear_greed_value", "?")))
     lines = [
-        f"Structural score (raw / display): {raw} / {disp}",
-        f"Zone: {zone}",
+        f"ARC-style structural score (raw / display): {raw} / {disp}",
+        f"Regime zone: {zone}",
         f"Phase cluster: {phase}",
         f"Percentile (if available): {pct}",
-        f"Fear and Greed (if available): {fg}",
+        f"Sentiment proxy — Fear and Greed (if available): {fg}",
     ]
     return "\n".join(lines)
 
@@ -162,25 +133,28 @@ def build_reply_prompt(
 ) -> str:
     """
     Build full system-style prompt string for a reply-generation Claude call.
-    Randomly picks 1 of 5 approaches; 40% chance to request a curiosity hook.
+    Randomly picks 1 of 5 approaches; 40% chance hook = ACTIVE (see reply_system.txt).
     """
     base = _read_prompt_file("reply_system.txt")
     approach_key = random.choice(REPLY_APPROACH_KEYS)
-    approach_instruction = REPLY_APPROACH_INSTRUCTIONS[approach_key]
-    curiosity_instruction = (
-        CURIOSITY_HOOK_YES if random.random() < 0.4 else CURIOSITY_HOOK_NO
+    hook_instruction = (
+        HOOK_ACTIVE_LABEL if random.random() < 0.4 else HOOK_INACTIVE_LABEL
     )
-    tweet_context = (
-        f"Author: @{tweet_author.lstrip('@')}\n"
-        f"Tweet text:\n{tweet_text.strip()}"
-    )
-    return (
-        base.replace("{{ARC_CONTEXT}}", _format_arc_block(arc_data))
-        .replace("{{REPLY_HISTORY}}", _format_reply_history(reply_history))
-        .replace("{{APPROACH_INSTRUCTION}}", approach_instruction)
-        .replace("{{CURIOSITY_INSTRUCTION}}", curiosity_instruction)
-        .replace("{{TWEET_CONTEXT}}", tweet_context)
-    )
+    author = tweet_author.lstrip("@")
+    text = tweet_text.strip()
+    history = _format_reply_history(reply_history)
+    arc_block = _format_arc_block(arc_data)
+    # Use replace (not str.format) so { } inside tweet_text does not break.
+    for key, val in (
+        ("{arc_data_block}", arc_block),
+        ("{approach}", approach_key),
+        ("{hook_instruction}", hook_instruction),
+        ("{tweet_author}", author),
+        ("{tweet_text}", text),
+        ("{reply_history}", history),
+    ):
+        base = base.replace(key, val)
+    return base
 
 
 def build_post_prompt(

@@ -191,6 +191,6 @@ Beim Bearbeiten von backend/fetcher.py, backend/main.py, backend/scoring.py oder
 
 ## alphacycle-x-bot / growth_engine (Content)
 - **NEVER** API-Calls in `growth_engine.py` — nur Prompt-Bau; Claude bleibt in `reply_engine.py` / spaeter `daily_post_engine.py`.
-- **NEVER** die LOCKED BRAND RULES in `prompts/reply_system.txt` und `prompts/post_system.txt` entfernen oder lockern: keine $BTC/$ETH, keine Hashtags/Emojis, kein Engagement-Bait, keine Preisziele; Replies ohne Woerter "AlphaCycle" und "ARC"; Posts 4-8 Zeilen, Ende mit Share Lines ohne Frage.
-- **ALWAYS** `build_reply_prompt` laed `prompts/reply_system.txt`; `build_post_prompt` laed `prompts/post_system.txt`; Platzhalter `{{...}}` per `replace` fuellen.
+- **NEVER** die LOCKED BRAND RULES in `prompts/reply_system.txt` und `prompts/post_system.txt` entfernen oder lockern: keine $BTC/$ETH, keine Hashtags/Emojis, kein Engagement-Bait, keine Preisziele; in der **generierten Reply-Zeile** keine Woerter "AlphaCycle" und "ARC" (Systemprompt darf Rahmen erklaeren); Posts 4-8 Zeilen, Ende mit Share Lines ohne Frage.
+- **ALWAYS** `build_reply_prompt` laed `prompts/reply_system.txt`; `build_post_prompt` laed `prompts/post_system.txt`; Reply-Prompt: Platzhalter `{arc_data_block}`, `{approach}`, `{hook_instruction}`, `{tweet_author}`, `{tweet_text}`, `{reply_history}` per `replace` fuellen (kein `str.format` auf den ganzen Text wegen `{` im Tweet).
 - **ALWAYS** `reply_engine.generate_reply` nutzt `growth_engine.build_reply_prompt` und `database.get_recent_reply_texts(10)` fuer Duplikat-Vermeidung.

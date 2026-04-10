@@ -4,6 +4,12 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-04-11) — alphacycle-x-bot: reply_system.txt Cycle Intelligence Desk
+- **Datei(en):** alphacycle-x-bot/prompts/reply_system.txt (Master-Systemprompt exakt laut Spec), alphacycle-x-bot/growth_engine.py (Platzhalter-Replace, HOOK ACTIVE/INACTIVE 40%), alphacycle-x-bot/reply_engine.py (User-Hinweis SKIP), permanent-fixes.mdc
+- **Was wurde geaendert:** Neuer Reply-Systemtext mit IDENTITY, ARC-Komponenten, 5 Ansaetze, Curiosity-Hook-Regeln; growth_engine ohne str.format auf Volltext (Tweet kann `{` enthalten).
+- **Warum:** Operating-Brain Vorgabe fuer Claude Replies.
+- **Status:** in progress
+
 ## Letzter Session-Status (2026-04-11) — alphacycle-x-bot: growth_engine + Prompt-Templates
 - **Datei(en):** alphacycle-x-bot/growth_engine.py, alphacycle-x-bot/prompts/reply_system.txt, alphacycle-x-bot/prompts/post_system.txt, alphacycle-x-bot/reply_engine.py, alphacycle-x-bot/database.py (get_recent_reply_texts), .cursor/rules/permanent-fixes.mdc (growth_engine Regeln)
 - **Was wurde geaendert:** Zentrale Prompt-Erzeugung: build_reply_prompt (5 Zufalls-Ansaetze, 40% Curiosity Hook, ARC+History+Tweet); build_post_prompt (Wochentag -> Post-Typ, Topics 7d, Share-Lines-Ende); Master-Rules in TXT; reply_engine nutzt growth_engine + letzte 10 Replies aus SQLite; keine API in growth_engine.

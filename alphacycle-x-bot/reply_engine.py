@@ -33,8 +33,8 @@ def generate_reply(tweet: dict, arc_context: dict) -> str | None:
         return None
 
     user_msg = (
-        "Produce only the reply text for the TARGET TWEET in your system instructions "
-        "(or exactly SKIP if instructed). No preamble."
+        "If the tweet is off-topic for cycle / liquidity / structural regime, output exactly SKIP. "
+        "Otherwise produce only the reply text. No preamble."
     )
 
     try:
