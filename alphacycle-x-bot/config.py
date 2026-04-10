@@ -40,7 +40,8 @@ TRACKED_ACCOUNTS = [
 
 MAX_REPLIES_PER_HOUR = 5
 MAX_REPLIES_PER_DAY = 20
-SCAN_INTERVAL_SECONDS = int(os.getenv("SCAN_INTERVAL_SECONDS", "300"))
+# Default 1800 = 30 min between scan cycles (saves X API read credits). Override in .env.
+SCAN_INTERVAL_SECONDS = int(os.getenv("SCAN_INTERVAL_SECONDS", "1800"))
 
 REPLY_DELAY_MIN = 360
 REPLY_DELAY_MAX = 1320
