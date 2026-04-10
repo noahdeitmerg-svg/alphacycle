@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10 (x-bot two-stage reply API->manual fallback)
+**Zuletzt aktualisiert:** 2026-04-10 (x-bot post_system CRITICAL STYLE sharpen)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-10) — alphacycle-x-bot: post_system.txt CRITICAL STYLE (deklarativ + Datenpunkt-Zaehlung)
+- **Datei(en):** alphacycle-x-bot/prompts/post_system.txt, DEPLOY_STATE.md, .cursor/rules/permanent-fixes.mdc
+- **Was wurde geaendert:** CRITICAL STYLE RULES: deklarative Muster (This is/That is + Erklaerung) explizit verboten; Datenpunkt-Limit mit Pflicht-Zaehlung vor Output und Beispiel (drei = schwaechsten streichen); FINAL TEST Punkt 5 angepasst.
+- **Warum:** Weniger Broschueren-Saetze, weniger Daten-Dumps in Daily Posts.
+- **Status:** deployed (VPS: git pull; Daily neu generieren nutzt neuen Prompt)
 
 ## Letzter Session-Status (2026-04-10) — alphacycle-x-bot: Zwei-Stufen Reply System (API -> Telegram Copy/Paste)
 - **Datei(en):** alphacycle-x-bot/poster.py, alphacycle-x-bot/database.py, alphacycle-x-bot/telegram_listener.py, DEPLOY_STATE.md
