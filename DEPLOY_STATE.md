@@ -8,7 +8,7 @@
 - **Datei(en):** alphacycle-x-bot/poster.py, DEPLOY_STATE.md, .cursor/rules/permanent-fixes.mdc
 - **Was wurde geaendert:** `_send_manual_copy_paste`: einheitliches Format (Tweet-Link, Reply in Trennlinien, Schritte 1–3, `[MANUAL_REPLY]`); zuerst `telegram_bot.send_feedback_message`, bei Fehler Raw-HTTP-Backup mit `r.ok`-Pruefung und Logging. `_post_reply_impl`: bei **Bot** Stunden-/Tageslimit kein stilles `"failed"` mehr — stattdessen manuelle Telegram-Nachricht und Rueckgabe `"manual"` (ohne `mark_api_blocked_account`, da kein X-Account-Block). Alle X-/OAuth-Fehlerpfade mit `logger.warning`/`logger.error`; unerwartetes `"failed"` nach `_post_reply_impl` mit Sicherheits-Fallback.
 - **Warum:** Listener zeigte „fehlgeschlagen“ ohne sichtbaren Copy-Paste-Text, wenn nur das interne Limit griff oder Telegram-Sendung still scheiterte.
-- **Status:** in progress (VPS: git pull + `restart-screens.sh`)
+- **Status:** pushed to GitHub; VPS: git pull + `restart-screens.sh` zum Live-Schalten
 
 ## Letzter Session-Status (2026-04-10) — x-bot: reply_system Banned+LOGIC, max 2 Replies/Account/Tag (UTC)
 - **Datei(en):** alphacycle-x-bot/prompts/reply_system.txt (BANNED erweitert; LOGIC CHECK nach FACTUAL), alphacycle-x-bot/database.py (`count_replies_to_author_today_utc`), alphacycle-x-bot/scanner.py (Skip + Log `[SCANNER] Skipping @...`), DEPLOY_STATE.md, .cursor/rules/permanent-fixes.mdc
