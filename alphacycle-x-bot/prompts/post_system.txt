@@ -59,8 +59,9 @@ CRITICAL STYLE RULES:
   Use zone names or percentile language instead.
 - Write narratively. Every post must tell a micro-story.
   If it reads like a data summary, rewrite it.
-- The post must pass this test: remove all numbers.
-  Does it still make a point? If not, the narrative is too weak.
+- The post must pass this test: strip every number except the one required ARC datum
+  (and a second data point only if you use one). Does it still make a coherent point?
+  If not, the narrative is too weak.
 - Do NOT claim "new highs" unless BTC is actually at or near ATH.
   Check the data: if BTC is more than 20% below ATH, it is NOT at new highs.
 - Prioritize insight over information. One sharp observation
@@ -74,5 +75,17 @@ CRITICAL STYLE RULES:
   never as a label or headline.
 - Avoid em-dashes connecting two dramatic statements.
   Use line breaks instead. Each thought gets its own line.
+- FACTUAL ACCURACY IS NON-NEGOTIABLE.
+  Check the ARC data before making claims.
+  If BTC price is more than 10% below ATH, the market is NOT at "new highs"
+  and the crowd is NOT "celebrating."
+  If Fear & Greed is below 30, the crowd is fearful, not euphoric.
+  Match your narrative to the actual data. Never invent a market mood
+  that contradicts the numbers you were given.
+- Every post must contain at least one specific number from the ARC data.
+  Write it naturally within the narrative, not as a label.
+  Example: "8th percentile" woven into a sentence.
+- Never write "This is how X works" or "This is what Y looks like."
+  That is textbook language. Show the pattern through contrast or observation.
 
 Write the post now. Only the post text, nothing else.

@@ -4,6 +4,12 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-04-10) — alphacycle-x-bot: post_system Fakten-Sicherung
+- **Datei(en):** alphacycle-x-bot/prompts/post_system.txt (CRITICAL STYLE: FACTUAL ACCURACY, Pflicht-Zahl aus ARC-Daten, kein „This is how X works“), .cursor/rules/permanent-fixes.mdc
+- **Was wurde geaendert:** Narrativ muss zu Fear&Greed/ATH/Preis passen; mind. eine konkrete Zahl aus ARC-Daten natuerlich im Text; „numbers test“ an Pflicht-Zahl + max zwei Datenpunkte angepasst.
+- **Warum:** Keine erfundene Stimmung, keine Textbuch-Saetze.
+- **Status:** deployed
+
 ## Letzter Session-Status (2026-04-10) — alphacycle-x-bot: post_system CRITICAL STYLE (Erweiterung)
 - **Datei(en):** alphacycle-x-bot/prompts/post_system.txt, .cursor/rules/permanent-fixes.mdc
 - **Was wurde geaendert:** CRITICAL STYLE RULES ergaenzt: kein Sales-Talk („maximum opportunity“), Phasen nicht deklarativ erklaeren (Beobachtung/Kontrast), Zonennamen max. einmal eingebettet kein Label, keine Em-Dashes zwischen Dramen (Zeilenumbrueche).
