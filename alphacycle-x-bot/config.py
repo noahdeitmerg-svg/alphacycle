@@ -22,11 +22,18 @@ CLAUDE_API_KEY = (os.getenv("CLAUDE_API_KEY", "") or "").strip()
 TELEGRAM_BOT_TOKEN = (os.getenv("TELEGRAM_BOT_TOKEN", "") or "").strip()
 TELEGRAM_CHAT_ID = (os.getenv("TELEGRAM_CHAT_ID", "") or "").strip()
 
-# AlphaCycle API (public JSON; full URL to arc-summary)
-ARC_API_URL = "https://alphacycle.app/api/arc-summary"
+# AlphaCycle API: must be JSON (FastAPI). alphacycle.app/api/* often serves the SPA (HTML) — use Railway.
+_DEFAULT_ARC_API_URL = "https://alphacycle-production.up.railway.app/api/arc-summary"
+ARC_API_URL = (
+    (os.getenv("ARC_API_URL", _DEFAULT_ARC_API_URL) or "").strip()
+    or _DEFAULT_ARC_API_URL
+)
 ALPHACYCLE_API = "https://alphacycle-production.up.railway.app"
-# Public site + ancillary fetches (cycle/btc, etc.); override for staging.
-ALPHACYCLE_PUBLIC_BASE = (os.getenv("ALPHACYCLE_PUBLIC_BASE", "https://alphacycle.app") or "").strip().rstrip("/")
+# Fallback host if ARC_API_URL is empty/malformed; ancillary GETs use host parsed from ARC_API_URL first.
+ALPHACYCLE_PUBLIC_BASE = (
+    os.getenv("ALPHACYCLE_PUBLIC_BASE", "https://alphacycle-production.up.railway.app")
+    or ""
+).strip().rstrip("/")
 DAILY_POST_DASHBOARD_URL = (os.getenv("DAILY_POST_DASHBOARD_URL", "https://alphacycle.app") or "").strip()
 
 # Daily Post Schedule (UTC)

@@ -88,7 +88,9 @@ def fetch_arc_data() -> dict[str, Any] | None:
         if parsed.scheme and parsed.netloc
         else ""
     )
-    base = host_base or (config.ALPHACYCLE_PUBLIC_BASE or "https://alphacycle.app")
+    base = host_base or (
+        config.ALPHACYCLE_PUBLIC_BASE or "https://alphacycle-production.up.railway.app"
+    )
     if not arc_url:
         arc_url = f"{base}/api/arc-summary"
     timeout = _ARC_SUMMARY_TIMEOUT

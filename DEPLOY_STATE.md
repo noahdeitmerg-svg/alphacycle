@@ -4,6 +4,13 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-04-10) — alphacycle-x-bot: ARC_API_URL Railway (JSON fix)
+- **Datei(en):** alphacycle-x-bot/config.py (`ARC_API_URL` + `ALPHACYCLE_PUBLIC_BASE` Default Railway; `ARC_API_URL` per `ARC_API_URL` env), alphacycle-x-bot/daily_post_engine.py (JSON-Fetch-Fallback-Host Railway statt alphacycle.app), alphacycle-x-bot/.env.example, .cursor/rules/permanent-fixes.mdc
+- **Was wurde geaendert:** Default Arc-Summary = `https://alphacycle-production.up.railway.app/api/arc-summary` — `alphacycle.app/api/arc-summary` liefert SPA-HTML, Bot brauchte JSON (`Expecting value` auf VPS).
+- **Warum:** Scan-Zyklus und Daily-Post `fetch_arc_data` wieder funktionsfaehig ohne manuelle .env-Pflicht.
+- **VPS:** Optional weiterhin `ARC_API_URL=...` in `.env` setzen; `git pull` + Bot/Listener neu starten.
+- **Status:** deployed
+
 ## Letzter Session-Status (2026-04-10) — alphacycle-x-bot: Telegram Chat-Feedback + Commands
 - **Datei(en):** alphacycle-x-bot/telegram_bot.py (`send_feedback_message`, `answer_callback_query` show_alert-Param), alphacycle-x-bot/telegram_listener.py (Bestätigungsnachricht als Reply auf Freigabe-Karte; /status /ping /help /start)
 - **Was wurde geaendert:** Nach jedem Button-Druck zusätzliche sichtbare Nachricht im Chat (wer was gedrückt hat, Tweet-ID/Pending-ID, Ergebnis); kurzer Callback-Toast unveraendert.
