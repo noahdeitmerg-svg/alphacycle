@@ -96,51 +96,58 @@ def schedule_daily_post() -> None:
 
 
 def run_cycle():
-    print("\n" + "=" * 50)
-    print("[BOT] Starting scan cycle...")
+    try:
+        print("\n" + "=" * 50)
+        print("[BOT] Starting scan cycle...")
 
-    candidates = scanner.scan_tweets()
-    if not candidates:
-        print("[BOT] No candidates — sleeping.")
-        return
+        candidates = scanner.scan_tweets()
+        if not candidates:
+            print("[BOT] No candidates — sleeping.")
+            return
 
-    arc = fetch_arc_data()
-    if not arc:
-        print("[BOT] No ARC data — skipping cycle.")
-        return
+        arc = fetch_arc_data()
+        if not arc:
+            print("[BOT] No ARC data — skipping cycle.")
+            return
 
-    print(f"[BOT] ARC: {arc.get('arc_score', '?')} ({arc.get('zone_name', '?')})")
+        print(f"[BOT] ARC: {arc.get('arc_score', '?')} ({arc.get('zone_name', '?')})")
 
-    queued = 0
-    for tweet in candidates:
-        if database.already_replied(tweet["id"]):
-            continue
+        queued = 0
+        for tweet in candidates:
+            if database.already_replied(tweet["id"]):
+                continue
 
-        reply_text, approach_key = reply_engine.generate_reply(tweet)
-        if not reply_text:
-            database.log_scanned(tweet["id"], tweet["author"], "no_reply_generated")
-            continue
+            reply_text, approach_key = reply_engine.generate_reply(tweet)
+            if not reply_text:
+                database.log_scanned(tweet["id"], tweet["author"], "no_reply_generated")
+                continue
 
-        tw_url = _tweet_url(tweet["author"], tweet["id"])
-        if not database.insert_pending_reply(
-            tweet["id"], tw_url, tweet["author"], reply_text, approach_key or ""
-        ):
-            print(f"[BOT] Pending row already exists for tweet {tweet['id']} — skip duplicate queue")
-            continue
+            tw_url = _tweet_url(tweet["author"], tweet["id"])
+            if not database.insert_pending_reply(
+                tweet["id"], tw_url, tweet["author"], reply_text, approach_key or ""
+            ):
+                print(
+                    f"[BOT] Pending row already exists for tweet {tweet['id']} — skip duplicate queue"
+                )
+                continue
 
-        sent = telegram_bot.send_approval(
-            tw_url, reply_text, tweet["id"], tweet["author"]
+            sent = telegram_bot.send_approval(
+                tw_url, reply_text, tweet["id"], tweet["author"]
+            )
+            if sent:
+                queued += 1
+            else:
+                database.delete_pending_reply(tweet["id"])
+                print(
+                    f"[BOT] Telegram send failed — removed pending row for tweet {tweet['id']}"
+                )
+
+        print(
+            f"[BOT] Cycle done. Queued for Telegram approval: {queued}. "
+            f"Posted today (already on X): {database.replies_today()}/{config.MAX_REPLIES_PER_DAY}"
         )
-        if sent:
-            queued += 1
-        else:
-            database.delete_pending_reply(tweet["id"])
-            print(f"[BOT] Telegram send failed — removed pending row for tweet {tweet['id']}")
-
-    print(
-        f"[BOT] Cycle done. Queued for Telegram approval: {queued}. "
-        f"Posted today (already on X): {database.replies_today()}/{config.MAX_REPLIES_PER_DAY}"
-    )
+    finally:
+        database.record_scan_cycle_finished()
 
 
 def main():
@@ -150,7 +157,29 @@ def main():
         action="store_true",
         help="Run a single scan cycle then exit (good for smoke tests).",
     )
+    parser.add_argument(
+        "--queue-daily",
+        action="store_true",
+        help="Generate one daily post now and send Telegram approval (catch-up). Exits after.",
+    )
     args = parser.parse_args()
+
+    if args.queue_daily and args.once:
+        print("[BOT] Use only one of --queue-daily or --once.")
+        sys.exit(2)
+
+    if args.queue_daily:
+        if not logging.root.handlers:
+            logging.basicConfig(level=logging.INFO, format="%(message)s")
+        if not preflight_check():
+            print("[BOT] Preflight failed — add secrets to .env next to config.py and retry.")
+            sys.exit(1)
+        database.init_db()
+        _configure_schedule_utc()
+        print("[BOT] --queue-daily: fetch ARC, generate post, queue Telegram approval...")
+        schedule_daily_post()
+        print("[BOT] --queue-daily finished.")
+        return
 
     if not logging.root.handlers:
         logging.basicConfig(level=logging.INFO, format="%(message)s")
@@ -171,6 +200,7 @@ def main():
         sys.exit(1)
 
     database.init_db()
+    database.set_bot_booted_now()
     print("[BOT] Database ready.")
     print("[BOT] All systems go.\n")
 

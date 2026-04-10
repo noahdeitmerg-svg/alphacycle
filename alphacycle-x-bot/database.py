@@ -1,5 +1,7 @@
 # database.py — SQLite reply tracking
 import sqlite3
+from datetime import datetime, timezone
+
 from config import DB_PATH, TOPIC_LOOKBACK_DAYS
 
 
@@ -134,8 +136,119 @@ def init_db():
     _ensure_column(conn, "pending_daily_posts", "post_type", "TEXT DEFAULT ''")
     _ensure_column(conn, "pending_daily_posts", "arc_score", "REAL")
 
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS bot_runtime (
+            id INTEGER PRIMARY KEY CHECK (id = 1),
+            booted_at TEXT,
+            last_scan_at TEXT,
+            scans_date TEXT,
+            scans_count INTEGER NOT NULL DEFAULT 0
+        )
+    """)
+
     conn.commit()
     conn.close()
+
+
+def set_bot_booted_now() -> None:
+    """Call once when bot.py main process starts (uptime baseline)."""
+    now = datetime.now(timezone.utc)
+    iso = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("SELECT 1 FROM bot_runtime WHERE id = 1")
+    if c.fetchone():
+        c.execute("UPDATE bot_runtime SET booted_at = ? WHERE id = 1", (iso,))
+    else:
+        c.execute(
+            """
+            INSERT INTO bot_runtime (id, booted_at, last_scan_at, scans_date, scans_count)
+            VALUES (1, ?, NULL, NULL, 0)
+            """,
+            (iso,),
+        )
+    conn.commit()
+    conn.close()
+
+
+def record_scan_cycle_finished() -> None:
+    """Increment scan cycles for current UTC day; set last_scan_at (every finished cycle)."""
+    now = datetime.now(timezone.utc)
+    iso = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+    day = now.strftime("%Y-%m-%d")
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("SELECT scans_date, scans_count FROM bot_runtime WHERE id = 1")
+    row = c.fetchone()
+    if not row:
+        c.execute(
+            """
+            INSERT INTO bot_runtime (id, booted_at, last_scan_at, scans_date, scans_count)
+            VALUES (1, ?, ?, ?, 1)
+            """,
+            (iso, iso, day),
+        )
+    else:
+        sd, sc = row[0], int(row[1] or 0)
+        if sd == day:
+            new_c = sc + 1
+        else:
+            new_c = 1
+        c.execute(
+            """
+            UPDATE bot_runtime
+            SET last_scan_at = ?, scans_date = ?, scans_count = ?
+            WHERE id = 1
+            """,
+            (iso, day, new_c),
+        )
+    conn.commit()
+    conn.close()
+
+
+def _parse_stored_utc(ts: str | None) -> datetime | None:
+    if not ts:
+        return None
+    s = str(ts).strip()
+    if s.endswith("Z"):
+        s = s[:-1]
+    try:
+        return datetime.fromisoformat(s).replace(tzinfo=timezone.utc)
+    except ValueError:
+        return None
+
+
+def get_bot_runtime_status() -> dict[str, str]:
+    """
+    For Telegram /status. Values are display strings; use 'n/a' if unknown.
+    Keys: uptime_h, scans_today, last_scan
+    """
+    out = {"uptime_h": "n/a", "scans_today": "n/a", "last_scan": "n/a"}
+    conn = sqlite3.connect(DB_PATH)
+    try:
+        c = conn.cursor()
+        c.execute(
+            "SELECT booted_at, last_scan_at, scans_date, scans_count FROM bot_runtime WHERE id = 1"
+        )
+        row = c.fetchone()
+        if not row:
+            return out
+        booted_at, last_scan_at, scans_date, scans_count = row[0], row[1], row[2], row[3]
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        bt = _parse_stored_utc(booted_at)
+        if bt is not None:
+            hours = (datetime.now(timezone.utc) - bt).total_seconds() / 3600.0
+            out["uptime_h"] = str(round(max(0.0, hours), 1))
+        if scans_date == today and scans_count is not None:
+            out["scans_today"] = str(int(scans_count))
+        else:
+            out["scans_today"] = "0"
+        st = _parse_stored_utc(last_scan_at)
+        if st is not None:
+            out["last_scan"] = st.strftime("%Y-%m-%d %H:%M UTC")
+    finally:
+        conn.close()
+    return out
 
 
 def already_replied(tweet_id: str) -> bool:

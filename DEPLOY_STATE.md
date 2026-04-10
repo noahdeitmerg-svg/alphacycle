@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-09 (daily_post Claude 529 retry)
+**Zuletzt aktualisiert:** 2026-04-10 (x-bot bot_runtime + --queue-daily)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-10) — alphacycle-x-bot: bot_runtime Status + --queue-daily
+- **Datei(en):** alphacycle-x-bot/database.py (`bot_runtime`, `set_bot_booted_now`, `record_scan_cycle_finished`, `get_bot_runtime_status`), alphacycle-x-bot/bot.py (`run_cycle` finally, `set_bot_booted_now`, CLI `--queue-daily`), alphacycle-x-bot/telegram_listener.py (`/status` nutzt DB), DEPLOY_STATE.md, .cursor/rules/permanent-fixes.mdc
+- **Was wurde geaendert:** Uptime (h seit Prozess-Start), Scans today (abgeschlossene Scan-Zyklen UTC-Tag), Last scan (UTC) persistiert; Catch-up: `python3 bot.py --queue-daily` baut Daily und Telegram-Freigabe ohne Scheduler-Loop (Main-Bot parallel ok).
+- **Warum:** /status vollstaendiger; fehlgeschlagener Daily (z. B. 529) manuell nachholen.
+- **Status:** deployed
 
 ## Letzter Session-Status (2026-04-09) — alphacycle-x-bot: generate_daily_post Retry bei Claude 529 overloaded
 - **Datei(en):** alphacycle-x-bot/daily_post_engine.py, DEPLOY_STATE.md, .cursor/rules/permanent-fixes.mdc

@@ -84,10 +84,18 @@ def _next_daily_post_time_str() -> str:
 
 
 def _build_status_body() -> str:
+    try:
+        rt = database.get_bot_runtime_status()
+        uptime = rt.get("uptime_h", "n/a")
+        scans_today = rt.get("scans_today", "n/a")
+        last_scan = rt.get("last_scan", "n/a")
+    except Exception:
+        uptime = scans_today = last_scan = "n/a"
+    up_line = f"Uptime: {uptime}h" if uptime != "n/a" else "Uptime: n/a"
     lines = [
         "AlphaCycle Bot Status:",
-        "Uptime: n/a",
-        "Scans today: n/a",
+        up_line,
+        f"Scans today: {scans_today}",
     ]
     try:
         rtd = database.replies_today()
@@ -98,7 +106,7 @@ def _build_status_body() -> str:
         lines.append("Replies today: n/a")
         lines.append("Replies this hour: n/a")
     lines.append(f"Next daily post: {_next_daily_post_time_str()}")
-    lines.append("Last scan: n/a")
+    lines.append(f"Last scan: {last_scan}")
     try:
         lines.append(f"Candidates found today: {_sql_candidates_found_today()}")
     except Exception:
