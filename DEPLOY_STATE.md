@@ -5,7 +5,7 @@
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
 ## Letzter Session-Status (2026-04-10) — x-bot: TRACKED_ACCOUNTS 60 (10/20/20) + Scan-Default 60 Min
-- **Datei(en):** alphacycle-x-bot/config.py, DEPLOY_STATE.md
+- **Datei(en):** alphacycle-x-bot/config.py, DEPLOY_STATE.md, .cursor/rules/permanent-fixes.mdc (Doku: 60 Accounts + SCAN_INTERVAL_SECONDS-Default)
 - **Was wurde geaendert:** `TIER_1_ACCOUNTS` / `TIER_2_ACCOUNTS` / `TIER_3_ACCOUNTS` und `TRACKED_ACCOUNTS` komplett ersetzt (60 Handles laut Vorgabe). `BLOCKED_KEYWORDS` um DM/Signal-Spam-Muster ergaenzt. **Option A Read-Budget:** Default `SCAN_INTERVAL_SECONDS` von 1800 auf **3600** (60 Min zwischen Zyklen); weiter per `.env` auf 1800 setzbar wenn X-Credits reichen (~2880 Reads/Tag bei 30 Min).
 - **Warum:** Erweiterte Reply-Ziel-Liste; 60 Accounts x 48 Scans/Tag ueberstiegen das fruehere ~1200/Tag-Ziel — 60-Min-Intervall ~ 1440 Timeline-Reads/Tag.
 - **Status:** pushed to GitHub; VPS: git pull + `restart-screens.sh`
