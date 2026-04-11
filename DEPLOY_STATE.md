@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-11 (x-bot: TRACKED_ACCOUNTS = 50 Doku-Fix)
+**Zuletzt aktualisiert:** 2026-04-11 (x-bot: Scanner tweet window 6h + no-candidate hint)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-11) — x-bot: Scanner — mehr Kandidaten (MAX_TWEET_AGE default 6h)
+- **Datei(en):** alphacycle-x-bot/config.py (`MAX_TWEET_AGE_SECONDS` default **21600**, `MIN_TWEET_AGE_SECONDS` per Env), alphacycle-x-bot/bot.py (Log-Hinweis wenn 0 Kandidaten), alphacycle-x-bot/scanner.py (Scan-Zeile mit Fenster/Likes), alphacycle-x-bot/.env.example, DEPLOY_STATE.md
+- **Was wurde geaendert:** Vorher nur Tweets der **letzten 3600s** (1h) — zu eng fuer `/scan` ohne Treffer. Default jetzt **6h**; alles per `MAX_TWEET_AGE_SECONDS` / `MIN_LIKES_TO_REPLY` / `MIN_TWEET_AGE_SECONDS` in `.env` steuerbar.
+- **Warum:** Nutzer: 50 Accounts gescannt, aber keine passenden Tweets; typisch zu kurzes Altersfenster + Mindest-Likes + Abstands-/Tageslimits.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-11) — x-bot: TRACKED_ACCOUNTS Zahl korrigiert (50, nicht 60)
 - **Datei(en):** alphacycle-x-bot/config.py (Kommentare), DEPLOY_STATE.md, .cursor/rules/permanent-fixes.mdc

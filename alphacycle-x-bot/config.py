@@ -153,8 +153,9 @@ SCAN_INTERVAL_SECONDS = int(os.getenv("SCAN_INTERVAL_SECONDS", "3600"))
 REPLY_DELAY_MIN = 360
 REPLY_DELAY_MAX = 1320
 
-MIN_TWEET_AGE_SECONDS = 60
-MAX_TWEET_AGE_SECONDS = 3600
+MIN_TWEET_AGE_SECONDS = int(os.getenv("MIN_TWEET_AGE_SECONDS", "60"))
+# Wider window = more candidates (Telegram /scan can still yield 0 if all tweets are old/low-likes/spaced-out).
+MAX_TWEET_AGE_SECONDS = int(os.getenv("MAX_TWEET_AGE_SECONDS", "21600"))
 MIN_LIKES_TO_REPLY = int(os.getenv("MIN_LIKES_TO_REPLY", "5"))
 
 DB_PATH = str(_BASE_DIR / "database.db")

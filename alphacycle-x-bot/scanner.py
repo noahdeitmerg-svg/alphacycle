@@ -126,5 +126,10 @@ def scan_tweets() -> list[dict]:
             database.log_scanned(tweet["id"], tweet["author"])
             candidates.append(tweet)
 
-    print(f"[SCANNER] Scanned {len(config.TRACKED_ACCOUNTS)} accounts, {len(candidates)} candidates")
+    n_accounts = len(config.TRACKED_ACCOUNTS)
+    print(
+        f"[SCANNER] Scanned {n_accounts} accounts, {len(candidates)} candidates "
+        f"(tweet window: {config.MIN_TWEET_AGE_SECONDS}s–{config.MAX_TWEET_AGE_SECONDS}s, "
+        f"min likes {config.MIN_LIKES_TO_REPLY})"
+    )
     return candidates

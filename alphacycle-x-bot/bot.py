@@ -139,7 +139,15 @@ def run_cycle():
 
         candidates = scanner.scan_tweets()
         if not candidates:
-            print("[BOT] No candidates — sleeping.")
+            print(
+                "[BOT] No candidates — sleeping.\n"
+                "[BOT] Filters: tweet age "
+                f"{config.MIN_TWEET_AGE_SECONDS}s–{config.MAX_TWEET_AGE_SECONDS}s, "
+                f"min {config.MIN_LIKES_TO_REPLY} likes, no RT/reply; "
+                "then blocked keywords, not already scanned/replied, author spacing, "
+                "max 2 replies per @ per UTC day. Widen: .env MAX_TWEET_AGE_SECONDS (e.g. 43200), "
+                "MIN_LIKES_TO_REPLY=2."
+            )
             return
 
         arc = fetch_arc_data()
