@@ -61,58 +61,87 @@ else:
 
 # ============================================================
 # TRACKED ACCOUNTS — AlphaCycle Reply Targets
-# 25 Accounts total. Budget: ~1200 API calls/day at 30min intervals.
+# 60 Accounts total (10 + 20 + 20)
+# Read budget: default SCAN_INTERVAL_SECONDS=3600 (60 min) => 60*24=1440 user-timeline
+#   reads per day (under typical ~1200/day planning; override in .env if credits allow 30 min).
 # ============================================================
 
 TIER_1_ACCOUNTS = [
     "RaoulGMI",
     "LynAldenContact",
-    "KobeissiLetter",
-    "100trillionUSD",
+    "APompliano",
+    "nic_carter",
+    "CryptoHayes",
     "WClemente",
+    "krugermacro",
+    "willywoo",
+    "BitcoinMagazine",
+    "GlassnodeAlerts",
 ]
 
 TIER_2_ACCOUNTS = [
     "_Checkmatey_",
-    "in2cryptoversee",
     "DylanLeClair",
-    "CryptoCon_",
-    "TechDev_52",
-    "PositiveCrypto",
-    "willywoo",
-    "ecoinometrics",
-    "coinmetrics",
-    "stackhodler",
-    "therationalroot",
-    "BitcoinMagazine",
+    "LukeGromen",
+    "JeffBooth",
+    "PrestonPysh",
+    "danheld",
+    "100trillionUSD",
+    "MartyBent",
+    "ErikVoorhees",
+    "balaji",
+    "FossGregfoss",
+    "real_vijay",
+    "MarkYusko",
+    "LawrenceLepard",
+    "TuurDemeester",
+    "KevinSvenson",
+    "JurrienTimmer",
+    "DoctorProfit",
+    "JSeyff",
+    "cburniske",
 ]
 
 TIER_3_ACCOUNTS = [
+    "CryptoCon_",
+    "TechDev_52",
+    "in2cryptoversee",
+    "TheRealPlanC",
+    "therationalroot",
+    "VentureCoinist",
+    "MacroAlf",
     "TXMCtrades",
-    "MacroCharts",
     "GameofTrades_",
     "fejau_inc",
-    "CryptoHayes",
-    "cburniske",
-    "GlassnodeAlerts",
-    "MacroAlf",
+    "PositiveCrypto",
+    "CryptoCred",
+    "milesdeutscher",
+    "MacroScope17",
+    "Trader_XO",
+    "stackhodler",
+    "ecoinometrics",
+    "coinmetrics",
+    "MacroCharts",
+    "KobeissiLetter",
 ]
 
-# Combined list for scanner
 TRACKED_ACCOUNTS = TIER_1_ACCOUNTS + TIER_2_ACCOUNTS + TIER_3_ACCOUNTS
 
-# Blocked keywords — skip tweets containing these
+# Verify: len should be 60
+# TIER_1: 10, TIER_2: 20, TIER_3: 20
+
 BLOCKED_KEYWORDS = [
     "LFG", "wagmi", "to the moon", "100x", "1000x",
     "BUY NOW", "FULL SEND", "PARABOLIC", "PUMP",
     "giveaway", "airdrop", "presale", "whitelist",
     "JOIN NOW", "FREE MINT", "LAST CHANCE",
+    "DM me", "join my group", "free signals",
 ]
 
 MAX_REPLIES_PER_HOUR = 5
 MAX_REPLIES_PER_DAY = 20
-# Default 1800 = 30 min between scan cycles (saves X API read credits). Override in .env.
-SCAN_INTERVAL_SECONDS = int(os.getenv("SCAN_INTERVAL_SECONDS", "1800"))
+# Default 3600 = 60 min between scan cycles (60 tracked accounts; override SCAN_INTERVAL_SECONDS in .env for 30 min).
+SCAN_INTERVAL_SECONDS = int(os.getenv("SCAN_INTERVAL_SECONDS", "3600"))
 
 REPLY_DELAY_MIN = 360
 REPLY_DELAY_MAX = 1320
