@@ -69,9 +69,9 @@ else:
 
 # ============================================================
 # TRACKED ACCOUNTS — AlphaCycle Reply Targets
-# 60 Accounts total (10 + 20 + 20)
-# Read budget: default SCAN_INTERVAL_SECONDS=3600 (60 min) => 60*24=1440 user-timeline
-#   reads per day (under typical ~1200/day planning; override in .env if credits allow 30 min).
+# 50 Accounts total (10 + 20 + 20 — not 60; tiers sum to 50).
+# Read budget: default SCAN_INTERVAL_SECONDS=3600 (60 min) => 50*24=1200 timeline reads/day.
+#   Override in .env (e.g. 1800) if X read credits allow shorter interval.
 # ============================================================
 
 TIER_1_ACCOUNTS = [
@@ -135,8 +135,7 @@ TIER_3_ACCOUNTS = [
 
 TRACKED_ACCOUNTS = TIER_1_ACCOUNTS + TIER_2_ACCOUNTS + TIER_3_ACCOUNTS
 
-# Verify: len should be 60
-# TIER_1: 10, TIER_2: 20, TIER_3: 20
+# Verify: len(TRACKED_ACCOUNTS) == 50 (10 + 20 + 20)
 
 BLOCKED_KEYWORDS = [
     "LFG", "wagmi", "to the moon", "100x", "1000x",
@@ -148,7 +147,7 @@ BLOCKED_KEYWORDS = [
 
 MAX_REPLIES_PER_HOUR = 5
 MAX_REPLIES_PER_DAY = 20
-# Default 3600 = 60 min between scan cycles (60 tracked accounts; override SCAN_INTERVAL_SECONDS in .env for 30 min).
+# Default 3600 = 60 min between scan cycles (50 tracked accounts; override SCAN_INTERVAL_SECONDS in .env for 30 min).
 SCAN_INTERVAL_SECONDS = int(os.getenv("SCAN_INTERVAL_SECONDS", "3600"))
 
 REPLY_DELAY_MIN = 360

@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10 (x-bot: Reply viral patterns + reply_history.pattern)
+**Zuletzt aktualisiert:** 2026-04-11 (x-bot: TRACKED_ACCOUNTS = 50 Doku-Fix)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-11) — x-bot: TRACKED_ACCOUNTS Zahl korrigiert (50, nicht 60)
+- **Datei(en):** alphacycle-x-bot/config.py (Kommentare), DEPLOY_STATE.md, .cursor/rules/permanent-fixes.mdc
+- **Was wurde geaendert:** Klarstellung: **10+20+20 = 50** Handles in `TRACKED_ACCOUNTS`; fruehere „60“-Angabe war ein Rechen-/Doku-Fehler. Read-Budget-Kommentar an 50*24 angepasst.
+- **Warum:** VPS `len(config.TRACKED_ACCOUNTS)` ergab 50 — erwartetes Ergebnis fuer die committed Listen.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-10) — x-bot: Viral Reply Patterns (Growth Engine + DB)
 - **Datei(en):** alphacycle-x-bot/config.py (`REPLY_PATTERNS` Gewichte), alphacycle-x-bot/growth_engine.py (`select_pattern_key`, Streak-Vermeidung letzte 2 gleiche Patterns, `{reply_pattern}`-Injection, Logging), alphacycle-x-bot/prompts/reply_system.txt (Block REPLY PATTERN), alphacycle-x-bot/reply_engine.py (3-Tupel), alphacycle-x-bot/bot.py / poster.py / telegram_listener.py (pattern durchreichen), alphacycle-x-bot/database.py (`pattern` auf `reply_history` + `pending_replies`, `get_last_reply_patterns`, `save_reply`/`insert_reply_history`/`insert_pending_reply`), DEPLOY_STATE.md, .cursor/rules/permanent-fixes.mdc
@@ -17,10 +23,10 @@
 - **VPS:** `pip install -r requirements.txt`, **`playwright install chromium`** (~150MB), ggf. System-Deps; Read+Write fuer Banner-Upload.
 - **Status:** pushed to GitHub; VPS: `pip install -r requirements.txt`, `playwright install chromium`, git pull, `./restart-screens.sh`
 
-## Letzter Session-Status (2026-04-10) — x-bot: TRACKED_ACCOUNTS 60 (10/20/20) + Scan-Default 60 Min
-- **Datei(en):** alphacycle-x-bot/config.py, DEPLOY_STATE.md, .cursor/rules/permanent-fixes.mdc (Doku: 60 Accounts + SCAN_INTERVAL_SECONDS-Default)
-- **Was wurde geaendert:** `TIER_1_ACCOUNTS` / `TIER_2_ACCOUNTS` / `TIER_3_ACCOUNTS` und `TRACKED_ACCOUNTS` komplett ersetzt (60 Handles laut Vorgabe). `BLOCKED_KEYWORDS` um DM/Signal-Spam-Muster ergaenzt. **Option A Read-Budget:** Default `SCAN_INTERVAL_SECONDS` von 1800 auf **3600** (60 Min zwischen Zyklen); weiter per `.env` auf 1800 setzbar wenn X-Credits reichen (~2880 Reads/Tag bei 30 Min).
-- **Warum:** Erweiterte Reply-Ziel-Liste; 60 Accounts x 48 Scans/Tag ueberstiegen das fruehere ~1200/Tag-Ziel — 60-Min-Intervall ~ 1440 Timeline-Reads/Tag.
+## Letzter Session-Status (2026-04-10) — x-bot: TRACKED_ACCOUNTS Tier-Listen + Scan-Default 60 Min
+- **Datei(en):** alphacycle-x-bot/config.py, DEPLOY_STATE.md, .cursor/rules/permanent-fixes.mdc
+- **Was wurde geaendert:** `TIER_1`/`TIER_2`/`TIER_3` + `TRACKED_ACCOUNTS` (Summe **50** Handles). `BLOCKED_KEYWORDS` erweitert. Default `SCAN_INTERVAL_SECONDS` **3600**. *(Fruehere „60 Accounts“-Formulierung war falsch — siehe Eintrag 2026-04-11.)*
+- **Warum:** Mehr Reply-Ziele; laengeres Scan-Intervall fuer Read-Budget.
 - **Status:** pushed to GitHub; VPS: git pull + `restart-screens.sh`
 
 ## Letzter Session-Status (2026-04-10) — x-bot: poster.py Reply — immer Telegram Copy-Paste bei API/Limit
