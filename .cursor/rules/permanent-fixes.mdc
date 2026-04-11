@@ -10,6 +10,7 @@ Beim Bearbeiten von backend/fetcher.py, backend/main.py, backend/scoring.py oder
 
 ## Vor jeder Änderung
 - DEPLOY_STATE.md im Repo-Root prüfen und die dort genannten "Permanent Fixes" einhalten.
+- **`docs/alphacycle_context.md`** lesen fuer Gesamtarchitektur, ARC-Regeln und Repo-Struktur (Single Source of Truth neben DEPLOY_STATE / dieser Datei).
 
 ## Nach jeder Änderung (PFLICHT)
 - **DEPLOY_STATE.md** aktualisieren: neuen Session-Status / Änderungen im Abschnitt „Letzter Session-Status“ dokumentieren (Datum, Kurzbeschreibung).

@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-11 (x-bot: Scanner tweet window 6h + no-candidate hint)
+**Zuletzt aktualisiert:** 2026-04-11 (docs: alphacycle_context.md + README pointer)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-11) — Repo: docs/ + alphacycle_context.md (AI Single Source of Truth)
+- **Datei(en):** `docs/alphacycle_context.md` (Inhalt aus ehem. Repo-Root verschoben), `README.md` (Hinweis ganz oben), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was wurde geaendert:** Ordner **`docs/`** mit zentralem Kontextdokument; Root-`alphacycle_context.md` entfernt (eine kanonische Datei unter `docs/`). Keine Code-Aenderungen. `alpha_cycle_whitepaper.pdf`, `system_map.png`, `roadmap.md` im Root nicht vorhanden — kein Move.
+- **Warum:** Klarer Einstieg fuer AI/Entwickler-Sessions.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-11) — x-bot: Scanner — mehr Kandidaten (MAX_TWEET_AGE default 6h)
 - **Datei(en):** alphacycle-x-bot/config.py (`MAX_TWEET_AGE_SECONDS` default **21600**, `MIN_TWEET_AGE_SECONDS` per Env), alphacycle-x-bot/bot.py (Log-Hinweis wenn 0 Kandidaten), alphacycle-x-bot/scanner.py (Scan-Zeile mit Fenster/Likes), alphacycle-x-bot/.env.example, DEPLOY_STATE.md

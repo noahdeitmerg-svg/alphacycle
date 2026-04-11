@@ -1,3 +1,5 @@
+> **Before working on this repository, read [docs/alphacycle_context.md](docs/alphacycle_context.md) to understand the system architecture.**
+
 # Alpha Cycle Intelligence
 
 Proprietary crypto market cycle intelligence platform.
