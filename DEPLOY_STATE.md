@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-11 (docs: alphacycle_context.md + README pointer)
+**Zuletzt aktualisiert:** 2026-04-11 (x-bot: kompakte reply_system + post_system Prompts)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-11) — x-bot: reply_system.txt + post_system.txt komplett ersetzt (kurz, Compliance)
+- **Datei(en):** `alphacycle-x-bot/prompts/reply_system.txt`, `alphacycle-x-bot/prompts/post_system.txt`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was wurde geaendert:** Beide Master-Prompts **vollstaendig** durch kuerzere Versionen ersetzt (ca. Haelfte der alten Laenge): kritische Regeln oben und unten, klare Limits (Reply **260** Zeichen im Prompt, Post max **2** Datenpunkte, keine Vorhersagen, Banned-Woerter/ kein deklarativer Fluff). Platzhalter fuer `growth_engine` unveraendert (`{arc_data_block}`, `{approach}`, `{reply_pattern}`, etc.). **Kein** Code in `growth_engine.py` / `reply_engine.py` geaendert (Clip weiter 270 Zeichen).
+- **Warum:** Lange Prompts wurden von Claude teils ignoriert; kuerzer soll Regelbefolgung verbessern.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-11) — Repo: docs/ + alphacycle_context.md (AI Single Source of Truth)
 - **Datei(en):** `docs/alphacycle_context.md` (Inhalt aus ehem. Repo-Root verschoben), `README.md` (Hinweis ganz oben), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
