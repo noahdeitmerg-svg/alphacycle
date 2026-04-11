@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-11 (docs: AI Operating Manual + README)
+**Zuletzt aktualisiert:** 2026-04-11 (docs: Operating Manual Sections 11-13 + COMPLETE copy)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-11) — docs: Operating Manual Sections 11-13 eingepflegt (kein Code)
+- **Datei(en):** `docs/alphacycle_ai_operating_manual.md`, `docs/alphacycle_ai_operating_manual_COMPLETE.md` (identischer Volltext), Quelle `AlphaCycle-AI-Manual-Sections-11-13-FINAL-v2.md`, `DEPLOY_STATE.md`
+- **Was wurde geaendert:** Abschnitte **11–13** (Signal Architecture, AI Agent Initialization, Long-Term Vision) vollstaendig ans Ende des bestehenden Manuals angehaengt; Sections **1–10** unveraendert. Zusaetzliche Kopie `alphacycle_ai_operating_manual_COMPLETE.md` mit gleichem Inhalt.
+- **Warum:** Ein Dokument fuer AI-Betrieb und Langzeit-Positionierung.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-11) — docs: alphacycle_ai_operating_manual.md + README (kein Code)
 - **Datei(en):** `docs/alphacycle_ai_operating_manual.md` (von Repo-Root nach `docs/` verschoben, falls vorher nur lokal im Root), `README.md` (Hinweis oben: Operating Manual + `alphacycle_context.md`), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
