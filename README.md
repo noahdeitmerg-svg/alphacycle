@@ -1,4 +1,4 @@
-> **Before working on this repository, read [docs/alphacycle_context.md](docs/alphacycle_context.md) to understand the system architecture.**
+> **Before working on this repository, read [docs/alphacycle_ai_operating_manual.md](docs/alphacycle_ai_operating_manual.md) and [docs/alphacycle_context.md](docs/alphacycle_context.md) to understand the system architecture.**
 
 # Alpha Cycle Intelligence
 

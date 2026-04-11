@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-11 (x-bot: kompakte reply_system + post_system Prompts)
+**Zuletzt aktualisiert:** 2026-04-11 (docs: AI Operating Manual + README)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-11) — docs: alphacycle_ai_operating_manual.md + README (kein Code)
+- **Datei(en):** `docs/alphacycle_ai_operating_manual.md` (von Repo-Root nach `docs/` verschoben, falls vorher nur lokal im Root), `README.md` (Hinweis oben: Operating Manual + `alphacycle_context.md`), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was wurde geaendert:** AI Operating Manual als Doku unter `docs/`; README verweist auf Manual und Kontext-Datei. Keine Code-Aenderungen.
+- **Warum:** Zentrale Agent-Rollen, Dev-Regeln und Masterprompt-System fuer AI-Sessions.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-11) — x-bot: reply_system.txt + post_system.txt komplett ersetzt (kurz, Compliance)
 - **Datei(en):** `alphacycle-x-bot/prompts/reply_system.txt`, `alphacycle-x-bot/prompts/post_system.txt`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
