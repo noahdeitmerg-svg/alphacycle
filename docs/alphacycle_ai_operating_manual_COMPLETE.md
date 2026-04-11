@@ -402,7 +402,7 @@ Changes to normalization logic require:
 The four signals are weighted and combined into a single structural risk score.
 
 ```
-ARC = trend × 0.30 + drawdown × 0.25 + liquidity × 0.25 + sentiment × 0.20
+ARC = ma_200w × 0.35 + drawdown × 0.25 + liquidity × 0.25 + fear_greed × 0.15
 ```
 
 Output: A score from 0 to 100.
@@ -565,7 +565,7 @@ Before performing any work, the agent must confirm awareness of these locked con
 
 ```
 LOCKED — NEVER MODIFY:
-├── ARC Formula: trend × 0.30 + drawdown × 0.25 + liquidity × 0.25 + sentiment × 0.20
+├── ARC Formula: ma_200w × 0.35 + drawdown × 0.25 + liquidity × 0.25 + fear_greed × 0.15
 ├── ARC Zone Boundaries: 0-29 / 30-39 / 40-59 / 60-69 / 70-100
 ├── ARC Zone Names: Deep Value / Accumulation / Expansion / Risk Rising / Euphoria
 ├── ARC Component Names: Trend, Drawdown, Sentiment, Liquidity

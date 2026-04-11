@@ -56,9 +56,9 @@ alphacycle-main/
 
 ## Architektur — LOCKED (nie ohne Genehmigung ändern)
 
-### ARC Index Formel:
+### ARC Index Formel (identisch zu `backend/scoring.py` `compute_arc_score`):
 ```
-ma_200w * 0.30 + drawdown * 0.25 + fear_greed * 0.20 + liquidity * 0.25
+ma_200w * 0.35 + drawdown * 0.25 + liquidity * 0.25 + fear_greed * 0.15
 ```
 **Gewichte NIEMALS ändern.**
 
