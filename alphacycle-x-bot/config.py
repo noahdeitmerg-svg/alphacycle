@@ -47,6 +47,14 @@ REPLY_HOOK_PROBABILITY = 0.4  # 40% = ca. 2 von 5
 MAX_REPLY_HISTORY = 10
 TOPIC_LOOKBACK_DAYS = 7
 
+# Structural reply patterns (rotate with approaches; weights sum ~1.0)
+REPLY_PATTERNS = {
+    "contrarian_insight_hook": 0.25,
+    "cycle_reframe": 0.30,
+    "historical_memory": 0.25,
+    "structural_insight": 0.20,
+}
+
 # Claude Model
 CLAUDE_MODEL = "claude-sonnet-4-20250514"
 # Daily post only: if Sonnet returns 529 overloaded, try this model immediately (often different capacity).

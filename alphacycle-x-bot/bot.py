@@ -154,14 +154,19 @@ def run_cycle():
             if database.already_replied(tweet["id"]):
                 continue
 
-            reply_text, approach_key = reply_engine.generate_reply(tweet)
+            reply_text, approach_key, pattern_key = reply_engine.generate_reply(tweet)
             if not reply_text:
                 database.log_scanned(tweet["id"], tweet["author"], "no_reply_generated")
                 continue
 
             tw_url = _tweet_url(tweet["author"], tweet["id"])
             if not database.insert_pending_reply(
-                tweet["id"], tw_url, tweet["author"], reply_text, approach_key or ""
+                tweet["id"],
+                tw_url,
+                tweet["author"],
+                reply_text,
+                approach_key or "",
+                pattern_key or "",
             ):
                 print(
                     f"[BOT] Pending row already exists for tweet {tweet['id']} — skip duplicate queue"

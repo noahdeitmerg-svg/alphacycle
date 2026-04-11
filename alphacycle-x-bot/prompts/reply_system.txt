@@ -24,6 +24,9 @@ REPLY APPROACH: {approach}
 - respectful_counter: Agree with data, disagree with conclusion.
 - short_data_drop: One number. One sentence. Done.
 
+REPLY PATTERN (structural — use together with the approach above; same character limit):
+{reply_pattern}
+
 CURIOSITY HOOK: {hook_instruction}
 If ACTIVE: Use ONE of these phrases naturally in the reply:
 - "structural risk composite"

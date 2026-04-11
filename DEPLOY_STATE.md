@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10 (x-bot: generate_banner + weekly job + Telegram /banner)
+**Zuletzt aktualisiert:** 2026-04-10 (x-bot: Reply viral patterns + reply_history.pattern)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-10) — x-bot: Viral Reply Patterns (Growth Engine + DB)
+- **Datei(en):** alphacycle-x-bot/config.py (`REPLY_PATTERNS` Gewichte), alphacycle-x-bot/growth_engine.py (`select_pattern_key`, Streak-Vermeidung letzte 2 gleiche Patterns, `{reply_pattern}`-Injection, Logging), alphacycle-x-bot/prompts/reply_system.txt (Block REPLY PATTERN), alphacycle-x-bot/reply_engine.py (3-Tupel), alphacycle-x-bot/bot.py / poster.py / telegram_listener.py (pattern durchreichen), alphacycle-x-bot/database.py (`pattern` auf `reply_history` + `pending_replies`, `get_last_reply_patterns`, `save_reply`/`insert_reply_history`/`insert_pending_reply`), DEPLOY_STATE.md, .cursor/rules/permanent-fixes.mdc
+- **Was wurde geaendert:** Zusaetzlich zu den 5 Approaches rotieren vier strukturelle Patterns (contrarian_insight_hook, cycle_reframe, historical_memory, structural_insight). Prompt enthaelt `{reply_pattern}` mit vollem Muster-Text. Wenn die letzten zwei `reply_history`-Patterns identisch sind, wird bei Bedarf ein anderes Pattern gewaehlt. `generate_reply` liefert `(text, approach, pattern)`; Pending und `insert_reply_history` speichern `pattern`.
+- **Warum:** Mehr Variation und klarere Schreib-Rahmen ohne die bestehenden Brand-/Banned-Regeln zu lockern.
+- **Status:** pushed to GitHub; VPS: git pull + restart-screens
 
 ## Letzter Session-Status (2026-04-10) — x-bot: Dashboard-Banner Screenshot (1500x500) + X-Header + Telegram
 - **Datei(en):** alphacycle-x-bot/generate_banner.py (neu), alphacycle-x-bot/bot.py (`_weekly_banner_job`, So 12:00), alphacycle-x-bot/telegram_listener.py (`/banner`, Text `banner`, `menu:banner`), alphacycle-x-bot/telegram_bot.py (`send_photo_path`), alphacycle-x-bot/requirements.txt (playwright, Pillow), alphacycle-x-bot/banners/.gitkeep, DEPLOY_STATE.md, .cursor/rules/permanent-fixes.mdc

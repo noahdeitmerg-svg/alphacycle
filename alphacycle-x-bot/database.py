@@ -51,6 +51,7 @@ def _upgrade_reply_history_schema(conn) -> None:
             c.execute(
                 "UPDATE reply_history SET timestamp = created_at WHERE timestamp IS NULL"
             )
+    _ensure_column(conn, "reply_history", "pattern", "TEXT NOT NULL DEFAULT ''")
 
 
 def init_db():
@@ -90,6 +91,7 @@ def init_db():
         )
     """)
     _ensure_column(conn, "pending_replies", "approach", "TEXT DEFAULT ''")
+    _ensure_column(conn, "pending_replies", "pattern", "TEXT NOT NULL DEFAULT ''")
 
     c.execute("""
         CREATE TABLE IF NOT EXISTS reply_history (
@@ -397,16 +399,43 @@ def get_reply_history_texts_for_prompt(limit: int = 10) -> list[str]:
     return hist[:limit]
 
 
-def insert_reply_history(reply_text: str, tweet_author: str, approach: str) -> None:
+def get_last_reply_patterns(limit: int = 5) -> list[str]:
+    """
+    Last N pattern keys from reply_history (newest first). Empty string if unset.
+    """
+    lim = max(1, min(int(limit), 50))
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    ob = _reply_history_order_by_clause(conn)
+    c.execute(
+        f"""
+        SELECT COALESCE(pattern, '') AS pattern
+        FROM reply_history
+        ORDER BY {ob}
+        LIMIT ?
+        """,
+        (lim,),
+    )
+    rows = [str(r[0] or "").strip() for r in c.fetchall()]
+    conn.close()
+    return rows
+
+
+def insert_reply_history(
+    reply_text: str,
+    tweet_author: str,
+    approach: str,
+    pattern: str = "",
+) -> None:
     """Log a posted reply for prompt duplicate-avoidance (after successful X post)."""
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute(
         """
-        INSERT INTO reply_history (tweet_author, tweet_text, reply_text, approach, had_hook)
-        VALUES (?, ?, ?, ?, 0)
+        INSERT INTO reply_history (tweet_author, tweet_text, reply_text, approach, had_hook, pattern)
+        VALUES (?, ?, ?, ?, 0, ?)
         """,
-        (tweet_author, "", reply_text, approach or ""),
+        (tweet_author, "", reply_text, approach or "", pattern or ""),
     )
     conn.commit()
     conn.close()
@@ -420,7 +449,7 @@ def get_recent_replies(limit: int = 10) -> list[dict]:
     ob = _reply_history_order_by_clause(conn)
     c.execute(
         f"""
-        SELECT reply_text, approach, tweet_author
+        SELECT reply_text, approach, tweet_author, COALESCE(pattern, '') AS pattern
         FROM reply_history
         ORDER BY {ob}
         LIMIT ?
@@ -438,6 +467,7 @@ def save_reply(
     reply_text: str,
     approach: str,
     had_hook: bool = False,
+    pattern: str = "",
 ) -> None:
     """Full reply_history row (e.g. after post with original tweet + hook flag)."""
     conn = sqlite3.connect(DB_PATH)
@@ -445,8 +475,8 @@ def save_reply(
     hook_int = 1 if had_hook else 0
     c.execute(
         """
-        INSERT INTO reply_history (tweet_author, tweet_text, reply_text, approach, had_hook)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO reply_history (tweet_author, tweet_text, reply_text, approach, had_hook, pattern)
+        VALUES (?, ?, ?, ?, ?, ?)
         """,
         (
             tweet_author,
@@ -454,6 +484,7 @@ def save_reply(
             reply_text,
             approach or "",
             hook_int,
+            pattern or "",
         ),
     )
     conn.commit()
@@ -551,16 +582,17 @@ def insert_pending_reply(
     username: str,
     reply_text: str,
     approach: str = "",
+    pattern: str = "",
 ) -> bool:
     """Insert a new pending row. Returns True if inserted, False if tweet_id already exists."""
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute(
         """
-        INSERT OR IGNORE INTO pending_replies (tweet_id, tweet_url, username, reply_text, status, approach)
-        VALUES (?, ?, ?, ?, 'pending', ?)
+        INSERT OR IGNORE INTO pending_replies (tweet_id, tweet_url, username, reply_text, status, approach, pattern)
+        VALUES (?, ?, ?, ?, 'pending', ?, ?)
         """,
-        (tweet_id, tweet_url, username, reply_text, approach or ""),
+        (tweet_id, tweet_url, username, reply_text, approach or "", pattern or ""),
     )
     inserted = c.rowcount > 0
     conn.commit()
@@ -575,7 +607,8 @@ def get_pending_by_tweet_id(tweet_id: str) -> dict | None:
     c.execute(
         """
         SELECT tweet_id, tweet_url, username, reply_text, status,
-               COALESCE(approach, '') AS approach
+               COALESCE(approach, '') AS approach,
+               COALESCE(pattern, '') AS pattern
         FROM pending_replies WHERE tweet_id = ?
         """,
         (tweet_id,),

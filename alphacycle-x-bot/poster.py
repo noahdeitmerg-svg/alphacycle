@@ -125,7 +125,13 @@ def _enforce_rate_limits() -> bool:
     return True
 
 
-def _post_reply_impl(tweet_id: str, author: str, reply_text: str, approach: str = "") -> str:
+def _post_reply_impl(
+    tweet_id: str,
+    author: str,
+    reply_text: str,
+    approach: str = "",
+    pattern: str = "",
+) -> str:
     """Create tweet reply and persist to replies table (used after approval)."""
     if not _enforce_rate_limits():
         print("[POSTER] Hourly or daily limit reached before reply delay")
@@ -197,7 +203,9 @@ def _post_reply_impl(tweet_id: str, author: str, reply_text: str, approach: str 
                 new_id = response.data.get("id")
             new_id_str = str(new_id) if new_id is not None else ""
             database.log_reply(tweet_id, author, reply_text)
-            database.insert_reply_history(reply_text, author, approach or "")
+            database.insert_reply_history(
+                reply_text, author, approach or "", pattern or ""
+            )
             print(f"[POSTER] Reply posted to @{author}: {reply_text[:60]}...")
             print(f"[LOG] reply posted tweet_id={tweet_id}")
             if new_id_str:
@@ -304,6 +312,7 @@ def post_reply(tweet_id: str) -> str:
     author = row["username"]
     reply_text = row["reply_text"]
     approach = row.get("approach") or ""
+    pattern = row.get("pattern") or ""
 
     if status == "pending":
         if not database.try_transition_pending_status(tweet_id, "pending", "approved"):
@@ -321,7 +330,7 @@ def post_reply(tweet_id: str) -> str:
         print(f"[POSTER] API blocked for @{author}, sent to Telegram for manual post")
         return "manual"
 
-    result = _post_reply_impl(tweet_id, author, reply_text, approach)
+    result = _post_reply_impl(tweet_id, author, reply_text, approach, pattern)
     if result == "failed":
         logger.error(
             "[POSTER] Unexpected failed from _post_reply_impl tweet_id=%s @%s",

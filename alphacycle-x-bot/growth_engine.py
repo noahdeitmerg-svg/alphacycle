@@ -29,6 +29,87 @@ REPLY_APPROACH_KEYS = (
 HOOK_ACTIVE_LABEL = "ACTIVE"
 HOOK_INACTIVE_LABEL = "INACTIVE"
 
+# Injected as {reply_pattern} — keys must match config.REPLY_PATTERNS
+REPLY_PATTERN_TEXTS: dict[str, str] = {
+    "contrarian_insight_hook": """Pattern: contrarian_insight_hook
+Structure your reply as a contrarian insight:
+- Sentence 1: Name what everyone thinks or expects (the consensus)
+- Sentence 2: Show why the structure says something different
+- Sentence 3: Open loop — imply a consequence without stating it
+The reader should finish your reply thinking "wait, what does that mean?"
+""",
+    "cycle_reframe": """Pattern: cycle_reframe
+Structure your reply as a cycle reframe:
+- Sentence 1: Name what everyone is watching (usually price)
+- Sentence 2: Point to what they're NOT watching (liquidity, leverage, positioning)
+- Optional sentence 3: What the blind spot has meant historically
+Shift the conversation from price to structure.
+""",
+    "historical_memory": """Pattern: historical_memory
+Structure your reply as a historical memory:
+- Sentence 1: Reference a specific historical phase (year + what happened)
+- Sentence 2: Connect subtly to today (similar conditions, not same outcome)
+- NO sentence 3. Keep it short. Let the pattern speak.
+Do NOT state what happened next. Let the reader wonder.
+""",
+    "structural_insight": """Pattern: structural_insight
+Structure your reply as a structural insight:
+- Sentence 1: What the crowd sees or does
+- Sentence 2: What the structure underneath shows
+- That's it. Two sentences. Maximum.
+Brevity = authority. Say more with less.
+""",
+}
+
+
+def _reply_pattern_catalog() -> dict[str, float]:
+    raw = getattr(config, "REPLY_PATTERNS", None) or {}
+    out: dict[str, float] = {}
+    for k, v in raw.items():
+        if not isinstance(k, str) or not k.strip():
+            continue
+        try:
+            w = float(v)
+        except (TypeError, ValueError):
+            w = 0.1
+        if w > 0:
+            out[k.strip()] = w
+    if not out:
+        for k in REPLY_PATTERN_TEXTS:
+            out[k] = 0.25
+    return out
+
+
+def select_pattern_key() -> str:
+    cat = _reply_pattern_catalog()
+    keys = list(cat.keys())
+    weights = [cat[k] for k in keys]
+    return random.choices(keys, weights=weights, k=1)[0]
+
+
+def select_different_pattern_key(banned: str) -> str:
+    cat = _reply_pattern_catalog()
+    keys = [k for k in cat if k != banned]
+    if not keys:
+        return banned
+    weights = [cat[k] for k in keys]
+    return random.choices(keys, weights=weights, k=1)[0]
+
+
+def _pick_pattern_avoiding_double_streak() -> str:
+    """If last two reply_history patterns match, do not pick that same key again."""
+    streak = database.get_last_reply_patterns(2)
+    pattern_key = select_pattern_key()
+    if (
+        len(streak) >= 2
+        and streak[0]
+        and streak[0] == streak[1]
+        and pattern_key == streak[0]
+    ):
+        pattern_key = select_different_pattern_key(streak[0])
+    return pattern_key
+
+
 # Monday=0 .. Sunday=6; keys must match bullets in prompts/post_system.txt
 POST_TYPE_BY_WEEKDAY: tuple[str, ...] = (
     "contrarian_signal",
@@ -146,19 +227,31 @@ def build_reply_prompt(
     tweet_author: str,
     reply_history: Sequence[str] | None,
     arc_data: dict[str, Any] | None,
-) -> tuple[str, str]:
+) -> tuple[str, str, str]:
     """
     Build full system-style prompt string for a reply-generation Claude call.
-    Randomly picks 1 of 5 approaches; 40% chance hook = ACTIVE (see reply_system.txt).
-    Returns (system_prompt, approach_key) so callers can log the approach after post.
+    Randomly picks 1 of 5 approaches and 1 structural pattern (see reply_system.txt).
+    40% chance hook = ACTIVE. Returns (system_prompt, approach_key, pattern_key).
     """
     base = _read_prompt_file("reply_system.txt")
     logger.info("[GROWTH ENGINE] Prompts loaded successfully")
     approach_key = random.choice(REPLY_APPROACH_KEYS)
+    pattern_key = _pick_pattern_avoiding_double_streak()
+    pattern_body = REPLY_PATTERN_TEXTS.get(
+        pattern_key,
+        f"Pattern: {pattern_key}\nFollow a clear 2–3 sentence structure; stay under 270 characters.",
+    )
     hook_instruction = (
         HOOK_ACTIVE_LABEL
         if random.random() < float(config.REPLY_HOOK_PROBABILITY)
         else HOOK_INACTIVE_LABEL
+    )
+    has_hook = hook_instruction == HOOK_ACTIVE_LABEL
+    logger.info(
+        "[GROWTH ENGINE] Reply: approach=%s, pattern=%s, hook=%s",
+        approach_key,
+        pattern_key,
+        has_hook,
     )
     author = tweet_author.lstrip("@")
     text = tweet_text.strip()
@@ -168,13 +261,14 @@ def build_reply_prompt(
     for key, val in (
         ("{arc_data_block}", arc_block),
         ("{approach}", approach_key),
+        ("{reply_pattern}", pattern_body.strip()),
         ("{hook_instruction}", hook_instruction),
         ("{tweet_author}", author),
         ("{tweet_text}", text),
         ("{reply_history}", history),
     ):
         base = base.replace(key, val)
-    return base, approach_key
+    return base, approach_key, pattern_key
 
 
 def build_post_prompt(

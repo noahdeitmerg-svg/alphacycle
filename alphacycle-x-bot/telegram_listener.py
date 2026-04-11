@@ -488,6 +488,7 @@ def _handle_text_command(msg: dict) -> None:
                 row.get("reply_text") or "",
                 author,
                 (row.get("approach") or "") or "manual_copy_paste",
+                row.get("pattern") or "",
             )
             database.set_pending_status(tweet_id, "posted")
         telegram_bot.send_feedback_message(
