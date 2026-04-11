@@ -1,8 +1,15 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10 (x-bot config: 60 TRACKED_ACCOUNTS + 60-Min-Scan-Default)
+**Zuletzt aktualisiert:** 2026-04-10 (x-bot: generate_banner + weekly job + Telegram /banner)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-10) — x-bot: Dashboard-Banner Screenshot (1500x500) + X-Header + Telegram
+- **Datei(en):** alphacycle-x-bot/generate_banner.py (neu), alphacycle-x-bot/bot.py (`_weekly_banner_job`, So 12:00), alphacycle-x-bot/telegram_listener.py (`/banner`, Text `banner`, `menu:banner`), alphacycle-x-bot/telegram_bot.py (`send_photo_path`), alphacycle-x-bot/requirements.txt (playwright, Pillow), alphacycle-x-bot/banners/.gitkeep, DEPLOY_STATE.md, .cursor/rules/permanent-fixes.mdc
+- **Was wurde geaendert:** Playwright oeffnet `alphacycle.app` (Viewport 1600x900), wartet auf `#btc-score-val` numerisch, Screenshot, Crop/Resize auf **1500x500**, optional **Tweepy v1.1** `update_profile_banner`. CLI: `python generate_banner.py`. **bot.py:** woechentlich Sonntag **12:00** (Prozess-TZ wie Daily = UTC wenn `TZ=UTC`+tzset). **Telegram:** `/banner` oder Wort `banner` oder Menue-Button; generiertes PNG als Foto + Upload-Status. Env: `BANNER_PAGE_URL`, `BANNER_OUTPUT_DIR` optional.
+- **Warum:** X-Profil-Header aus live Dashboard ohne manuelles Zuschneiden.
+- **VPS:** `pip install -r requirements.txt`, **`playwright install chromium`** (~150MB), ggf. System-Deps; Read+Write fuer Banner-Upload.
+- **Status:** pushed to GitHub; VPS: `pip install -r requirements.txt`, `playwright install chromium`, git pull, `./restart-screens.sh`
 
 ## Letzter Session-Status (2026-04-10) — x-bot: TRACKED_ACCOUNTS 60 (10/20/20) + Scan-Default 60 Min
 - **Datei(en):** alphacycle-x-bot/config.py, DEPLOY_STATE.md, .cursor/rules/permanent-fixes.mdc (Doku: 60 Accounts + SCAN_INTERVAL_SECONDS-Default)

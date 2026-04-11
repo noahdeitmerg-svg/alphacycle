@@ -1,4 +1,5 @@
 import argparse
+import asyncio
 import logging
 import os
 import sys
@@ -10,6 +11,8 @@ import schedule
 import database
 import telegram_bot
 import config
+
+_logger = logging.getLogger(__name__)
 from daily_post_engine import fetch_arc_data, generate_daily_post
 import scanner
 import reply_engine
@@ -93,6 +96,40 @@ def schedule_daily_post() -> None:
     if not sent:
         database.delete_pending_daily_post(pending_id)
         print("[DAILY] Telegram send failed — removed pending daily row")
+
+
+def _weekly_banner_job() -> None:
+    """
+    Sunday 12:00 UTC: screenshot alphacycle.app hero -> 1500x500 PNG, optional X header upload.
+    """
+    print("[BANNER] Weekly banner job triggered")
+    try:
+        from generate_banner import generate_and_upload_banner
+    except ImportError as e:
+        print(f"[BANNER] Import failed: {e}")
+        telegram_bot.send_feedback_message(
+            "[BANNER] generate_banner not importable. Install: pip install playwright Pillow "
+            "and playwright install chromium."
+        )
+        return
+    try:
+        filepath, success = asyncio.run(generate_and_upload_banner())
+    except Exception as e:
+        _logger.exception("[BANNER] Job failed")
+        telegram_bot.send_feedback_message(f"[BANNER] Job failed: {e}")
+        return
+    if success:
+        telegram_bot.send_feedback_message(
+            "[BANNER] X profile header updated from latest alphacycle.app screenshot."
+        )
+    elif filepath:
+        telegram_bot.send_feedback_message(
+            f"[BANNER] PNG generated but X upload failed.\nFile: {filepath}\nUpload manually on X."
+        )
+    else:
+        telegram_bot.send_feedback_message(
+            "[BANNER] Screenshot failed. Check logs; ensure playwright+Pillow and chromium."
+        )
 
 
 def run_cycle():
@@ -219,6 +256,8 @@ def main():
         f"[BOT] Daily post job registered: every day at {config.DAILY_POST_TIME} "
         "(local TZ; see note above for UTC)."
     )
+    schedule.every().sunday.at("12:00").do(_weekly_banner_job)
+    print("[BOT] Weekly banner job registered: every Sunday at 12:00 (process TZ; use UTC on Linux).")
 
     next_scan_at = 0.0
     while True:

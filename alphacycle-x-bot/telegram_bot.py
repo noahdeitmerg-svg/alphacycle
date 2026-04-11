@@ -1,6 +1,8 @@
 """
 Send Telegram inline-keyboard approval requests for reply candidates.
 """
+import os
+
 import requests
 
 import config
@@ -146,6 +148,7 @@ def send_main_menu(chat_id: int | str | None = None) -> bool:
         "Ping — Listener erreichbar?\n"
         "Scan jetzt — ein Scan-Zyklus (wie bot.py --once).\n"
         "Daily in Queue — Daily-Post erzeugen + Freigabe in Telegram.\n"
+        "Banner — Screenshot alphacycle.app Hero (1500x500), optional X-Header.\n"
         f"Log {sb} — letzte Zeilen Screen-Scrollback (bot.py).\n"
         f"Log {st} — letzte Zeilen Scrollback (dieser Listener).\n"
         "Menue erneut — diese Karte nochmal.\n"
@@ -160,6 +163,9 @@ def send_main_menu(chat_id: int | str | None = None) -> bool:
         [
             {"text": "Scan jetzt", "callback_data": "menu:scan"},
             {"text": "Daily in Queue", "callback_data": "menu:queuedaily"},
+        ],
+        [
+            {"text": "Banner", "callback_data": "menu:banner"},
         ],
         [
             {"text": f"Log {sb}", "callback_data": "menu:logbot"},
@@ -184,6 +190,38 @@ def send_main_menu(chat_id: int | str | None = None) -> bool:
         return bool(r.json().get("ok"))
     except Exception as e:
         print(f"[TELEGRAM] send_main_menu error: {e}")
+        return False
+
+
+def send_photo_path(
+    photo_path: str,
+    caption: str = "",
+    chat_id: int | str | None = None,
+    reply_to_message_id: int | None = None,
+) -> bool:
+    """sendPhoto with local file (e.g. X banner PNG)."""
+    cid = chat_id if chat_id is not None else config.TELEGRAM_CHAT_ID
+    if not config.TELEGRAM_BOT_TOKEN or not cid:
+        return False
+    path = (photo_path or "").strip()
+    if not path or not os.path.isfile(path):
+        print(f"[TELEGRAM] send_photo_path: file missing: {path!r}")
+        return False
+    url = f"{_api_base()}/sendPhoto"
+    cap = (caption or "")[:1024]
+    try:
+        with open(path, "rb") as photo:
+            files = {"photo": photo}
+            data: dict = {"chat_id": str(cid), "caption": cap}
+            if reply_to_message_id is not None:
+                data["reply_to_message_id"] = str(reply_to_message_id)
+            r = requests.post(url, data=data, files=files, timeout=120)
+        if not r.ok:
+            print(f"[TELEGRAM] sendPhoto failed: {r.status_code} {r.text[:500]}")
+            return False
+        return bool((r.json() or {}).get("ok"))
+    except Exception as e:
+        print(f"[TELEGRAM] send_photo_path error: {e}")
         return False
 
 

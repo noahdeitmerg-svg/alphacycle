@@ -3,6 +3,7 @@ Telegram long-polling: POST/SKIP (replies + daily), sichtbare Chat-Bestätigunge
 Inline-Menue (menu:*), Slash-Befehle, Daily Summary 23:00 UTC.
 Run alongside: python3 bot.py
 """
+import asyncio
 import os
 import re
 import sqlite3
@@ -295,11 +296,61 @@ def _build_help_body() -> str:
         "/ping — Listener lebt\n"
         "/scan — ein Scan-Zyklus (bot.py --once)\n"
         "/queuedaily — Daily jetzt + Freigabe\n"
+        "/banner — Dashboard-Hero Screenshot 1500x500 + optional X-Header\n"
         f"/logbot — Screen-Log ({config.SCREEN_SESSION_BOT})\n"
         f"/logtg — Screen-Log ({config.SCREEN_SESSION_TG})\n\n"
         "Hinweis: /scan kann parallel zum laufenden bot.py laufen.\n"
-        "Schreib auch menu oder hilfe fuer die Button-Karte."
+        "Schreib auch menu, hilfe oder banner (ohne Slash)."
     )
+
+
+def _handle_banner_generate(chat_id, reply_to_message_id: int | None = None) -> None:
+    """Run Playwright screenshot + optional X upload; send PNG to Telegram."""
+    try:
+        from generate_banner import generate_and_upload_banner
+    except ImportError as e:
+        telegram_bot.send_feedback_message(
+            f"[BANNER] Modul fehlt: {e}\n"
+            "pip install playwright Pillow && playwright install chromium",
+            chat_id=chat_id,
+            reply_to_message_id=reply_to_message_id,
+        )
+        return
+    telegram_bot.send_feedback_message(
+        "[BANNER] Erzeuge Screenshot (1–2 Min) …",
+        chat_id=chat_id,
+        reply_to_message_id=reply_to_message_id,
+    )
+    try:
+        filepath, success = asyncio.run(generate_and_upload_banner())
+    except Exception as e:
+        telegram_bot.send_feedback_message(
+            f"[BANNER] Fehler: {e}",
+            chat_id=chat_id,
+            reply_to_message_id=reply_to_message_id,
+        )
+        return
+    upload_line = "X Upload: Success" if success else "X Upload: Failed (upload manually on X)"
+    caption = f"Banner generated\n{upload_line}"
+    if filepath and os.path.isfile(filepath):
+        ok = telegram_bot.send_photo_path(
+            filepath,
+            caption=caption,
+            chat_id=chat_id,
+            reply_to_message_id=reply_to_message_id,
+        )
+        if not ok:
+            telegram_bot.send_feedback_message(
+                f"{caption}\n(Telegram photo send failed; file: {filepath})",
+                chat_id=chat_id,
+                reply_to_message_id=reply_to_message_id,
+            )
+    else:
+        telegram_bot.send_feedback_message(
+            f"{caption}\n(No PNG — see server logs.)",
+            chat_id=chat_id,
+            reply_to_message_id=reply_to_message_id,
+        )
 
 
 def _handle_menu_callback(
@@ -380,6 +431,10 @@ def _handle_menu_callback(
             reply_to_message_id=reply_mid,
         )
         return
+    if key == "banner":
+        toast("Banner …")
+        _handle_banner_generate(chat_id, reply_mid)
+        return
 
     toast("Unbekannt")
     telegram_bot.send_feedback_message(
@@ -412,6 +467,9 @@ def _handle_text_command(msg: dict) -> None:
 
     if not text.startswith("/"):
         low = text.lower().strip()
+        if _authorized_chat(chat_id) and low == "banner":
+            _handle_banner_generate(chat_id, msg.get("message_id"))
+            return
         if low != "done" and _authorized_chat(chat_id) and low in _MENU_TRIGGERS:
             telegram_bot.send_main_menu(chat_id)
             return
@@ -488,6 +546,10 @@ def _handle_text_command(msg: dict) -> None:
     if cmd in ("/logtg", "/log_tg", "/screentg", "/screen_tg"):
         log_text = _screen_log_tail(config.SCREEN_SESSION_TG)
         _send_chunks(chat_id, log_text)
+        return
+
+    if cmd == "/banner":
+        _handle_banner_generate(chat_id, msg.get("message_id"))
         return
 
 
