@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-11 (docs: ARC-Formel Doku = Live scoring.py)
+**Zuletzt aktualisiert:** 2026-04-11 (docs: 5-Zonen-Kohaerenz + CURSOR_MASTERPROMPT)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-11) — docs: 5 ARC-Zonen ueberall konsistent (Doku only)
+- **Datei(en):** `CURSOR_MASTERPROMPT.md` (alte 4-Stufen 61/81 entfernt; Tabelle 0-29 … 70-100 + Verweise), `docs/alphacycle_context.md` (2.4 Boundary Implementation neu), `docs/alphacycle_ai_operating_manual.md`, `docs/alphacycle_ai_operating_manual_COMPLETE.md` (Section 2 Locked Constants), `DEPLOY_STATE.md`
+- **Was wurde geaendert:** Zonen-Doku aligned mit `get_zone_name` / `phaseOf` / `scoreColor`; veraltete FIX-1/2/3- und OKX-„todo“-Zeilen im Masterprompt bereinigt; Datenquellen-Tabelle OKX auf live gesetzt.
+- **Warum:** Eine klare, widerspruchsfreie Beschreibung des 5-Zonen-Modells.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-11) — docs: ARC-Formel auf Live abgleichen (scoring.py)
 - **Datei(en):** `docs/alphacycle_ai_operating_manual.md`, `docs/alphacycle_ai_operating_manual_COMPLETE.md`, `AlphaCycle-AI-Manual-Sections-11-13-FINAL-v2.md`, `CURSOR_MASTERPROMPT.md`, `DEPLOY_STATE.md`

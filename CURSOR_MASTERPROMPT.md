@@ -62,13 +62,21 @@ ma_200w * 0.35 + drawdown * 0.25 + liquidity * 0.25 + fear_greed * 0.15
 ```
 **Gewichte NIEMALS ändern.**
 
-### Scoring Range: 0–100 (niedrig = bullish, hoch = bearish)
+### Scoring Range: 0–100 (niedrig = guenstigere strukturelle Phase, hoch = hoeheres strukturelles Risiko)
 
-### Phase Grenzen (phaseOf in index.html):
-- < 30 → Low Risk
-- < 61 → Moderate Risk
-- < 81 → Elevated Risk
-- ≥ 81 → Extreme Risk
+### ARC-Zonen — 5-Zonen-Modell (LOCKED, wie `get_zone_name` / `phaseOf`)
+
+| Zone | ARC-Bereich (ganzzahlig) | Quelle |
+|------|---------------------------|--------|
+| Deep Value | 0–29 | `get_zone_name`: `<= 29`; `phaseOf`: `< 30` |
+| Accumulation | 30–39 | `<= 39` |
+| Expansion | 40–59 | `<= 59` |
+| Risk Rising | 60–69 | `<= 69` |
+| Euphoria | 70–100 | sonst |
+
+- **Backend:** `backend/main.py` — `get_zone_name(arc_score)` (Zone History, APIs, `zone_name`).
+- **Frontend:** `index.html` — `phaseOf(score)` (Labels, Hero), `scoreColor(s)` — Farbbänder `< 30 / < 40 / < 60 / < 70` (fuenf Zonenfarben).
+- Details: `docs/alphacycle_context.md` (Abschnitt 2.3–2.4), `.cursor/rules/permanent-fixes.mdc` (Fixes 53–58).
 
 ---
 
@@ -143,32 +151,11 @@ CMD gunicorn main:app --workers 1 --worker-class uvicorn.workers.UvicornWorker -
 
 ---
 
-## Aktuelle offene Fixes (sofort umsetzen)
+## Offene Arbeit / Backlog
 
-### FIX 1 — backend/Dockerfile: Duplikat entfernen
-Im `backend/` Ordner gibt es 2 Dateien:
-- `" Dockerfile"` (mit Leerzeichen, 255 bytes) — korrektes CMD mit $PORT
-- `"Dockerfile"` (434 bytes) — altes CMD mit Port 8000 hardcoded
+Veraltete Einzel-FIX-Bloecke (Dockerfile-Duplikat, OKX-Funding) sind im Code umgesetzt — **OKX Funding** laeuft in `fetcher.py`, **ein** `backend/Dockerfile** mit `$PORT`.
 
-**Lösung:** Lösche `"Dockerfile"` (434 bytes). Benenne `" Dockerfile"` um zu `"Dockerfile"`.
-Inhalt soll sein:
-```dockerfile
-FROM python:3.12-slim
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-COPY . .
-CMD gunicorn main:app --workers 1 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT --timeout 120 --access-logfile -
-```
-
-### FIX 2 — backend/fetcher.py: OKX Funding Rates
-Ersetze `fetch_funding_rates()` komplett mit OKX Version (siehe Permanent Fixes oben).
-Bybit gibt 403 auf Railway — genau wie Binance.
-
-### FIX 3 — DEPLOY_STATE.md + permanent-fixes.mdc updaten
-Nach FIX 1 und FIX 2:
-- DEPLOY_STATE.md: Fixes 37-38 ergänzen
-- permanent-fixes.mdc: OKX Funding + Dockerfile Regel ergänzen
+Aktuelle Tasks und Deploy-Historie: immer **`DEPLOY_STATE.md`** („Letzter Session-Status“) und **`.cursor/rules/permanent-fixes.mdc`** lesen.
 
 ---
 
@@ -176,7 +163,7 @@ Nach FIX 1 und FIX 2:
 | Quelle | Was | Status |
 |--------|-----|--------|
 | Kraken | BTC/ETH Preise + Ticker | ✅ funktioniert |
-| OKX | Funding Rates | 🔄 zu implementieren |
+| OKX | Funding Rates | ✅ (public API, Railway-tauglich) |
 | Alternative.me | Fear & Greed | ✅ funktioniert |
 | DeFiLlama | TVL + Stablecoins | ✅ funktioniert |
 | FRED | WALCL + 10Y Yield | ✅ funktioniert |
@@ -214,5 +201,5 @@ Nach FIX 1 und FIX 2:
    - BTC Score → nicht 50
    - Regime → EXPANSION/NEUTRAL/CONTRACTION
    - Decision → BUY/SELL/HOLD etc.
-   - Funding → N/A (solange OKX blockiert) oder echter Wert
+   - Funding → echter Wert (OKX) oder N/A bei Fehler/0
    - Bond → zwischen 20-90 (nicht 100)

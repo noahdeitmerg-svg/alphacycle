@@ -39,7 +39,7 @@ AlphaCycle is a live Bitcoin Cycle Intelligence SaaS. It classifies the current 
 ### Locked Constants (NEVER modify):
 
 1. **ARC Formula:** `ma_200w × 0.35 + drawdown × 0.25 + liquidity × 0.25 + fear_greed × 0.15`
-2. **Zone Boundaries:** `< 30 / < 40 / < 60 / < 70` (Deep Value / Accumulation / Expansion / Risk Rising / Euphoria)
+2. **Zone Boundaries:** 0–29 / 30–39 / 40–59 / 60–69 / 70–100 — Deep Value / Accumulation / Expansion / Risk Rising / Euphoria (gleich `get_zone_name()` / `phaseOf()`; siehe `docs/alphacycle_context.md` 2.3–2.4)
 3. **ARC = "AlphaCycle Risk Composite"**
 
 ---

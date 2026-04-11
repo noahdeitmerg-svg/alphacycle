@@ -50,9 +50,15 @@ ARC = ma_200w × 0.35 + drawdown × 0.25 + liquidity × 0.25 + fear_greed × 0.1
 
 ### 2.4 Boundary Implementation
 
-All frontend zone classification uses `< 30 / < 40 / < 60 / < 70` (strict less-than). Functions that must use these boundaries:
-- `phaseOf()`, `colorOf()`, `zoneColorForScore()`, `zoneKey`, `renderDecisionInterpretation()`
-- Backend: `_phase_label()`, `get_position()`
+**Canonical integer bands (same five zones as section 2.3):** 0–29 | 30–39 | 40–59 | 60–69 | 70–100.
+
+- **Zone name (API, Zone History, `zone_name` in `/api/arc-summary`):** `get_zone_name(arc_score)` in `backend/main.py` — `<= 29` Deep Value; `<= 39` Accumulation; `<= 59` Expansion; `<= 69` Risk Rising; else Euphoria.
+- **Dashboard zone label:** `phaseOf(score)` in `index.html` — `< 30` Deep Value; `<= 39` Accumulation; `<= 59` Expansion; `<= 69` Risk Rising; else Euphoria. Matches integer ARC; at fractional scores 29–30 see source for edge behavior.
+- **Zone colors:** `scoreColor(s)` in `index.html` uses `< 30`, `< 40`, `< 60`, `< 70` (five color bands aligned to the same zones).
+- **Snapshot / some API labels:** `_phase_label(arc)` in `main.py` uses `< 30`, `< 40`, `< 60`, `< 70` (equivalent to the five zones).
+- **Decision thresholds** in `decision_engine.get_position()` use separate numeric cuts; map to regime language via section 3.
+
+Related: `zoneKey`, `renderDecisionInterpretation()`, Historical Returns grids — always use the same five zone names and boundaries as above.
 
 ### 2.5 Data Pipeline
 
