@@ -442,6 +442,21 @@ def _get_net_liq_score(date_str: str, net_liq_by_date: Dict[str, float], history
     return max(0.0, min(100.0, 50 - pct * 2.0))
 
 
+def _get_net_liq_impulse_score(date_str: str, net_liq_by_date: Dict[str, float]) -> float:
+    """Net Liq impulse score matching compute_arc_score() methodology.
+    Uses 30d + 90d change with coefficients 2.5 and 1.5."""
+    available = sorted([(d, v) for d, v in net_liq_by_date.items() if d <= date_str])
+    if len(available) < 22:
+        return 50.0
+    cur = available[-1][1]
+    prev_30d = available[-22][1]
+    prev_90d = available[-65][1] if len(available) >= 65 else available[0][1]
+    change_30d = (cur - prev_30d) / abs(prev_30d) * 100 if prev_30d != 0 else 0.0
+    change_90d = (cur - prev_90d) / abs(prev_90d) * 100 if prev_90d != 0 else 0.0
+    impulse = 50.0 - change_30d * 2.5 - change_90d * 1.5
+    return max(0.0, min(100.0, impulse))
+
+
 async def _fetch_fg_history() -> Dict[str, float]:
     """Fetch full F&G history from Alternative.me. Returns {date_str: value}."""
     try:
@@ -887,10 +902,10 @@ async def run_daily_backtest_full() -> Dict[str, Any]:
             daily_high = safe_float(item.get("high", price), price)
             daily_low = safe_float(item.get("low", price), price)
 
-            ma_200w_score = ma_deviation_score(price, ma_200w)
+            ma_200w_score = ma_deviation_score(daily_high, ma_200w)
 
             prices_so_far = prices[: idx + 1]
-            dd_score = drawdown_score(prices_so_far) if len(prices_so_far) >= 10 else 50.0
+            dd_score = drawdown_score_hl(prices_so_far, daily_low) if len(prices_so_far) >= 10 else 50.0
 
             if item["date"] in fg_history:
                 fear_greed_raw = fg_history[item["date"]]
@@ -899,7 +914,7 @@ async def run_daily_backtest_full() -> Dict[str, Any]:
                 fear_greed_raw = fg_raw_ff if fg_raw_ff != 50.0 else _rsi_to_fg(prices_so_far)
             fg_score = fg_to_score(fear_greed_raw)
 
-            macro_liq = _get_net_liq_score(item["date"], net_liq_by_date, prices_so_far)
+            macro_liq = _get_net_liq_impulse_score(item["date"], net_liq_by_date)
 
             arc = (
                 ma_200w_score * ARC_WEIGHTS["trend"]

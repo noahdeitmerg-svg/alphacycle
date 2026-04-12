@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10 (main.py snapshot ARC + get_snapshot fix)
+**Zuletzt aktualisiert:** 2026-04-10 (backtest_engine daily full liq parity + Hi/Lo)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-10) — run_daily_backtest_full: Net-Liq Impulse + Hi/Lo
+- **Datei(en):** `backend/services/backtest_engine.py` (`_get_net_liq_impulse_score`; in `run_daily_backtest_full` nur: macro_liq aus Impulse statt `_get_net_liq_score`; MA aus `daily_high`, DD aus `drawdown_score_hl(..., daily_low)`), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was wurde geaendert:** Daily-Full-Backtest aligned mit Live-ARC Liquidity-Impuls (30d/90d) und High/Low-Komponenten wie spezifiziert.
+- **Warum:** Vorher 52w Net-Liq-Trend im Daily-Full vs. Impuls im Live-ARC; Tages-High/Low ungenutzt.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-10) — main.py: Daily Snapshot ARC + snapshot endpoint
 - **Datei(en):** `backend/main.py` (`_save_today_snapshot`: `arc` aus `compute_arc_score` statt `combined_score`; `decision` aus `get_position(real_arc)`; `get_snapshot`: `arc_display_val` vor `_get_expected_range`-try; `_alloc` um **ACCUMULATE** 50-70pct), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
