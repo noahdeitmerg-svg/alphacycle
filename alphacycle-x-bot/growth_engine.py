@@ -363,6 +363,78 @@ _QA_PLACEHOLDER_REPLY = (
 )
 
 
+def _build_qa_replacement_guide(failures: list[str]) -> str:
+    """Append-once blocks keyed by failure patterns (Haiku FAIL reasons)."""
+    blob = " ".join(failures).lower()
+    parts: list[str] = []
+    seen: set[str] = set()
+
+    def add(key: str, text: str) -> None:
+        if key not in seen:
+            seen.add(key)
+            parts.append(text)
+
+    if "banned_word" in blob or "zone_label" in blob:
+        add(
+            "zone_banned",
+            "\nDo NOT use ARC zone names as labels."
+            "\nInstead of 'deep value territory' write 'historic structural lows'"
+            "\nInstead of 'deep value zone' write 'single-digit percentile readings'"
+            "\nInstead of 'accumulation phase' write 'structural positioning'"
+            "\nInstead of 'accumulation zone' write 'low-risk structural environment'"
+            "\nNever use zone names directly. Describe what they mean.",
+        )
+    if "contains_prediction" in blob or "prediction" in blob:
+        add(
+            "pred",
+            "\nDo NOT predict what happens next."
+            "\nReplace any 'will', 'next', 'coming' + outcome with an observation."
+            "\nDescribe what IS, not what WILL BE.",
+        )
+    if "ai_sound" in blob:
+        add(
+            "ai",
+            "\nYour reply sounded like AI. Rewrite completely."
+            "\nUse shorter words. Be direct. Sound like a sharp trader at a bar.",
+        )
+    if "generic_opener" in blob:
+        add(
+            "generic",
+            "\nYour first sentence was generic. Start by referencing"
+            "\na SPECIFIC claim or data point from the original tweet.",
+        )
+    if "over_260" in blob:
+        add(
+            "len",
+            "\nYour reply was too long. Maximum 260 characters."
+            "\nCut to 2 sentences maximum.",
+        )
+    if "factual" in blob:
+        add(
+            "fact",
+            "\nYour reply had a factual error. ATH=$126,000."
+            "\nDouble-check all numbers before writing.",
+        )
+    if "logic" in blob:
+        add(
+            "logic",
+            "\nYour reply had a logic error. Read the tweet again carefully."
+            "\nMake sure your commentary matches what the author actually said.",
+        )
+    if "brand" in blob:
+        add(
+            "brand",
+            "\nNever mention AlphaCycle, ARC, our dashboard, or our model."
+            "\nUse 'structural risk composite' or 'risk percentile readings' instead.",
+        )
+    if "sales" in blob:
+        add(
+            "sales",
+            "\nRemove any sales language. You observe, you don't sell.",
+        )
+    return "".join(parts)
+
+
 def generate_reply_with_qa(
     tweet: dict,
     arc_data: dict | None = None,
@@ -392,13 +464,14 @@ def generate_reply_with_qa(
     for attempt in range(1, max_a + 1):
         extra = ""
         if failures:
+            replacement_guide = _build_qa_replacement_guide(failures)
             extra = (
-                "\n\nPREVIOUS ATTEMPTS FAILED QA CHECK:\n"
-                + "\n".join(
-                    f"Attempt {i + 1}: FAIL - {r}" for i, r in enumerate(failures)
-                )
-                + "\n\nFix these specific issues in your new reply. "
-                + "Do NOT repeat the same mistakes."
+                "\n\n=== QA FEEDBACK — YOU MUST FIX THESE ===\n"
+                f"Your previous {len(failures)} attempts failed:\n"
+                + "\n".join(f"Attempt {i + 1}: {r}" for i, r in enumerate(failures))
+                + f"\n\n=== HOW TO FIX ==={replacement_guide}"
+                + "\n\nWrite a COMPLETELY NEW reply. Do not modify the old one."
+                + "\nStart from scratch with a different angle entirely."
             )
         rt, ak, pk = reply_engine.generate_reply(
             tweet,

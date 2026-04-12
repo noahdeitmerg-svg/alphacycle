@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10 (x-bot: QA Auto-Fix Loop, kein Skip)
+**Zuletzt aktualisiert:** 2026-04-12 (x-bot: QA Feedback + Retry-Guide + Zone STOP)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-12) — x-bot: QA spezifischer + Replacement-Guide + Zone-STOP
+- **Datei(en):** `alphacycle-x-bot/prompts/qa_system.txt` (FAIL `banned_word_"..."`, Regel 10 `zone_label_"..."`), `alphacycle-x-bot/growth_engine.py` (`_build_qa_replacement_guide`, Retry-`extra_instruction`), `alphacycle-x-bot/prompts/reply_system.txt` (STOP Regel 6: keine Zonennamen als Labels), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was wurde geaendert:** Haiku muss exakte Phrase bei Banned/Zone melden; Retry-Prompt mit **HOW TO FIX**-Bloecken (zone, prediction, ai_sound, generic, Laenge, factual, logic, brand, sales) ohne Duplikate; Reply-Master: Zonennamen nicht als Labels, Ersatzformulierungen.
+- **Warum:** Auto-Fix-Retries nutzen klareres Feedback.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-10) — x-bot: QA Auto-Fix Loop (max 3) + immer Telegram
 - **Datei(en):** `alphacycle-x-bot/prompts/qa_system.txt` (aktualisiert), `alphacycle-x-bot/growth_engine.py` (`generate_reply_with_qa`, `qa_check_reply`), `alphacycle-x-bot/reply_engine.py` (`extra_instruction`, `arc_data`), `alphacycle-x-bot/bot.py`, `alphacycle-x-bot/telegram_bot.py` (`send_approval` mit `qa_status`/`qa_attempts`, New AlphaCycle Reply Candidate), `alphacycle-x-bot/config.py` (`QA_MAX_ATTEMPTS` statt `QA_MAX_RETRIES`), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`

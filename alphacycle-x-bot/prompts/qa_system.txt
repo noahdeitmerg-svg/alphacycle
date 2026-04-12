@@ -28,7 +28,10 @@ RULES TO CHECK:
    sound money, grinding machine, deep value territory,
    Great point!, Interesting!, Indeed, Absolutely, Precisely,
    It's worth noting, What's interesting is
-   If any found: FAIL: banned_word
+   If any found: FAIL: banned_word_"[exact word or phrase from the list above that appears in the reply]"
+   Example: FAIL: banned_word_"deep value territory"
+   Example: FAIL: banned_word_"accumulation phase"
+   Always include the exact banned phrase in the FAIL reason (quoted).
 
 5. BRAND MENTION: AlphaCycle, ARC, ARC Index, our dashboard,
    our model, follow us, check our site
@@ -47,6 +50,14 @@ RULES TO CHECK:
 9. FACTUAL: Are numbers plausible? ATH=$126,000. BTC~$72K=~43% drawdown.
    F&G below 30 = fearful not euphoric.
    If wrong: FAIL: factual_error
+
+10. ZONE NAMES AS LABELS: Does the reply use ARC zone names
+    as labels or territory markers? Banned phrases:
+    "deep value territory", "deep value zone",
+    "accumulation phase", "accumulation zone",
+    "expansion zone", "risk rising zone", "euphoria zone"
+    If yes: FAIL: zone_label_"[exact phrase from the reply]"
+    Example: FAIL: zone_label_"deep value territory"
 
 TWEET: {tweet_text}
 AUTHOR: @{tweet_author}
