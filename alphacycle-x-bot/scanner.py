@@ -1,7 +1,12 @@
-import tweepy
+import logging
 from datetime import datetime, timezone
+
+import tweepy
+
 import config
 import database
+
+logger = logging.getLogger(__name__)
 
 
 def _tweet_has_blocked_keyword(tweet_text: str) -> bool:
@@ -68,12 +73,30 @@ def get_latest_tweets(account_spec: str, client: tweepy.Client) -> list[dict]:
             age = (now - tweet.created_at).total_seconds()
 
             if age < config.MIN_TWEET_AGE_SECONDS:
+                logger.info(
+                    "[SCANNER] Skipped @%s: too_recent (age=%ds, min=%ds)",
+                    handle,
+                    int(age),
+                    config.MIN_TWEET_AGE_SECONDS,
+                )
                 continue
             if age > config.MAX_TWEET_AGE_SECONDS:
+                logger.info(
+                    "[SCANNER] Skipped @%s: too_old (age=%ds, max=%ds)",
+                    handle,
+                    int(age),
+                    config.MAX_TWEET_AGE_SECONDS,
+                )
                 continue
 
             likes = tweet.public_metrics.get("like_count", 0) if tweet.public_metrics else 0
             if likes < config.MIN_LIKES_TO_REPLY:
+                logger.info(
+                    "[SCANNER] Skipped @%s: low_likes (likes=%s, min=%s)",
+                    handle,
+                    likes,
+                    config.MIN_LIKES_TO_REPLY,
+                )
                 continue
 
             results.append({
@@ -99,31 +122,34 @@ def scan_tweets() -> list[dict]:
         tweets = get_latest_tweets(account, client)
 
         for tweet in tweets:
+            author = tweet["author"]
             if _tweet_has_blocked_keyword(tweet["text"]):
+                logger.info("[SCANNER] Skipped @%s: blocked_keyword", author)
                 database.log_scanned(
-                    tweet["id"], tweet["author"], "blocked_keyword"
+                    tweet["id"], author, "blocked_keyword"
                 )
                 continue
             if database.already_scanned(tweet["id"]):
+                logger.info("[SCANNER] Skipped @%s: already_scanned", author)
                 continue
             if database.already_replied(tweet["id"]):
-                database.log_scanned(tweet["id"], tweet["author"], "already_replied")
+                logger.info("[SCANNER] Skipped @%s: already_replied", author)
+                database.log_scanned(tweet["id"], author, "already_replied")
                 continue
-            if not database.is_author_spacing_ok_for_reply(tweet["author"]):
+            if not database.is_author_spacing_ok_for_reply(author):
+                logger.info("[SCANNER] Skipped @%s: same_account_limit (author_spacing)", author)
                 database.log_scanned(
-                    tweet["id"], tweet["author"], "author_spacing"
+                    tweet["id"], author, "author_spacing"
                 )
                 continue
-            if database.count_replies_to_author_today_utc(tweet["author"]) >= 2:
-                print(
-                    f"[SCANNER] Skipping @{tweet['author']} — daily reply limit reached"
-                )
+            if database.count_replies_to_author_today_utc(author) >= 2:
+                logger.info("[SCANNER] Skipped @%s: same_account_limit (daily_reply_limit)", author)
                 database.log_scanned(
-                    tweet["id"], tweet["author"], "daily_reply_limit"
+                    tweet["id"], author, "daily_reply_limit"
                 )
                 continue
 
-            database.log_scanned(tweet["id"], tweet["author"])
+            database.log_scanned(tweet["id"], author)
             candidates.append(tweet)
 
     n_accounts = len(config.TRACKED_ACCOUNTS)

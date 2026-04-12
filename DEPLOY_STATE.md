@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-11 (docs: 5-Zonen-Kohaerenz + CURSOR_MASTERPROMPT)
+**Zuletzt aktualisiert:** 2026-04-11 (x-bot: Reply-Candidates / Filter lockern)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-11) — x-bot: mehr Reply-Candidates (Limits, SKIP-Prompt, Logging)
+- **Datei(en):** `alphacycle-x-bot/config.py`, `alphacycle-x-bot/scanner.py`, `alphacycle-x-bot/reply_engine.py`, `DEPLOY_STATE.md`
+- **Was wurde geaendert:** `MAX_REPLIES_PER_HOUR` **10**, `MAX_REPLIES_PER_DAY` **30**, `REPLY_DELAY_MIN/MAX` **30–120** s, `MIN_LIKES_TO_REPLY` Default **0** (weiter per `.env` steuerbar). `BLOCKED_KEYWORDS` **temporaer leer** fuer Test-Durchsatz. `reply_engine`: User-Prompt lockert SKIP (nur offensichtlich irrelevant); `logger.info` bei `not_relevant`. `scanner`: `logger.info` bei Skip mit Grund (`too_recent`, `too_old`, `low_likes`, `blocked_keyword`, `already_scanned`, `already_replied`, `same_account_limit` fuer spacing + daily cap).
+- **Warum:** Zu viele Candidates wurden als nicht-ARC-relevant verworfen bzw. zu wenig Tweets passierten Likes/Filter.
+- **Status:** pushed to GitHub (VPS: `git pull` + `restart-screens.sh`)
 
 ## Letzter Session-Status (2026-04-11) — docs: 5 ARC-Zonen ueberall konsistent (Doku only)
 - **Datei(en):** `CURSOR_MASTERPROMPT.md` (alte 4-Stufen 61/81 entfernt; Tabelle 0-29 … 70-100 + Verweise), `docs/alphacycle_context.md` (2.4 Boundary Implementation neu), `docs/alphacycle_ai_operating_manual.md`, `docs/alphacycle_ai_operating_manual_COMPLETE.md` (Section 2 Locked Constants), `DEPLOY_STATE.md`

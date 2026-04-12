@@ -137,25 +137,21 @@ TRACKED_ACCOUNTS = TIER_1_ACCOUNTS + TIER_2_ACCOUNTS + TIER_3_ACCOUNTS
 
 # Verify: len(TRACKED_ACCOUNTS) == 50 (10 + 20 + 20)
 
-BLOCKED_KEYWORDS = [
-    "LFG", "wagmi", "to the moon", "100x", "1000x",
-    "BUY NOW", "FULL SEND", "PARABOLIC", "PUMP",
-    "giveaway", "airdrop", "presale", "whitelist",
-    "JOIN NOW", "FREE MINT", "LAST CHANCE",
-    "DM me", "join my group", "free signals",
-]
+# Temporarily empty for higher reply throughput during testing; restore list to tighten.
+BLOCKED_KEYWORDS: list = []
 
-MAX_REPLIES_PER_HOUR = 5
-MAX_REPLIES_PER_DAY = 20
+# Reply rate caps (also referenced as REPLY_LIMIT_* in docs).
+MAX_REPLIES_PER_HOUR = 10
+MAX_REPLIES_PER_DAY = 30
 # Default 3600 = 60 min between scan cycles (50 tracked accounts; override SCAN_INTERVAL_SECONDS in .env for 30 min).
 SCAN_INTERVAL_SECONDS = int(os.getenv("SCAN_INTERVAL_SECONDS", "3600"))
 
-REPLY_DELAY_MIN = 360
-REPLY_DELAY_MAX = 1320
+REPLY_DELAY_MIN = 30
+REPLY_DELAY_MAX = 120
 
 MIN_TWEET_AGE_SECONDS = int(os.getenv("MIN_TWEET_AGE_SECONDS", "60"))
 # Wider window = more candidates (Telegram /scan can still yield 0 if all tweets are old/low-likes/spaced-out).
 MAX_TWEET_AGE_SECONDS = int(os.getenv("MAX_TWEET_AGE_SECONDS", "21600"))
-MIN_LIKES_TO_REPLY = int(os.getenv("MIN_LIKES_TO_REPLY", "5"))
+MIN_LIKES_TO_REPLY = int(os.getenv("MIN_LIKES_TO_REPLY", "0"))
 
 DB_PATH = str(_BASE_DIR / "database.db")

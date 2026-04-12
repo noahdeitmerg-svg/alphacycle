@@ -1,8 +1,12 @@
+import logging
+
 import anthropic
 import config
 import daily_post_engine
 import database
 from growth_engine import build_reply_prompt
+
+logger = logging.getLogger(__name__)
 
 
 def generate_reply(tweet: dict) -> tuple[str | None, str | None, str | None]:
@@ -29,7 +33,12 @@ def generate_reply(tweet: dict) -> tuple[str | None, str | None, str | None]:
         return None, None, None
 
     user_msg = (
-        "If the tweet is off-topic for cycle / liquidity / structural regime, output exactly SKIP. "
+        "Throughput mode: output SKIP only if the tweet is clearly non-substantive "
+        '(e.g. "gm" alone, "happy birthday", pure emoji/no text, obvious spam). '
+        "If it touches markets, Bitcoin, crypto, macro, liquidity, rates, Fed, inflation, "
+        "equities, bonds, tariffs, geopolitics, risk, cycles, sentiment, positioning, or finance "
+        "in any remote way, do NOT output SKIP — write the reply. "
+        "Tweets from tracked accounts are relevant enough unless obviously spam. "
         "Otherwise produce only the reply text. No preamble."
     )
 
@@ -45,7 +54,9 @@ def generate_reply(tweet: dict) -> tuple[str | None, str | None, str | None]:
         reply = response.content[0].text.strip()
 
         if reply == "SKIP":
-            print("[REPLY_ENGINE] Skipped — not relevant to ARC")
+            author = (tweet.get("author") or "").strip() or "unknown"
+            logger.info("[REPLY_ENGINE] Skipped @%s: not_relevant", author)
+            print(f"[REPLY_ENGINE] Skipped @{author}: not_relevant")
             return None, None, None
 
         if len(reply) > 270:
