@@ -988,7 +988,9 @@ body::before {
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
-  gap: 4px !important;
+  justify-content: center !important;
+  text-align: center !important;
+  gap: 0px !important;
 }
 
 #btc-card.hero-card::after {
@@ -1068,8 +1070,8 @@ body::before {
     #f59e0b 59% 69%,
     #ef4444 69% 100%
   ) !important;
-  -webkit-mask: radial-gradient(circle, transparent 88%, black 89%) !important;
-  mask: radial-gradient(circle, transparent 88%, black 89%) !important;
+  -webkit-mask: radial-gradient(circle, transparent 85%, black 87%) !important;
+  mask: radial-gradient(circle, transparent 85%, black 87%) !important;
   opacity: 1 !important;
   pointer-events: none !important;
   z-index: 0 !important;
@@ -1161,7 +1163,9 @@ body::before {
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
-  gap: 2px !important;
+  justify-content: center !important;
+  text-align: center !important;
+  gap: 0px !important;
   position: static !important;
   z-index: 1;
 }
@@ -1179,8 +1183,11 @@ body::before {
 }
 
 #btc-card.hero-card .gauge-denom {
-  font-size: 10px !important;
-  opacity: 0.35 !important;
+  font-size: 11px !important;
+  color: rgba(255, 255, 255, 0.25) !important;
+  margin-top: -2px !important;
+  letter-spacing: 0.08em !important;
+  opacity: 1 !important;
   z-index: 1;
 }
 
@@ -5032,11 +5039,11 @@ const fmtT    = n => '$'+safeNum(n/1e12).toFixed(2)+'T';
 
 function scoreColor(s) {
   s = clamp(s);
-  if (s < 30) return '#00C896';
-  if (s < 40) return '#00B4D8';
-  if (s < 60) return '#3B82F6';
-  if (s < 70) return '#F97316';
-  return '#EF4444';
+  if (s < 30) return '#22c55e';
+  if (s < 40) return '#00D4AA';
+  if (s < 60) return '#3b82f6';
+  if (s < 70) return '#f59e0b';
+  return '#ef4444';
 }
 function phaseOf(score) {
   var v = Number(score);
@@ -5789,6 +5796,8 @@ function updateUI() {
 
   // Score numbers (Hero ARC Gauge nutzt arc_display)
   setText('btc-score-val', Math.round(combinedScore), bCol);
+  var _heroSv = document.getElementById('btc-score-val');
+  if (_heroSv) _heroSv.style.color = scoreColor(combinedScore);
   positionOrbitDot(Math.round(combinedScore));
   highlightOrbitZone(Math.round(combinedScore));
   (function updateHeroRisk() {
@@ -5856,19 +5865,17 @@ function updateUI() {
 
   // Phases
   setText('btc-phase', phaseOf(S.btcScore), bCol);
+  var _heroPh = document.getElementById('btc-phase');
+  if (_heroPh) _heroPh.style.color = scoreColor(combinedScore);
   setText('eth-phase', phaseOf(S.ethScore), eCol);
   setText('mac-phase', phaseOf(S.macScore), mCol);
 
-  // Hero regime context (1-line, dim)
+  // Hero regime context (1-line, dim; same copy as _getCycleDescription, driven by display score)
   var ctxEl = document.getElementById('hero-regime-context');
   if (ctxEl) {
-    var s = S.arcSummary ? S.arcSummary.arc_score : null;
-    if (s != null) {
-      if (s < 30) ctxEl.textContent = 'Historically the strongest risk/reward environment';
-      else if (s < 40) ctxEl.textContent = 'Markets in this phase have historically delivered strong 12-month returns';
-      else if (s < 60) ctxEl.textContent = 'Mid-cycle transitional environment — balanced risk/reward';
-      else if (s < 70) ctxEl.textContent = 'Late-cycle phase — risk historically outweighs reward';
-      else ctxEl.textContent = 'Peak-cycle environment — historically elevated drawdown risk';
+    var a = Number(combinedScore);
+    if (isFinite(a)) {
+      ctxEl.textContent = _getCycleDescription(a);
     }
   }
 

@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10 (index.html Hero Orbit Clarity)
+**Zuletzt aktualisiert:** 2026-04-10 (index.html Hero orbit hotfix context + colors)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-10) — Hero hotfix: regime-context, Ring, Zentrierung, scoreColor
+- **Datei(en):** `index.html` (`hero-regime-context` nutzt `_getCycleDescription(combinedScore)` statt alter arc_score-Texte; `.orbit-ring::before` Mask 85/87; `.gauge-center` gap 0 + justify center; `.gauge-denom` /100 dezenter; `scoreColor()` auf Orbit-Palette #22c55e/#00D4AA/#3b82f6/#f59e0b/#ef4444; explizit `btc-score-val`/`btc-phase` Farbe aus `scoreColor(combinedScore)`), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was wurde geaendert:** Kontextzeile aktualisiert sich mit Anzeige-Score; Score und Zonenlabel farblich konsistent; Ring etwas dicker.
+- **Warum:** Bug: `updateUI` setzte weiter lange englische Texte und `arc_score` statt Kurztexte; Hero-Score blieb optisch nicht zonenfarbig genug.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-10) — Hero Orbit Clarity (CSS/JS, keine ARC-Aenderung)
 - **Datei(en):** `index.html` (Orbit-Ring Mask 88/89, Glow box-shadow, feste Label-Farben ol-*, active text-shadow, inner ring inset 14px, `#hero-regime-context` kompakter, `_getCycleDescription()` kuerzere Texte, `highlightOrbitZone` ohne inline `color`), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
