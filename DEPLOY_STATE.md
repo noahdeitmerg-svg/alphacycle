@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-12 (x-bot: reply_system EXAMPLES + Anti-Patterns)
+**Zuletzt aktualisiert:** 2026-04-10 (arc_config.py ARC single source of truth)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-10) — arc_config.py Single Source of Truth (ARC)
+- **Datei(en):** `backend/arc_config.py` (neu), `backend/scoring.py` (Docstring-Hinweis zu `arc_config.ARC_WEIGHTS`), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was wurde geaendert:** Zentrale Referenz fuer ARC_FORMULA_VERSION, ARC_WEIGHTS (0.35/0.25/0.25/0.15), ARC_ZONES, `get_zone()`, `assert_weights_sum()` beim Import. Keine Aenderung an der bestehenden Berechnungslogik.
+- **Warum:** Audit-Gap 3.1/4.2 - verhindert stillen Drift der Gewichte ohne sichtbaren Referenzpunkt.
+- **Status:** pushed to GitHub (nach Commit)
 
 ## Letzter Session-Status (2026-04-12) — x-bot: reply_system EXAMPLES verdoppelt + FAIL-QA Anti-Patterns
 - **Datei(en):** `alphacycle-x-bot/prompts/reply_system.txt` (EXCELLENT-Beispiele erweitert; neuer Block REPLIES THAT WOULD FAIL QA mit BAD/WHY/FIX), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
@@ -752,6 +758,7 @@
 
 ## Architecture Lock (NEVER change without architect approval)
 ARC Formula (unified, research-validated): ma_200w*0.35 + drawdown*0.25 + liquidity*0.25 + fear_greed*0.15
+Single source of truth: `backend/arc_config.py` (ARC_WEIGHTS, ARC_ZONES, ARC_FORMULA_VERSION). Import `arc_config` when needed - never duplicate hardcoded weights elsewhere.
 Use fg_to_score(fear_greed) for F&G input. Same formula in scoring.compute_arc_score(), backtest_engine, and /api/arc-summary.
 DO NOT modify weights. DO NOT add scoring components.
 **ARC output**: compute_arc_score() returns clamp(arc) — raw ARC range (empirical ~22-78). No rescaling. Momentum from backtest via scoring.compute_arc_momentum(arc_history, days=30).

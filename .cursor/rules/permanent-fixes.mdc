@@ -43,6 +43,9 @@ Beim Bearbeiten von backend/fetcher.py, backend/main.py, backend/scoring.py oder
 - **ALWAYS** in merge(): Wenn market_cap 0 und price > 0, Fallback market_cap = price * 19_700_000 (BTC Umlaufmenge).
 - **ALWAYS** in fetch_all() nach merge(): Wenn gdata.btc_dominance == 50.0 (CoinGecko-Fallback) und btc_market.market_cap sowie gdata.total_market_cap > 0, gdata["btc_dominance"] = round(btc_mc / total_mc * 100, 1) — btc_dominance Fallback aus market_cap.
 
+## backend/arc_config.py
+- **arc_config.py**: Single source of truth fuer ARC-Formel (ARC_WEIGHTS trend:0.35/drawdown:0.25/liquidity:0.25/sentiment:0.15), Zonen (5 Zonen, Display-Skala) und ARC_FORMULA_VERSION "1.0". assert_weights_sum() prueft beim Import. NIEMALS Gewichte in scoring.py, backtest_engine.py oder main.py hardcoden - immer arc_config importieren.
+
 ## backend/scoring.py
 - **compute_combined()** ALWAYS returns **signal** (STRONG BUY/BUY/ACCUMULATE/HOLD/REDUCE/SELL) and **confidence** (round(abs(combined-50)*2, 1)).
 - **compute_macro_score()** ALWAYS returns **regime** (EXPANSION if macro_score < 35, NEUTRAL if < 60, else CONTRACTION).
