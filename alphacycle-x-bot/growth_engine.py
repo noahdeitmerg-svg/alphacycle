@@ -356,3 +356,91 @@ def qa_check_reply(
     if "FAIL" in upper:
         return False, first_line[:300]
     return False, first_line[:300] if first_line else raw[:300]
+
+
+_QA_PLACEHOLDER_REPLY = (
+    "[Could not generate reply text after retries — post manually.]"
+)
+
+
+def generate_reply_with_qa(
+    tweet: dict,
+    arc_data: dict | None = None,
+) -> tuple[str, str, int, str | None, str | None]:
+    """
+    Sonnet reply + Haiku QA loop (up to QA_MAX_ATTEMPTS).
+    Always returns a non-empty reply_text (placeholder if needed).
+    Returns: reply_text, qa_status, attempts, approach_key, pattern_key
+    qa_status: \"PASS\" or \"FAIL_3x:reasons\"
+    """
+    import reply_engine
+
+    author_log = (tweet.get("author") or "").strip().lstrip("@") or "unknown"
+    max_a = max(1, int(getattr(config, "QA_MAX_ATTEMPTS", 3)))
+
+    if not getattr(config, "QA_ENABLED", True):
+        rt, ak, pk = reply_engine.generate_reply(tweet, arc_data=arc_data)
+        if not rt:
+            rt = _QA_PLACEHOLDER_REPLY
+        return rt, "PASS", 1, ak, pk
+
+    failures: list[str] = []
+    last_reply = ""
+    last_ak: str | None = None
+    last_pk: str | None = None
+
+    for attempt in range(1, max_a + 1):
+        extra = ""
+        if failures:
+            extra = (
+                "\n\nPREVIOUS ATTEMPTS FAILED QA CHECK:\n"
+                + "\n".join(
+                    f"Attempt {i + 1}: FAIL - {r}" for i, r in enumerate(failures)
+                )
+                + "\n\nFix these specific issues in your new reply. "
+                + "Do NOT repeat the same mistakes."
+            )
+        rt, ak, pk = reply_engine.generate_reply(
+            tweet,
+            extra_instruction=extra,
+            arc_data=arc_data,
+        )
+        if rt:
+            last_reply = rt
+            last_ak = ak
+            last_pk = pk
+        else:
+            failures.append("empty_reply")
+            logger.info(
+                "[QA] @%s: empty generation (attempt %s)",
+                author_log,
+                attempt,
+            )
+            continue
+
+        passed, reason = qa_check_reply(
+            tweet.get("text") or "",
+            tweet.get("author") or "",
+            rt,
+        )
+        if passed:
+            logger.info("[QA] @%s: PASS (attempt %s)", author_log, attempt)
+            return rt, "PASS", attempt, ak, pk
+
+        fail_reason = reason or "unknown"
+        failures.append(fail_reason)
+        logger.info(
+            "[QA] @%s: FAIL - %s (attempt %s)",
+            author_log,
+            fail_reason,
+            attempt,
+        )
+
+    summary = "; ".join(failures) if failures else "unknown"
+    logger.warning(
+        "[QA] @%s: %sx FAIL - sending anyway with warning",
+        author_log,
+        max_a,
+    )
+    out = last_reply or _QA_PLACEHOLDER_REPLY
+    return out, f"FAIL_3x:{summary}", max_a, last_ak, last_pk

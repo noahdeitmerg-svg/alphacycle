@@ -71,7 +71,7 @@ else:
 _QA_ENV = (os.getenv("QA_ENABLED", "true") or "").strip().lower()
 QA_ENABLED = _QA_ENV not in ("0", "false", "no", "off")
 QA_MODEL = (os.getenv("QA_MODEL") or "claude-haiku-4-5-20251001").strip() or "claude-haiku-4-5-20251001"
-QA_MAX_RETRIES = max(1, int(os.getenv("QA_MAX_RETRIES", "2") or "2"))
+QA_MAX_ATTEMPTS = max(1, int(os.getenv("QA_MAX_ATTEMPTS", "3") or "3"))
 
 # ============================================================
 # TRACKED ACCOUNTS — AlphaCycle Reply Targets

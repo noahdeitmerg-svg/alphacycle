@@ -5,16 +5,23 @@ import database
 from growth_engine import build_reply_prompt
 
 
-def generate_reply(tweet: dict) -> tuple[str | None, str | None, str | None]:
+def generate_reply(
+    tweet: dict,
+    extra_instruction: str = "",
+    arc_data: dict | None = None,
+) -> tuple[str | None, str | None, str | None]:
     """
     Build prompt via growth_engine + live ARC from daily_post_engine; call Claude.
     Returns (reply_text, approach_key, pattern_key) for pending row / reply_history.
+    optional arc_data: skip refetch when provided (e.g. QA loop).
+    extra_instruction: appended to the user message (QA fix feedback).
     """
     if not config.CLAUDE_API_KEY:
         print("[REPLY_ENGINE] No Claude API key set")
         return None, None, None
 
-    arc_data = daily_post_engine.fetch_arc_data() or {}
+    if arc_data is None:
+        arc_data = daily_post_engine.fetch_arc_data() or {}
     history = database.get_reply_history_texts_for_prompt(config.MAX_REPLY_HISTORY)
 
     try:
@@ -34,6 +41,8 @@ def generate_reply(tweet: dict) -> tuple[str | None, str | None, str | None]:
         "Do not output SKIP or any placeholder — always produce reply text for this tweet. "
         "No preamble."
     )
+    if (extra_instruction or "").strip():
+        user_msg = user_msg + "\n\n" + (extra_instruction or "").strip()
 
     try:
         client = anthropic.Anthropic(api_key=config.CLAUDE_API_KEY)

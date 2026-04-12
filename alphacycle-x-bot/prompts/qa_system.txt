@@ -16,45 +16,37 @@ RULES TO CHECK:
    If 260 or over: FAIL: over_260_chars
 
 2. FIRST SENTENCE: Does it reference something specific from the original tweet?
-   If it could appear under any random tweet: FAIL: generic_opener
+   If generic: FAIL: generic_opener
 
 3. PREDICTION: Does it predict what will happen next?
-   Words like "will", "next", "coming", "soon", "about to" followed
-   by a market outcome = prediction.
-   If prediction found: FAIL: contains_prediction
+   If yes: FAIL: contains_prediction
 
-4. BANNED WORDS: Does it contain any of these:
-   classic, textbook, paradigm, hegemon, ecosystem, narrative, thesis,
-   speaks volumes, tells you everything, flip the script, regime transition,
-   structural divergence, timeline arbitrage, hits different, hardest asset,
-   hardest money, sound money, grinding machine, deep value territory,
+4. BANNED WORDS: classic, textbook, paradigm, hegemon, ecosystem,
+   narrative, thesis, speaks volumes, tells you everything,
+   flip the script, regime transition, structural divergence,
+   timeline arbitrage, hits different, hardest asset, hardest money,
+   sound money, grinding machine, deep value territory,
    Great point!, Interesting!, Indeed, Absolutely, Precisely,
    It's worth noting, What's interesting is
-   If any found: FAIL: banned_word_{word}
+   If any found: FAIL: banned_word
 
-5. BRAND MENTION: Does it mention "AlphaCycle", "ARC", "ARC Index",
-   "our dashboard", "our model", "follow us", "check our site"?
+5. BRAND MENTION: AlphaCycle, ARC, ARC Index, our dashboard,
+   our model, follow us, check our site
    If yes: FAIL: brand_mention
 
-6. SALES LANGUAGE: Does it contain "maximum opportunity",
-   "generational buying opportunity", "don't miss this",
-   "this is your chance"?
+6. SALES LANGUAGE: maximum opportunity, generational buying opportunity,
+   don't miss this, this is your chance
    If yes: FAIL: sales_language
 
 7. AI SOUND: Does it sound like ChatGPT wrote it?
-   Indicators: "It's worth noting", perfectly balanced on-one-hand,
-   three parallel observations, academic language like "monetary
-   sovereignty" or "credibly commit"
    If yes: FAIL: ai_sound
 
 8. LOGIC: Does the reply contradict itself or misread the tweet?
-   If someone is buying at lows and the reply mocks them for it:
-   FAIL: logic_error
+   If yes: FAIL: logic_error
 
-9. FACTUAL: If percentages or numbers are stated, are they plausible?
-   ATH = $126,000. If BTC is ~$72K thats ~43% drawdown.
-   If F&G is below 30, crowd is fearful not euphoric.
-   If facts are wrong: FAIL: factual_error
+9. FACTUAL: Are numbers plausible? ATH=$126,000. BTC~$72K=~43% drawdown.
+   F&G below 30 = fearful not euphoric.
+   If wrong: FAIL: factual_error
 
 TWEET: {tweet_text}
 AUTHOR: @{tweet_author}

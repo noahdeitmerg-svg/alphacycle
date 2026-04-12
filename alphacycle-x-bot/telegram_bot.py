@@ -39,7 +39,8 @@ def send_approval(
     username: str,
     post_mode: str = "auto",
     reply_settings: str = "",
-    qa_pass: bool | None = None,
+    qa_status: str | None = None,
+    qa_attempts: int | None = None,
 ) -> bool:
     if not config.TELEGRAM_BOT_TOKEN or not config.TELEGRAM_CHAT_ID:
         print("[TELEGRAM] Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID — cannot send approval")
@@ -48,14 +49,57 @@ def send_approval(
     u = (username or "").strip().lstrip("@")
     rs = (reply_settings or "").strip() or "(unknown)"
     mode = (post_mode or "auto").strip() or "auto"
-    qa_line = "\n\n✅ QA: PASS" if qa_pass is True else ""
-    body = (
-        f"Reply ready — {mode}{qa_line}\n\n"
-        f"Tweet: {tweet_url}\n"
-        f"Author: @{u}\n"
-        f"Reply setting: {rs}\n\n"
-        "Tap POST to send (API or copy-paste if blocked). Reply text follows in the next message."
-    )
+    rt = (reply_text or "").strip()
+
+    if qa_status:
+        att = int(qa_attempts or 1)
+        if qa_status == "PASS" or qa_status.startswith("PASS"):
+            body = (
+                "New AlphaCycle Reply Candidate\n\n"
+                f"✅ QA: PASS (attempt {att})\n"
+                f"Account: @{u}\n"
+                f"Tweet: {tweet_url}\n"
+                f"Mode: {mode}\n\n"
+                "Reply:\n"
+                f"{rt}\n\n"
+                "Approve?"
+            )
+        elif qa_status.startswith("FAIL_3x"):
+            reasons = (
+                qa_status.split(":", 1)[1].strip()
+                if ":" in qa_status
+                else qa_status
+            )
+            body = (
+                "New AlphaCycle Reply Candidate\n\n"
+                f"⚠️ QA: FAILED 3x ({reasons}) — check carefully\n"
+                f"Account: @{u}\n"
+                f"Tweet: {tweet_url}\n"
+                f"Mode: {mode}\n\n"
+                "Reply:\n"
+                f"{rt}\n\n"
+                "Approve?"
+            )
+        else:
+            body = (
+                "New AlphaCycle Reply Candidate\n\n"
+                f"QA: {qa_status}\n"
+                f"Account: @{u}\n"
+                f"Tweet: {tweet_url}\n"
+                f"Mode: {mode}\n\n"
+                "Reply:\n"
+                f"{rt}\n\n"
+                "Approve?"
+            )
+    else:
+        body = (
+            f"Reply ready — {mode}\n\n"
+            f"Tweet: {tweet_url}\n"
+            f"Author: @{u}\n"
+            f"Reply setting: {rs}\n\n"
+            "Tap POST to send (API or copy-paste if blocked). Reply text follows in the next message."
+        )
+
     max_len = 4096
     if len(body) > max_len:
         body = body[: max_len - 40] + "\n...(truncated)"
@@ -88,7 +132,10 @@ def send_approval(
         print(f"[TELEGRAM] sendMessage error: {e}")
         return False
 
-    if not send_plain_message((reply_text or "").strip()):
+    if qa_status:
+        return True
+
+    if not send_plain_message(rt):
         print("[TELEGRAM] approval info sent but plain reply message failed")
         return False
     return True
