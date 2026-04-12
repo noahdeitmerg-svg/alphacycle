@@ -50,13 +50,13 @@ def _is_claude_overloaded(exc: BaseException) -> bool:
 
 def _zone_hist_key(arc_score: float) -> str:
     a = float(arc_score)
-    if a <= 29:
+    if a < 30:
         return "deep_value"
-    if a <= 39:
+    if a < 40:
         return "accumulation"
-    if a <= 59:
+    if a < 60:
         return "expansion"
-    if a <= 69:
+    if a < 70:
         return "risk_rising"
     return "euphoria"
 

@@ -913,13 +913,13 @@ def _phase_group(ph):
 
 
 def get_zone_name(arc_score: float) -> str:
-    if arc_score <= 29:
+    if arc_score < 30:
         return "Deep Value"
-    if arc_score <= 39:
+    if arc_score < 40:
         return "Accumulation"
-    if arc_score <= 59:
+    if arc_score < 60:
         return "Expansion"
-    if arc_score <= 69:
+    if arc_score < 70:
         return "Risk Rising"
     return "Euphoria"
 
@@ -930,16 +930,16 @@ def _get_expected_range(arc: float, hist_returns: dict = None, high_risk_drawdow
     independent of phase. Uses hist_returns["zones"] (deep_value, accumulation, expansion, risk_rising, euphoria).
     """
     arc = float(arc)
-    if arc <= 29:
+    if arc < 30:
         zone_key = "deep_value"
         zone_name = "Deep Value"
-    elif arc <= 39:
+    elif arc < 40:
         zone_key = "accumulation"
         zone_name = "Accumulation"
-    elif arc <= 59:
+    elif arc < 60:
         zone_key = "expansion"
         zone_name = "Expansion"
-    elif arc <= 69:
+    elif arc < 70:
         zone_key = "risk_rising"
         zone_name = "Risk Rising"
     else:

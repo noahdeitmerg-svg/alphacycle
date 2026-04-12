@@ -21,8 +21,8 @@ import httpx
 
 logger = logging.getLogger(__name__)
 
-# 5-zone buckets for historical returns (aligned with phaseOf / get_zone_name)
-ZONES = [(0, 29), (30, 39), (40, 59), (60, 69), (70, 100)]
+# 5-zone buckets (lo inclusive, hi exclusive) — aligned with arc_config.ARC_ZONES / get_zone_name
+ZONES = [(0, 30), (30, 40), (40, 60), (60, 70), (70, 101)]
 ZONE_NAMES = ["Deep Value", "Accumulation", "Expansion", "Risk Rising", "Euphoria"]
 
 try:

@@ -51,13 +51,13 @@ def compute_historical_returns(backtest_data: list, zone_periods: Optional[list]
     def in_zone(arc: float, zone: str) -> bool:
         a = float(arc)
         if zone == "deep_value":
-            return 0 <= a <= 29
+            return 0 <= a < 30
         if zone == "accumulation":
-            return 30 <= a <= 39
+            return 30 <= a < 40
         if zone == "expansion":
-            return 40 <= a <= 59
+            return 40 <= a < 60
         if zone == "risk_rising":
-            return 60 <= a <= 69
+            return 60 <= a < 70
         if zone == "euphoria":
             return 70 <= a <= 100
         return False
@@ -228,11 +228,11 @@ def compute_historical_returns(backtest_data: list, zone_periods: Optional[list]
                 )
 
     zone_meta = {
-        "deep_value": ("0-29", "Deep Value"),
-        "accumulation": ("30-39", "Accumulation"),
-        "expansion": ("40-59", "Expansion"),
-        "risk_rising": ("60-69", "Risk Rising"),
-        "euphoria": ("70-100", "Euphoria"),
+        "deep_value": ("[0,30)", "Deep Value"),
+        "accumulation": ("[30,40)", "Accumulation"),
+        "expansion": ("[40,60)", "Expansion"),
+        "risk_rising": ("[60,70)", "Risk Rising"),
+        "euphoria": ("[70,100]", "Euphoria"),
     }
 
     def stats(entries: list, key: str) -> dict:
@@ -483,11 +483,11 @@ def _empty_returns() -> dict:
     }
     return {
         "zones": {
-            "deep_value": {**empty_zone, "range": "0-29", "zone_name": "Deep Value"},
-            "accumulation": {**empty_zone, "range": "30-39", "zone_name": "Accumulation"},
-            "expansion": {**empty_zone, "range": "40-59", "zone_name": "Expansion"},
-            "risk_rising": {**empty_zone, "range": "60-69", "zone_name": "Risk Rising"},
-            "euphoria": {**empty_zone, "range": "70-100", "zone_name": "Euphoria"},
+            "deep_value": {**empty_zone, "range": "[0,30)", "zone_name": "Deep Value"},
+            "accumulation": {**empty_zone, "range": "[30,40)", "zone_name": "Accumulation"},
+            "expansion": {**empty_zone, "range": "[40,60)", "zone_name": "Expansion"},
+            "risk_rising": {**empty_zone, "range": "[60,70)", "zone_name": "Risk Rising"},
+            "euphoria": {**empty_zone, "range": "[70,100]", "zone_name": "Euphoria"},
         },
         "best_entry_zone": None,
         "sample_events": [],
