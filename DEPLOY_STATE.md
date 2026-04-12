@@ -8,7 +8,7 @@
 - **Datei(en):** `alphacycle-x-bot/telegram_bot.py` (`send_main_menu`: optional `reply_to_message_id`), `alphacycle-x-bot/telegram_listener.py` (`_entity_text_utf16`, `_entity_mentions_this_bot`, `_message_invokes_bot` mit `text`; Menue-/Slash-Pfade mit `reply_to`), `DEPLOY_STATE.md`
 - **Was wurde geaendert:** @-Erwaehnung per Telegram-`entities` (mention/text_mention) erkannt; Hauptmenue sendet weiterhin volle **Inline-Keyboard**-Zeilen und kann auf die Nutzer-Nachricht antworten.
 - **Warum:** „Hi @bot“ muss zuverlaessig die Karte mit allen Buttons liefern (nicht nur substring).
-- **Status:** nach Commit/Push
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-10) — x-bot: Telegram Gruppe Keywords + @bot (jeder Nutzer)
 - **Datei(en):** `alphacycle-x-bot/telegram_listener.py` (`_TEXT_TO_SLASH`, `_execute_slash_command`, `_message_invokes_bot`, `_get_bot_username_lower`), `alphacycle-x-bot/config.py` (`TELEGRAM_BOT_USERNAME`), `alphacycle-x-bot/.env.example`, `alphacycle-x-bot/verify_env.py`, `alphacycle-x-bot/RUN_24_7.md`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
