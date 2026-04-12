@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10 (permanent-fixes: reply_engine Regel)
+**Zuletzt aktualisiert:** 2026-04-10 (x-bot: Haiku QA Gate vor Telegram)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-10) — x-bot: Haiku QA Gate vor Telegram Approval
+- **Datei(en):** `alphacycle-x-bot/prompts/qa_system.txt`, `alphacycle-x-bot/growth_engine.py` (`qa_check_reply`), `alphacycle-x-bot/bot.py` (max 2 Generate+QA Versuche), `alphacycle-x-bot/telegram_bot.py` (`send_approval` + optional `qa_pass` / Zeile `QA: PASS`), `alphacycle-x-bot/config.py` (`QA_ENABLED`, `QA_MODEL`, `QA_MAX_RETRIES`), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was wurde geaendert:** Nach `generate_reply` (Sonnet) zweiter Claude-Call mit `prompts/qa_system.txt` und **QA_MODEL** (Default Haiku). Nur bei **PASS** (oder `QA_ENABLED=false`) Pending + Telegram; bei FAIL bis zu **QA_MAX_RETRIES** (2) neu generieren, sonst `qa_fail_twice`. Telegram-Info-Nachricht enthaelt bei Erfolg **QA: PASS**. Logging: `[QA] @user: PASS` / `FAIL - reason, regenerating` / `FAIL x2 - skipping tweet`.
+- **Warum:** Manuelle 10+ Regeln vor Freigabe entlasten; billiger Haiku-Check.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-10) — x-bot: reply_engine Relevanz-/SKIP-Gate deaktiviert
 - **Datei(en):** `alphacycle-x-bot/reply_engine.py`, `DEPLOY_STATE.md`

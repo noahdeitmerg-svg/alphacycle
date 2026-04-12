@@ -11,6 +11,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Sequence
 
+import anthropic
+
 import config
 import database
 
@@ -296,3 +298,61 @@ def build_post_prompt(
     ):
         base = base.replace(key, val)
     return base
+
+
+def qa_check_reply(
+    tweet_text: str,
+    tweet_author: str,
+    reply_text: str,
+) -> tuple[bool, str | None]:
+    """
+    Second Claude call (Haiku): PASS or FAIL: reason.
+    Returns (True, None) on PASS, (False, reason) on FAIL or API error.
+    """
+    if not getattr(config, "CLAUDE_API_KEY", None):
+        logger.warning("[QA] No CLAUDE_API_KEY")
+        return False, "no_api_key"
+
+    try:
+        template = _read_prompt_file("qa_system.txt")
+    except FileNotFoundError as e:
+        logger.error("[QA] %s", e)
+        return False, "missing_qa_prompt"
+
+    author = (tweet_author or "").strip().lstrip("@")
+    t = (tweet_text or "").strip()
+    r = (reply_text or "").strip()
+    for key, val in (
+        ("{tweet_text}", t),
+        ("{tweet_author}", author),
+        ("{reply_text}", r),
+    ):
+        template = template.replace(key, val)
+
+    model = (getattr(config, "QA_MODEL", None) or "claude-haiku-4-5-20251001").strip()
+    try:
+        client = anthropic.Anthropic(api_key=config.CLAUDE_API_KEY)
+        response = client.messages.create(
+            model=model,
+            max_tokens=50,
+            messages=[{"role": "user", "content": template}],
+        )
+    except Exception as e:
+        logger.warning("[QA] Claude QA call failed: %s", e)
+        return False, f"qa_api_error:{str(e)[:180]}"
+
+    try:
+        raw = (response.content[0].text or "").strip()
+    except (IndexError, AttributeError):
+        return False, "empty_qa_response"
+
+    first_line = raw.split("\n", 1)[0].strip()
+    upper = first_line.upper()
+    if upper == "PASS" or upper.startswith("PASS "):
+        return True, None
+    if upper.startswith("FAIL"):
+        reason = first_line[4:].lstrip(": ").strip() or raw[:300]
+        return False, reason
+    if "FAIL" in upper:
+        return False, first_line[:300]
+    return False, first_line[:300] if first_line else raw[:300]

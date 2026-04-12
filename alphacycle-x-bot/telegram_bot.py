@@ -39,6 +39,7 @@ def send_approval(
     username: str,
     post_mode: str = "auto",
     reply_settings: str = "",
+    qa_pass: bool | None = None,
 ) -> bool:
     if not config.TELEGRAM_BOT_TOKEN or not config.TELEGRAM_CHAT_ID:
         print("[TELEGRAM] Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID — cannot send approval")
@@ -47,8 +48,9 @@ def send_approval(
     u = (username or "").strip().lstrip("@")
     rs = (reply_settings or "").strip() or "(unknown)"
     mode = (post_mode or "auto").strip() or "auto"
+    qa_line = "\n\n✅ QA: PASS" if qa_pass is True else ""
     body = (
-        f"Reply ready — {mode}\n\n"
+        f"Reply ready — {mode}{qa_line}\n\n"
         f"Tweet: {tweet_url}\n"
         f"Author: @{u}\n"
         f"Reply setting: {rs}\n\n"

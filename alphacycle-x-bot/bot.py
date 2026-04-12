@@ -11,6 +11,7 @@ import schedule
 import database
 import telegram_bot
 import config
+import growth_engine
 
 _logger = logging.getLogger(__name__)
 from daily_post_engine import fetch_arc_data, generate_daily_post
@@ -178,9 +179,54 @@ def run_cycle():
             if database.already_replied(tweet["id"]):
                 continue
 
-            reply_text, approach_key, pattern_key = reply_engine.generate_reply(tweet)
+            author_log = (tweet.get("author") or "").strip().lstrip("@")
+            max_tries = config.QA_MAX_RETRIES if config.QA_ENABLED else 1
+            reply_text = None
+            approach_key = ""
+            pattern_key = ""
+            telegram_qa_pass: bool | None = None
+
+            for attempt in range(1, max_tries + 1):
+                reply_text, approach_key, pattern_key = reply_engine.generate_reply(tweet)
+                if not reply_text:
+                    if attempt == 1:
+                        database.log_scanned(
+                            tweet["id"], tweet["author"], "no_reply_generated"
+                        )
+                    else:
+                        database.log_scanned(
+                            tweet["id"],
+                            tweet["author"],
+                            "no_reply_generated_qa_retry",
+                        )
+                    reply_text = None
+                    break
+
+                if not config.QA_ENABLED:
+                    break
+
+                passed, qa_reason = growth_engine.qa_check_reply(
+                    tweet.get("text") or "",
+                    tweet["author"],
+                    reply_text,
+                )
+                if passed:
+                    _logger.info("[QA] @%s: PASS", author_log)
+                    telegram_qa_pass = True
+                    break
+
+                _logger.info(
+                    "[QA] @%s: FAIL - %s, regenerating",
+                    author_log,
+                    qa_reason or "?",
+                )
+                if attempt >= max_tries:
+                    _logger.info("[QA] @%s: FAIL x2 - skipping tweet", author_log)
+                    database.log_scanned(tweet["id"], tweet["author"], "qa_fail_twice")
+                    reply_text = None
+                    break
+
             if not reply_text:
-                database.log_scanned(tweet["id"], tweet["author"], "no_reply_generated")
                 continue
 
             rs = (tweet.get("reply_settings") or "").strip()
@@ -215,6 +261,7 @@ def run_cycle():
                 tweet["author"],
                 post_mode=post_mode,
                 reply_settings=rs_disp or rs or "",
+                qa_pass=telegram_qa_pass,
             )
             if sent:
                 queued += 1

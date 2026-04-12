@@ -67,6 +67,12 @@ elif _CLAUDE_FB:
 else:
     CLAUDE_MODEL_DAILY_FALLBACK = "claude-3-5-haiku-20241022"
 
+# Pre-Telegram QA: second Claude call (Haiku) on generated reply
+_QA_ENV = (os.getenv("QA_ENABLED", "true") or "").strip().lower()
+QA_ENABLED = _QA_ENV not in ("0", "false", "no", "off")
+QA_MODEL = (os.getenv("QA_MODEL") or "claude-haiku-4-5-20251001").strip() or "claude-haiku-4-5-20251001"
+QA_MAX_RETRIES = max(1, int(os.getenv("QA_MAX_RETRIES", "2") or "2"))
+
 # ============================================================
 # TRACKED ACCOUNTS — AlphaCycle Reply Targets
 # 50 Accounts total (10 + 20 + 20 — not 60; tiers sum to 50).
