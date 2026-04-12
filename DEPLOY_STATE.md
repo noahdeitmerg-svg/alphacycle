@@ -8,7 +8,7 @@
 - **Datei(en):** `backend/arc_config.py` (neu), `backend/scoring.py` (Docstring-Hinweis zu `arc_config.ARC_WEIGHTS`), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
 - **Was wurde geaendert:** Zentrale Referenz fuer ARC_FORMULA_VERSION, ARC_WEIGHTS (0.35/0.25/0.25/0.15), ARC_ZONES, `get_zone()`, `assert_weights_sum()` beim Import. Keine Aenderung an der bestehenden Berechnungslogik.
 - **Warum:** Audit-Gap 3.1/4.2 - verhindert stillen Drift der Gewichte ohne sichtbaren Referenzpunkt.
-- **Status:** pushed to GitHub (nach Commit)
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-12) — x-bot: reply_system EXAMPLES verdoppelt + FAIL-QA Anti-Patterns
 - **Datei(en):** `alphacycle-x-bot/prompts/reply_system.txt` (EXCELLENT-Beispiele erweitert; neuer Block REPLIES THAT WOULD FAIL QA mit BAD/WHY/FIX), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
