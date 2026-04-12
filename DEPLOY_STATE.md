@@ -8,7 +8,7 @@
 - **Datei(en):** `index.html` (`.orbit-label` Basis ohne translate(-50%,-50%); `.ol-dv`/`.ol-ac` rechts mit `left:108%` + `translateY(-50%)`; `.ol-ex` unten `top:108%` + `translateX(-50%)`; `.ol-rr`/`.ol-eu` mit `right:108%`/`left:auto` + Text nach links; `.orbit-dot` z-index 10, Labels z-index 5; `#btc-card.hero-card .gauge-wrap` flex center + z-index 6; `.gauge-center` gap/padding/margin 0; Ring-Mask 84%/86%; Mobile 700px/400px nur Font + 105% Offsets; doppelte `.gauge-center`/`.ol-*`-Regeln entfernt), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
 - **Was wurde geaendert:** Orbit-Labels mathematisch ausserhalb Ring, Score zentriert, Ring-Gradient sichtbarer, Dot ueber Labels.
 - **Warum:** Ueberlappungen, schwacher Ring, falsche Label-Anker.
-- **Status:** nach Commit/Push
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-10) — ARC source purity (snapshot + arc-summary placeholder)
 - **Datei(en):** `backend/main.py` (`get_snapshot`: `arc_score` nur noch `arc_summary.arc_score` oder Analyzer-`arc_score` oder `50`, kein `combined_score`/`alpha_cycle_position`; `get_arc_summary`: initiales `out["decision"]` = `"HOLD"` statt Combined-`signal`), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
