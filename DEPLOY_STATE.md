@@ -8,7 +8,7 @@
 - **Datei(en):** `alphacycle-x-bot/config.py` (`TELEGRAM_ALLOWED_CHAT_IDS`, erste ID bleibt `TELEGRAM_CHAT_ID` fuer Sends), `alphacycle-x-bot/telegram_listener.py` (`_authorized_chat` gegen Menge; Log bei abgelehnten Slash-Commands; Callback-Log mit erlaubter Liste), `alphacycle-x-bot/verify_env.py`, `alphacycle-x-bot/.env.example`, `alphacycle-x-bot/RUN_24_7.md`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
 - **Was wurde geaendert:** Gruppe + DM gleichzeitig erlaubbar; Supergroup-ID nicht mehr nur exakt eine Zelle.
 - **Warum:** Listener verglich nur mit einer ID — Gruppe oft `-100…`, Deploy/.env oft nur DM.
-- **Status:** nach Commit/Push
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-10) — Hero Orbit Komplettfix (index.html CSS)
 - **Datei(en):** `index.html` (`.orbit-label` Basis ohne translate(-50%,-50%); `.ol-dv`/`.ol-ac` rechts mit `left:108%` + `translateY(-50%)`; `.ol-ex` unten `top:108%` + `translateX(-50%)`; `.ol-rr`/`.ol-eu` mit `right:108%`/`left:auto` + Text nach links; `.orbit-dot` z-index 10, Labels z-index 5; `#btc-card.hero-card .gauge-wrap` flex center + z-index 6; `.gauge-center` gap/padding/margin 0; Ring-Mask 84%/86%; Mobile 700px/400px nur Font + 105% Offsets; doppelte `.gauge-center`/`.ol-*`-Regeln entfernt), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
