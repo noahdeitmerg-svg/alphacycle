@@ -12,26 +12,51 @@ def _api_base() -> str:
     return f"https://api.telegram.org/bot{config.TELEGRAM_BOT_TOKEN}"
 
 
+def send_plain_message(text: str) -> bool:
+    """Second message: reply text only (long-press copy). No keyboard."""
+    if not config.TELEGRAM_BOT_TOKEN or not config.TELEGRAM_CHAT_ID:
+        return False
+    payload = {
+        "chat_id": config.TELEGRAM_CHAT_ID,
+        "text": (text or "")[:4096],
+    }
+    url = f"{_api_base()}/sendMessage"
+    try:
+        r = requests.post(url, json=payload, timeout=45)
+        if not r.ok:
+            print(f"[TELEGRAM] send_plain_message failed: {r.status_code} {r.text[:400]}")
+            return False
+        return bool((r.json() or {}).get("ok"))
+    except Exception as e:
+        print(f"[TELEGRAM] send_plain_message error: {e}")
+        return False
+
+
 def send_approval(
     tweet_url: str,
     reply_text: str,
     tweet_id: str,
     username: str,
+    post_mode: str = "auto",
+    reply_settings: str = "",
 ) -> bool:
     if not config.TELEGRAM_BOT_TOKEN or not config.TELEGRAM_CHAT_ID:
         print("[TELEGRAM] Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID — cannot send approval")
         return False
 
+    u = (username or "").strip().lstrip("@")
+    rs = (reply_settings or "").strip() or "(unknown)"
+    mode = (post_mode or "auto").strip() or "auto"
     body = (
-        "New AlphaCycle Reply Candidate\n\n"
-        f"Account: @{username}\n\n"
-        f"Tweet:\n{tweet_url}\n\n"
-        f"Reply:\n{reply_text}\n\n"
-        "Approve?"
+        f"Reply ready — {mode}\n\n"
+        f"Tweet: {tweet_url}\n"
+        f"Author: @{u}\n"
+        f"Reply setting: {rs}\n\n"
+        "Tap POST to send (API or copy-paste if blocked). Reply text follows in the next message."
     )
     max_len = 4096
     if len(body) > max_len:
-        body = body[: max_len - 20] + "\n...(truncated)"
+        body = body[: max_len - 40] + "\n...(truncated)"
 
     payload = {
         "chat_id": config.TELEGRAM_CHAT_ID,
@@ -57,10 +82,54 @@ def send_approval(
             print(f"[TELEGRAM] sendMessage not ok: {data}")
             return False
         print(f"[LOG] telegram approval sent tweet_id={tweet_id}")
-        return True
     except Exception as e:
         print(f"[TELEGRAM] sendMessage error: {e}")
         return False
+
+    if not send_plain_message((reply_text or "").strip()):
+        print("[TELEGRAM] approval info sent but plain reply message failed")
+        return False
+    return True
+
+
+def send_post_outcome_two_part(
+    author: str,
+    tweet_id: str,
+    reply_text: str,
+    reply_settings: str,
+    post_mode: str,
+    result_line: str,
+) -> bool:
+    """
+    After POST: info message + plain reply only (copy-paste path / result notice).
+    result_line: e.g. Auto-posted, API blocked, or Restricted.
+    """
+    if not config.TELEGRAM_BOT_TOKEN or not config.TELEGRAM_CHAT_ID:
+        return False
+    a = (author or "").strip().lstrip("@")
+    rs = (reply_settings or "").strip() or "(unknown)"
+    url = f"https://x.com/{a}/status/{tweet_id}"
+    body = (
+        f"Reply ready — {post_mode}\n\n"
+        f"Tweet: {url}\n"
+        f"Author: @{a}\n"
+        f"Reply setting: {rs}\n\n"
+        f"{result_line}\n\n"
+        f"[MANUAL_REPLY] tweet_id={tweet_id} author={a}"
+    )[:4096]
+    payload = {"chat_id": config.TELEGRAM_CHAT_ID, "text": body}
+    req_url = f"{_api_base()}/sendMessage"
+    try:
+        r = requests.post(req_url, json=payload, timeout=45)
+        if not r.ok:
+            print(f"[TELEGRAM] send_post_outcome info failed: {r.status_code}")
+            return False
+        if not (r.json() or {}).get("ok"):
+            return False
+    except Exception as e:
+        print(f"[TELEGRAM] send_post_outcome error: {e}")
+        return False
+    return send_plain_message((reply_text or "").strip())
 
 
 def send_daily_post_approval(post_text: str, pending_id: str) -> bool:

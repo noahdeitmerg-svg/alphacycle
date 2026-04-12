@@ -113,12 +113,14 @@ def _next_daily_post_time_str() -> str:
 
 
 def _build_status_body() -> str:
+    rt: dict = {}
     try:
         rt = database.get_bot_runtime_status()
         uptime = rt.get("uptime_h", "n/a")
         scans_today = rt.get("scans_today", "n/a")
         last_scan = rt.get("last_scan", "n/a")
     except Exception:
+        rt = {}
         uptime = scans_today = last_scan = "n/a"
     up_line = f"Uptime: {uptime}h" if uptime != "n/a" else "Uptime: n/a"
     lines = [
@@ -134,6 +136,9 @@ def _build_status_body() -> str:
     except Exception:
         lines.append("Replies today: n/a")
         lines.append("Replies this hour: n/a")
+    lines.append(f"Auto-posted: {rt.get('reply_stat_auto', '0')}")
+    lines.append(f"Copy-paste sent: {rt.get('reply_stat_paste', '0')}")
+    lines.append(f"Skipped (restricted): {rt.get('reply_stat_restricted', '0')}")
     lines.append(f"Next daily post: {_next_daily_post_time_str()}")
     lines.append(f"Last scan: {last_scan}")
     try:

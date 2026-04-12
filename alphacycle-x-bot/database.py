@@ -92,6 +92,8 @@ def init_db():
     """)
     _ensure_column(conn, "pending_replies", "approach", "TEXT DEFAULT ''")
     _ensure_column(conn, "pending_replies", "pattern", "TEXT NOT NULL DEFAULT ''")
+    _ensure_column(conn, "pending_replies", "post_mode", "TEXT NOT NULL DEFAULT 'auto'")
+    _ensure_column(conn, "pending_replies", "reply_settings", "TEXT NOT NULL DEFAULT ''")
 
     c.execute("""
         CREATE TABLE IF NOT EXISTS reply_history (
@@ -147,6 +149,9 @@ def init_db():
             scans_count INTEGER NOT NULL DEFAULT 0
         )
     """)
+    _ensure_column(conn, "bot_runtime", "reply_stat_auto", "INTEGER NOT NULL DEFAULT 0")
+    _ensure_column(conn, "bot_runtime", "reply_stat_paste", "INTEGER NOT NULL DEFAULT 0")
+    _ensure_column(conn, "bot_runtime", "reply_stat_restricted", "INTEGER NOT NULL DEFAULT 0")
 
     c.execute("""
         CREATE TABLE IF NOT EXISTS api_blocked_accounts (
@@ -238,12 +243,18 @@ def get_bot_runtime_status() -> dict[str, str]:
     try:
         c = conn.cursor()
         c.execute(
-            "SELECT booted_at, last_scan_at, scans_date, scans_count FROM bot_runtime WHERE id = 1"
+            "SELECT booted_at, last_scan_at, scans_date, scans_count, "
+            "COALESCE(reply_stat_auto, 0), COALESCE(reply_stat_paste, 0), "
+            "COALESCE(reply_stat_restricted, 0) FROM bot_runtime WHERE id = 1"
         )
         row = c.fetchone()
         if not row:
             return out
         booted_at, last_scan_at, scans_date, scans_count = row[0], row[1], row[2], row[3]
+        ra, rp, rr = row[4], row[5], row[6]
+        out["reply_stat_auto"] = str(int(ra or 0))
+        out["reply_stat_paste"] = str(int(rp or 0))
+        out["reply_stat_restricted"] = str(int(rr or 0))
         today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         bt = _parse_stored_utc(booted_at)
         if bt is not None:
@@ -576,6 +587,25 @@ def replies_today() -> int:
     return count
 
 
+def increment_reply_stat(kind: str) -> None:
+    """kind: auto | paste | restricted — counters for /status."""
+    colmap = {
+        "auto": "reply_stat_auto",
+        "paste": "reply_stat_paste",
+        "restricted": "reply_stat_restricted",
+    }
+    col = colmap.get((kind or "").strip().lower())
+    if not col:
+        return
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute(
+        f"UPDATE bot_runtime SET {col} = COALESCE({col}, 0) + 1 WHERE id = 1"
+    )
+    conn.commit()
+    conn.close()
+
+
 def insert_pending_reply(
     tweet_id: str,
     tweet_url: str,
@@ -583,16 +613,30 @@ def insert_pending_reply(
     reply_text: str,
     approach: str = "",
     pattern: str = "",
+    post_mode: str = "auto",
+    reply_settings: str = "",
 ) -> bool:
     """Insert a new pending row. Returns True if inserted, False if tweet_id already exists."""
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute(
         """
-        INSERT OR IGNORE INTO pending_replies (tweet_id, tweet_url, username, reply_text, status, approach, pattern)
-        VALUES (?, ?, ?, ?, 'pending', ?, ?)
+        INSERT OR IGNORE INTO pending_replies (
+            tweet_id, tweet_url, username, reply_text, status, approach, pattern,
+            post_mode, reply_settings
+        )
+        VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?)
         """,
-        (tweet_id, tweet_url, username, reply_text, approach or "", pattern or ""),
+        (
+            tweet_id,
+            tweet_url,
+            username,
+            reply_text,
+            approach or "",
+            pattern or "",
+            post_mode or "auto",
+            reply_settings or "",
+        ),
     )
     inserted = c.rowcount > 0
     conn.commit()
@@ -608,7 +652,9 @@ def get_pending_by_tweet_id(tweet_id: str) -> dict | None:
         """
         SELECT tweet_id, tweet_url, username, reply_text, status,
                COALESCE(approach, '') AS approach,
-               COALESCE(pattern, '') AS pattern
+               COALESCE(pattern, '') AS pattern,
+               COALESCE(post_mode, 'auto') AS post_mode,
+               COALESCE(reply_settings, '') AS reply_settings
         FROM pending_replies WHERE tweet_id = ?
         """,
         (tweet_id,),
