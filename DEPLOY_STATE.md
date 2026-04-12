@@ -8,7 +8,7 @@
 - **Datei(en):** `alphacycle-x-bot/telegram_listener.py` (`_TEXT_TO_SLASH`, `_execute_slash_command`, `_message_invokes_bot`, `_get_bot_username_lower`), `alphacycle-x-bot/config.py` (`TELEGRAM_BOT_USERNAME`), `alphacycle-x-bot/.env.example`, `alphacycle-x-bot/verify_env.py`, `alphacycle-x-bot/RUN_24_7.md`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
 - **Was wurde geaendert:** In erlaubten Chats reagiert der Listener auf Woerter wie `scan`/`status`/`ping` ohne Slash und auf @Bot / Reply auf Bot — unabhaengig vom Absender (kein User-Allowlist).
 - **Warum:** Gruppenmitglieder sollen Befehle nutzen koennen; @-Erwaehnung wie bei Telegram Privacy ueblich.
-- **Status:** nach Commit/Push
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-10) — x-bot Telegram: mehrere TELEGRAM_CHAT_ID, Listener-Log
 - **Datei(en):** `alphacycle-x-bot/config.py` (`TELEGRAM_ALLOWED_CHAT_IDS`, erste ID bleibt `TELEGRAM_CHAT_ID` fuer Sends), `alphacycle-x-bot/telegram_listener.py` (`_authorized_chat` gegen Menge; Log bei abgelehnten Slash-Commands; Callback-Log mit erlaubter Liste), `alphacycle-x-bot/verify_env.py`, `alphacycle-x-bot/.env.example`, `alphacycle-x-bot/RUN_24_7.md`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
