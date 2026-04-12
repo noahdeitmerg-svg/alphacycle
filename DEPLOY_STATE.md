@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-12 (fix: renderMomentumChart priceMin ReferenceError)
+**Zuletzt aktualisiert:** 2026-04-12 (x-bot: reply_system EXAMPLES + Anti-Patterns)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-12) — x-bot: reply_system EXAMPLES verdoppelt + FAIL-QA Anti-Patterns
+- **Datei(en):** `alphacycle-x-bot/prompts/reply_system.txt` (EXCELLENT-Beispiele erweitert; neuer Block REPLIES THAT WOULD FAIL QA mit BAD/WHY/FIX), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was wurde geaendert:** Mehr Positiv-Beispiele (Macro, F&G, Institutions, Crash, Cycle bottom, Chart, Equities, Retail); explizite Negativbeispiele inkl. Korrekturhinweisen.
+- **Warum:** Klareres Schreibziel fuer Sonnet; Alignment mit QA-Regeln.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-12) — index.html: renderMomentumChart priceMin Fix
 - **Datei(en):** `index.html` (`renderMomentumChart`: `_arcOriginalPriceMin`/`Max` aus `window._arcHistoryChart.options.scales.yPrice`, nicht `priceMin` aus `renderArcChart`), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`

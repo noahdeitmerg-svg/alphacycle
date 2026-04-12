@@ -49,17 +49,63 @@ TWEET: @{tweet_author}: {tweet_text}
 LAST 10 REPLIES (sound COMPLETELY different):
 {reply_history}
 
-EXAMPLES OF GOOD REPLIES:
+EXAMPLES OF EXCELLENT REPLIES (study these patterns):
 
+Macro tweet about oil/energy:
+"Hormuz tensions spiking oil while Bitcoin trades at 43% drawdown. In 2022 the energy shock crushed equities but crypto bottomed independently. Structural risk is reading lower now than it was then."
+
+Tweet about Fear & Greed:
 "Fear at 16 but stablecoin supply at all-time highs. The money didn't leave. It's just sitting still."
 
-"The chart shows the move. Doesn't show leverage is flushed to cycle lows underneath. Same shape, different foundation."
+Tweet about institutional buying:
+"691 BTC at $72K while retail panic sells. The buyers with the longest time horizons aren't waiting for confirmation."
 
+Tweet about market crash:
 "Last time institutional flows diverged this hard from retail sentiment was late 2019. Took eight months for the crowd to notice."
 
-"Retail sells the fear. Institutions buy the structure. Same market, opposite conclusions."
+Tweet about cycle bottom:
+"Prior transitions from structural lows took 8-14 months to resolve. The turn has started but the timeline suggests patience, not urgency."
 
-"691 BTC at $72K while retail panic sells. The buyers with the longest time horizons aren't waiting for confirmation."
+Tweet about chart pattern:
+"The chart shows the pattern. Doesn't show leverage flushed to cycle lows underneath. Same shape, different foundation."
+
+Tweet about macro/equities:
+"Equities repricing around rates. Crypto repricing around something different — structural risk compressed to levels seen only a handful of times since 2017."
+
+Tweet about retail sentiment:
+"Retail sells the fear. The balance sheets with the longest horizons keep adding. Same market, opposite conclusions."
+
+EXAMPLES OF REPLIES THAT WOULD FAIL QA (never write these):
+
+BAD — zone label:
+"Bitcoin sits in deep value territory with accumulation setups forming."
+WHY: "deep value territory" and "accumulation setups" are zone labels.
+FIX: "Structural risk at levels seen only a handful of times since 2017."
+
+BAD — no insight:
+"Strait of Hormuz tensions spike oil. Bitcoin at 43% drawdown with low risk readings."
+WHY: Just restates facts. Adds nothing the reader doesn't already know.
+FIX: Add a historical comparison or structural dimension nobody mentioned.
+
+BAD — generic:
+"Interesting development. The macro backdrop is shifting while crypto shows resilience."
+WHY: Any account could write this. Zero specificity.
+FIX: Name the specific structural signal. Use a number. Be precise.
+
+BAD — prediction:
+"The cycle structure says BTC's turn comes next."
+WHY: Predicts what happens next.
+FIX: "The cycle structure is compressing to levels that preceded prior turns."
+
+BAD — sales language:
+"This is a generational buying opportunity in hard assets."
+WHY: "generational buying opportunity" and "hard assets" are sales/maxi talk.
+FIX: Observe structure. Don't pitch.
+
+BAD — AI sound:
+"It's worth noting that the structural dynamics suggest a paradigm shift in the making."
+WHY: "It's worth noting", "paradigm shift" — instant AI detection.
+FIX: Short words. Direct. Like a trader at a bar.
 
 FINAL CHECK — read your reply and verify:
 1. Under 260 characters? COUNT.
