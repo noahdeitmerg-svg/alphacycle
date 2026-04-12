@@ -645,13 +645,6 @@ body::before {
   height: auto;
   overflow: visible;
 }
-#btc-card.hero-card .gauge-center {
-  position: relative;
-  margin-top: -20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
 #btc-card.hero-card .score-footer {
   grid-area: info;
   display: flex;
@@ -696,9 +689,6 @@ body::before {
 }
 #btc-card.hero-card::before {
   display: none !important;
-}
-#btc-card.hero-card .gauge-center {
-  text-align: center;
 }
 #btc-card.hero-card .gauge-val {
   font-size: clamp(52px, 10vw, 80px) !important;
@@ -984,15 +974,6 @@ body::before {
   opacity: 0.5 !important;
 }
 
-#btc-card.hero-card .gauge-center {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
-  text-align: center !important;
-  gap: 0px !important;
-}
-
 #btc-card.hero-card::after {
   content: "";
   position: absolute;
@@ -1070,12 +1051,12 @@ body::before {
     #f59e0b 59% 69%,
     #ef4444 69% 100%
   ) !important;
-  -webkit-mask: radial-gradient(circle, transparent 85%, black 87%) !important;
-  mask: radial-gradient(circle, transparent 85%, black 87%) !important;
+  -webkit-mask: radial-gradient(circle, transparent 84%, black 86%) !important;
+  mask: radial-gradient(circle, transparent 84%, black 86%) !important;
+  filter: none !important;
   opacity: 1 !important;
   pointer-events: none !important;
   z-index: 0 !important;
-  filter: none !important;
 }
 
 .orbit-inner-ring {
@@ -1125,7 +1106,7 @@ body::before {
     left 0.8s cubic-bezier(0.22, 1, 0.36, 1),
     top 0.8s cubic-bezier(0.22, 1, 0.36, 1),
     transform 0.4s ease;
-  z-index: 2;
+  z-index: 10 !important;
 }
 
 .orbit-dot::after {
@@ -1155,8 +1136,12 @@ body::before {
   transform: translate(-50%, -50%) !important;
   width: auto !important;
   height: auto !important;
-  margin-top: 0px !important;
-  z-index: 1;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 6;
 }
 
 #btc-card.hero-card .gauge-center {
@@ -1165,7 +1150,9 @@ body::before {
   align-items: center !important;
   justify-content: center !important;
   text-align: center !important;
-  gap: 0px !important;
+  gap: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
   position: static !important;
   z-index: 1;
 }
@@ -1279,24 +1266,63 @@ body::before {
 .orbit-label {
   position: absolute;
   font-family: var(--f-mono);
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  opacity: 0.35;
   white-space: nowrap;
-  transform: translate(-50%, -50%);
-  color: var(--tx-ter);
   pointer-events: none;
   transition: opacity 0.4s ease, text-shadow 0.4s ease;
-  z-index: 1;
+  z-index: 5;
 }
 
-.ol-dv { top: 10%; left: 98%; color: #22c55e !important; opacity: 0.5 !important; }
-.ol-ac { top: 55%; left: 112%; color: #00D4AA !important; opacity: 0.5 !important; }
-.ol-ex { top: 112%; left: 55%; color: #3b82f6 !important; opacity: 0.5 !important; }
-.ol-rr { top: 88%; left: -12%; color: #f59e0b !important; opacity: 0.5 !important; }
-.ol-eu { top: 15%; left: -12%; color: #ef4444 !important; opacity: 0.5 !important; }
+/* Right side — text starts at anchor, extends RIGHT (away from ring) */
+.ol-dv {
+  top: 8%;
+  left: 108%;
+  transform: translateY(-50%);
+  text-align: left;
+  color: #22c55e !important;
+  opacity: 0.5;
+}
+.ol-ac {
+  top: 72%;
+  left: 108%;
+  transform: translateY(-50%);
+  text-align: left;
+  color: #00D4AA !important;
+  opacity: 0.5;
+}
+
+/* Bottom — text starts at anchor, extends DOWN */
+.ol-ex {
+  top: 108%;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  color: #3b82f6 !important;
+  opacity: 0.5;
+}
+
+/* Left side — text ends at anchor, extends LEFT (away from ring) */
+.ol-rr {
+  top: 72%;
+  right: 108%;
+  left: auto;
+  transform: translateY(-50%);
+  text-align: right;
+  color: #f59e0b !important;
+  opacity: 0.5;
+}
+.ol-eu {
+  top: 8%;
+  right: 108%;
+  left: auto;
+  transform: translateY(-50%);
+  text-align: right;
+  color: #ef4444 !important;
+  opacity: 0.5;
+}
 
 .orbit-label.active {
   opacity: 1 !important;
@@ -1344,16 +1370,15 @@ body::before {
     opacity: 0.5 !important;
   }
 
-  /* Labels WEIT ausserhalb des Rings */
   .orbit-label {
     font-size: 6px !important;
     letter-spacing: 0.08em !important;
   }
-  .ol-dv  { top: 8% !important; left: 96% !important; }
-  .ol-ac  { top: 55% !important; left: 110% !important; }
-  .ol-ex  { top: 110% !important; left: 55% !important; }
-  .ol-rr  { top: 86% !important; left: -10% !important; }
-  .ol-eu  { top: 13% !important; left: -10% !important; }
+  .ol-dv  { left: 105% !important; }
+  .ol-ac  { left: 105% !important; }
+  .ol-ex  { top: 105% !important; }
+  .ol-rr  { right: 105% !important; }
+  .ol-eu  { right: 105% !important; }
 
   /* Components Grid stacked */
   #btc-card.hero-card .components-grid {
@@ -1404,7 +1429,6 @@ body::before {
   .orbit-label {
     font-size: 5px !important;
   }
-  /* .ol-dv ... .ol-eu: same positions as max-width 700px block (still matches here) */
 }
 
 /* === END HERO ORBITAL DESIGN === */
