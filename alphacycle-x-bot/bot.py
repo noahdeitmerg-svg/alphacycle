@@ -21,6 +21,8 @@ import reply_engine
 def _infer_post_mode(reply_settings: str | None) -> tuple[str, str]:
     """
     Map Twitter reply_settings to posting mode.
+    Only everyone: API after Telegram approval. All other non-empty values: copy-paste only.
+    Empty/missing: auto (scanner/API may omit the field; treat like open replies).
     Returns (post_mode, normalized_display_string).
     """
     s = (reply_settings or "").strip()
@@ -29,11 +31,7 @@ def _infer_post_mode(reply_settings: str | None) -> tuple[str, str]:
     sl = s.lower().replace("_", "")
     if sl == "everyone":
         return "auto", s
-    if sl == "following":
-        return "try_auto", s
-    if sl == "mentionedusers":
-        return "manual_only", s
-    return "auto", s
+    return "manual_only", s
 
 
 def _configure_schedule_utc() -> None:

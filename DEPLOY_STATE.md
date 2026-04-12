@@ -1,14 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-11 (x-bot: reply_settings + mode-based posting)
+**Zuletzt aktualisiert:** 2026-04-10 (x-bot: reply_settings nur everyone=auto sonst manual_only)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
-## Letzter Session-Status (2026-04-11) — x-bot: reply_settings Filter + Telegram 2-Teil + /status Stats
-- **Datei(en):** `alphacycle-x-bot/scanner.py` (`tweet_fields` inkl. `reply_settings`, Fallback ohne Feld), `alphacycle-x-bot/bot.py` (`post_mode` auto/try_auto/manual_only), `alphacycle-x-bot/database.py` (`pending_replies.post_mode`, `reply_settings`; `bot_runtime` Zaehler `reply_stat_*`; `increment_reply_stat`), `alphacycle-x-bot/telegram_bot.py` (`send_approval` 2 Nachrichten; `send_post_outcome_two_part` + `[MANUAL_REPLY]` in Info), `alphacycle-x-bot/poster.py` (manual_only ohne API; try_auto 403 info-level), `alphacycle-x-bot/telegram_listener.py` (`/status` Zeilen Auto-posted / Copy-paste / Skipped restricted), `DEPLOY_STATE.md`
-- **Was wurde geaendert:** Vor POST: Twitter `reply_settings` lesen; Modi: **everyone**->auto, **following**->try_auto (403 erwartbar->Copy-Paste), **mentionedUsers**->manual_only (kein API-Versuch, nur Copy-Paste). Telegram: erste Nachricht Info+Buttons, zweite nur Reply-Text. Statistik in DB und `/status`.
-- **Warum:** 403 bei restricted replies; keine verschwendeten X-Versuche bei `mentionedUsers`.
-- **Status:** pushed to GitHub (VPS: git pull + restart listener + bot)
+## Letzter Session-Status (2026-04-10) — x-bot: reply_settings nur everyone=API sonst Copy-Paste
+- **Datei(en):** `alphacycle-x-bot/bot.py` (`_infer_post_mode`), `alphacycle-x-bot/poster.py` (Log 403 ohne try_auto-Zweig), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was wurde geaendert:** **everyone** -> `post_mode` **auto** (Claude -> Telegram -> `create_tweet`). Jeder andere nicht-leere Wert (**following**, **mentionedUsers**, etc.) -> **manual_only** (kein API-Versuch, nur Telegram-Zwei-Teil-Copy-Paste). Fehlendes/leeres `reply_settings` bleibt **auto** (API liefert Feld oft nicht).
+- **Warum:** Kein API-Versuch bei Accounts mit eingeschraenkten Reply-Einstellungen; `try_auto` entfaellt.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-11) — x-bot: mehr Reply-Candidates (Limits, SKIP-Prompt, Logging)
 - **Datei(en):** `alphacycle-x-bot/config.py`, `alphacycle-x-bot/scanner.py`, `alphacycle-x-bot/reply_engine.py`, `DEPLOY_STATE.md`

@@ -15,6 +15,14 @@ _X_PUBLIC_HANDLE = "Real_AlphaCycle"
 logger = logging.getLogger(__name__)
 
 
+def _normalize_post_mode(post_mode: str | None) -> str:
+    """auto | manual_only only; legacy try_auto -> manual_only (no API attempt)."""
+    m = (post_mode or "auto").strip() or "auto"
+    if m == "try_auto":
+        return "manual_only"
+    return m
+
+
 def _telegram_post_confirmation(text: str) -> None:
     """Best-effort; posting already succeeded on X."""
     body = (text or "")[:4096]
@@ -158,11 +166,11 @@ def _post_reply_impl(
     reply_settings: str = "",
 ) -> str:
     """Create tweet reply and persist to replies table (used after approval)."""
-    post_mode = (post_mode or "auto").strip() or "auto"
+    post_mode = _normalize_post_mode(post_mode)
     reply_settings = (reply_settings or "").strip()
 
     if post_mode == "manual_only":
-        logger.info("[POSTER] @%s skipped API — mentionedUsers restriction", author)
+        logger.info("[POSTER] @%s skipped API — reply_settings not everyone", author)
         ok = _manual_copy_two_part(
             author,
             tweet_id,
@@ -336,14 +344,7 @@ def _post_reply_impl(
             except Exception:
                 detail = str(e.response)
         print(f"[POSTER] 403 Forbidden (X policy, not OAuth): {e}")
-        if post_mode == "try_auto":
-            logger.info(
-                "[POSTER] X API 403 @%s tweet_id=%s (try_auto: copy-paste fallback expected possible)",
-                author,
-                tweet_id,
-            )
-        else:
-            logger.warning("[POSTER] X API 403 @%s tweet_id=%s: %s", author, tweet_id, e)
+        logger.warning("[POSTER] X API 403 @%s tweet_id=%s: %s", author, tweet_id, e)
         if detail:
             print(f"[POSTER] Response body: {detail}")
         print(
@@ -406,7 +407,7 @@ def post_reply(tweet_id: str) -> str:
     reply_text = row["reply_text"]
     approach = row.get("approach") or ""
     pattern = row.get("pattern") or ""
-    post_mode = (row.get("post_mode") or "auto").strip() or "auto"
+    post_mode = _normalize_post_mode(row.get("post_mode"))
     reply_settings = (row.get("reply_settings") or "").strip()
 
     if status == "pending":
