@@ -8386,9 +8386,12 @@ function renderMomentumChart() {
       }
     }
   });
-  if (window._arcHistoryChart) {
-    window._arcOriginalPriceMin = priceMin;
-    window._arcOriginalPriceMax = priceMax;
+  if (window._arcHistoryChart && window._arcHistoryChart.options && window._arcHistoryChart.options.scales && window._arcHistoryChart.options.scales.yPrice) {
+    var yp = window._arcHistoryChart.options.scales.yPrice;
+    if (yp.min != null && yp.max != null) {
+      window._arcOriginalPriceMin = yp.min;
+      window._arcOriginalPriceMax = yp.max;
+    }
   }
 }
 

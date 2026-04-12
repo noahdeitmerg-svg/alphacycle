@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-12 (x-bot: Scanner-Limits + QA Regel 11 + Reply-Quality-Absatz)
+**Zuletzt aktualisiert:** 2026-04-12 (fix: renderMomentumChart priceMin ReferenceError)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-12) — index.html: renderMomentumChart priceMin Fix
+- **Datei(en):** `index.html` (`renderMomentumChart`: `_arcOriginalPriceMin`/`Max` aus `window._arcHistoryChart.options.scales.yPrice`, nicht `priceMin` aus `renderArcChart`), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was wurde geaendert:** ReferenceError behoben; Reset/Double-Click Preisachse nutzt weiter die beim ARC-Chart gesetzten yPrice-Grenzen.
+- **Warum:** `priceMin`/`priceMax` sind nur im Scope von `renderArcChart()`.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-12) — x-bot: Scanner-Limits + QA Standard (Regel 11)
 - **Datei(en):** `alphacycle-x-bot/config.py` (`REPLY_LIMIT_*`, `SCAN_TWEET_MAX_AGE`, `MIN_LIKES_TO_REPLY=5`, `MAX_REPLIES_PER_ACCOUNT_PER_DAY`; Aliase `MAX_REPLIES_PER_*`), `alphacycle-x-bot/scanner.py` (taegliches Account-Limit aus Config), `alphacycle-x-bot/bot.py` (Hinweistext), `alphacycle-x-bot/prompts/qa_system.txt` (Regel 11 ALPHACYCLE STANDARD), `alphacycle-x-bot/prompts/reply_system.txt` (Quality-Absatz nach STOP), `alphacycle-x-bot/growth_engine.py` (`_build_qa_replacement_guide` fuer no_insight / too_generic / no_structural_lens / low_authority), `alphacycle-x-bot/.env.example`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
