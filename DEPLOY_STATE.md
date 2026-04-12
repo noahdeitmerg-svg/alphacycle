@@ -1,8 +1,15 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10 (ARC_WEIGHTS enforcement scoring + backtest_engine)
+**Zuletzt aktualisiert:** 2026-04-10 (ARC Extreme Condition Boosts Backtest = Live)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-10) — ARC Extreme Condition Boosts (Backtest = Live)
+- **Datei(en):** `backend/services/backtest_engine.py` (nach jeder ARC-Gewichtssumme: identische Boost-Logik wie `compute_arc_score()`, dann clamp), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was wurde geaendert:** Weekly-, Daily- und Full-Daily-Backtest wenden dieselben +/-7/+/-3 Anpassungen an (ma_200w_score/fg_score und dd_score/fg_score) wie Live-ARC; Reihenfolge: Basis-ARC, Boosts, `max(0,min(100,arc))`.
+- **Warum:** Historischer Chart und Live-Score direkt vergleichbar.
+- **Cache:** Nach Deploy loescht `main.py` lifespan bereits `/tmp/backtest_cache.json` und `/tmp/daily_full_cache.json` beim Start (neuaufbau). Manuelles `rm` nur noetig ohne App-Neustart.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-10) — ARC_CONFIG enforcement (ARC_WEIGHTS live)
 - **Datei(en):** `backend/scoring.py` (`compute_arc_score`: Import ARC_WEIGHTS, arc aus Dict-Gewichten), `backend/services/backtest_engine.py` (Modulimport ARC_WEIGHTS + drei ARC-Blöcke), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
@@ -766,6 +773,7 @@
 ARC Formula (unified, research-validated): ma_200w*0.35 + drawdown*0.25 + liquidity*0.25 + fear_greed*0.15
 Single source of truth: `backend/arc_config.py` (ARC_WEIGHTS, ARC_ZONES, ARC_FORMULA_VERSION). **Enforced:** `compute_arc_score()` and `backtest_engine` read `ARC_WEIGHTS` at runtime; do not duplicate numeric weights elsewhere.
 Use fg_to_score(fear_greed) for F&G input. Same formula in scoring.compute_arc_score(), backtest_engine, and /api/arc-summary.
+Extreme Condition Boosts identisch in compute_arc_score() UND allen drei backtest_engine ARC-Berechnungen (weekly run_backtest, run_daily_backtest, run_daily_backtest_full).
 DO NOT modify weights. DO NOT add scoring components.
 **ARC output**: compute_arc_score() returns clamp(arc) — raw ARC range (empirical ~22-78). No rescaling. Momentum from backtest via scoring.compute_arc_momentum(arc_history, days=30).
 **ARC display (UI only)**: arc_display_score(arc_raw, k=1.2) in scoring.py — k=1.2 optimal (verhindert 0-Werte bei Extrempunkten). Intern (compute_arc_score/Backtest-Formel/Momentum) wird weiter mit dem **rohen ARC** gearbeitet; alle sichtbaren Zonen/Labels im UI (Hero, Phase Banner, Historical Returns, Zone History, Expected Range, Snapshots) nutzen jedoch konsequent den **Display-Score**. Raw 25->~15.6, 50->50, 75->~84.4. Zone-Grenzen im UI: Deep Value 0–29, Accumulation 30–39, Expansion 40–59, Risk Rising 60–69, Euphoria 70–100 (Display-Skala).

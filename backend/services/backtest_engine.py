@@ -570,6 +570,15 @@ async def run_backtest() -> Dict[str, Any]:
                 + macro_liq * ARC_WEIGHTS["liquidity"]
                 + fg_score * ARC_WEIGHTS["sentiment"]
             )
+            # Extreme Condition Boost - identical to compute_arc_score() in scoring.py
+            if ma_200w_score > 78 and fg_score > 82:
+                arc += 7.0
+            elif ma_200w_score > 72 and fg_score > 75:
+                arc += 3.0
+            if dd_score < 18 and fg_score < 15:
+                arc -= 7.0
+            elif dd_score < 25 and fg_score < 20:
+                arc -= 3.0
             arc = max(0.0, min(100.0, arc))
 
             results.append(
@@ -758,6 +767,15 @@ async def run_daily_backtest(days: int = 400) -> Dict[str, Any]:
                 + macro_liq * ARC_WEIGHTS["liquidity"]
                 + fg_score * ARC_WEIGHTS["sentiment"]
             )
+            # Extreme Condition Boost - identical to compute_arc_score() in scoring.py
+            if ma_200w_score > 78 and fg_score > 82:
+                arc += 7.0
+            elif ma_200w_score > 72 and fg_score > 75:
+                arc += 3.0
+            if dd_score < 18 and fg_score < 15:
+                arc -= 7.0
+            elif dd_score < 25 and fg_score < 20:
+                arc -= 3.0
             arc = max(0.0, min(100.0, arc))
 
             results.append(
@@ -889,6 +907,15 @@ async def run_daily_backtest_full() -> Dict[str, Any]:
                 + macro_liq * ARC_WEIGHTS["liquidity"]
                 + fg_score * ARC_WEIGHTS["sentiment"]
             )
+            # Extreme Condition Boost - identical to compute_arc_score() in scoring.py
+            if ma_200w_score > 78 and fg_score > 82:
+                arc += 7.0
+            elif ma_200w_score > 72 and fg_score > 75:
+                arc += 3.0
+            if dd_score < 18 and fg_score < 15:
+                arc -= 7.0
+            elif dd_score < 25 and fg_score < 20:
+                arc -= 3.0
             arc = max(0.0, min(100.0, arc))
 
             results.append({
