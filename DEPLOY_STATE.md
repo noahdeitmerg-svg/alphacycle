@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10 (ARC zone boundaries: half-open bands aligned with arc_config)
+**Zuletzt aktualisiert:** 2026-04-10 (Backtest: daily-only, deprecated weekly paths removed)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-10) — Remove deprecated weekly backtest; daily-only graceful empty
+- **Datei(en):** `backend/services/backtest_engine.py` (entfernt: `run_backtest`, `run_daily_backtest`, woechentlicher Kraken-Cache `_load_or_build_cache`/`_fetch_btc_history`/`_fetch_since`, `_get_net_liq_score`; `<1400` Punkte: `logger.error` + `{"results":[],"error":"insufficient daily history"}` statt Weekly-Fallback; ARC VALIDATION: `logger.debug`; kein `run_backtest`-Vergleich mehr), `backend/main.py` (Import und alle Calls nur `run_daily_backtest_full`; Fallbacks zu `run_backtest` entfernt; Startup-Cache-Clear ohne `/tmp/backtest_cache.json`), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was wurde geaendert:** Autoritative ARC-Historie nur noch `run_daily_backtest_full()`; bei Datenmangel leere Results statt 500/Crash.
+- **Warum:** Deprecated Pfade verwirrten und banden noch Weekly-Logik.
+- **Status:** nach Commit/Push
 
 ## Letzter Session-Status (2026-04-10) — ARC zone boundary normalization (<30 canonical, arc_config)
 - **Datei(en):** `backend/main.py` (`get_zone_name`, `_get_expected_range`: `<30/<40/<60/<70`), `backend/historical_returns.py` (`in_zone` half-open, `zone_meta` / `_empty_returns` range labels), `backend/services/backtest_engine.py` (`ZONES` tuples aligned with `ARC_ZONES`), `alphacycle-x-bot/daily_post_engine.py` (`_zone_hist_key`), `index.html` (`phaseOf` upper bounds `<40/<60/<70`), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`

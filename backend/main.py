@@ -88,9 +88,9 @@ except ImportError:
 _analyzer = CycleAnalyzer()
 
 try:
-    from services.backtest_engine import run_backtest, run_daily_backtest, run_daily_backtest_full
+    from services.backtest_engine import run_daily_backtest_full
 except ImportError:
-    from services.backtest_engine import run_backtest, run_daily_backtest, run_daily_backtest_full
+    from services.backtest_engine import run_daily_backtest_full
 
 try:
     from snapshot import build_snapshot
@@ -223,9 +223,10 @@ async def refresh_cache(force: bool = False):
                 bt_data = await run_daily_backtest_full()
                 bt_results = bt_data.get("results", []) if isinstance(bt_data, dict) else []
                 if not bt_results:
-                    logger.warning("Daily full backtest empty in refresh, temporary fallback to weekly")
-                    bt_data = await run_backtest()
-                    bt_results = bt_data.get("results", []) if isinstance(bt_data, dict) else []
+                    logger.error(
+                        "Backtest failed: daily full backtest returned no results (%s)",
+                        bt_data.get("error") if isinstance(bt_data, dict) else "non-dict response",
+                    )
                 if bt_results:
                     for _r in bt_results:
                         if _r.get("score_display") is not None:
@@ -280,7 +281,7 @@ async def lifespan(app: FastAPI):
     logger.info("Alpha Cycle Intelligence API starting…")
     try:
         from pathlib import Path as _Path
-        for _cache_path in ("/tmp/backtest_cache.json", "/tmp/zone_history_cache.json", "/tmp/daily_full_cache.json"):
+        for _cache_path in ("/tmp/zone_history_cache.json", "/tmp/daily_full_cache.json"):
             cache_file = _Path(_cache_path)
             if cache_file.exists():
                 try:
@@ -1092,8 +1093,7 @@ async def get_arc_summary(request: Request):
         from analyzer import compute_arc_momentum
         results = CACHE.get("backtest_results")
         if not results:
-            # Do not block: run_backtest() can take 10–30s; return immediately with placeholders.
-            # refresh_cache() will populate the cache; next request or reload will have full data.
+            # Do not block on backtest: refresh_cache() fills CACHE; next request may have full data.
             results = []
         fwd = CACHE.get("fwd_returns")
         if fwd is None and results:
@@ -1633,8 +1633,6 @@ async def get_backtest(request: Request):
         if CACHE.get("backtest_results"):
             return api_response({"results": CACHE["backtest_results"]})
         data = await run_daily_backtest_full()
-        if not data.get("results"):
-            data = await run_backtest()
         return api_response(data)
     except Exception as e:
         logger.exception("Backtest endpoint failed")
@@ -1671,7 +1669,7 @@ async def get_zone_history(request: Request):
         current_since = current.get("from")
         current_weeks = int(current.get("weeks") or 0)
 
-    # Override context with live ARC if available (weekly backtest can lag)
+    # Override context with live ARC if available (cached backtest can lag)
     live_arc = None
     try:
         combined = CACHE.get("combined", {})
@@ -1720,9 +1718,6 @@ async def get_historical_returns(request: Request):
             from historical_returns import compute_historical_returns, _empty_returns
             bt = await run_daily_backtest_full()
             bt_list = bt.get("results", []) if isinstance(bt, dict) else []
-            if not bt_list:
-                bt = await run_backtest()
-                bt_list = bt.get("results", []) if isinstance(bt, dict) else []
             arc_history_for_zones = []
             for r in bt_list:
                 if not r:
@@ -1807,9 +1802,6 @@ async def get_arc_forward_returns(request: Request):
         from historical_returns import compute_arc_forward_returns
         bt = await run_daily_backtest_full()
         bt_list = bt.get("results", []) if isinstance(bt, dict) else []
-        if not bt_list:
-            bt = await run_backtest()
-            bt_list = bt.get("results", []) if isinstance(bt, dict) else []
         results = compute_arc_forward_returns(bt_list)
         return api_response({"buckets": results})
     except Exception as e:
@@ -2100,7 +2092,7 @@ async def get_snapshot(request: Request):
             fwd = CACHE.get("fwd_returns")
             dd_data = CACHE.get("high_risk_drawdown")
             if not bt_results:
-                bt = await run_backtest()
+                bt = await run_daily_backtest_full()
                 bt_results = bt.get("results", []) if isinstance(bt, dict) else []
             if fwd is None and bt_results:
                 from historical_returns import compute_arc_forward_returns
