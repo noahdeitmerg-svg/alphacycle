@@ -1,5 +1,5 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10 (x-bot: reply_engine SKIP/not_relevant Filter aus)
+**Zuletzt aktualisiert:** 2026-04-10 (permanent-fixes: reply_engine Regel)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
@@ -8,6 +8,12 @@
 - **Datei(en):** `alphacycle-x-bot/reply_engine.py`, `DEPLOY_STATE.md`
 - **Was wurde geaendert:** Kein Abbruch mehr wenn Claude `SKIP` zurueckgibt / kein `not_relevant`-Log. User-Nachricht: immer Reply-Text, kein SKIP-Placeholder. Leere Antwort oder alleinstehendes `SKIP` (Platzhalter) -> kein Telegram-Queue. Kein separater Relevanz-Claude-Call (existierte nicht).
 - **Warum:** Generierte Replies wurden nach API-Kosten verworfen; Freigabe in Telegram.
+- **Status:** pushed to GitHub
+
+## Letzter Session-Status (2026-04-10) — x-bot: permanent-fixes.mdc reply_engine Eintrag
+- **Datei(en):** `.cursor/rules/permanent-fixes.mdc`, `DEPLOY_STATE.md`
+- **Was wurde geaendert:** Dauerregel zu `reply_engine.generate_reply` (SKIP/not_relevant Gate aus, Telegram-Freigabe) ergaenzt.
+- **Warum:** Abgleich mit Code-Stand e15e556; Folge auf vorherige reply_engine-Aenderung.
 - **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-10) — x-bot: reply_settings nur everyone=API sonst Copy-Paste
