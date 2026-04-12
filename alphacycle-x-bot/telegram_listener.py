@@ -306,7 +306,8 @@ def _build_help_body() -> str:
         f"/logbot — Screen-Log ({config.SCREEN_SESSION_BOT})\n"
         f"/logtg — Screen-Log ({config.SCREEN_SESSION_TG})\n\n"
         "Hinweis: /scan kann parallel zum laufenden bot.py laufen.\n"
-        "Schreib auch menu, hilfe oder banner (ohne Slash)."
+        "Ohne Slash (nur erlaubter Chat): scan, status, ping, menu, banner, … oder @Botname / Antwort auf Bot.\n"
+        "Optional .env: TELEGRAM_BOT_USERNAME=YourBot (ohne @) falls getMe nicht erreichbar."
     )
 
 
@@ -464,57 +465,90 @@ def _maybe_send_daily_summary_utc() -> None:
         print(f"[LISTENER] Daily summary sent for UTC date {today}")
 
 
-def _handle_text_command(msg: dict) -> None:
-    """Slash-commands, manual 'done', and remote bot control (authorized chat only)."""
-    text = (msg.get("text") or "").strip()
-    chat_id = msg.get("chat", {}).get("id")
-    if chat_id is None:
-        return
+_BOT_USERNAME_LOADED = False
+_BOT_USERNAME_LOWER: str | None = None
 
-    if not text.startswith("/"):
-        low = text.lower().strip()
-        if _authorized_chat(chat_id) and low == "banner":
-            _handle_banner_generate(chat_id, msg.get("message_id"))
-            return
-        if low != "done" and _authorized_chat(chat_id) and low in _MENU_TRIGGERS:
-            telegram_bot.send_main_menu(chat_id)
-            return
-        if text.lower() != "done":
-            return
-        if not _authorized_chat(chat_id):
-            return
-        reply_msg = msg.get("reply_to_message") or {}
-        src_text = reply_msg.get("text") or ""
-        tweet_id, author = _parse_manual_meta(src_text)
-        if not tweet_id or not author:
-            return
-        row = database.get_pending_by_tweet_id(tweet_id)
-        if row:
-            database.insert_reply_history(
-                row.get("reply_text") or "",
-                author,
-                (row.get("approach") or "") or "manual_copy_paste",
-                row.get("pattern") or "",
-            )
-            database.set_pending_status(tweet_id, "posted")
-        telegram_bot.send_feedback_message(
-            f"OK: manual reply logged for @{author} (tweet_id={tweet_id}).",
-            chat_id=chat_id,
-            reply_to_message_id=msg.get("message_id"),
-        )
-        return
+# First word (after stripping @bot) maps to same handler as slash command (any group member).
+_TEXT_TO_SLASH = {
+    "scan": "/scan",
+    "status": "/status",
+    "ping": "/ping",
+    "help": "/help",
+    "hilfe": "/help",
+    "queuedaily": "/queuedaily",
+    "queue_daily": "/queuedaily",
+    "dailyqueue": "/queuedaily",
+    "logbot": "/logbot",
+    "log_xbot": "/logbot",
+    "screenbot": "/logbot",
+    "logtg": "/logtg",
+    "log_tg": "/logtg",
+    "screentg": "/logtg",
+    "screen_tg": "/logtg",
+    "banner": "/banner",
+    "menu": "/menu",
+    "start": "/start",
+}
 
-    if not _authorized_chat(chat_id):
-        if text.startswith("/"):
-            print(
-                "[LISTENER] Rejected slash command (unauthorized chat_id=%r). "
-                "Set TELEGRAM_CHAT_ID in .env to this id or a comma-separated list "
-                "(e.g. private id + supergroup -100...). Allowed now: %s"
-                % (chat_id, ",".join(config.TELEGRAM_ALLOWED_CHAT_IDS) or "(none)"),
-            )
-        return
 
-    cmd = text.split()[0].split("@", 1)[0].lower()
+def _bot_id_from_token() -> int | None:
+    tok = (config.TELEGRAM_BOT_TOKEN or "").strip()
+    if not tok or ":" not in tok:
+        return None
+    try:
+        return int(tok.split(":", 1)[0])
+    except ValueError:
+        return None
+
+
+def _get_bot_username_lower() -> str | None:
+    """Lowercase username without @; from env or first successful getMe."""
+    global _BOT_USERNAME_LOADED, _BOT_USERNAME_LOWER
+    if _BOT_USERNAME_LOADED:
+        return _BOT_USERNAME_LOWER
+    raw = (getattr(config, "TELEGRAM_BOT_USERNAME", "") or "").strip().lstrip("@").lower()
+    if raw:
+        _BOT_USERNAME_LOADED = True
+        _BOT_USERNAME_LOWER = raw
+        return raw
+    base = _api_base()
+    try:
+        r = requests.get(f"{base}/getMe", timeout=12).json()
+        un = str((r.get("result") or {}).get("username") or "").strip().lower()
+        _BOT_USERNAME_LOADED = True
+        _BOT_USERNAME_LOWER = un if un else None
+        return _BOT_USERNAME_LOWER
+    except Exception as e:
+        print(f"[LISTENER] getMe (username) failed: {e}")
+        _BOT_USERNAME_LOADED = True
+        _BOT_USERNAME_LOWER = None
+        return None
+
+
+def _strip_bot_mentions(low: str, bun: str | None) -> str:
+    if not bun:
+        return low
+    return " ".join(low.replace(f"@{bun}", " ").split())
+
+
+def _message_invokes_bot(msg: dict, low: str) -> bool:
+    """Reply to this bot, or @username in text (privacy groups need mention for non-commands)."""
+    bid = _bot_id_from_token()
+    rt = msg.get("reply_to_message") or {}
+    fu = rt.get("from") or {}
+    if bid is not None and fu.get("id") == bid:
+        return True
+    bun = _get_bot_username_lower()
+    if bun and f"@{bun}" in low:
+        return True
+    return False
+
+
+def _execute_slash_command(chat_id, cmd: str, reply_to_message_id: int | None = None) -> None:
+    """Dispatch /command (same behavior for slash and keyword aliases)."""
+    cmd = (cmd or "").strip().split()[0].split("@", 1)[0].lower()
+    if not cmd.startswith("/"):
+        return
 
     if cmd in ("/start", "/menu"):
         telegram_bot.send_main_menu(chat_id)
@@ -563,8 +597,84 @@ def _handle_text_command(msg: dict) -> None:
         return
 
     if cmd == "/banner":
-        _handle_banner_generate(chat_id, msg.get("message_id"))
+        _handle_banner_generate(chat_id, reply_to_message_id)
         return
+
+
+def _handle_text_command(msg: dict) -> None:
+    """Slash-commands, @bot / reply-to-bot, keyword commands (authorized chat); manual done."""
+    text = (msg.get("text") or "").strip()
+    chat_id = msg.get("chat", {}).get("id")
+    if chat_id is None:
+        return
+
+    if not text.startswith("/"):
+        low = text.lower().strip()
+        chat_ok = _authorized_chat(chat_id)
+
+        if chat_ok and low == "banner":
+            _handle_banner_generate(chat_id, msg.get("message_id"))
+            return
+
+        if low != "done":
+            if chat_ok:
+                bun = _get_bot_username_lower()
+                remain = _strip_bot_mentions(low, bun)
+                first = remain.split()[0] if remain.split() else ""
+
+                if first in _TEXT_TO_SLASH:
+                    _execute_slash_command(
+                        chat_id,
+                        _TEXT_TO_SLASH[first],
+                        msg.get("message_id"),
+                    )
+                    return
+
+                if low in _MENU_TRIGGERS or first in _MENU_TRIGGERS:
+                    telegram_bot.send_main_menu(chat_id)
+                    return
+
+                if _message_invokes_bot(msg, low):
+                    telegram_bot.send_main_menu(chat_id)
+                    return
+
+            return
+
+        if not chat_ok:
+            return
+        reply_msg = msg.get("reply_to_message") or {}
+        src_text = reply_msg.get("text") or ""
+        tweet_id, author = _parse_manual_meta(src_text)
+        if not tweet_id or not author:
+            return
+        row = database.get_pending_by_tweet_id(tweet_id)
+        if row:
+            database.insert_reply_history(
+                row.get("reply_text") or "",
+                author,
+                (row.get("approach") or "") or "manual_copy_paste",
+                row.get("pattern") or "",
+            )
+            database.set_pending_status(tweet_id, "posted")
+        telegram_bot.send_feedback_message(
+            f"OK: manual reply logged for @{author} (tweet_id={tweet_id}).",
+            chat_id=chat_id,
+            reply_to_message_id=msg.get("message_id"),
+        )
+        return
+
+    if not _authorized_chat(chat_id):
+        if text.startswith("/"):
+            print(
+                "[LISTENER] Rejected slash command (unauthorized chat_id=%r). "
+                "Set TELEGRAM_CHAT_ID in .env to this id or a comma-separated list "
+                "(e.g. private id + supergroup -100...). Allowed now: %s"
+                % (chat_id, ",".join(config.TELEGRAM_ALLOWED_CHAT_IDS) or "(none)"),
+            )
+        return
+
+    cmd = text.split()[0].split("@", 1)[0].lower()
+    _execute_slash_command(chat_id, cmd, msg.get("message_id"))
 
 
 def preflight() -> bool:
@@ -603,6 +713,14 @@ def ensure_polling_mode() -> None:
 def poll_loop() -> None:
     offset = 0
     print("[LISTENER] Telegram callback listener started (getUpdates long polling).")
+    try:
+        u = _get_bot_username_lower()
+        if u:
+            print(f"[LISTENER] Mention token: @{u} (also reply-to-bot)")
+        else:
+            print("[LISTENER] Hint: set TELEGRAM_BOT_USERNAME in .env so @-mentions work in groups.")
+    except Exception:
+        pass
     while True:
         try:
             _maybe_send_daily_summary_utc()

@@ -26,6 +26,7 @@ def main() -> None:
             f"TELEGRAM_ALLOWED_CHAT_IDS: count={n_allowed} (all may use /commands and inline buttons; "
             "first id is default for approvals if send omits chat_id)."
         )
+    _line("TELEGRAM_BOT_USERNAME (optional)", getattr(config, "TELEGRAM_BOT_USERNAME", "") or "")
     if config.TWITTER_BEARER and len(config.TWITTER_BEARER) < 80:
         print("Hint: Bearer usually long; len<80 may be truncated in .env (line break?).")
     if config.TWITTER_API_SECRET and len(config.TWITTER_API_SECRET) < 40:

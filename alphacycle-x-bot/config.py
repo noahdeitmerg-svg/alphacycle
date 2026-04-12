@@ -36,6 +36,8 @@ _telegram_chat_raw = (os.getenv("TELEGRAM_CHAT_ID", "") or "").strip()
 TELEGRAM_ALLOWED_CHAT_IDS: tuple[str, ...] = _parse_telegram_allowed_chat_ids(_telegram_chat_raw)
 # First id: default target for outbound approvals / summaries when send_* omits chat_id.
 TELEGRAM_CHAT_ID = TELEGRAM_ALLOWED_CHAT_IDS[0] if TELEGRAM_ALLOWED_CHAT_IDS else ""
+# Optional: @username without @ for mention detection; if empty, telegram_listener uses getMe once.
+TELEGRAM_BOT_USERNAME = (os.getenv("TELEGRAM_BOT_USERNAME", "") or "").strip().lstrip("@")
 # screen -S <name> for /logbot and /logtg (Telegram tail of scrollback via hardcopy -h).
 SCREEN_SESSION_BOT = (os.getenv("SCREEN_SESSION_BOT", "xbot") or "xbot").strip()
 SCREEN_SESSION_TG = (os.getenv("SCREEN_SESSION_TG", "tg") or "tg").strip()
