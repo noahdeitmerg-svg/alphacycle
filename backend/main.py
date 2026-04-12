@@ -67,9 +67,9 @@ except ImportError:
     from analyzer import analyzer as cycle_analyzer, get_short_term_context
 
 try:
-    from decision_engine import decision_engine
+    from decision_engine import decision_engine, get_position
 except ImportError:
-    from decision_engine import decision_engine
+    from decision_engine import decision_engine, get_position
 
 try:
     from liquidity_engine import compute_liquidity_regime
@@ -347,14 +347,24 @@ def _save_today_snapshot() -> dict:
         fg_value = (raw.get("fear_greed") or {}).get("current", 50.0)
         liquidity_trend = macro_scores.get("walcl_trend", 50.0)
 
+        walcl = [item["v"] for item in raw.get("walcl_series", [])]
+        stable = [item["v"] for item in raw.get("stable_series", [])]
+        real_arc = compute_arc_score(
+            raw.get("btc_prices", []),
+            fg_value,
+            walcl,
+            stable,
+            raw.get("net_liq_series"),
+        )
+
         snapshot = {
             "date":       date.today().isoformat(),
-            "arc":        round(combined.get("combined_score", 50.0), 1),
+            "arc":        round(float(real_arc), 1),
             "btc_price":  round(safe_float(btc_market.get("price", 0.0)), 0),
             "regime":     macro_scores.get("regime", "NEUTRAL"),
             "liquidity":  round(liquidity_trend, 1),
             "fear_greed": fg_value,
-            "decision":   combined.get("signal", "HOLD"),
+            "decision":   get_position(real_arc),
             "confidence": round(combined.get("confidence", 0.0), 1),
         }
 
@@ -1140,7 +1150,13 @@ async def get_arc_summary(request: Request):
             conf_val,
         )
         out["decision"] = out["position"]
-        _alloc = {"BUY": "60-80%", "HOLD": "40-60%", "REDUCE": "20-40%", "SELL": "0-20%"}
+        _alloc = {
+            "BUY": "60-80%",
+            "ACCUMULATE": "50-70%",
+            "HOLD": "40-60%",
+            "REDUCE": "20-40%",
+            "SELL": "0-20%",
+        }
         out["allocation"] = _alloc.get(out["position"], "40-60%")
 
         # Phase-coherent overrides (phase takes priority over ARC-only)
@@ -2073,6 +2089,7 @@ async def get_snapshot(request: Request):
             or 50
         )
         arc_score = float(arc_score) if arc_score is not None else 50.0
+        arc_display_val = arc_display_score(arc_score)
         st_ctx = result.get("short_term_context") or st_ctx
         cy_sig = result.get("cycle_signal") or {}
         eth_price = safe_float(raw.get("eth_market", {}).get("price", 0))
@@ -2120,7 +2137,6 @@ async def get_snapshot(request: Request):
         except Exception:
             pass
 
-        arc_display_val = arc_display_score(arc_score)
         snapshot = build_snapshot(
             arc_score=arc_display_val,
             btc_price=btc_price,

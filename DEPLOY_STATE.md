@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10 (index.html Hero orbit hotfix context + colors)
+**Zuletzt aktualisiert:** 2026-04-10 (main.py snapshot ARC + get_snapshot fix)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-10) — main.py: Daily Snapshot ARC + snapshot endpoint
+- **Datei(en):** `backend/main.py` (`_save_today_snapshot`: `arc` aus `compute_arc_score` statt `combined_score`; `decision` aus `get_position(real_arc)`; `get_snapshot`: `arc_display_val` vor `_get_expected_range`-try; `_alloc` um **ACCUMULATE** 50-70pct), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was wurde geaendert:** Persistierter Tages-Snapshot speichert echten ARC; Decision aligned mit ARC-Position; `/api/snapshot` kein NameError mehr; Allocation fuer ACCUMULATE.
+- **Warum:** combined_score ist BTC/ETH/Macro-Mix, nicht ARC-Formel.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-10) — Hero hotfix: regime-context, Ring, Zentrierung, scoreColor
 - **Datei(en):** `index.html` (`hero-regime-context` nutzt `_getCycleDescription(combinedScore)` statt alter arc_score-Texte; `.orbit-ring::before` Mask 85/87; `.gauge-center` gap 0 + justify center; `.gauge-denom` /100 dezenter; `scoreColor()` auf Orbit-Palette #22c55e/#00D4AA/#3b82f6/#f59e0b/#ef4444; explizit `btc-score-val`/`btc-phase` Farbe aus `scoreColor(combinedScore)`), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
