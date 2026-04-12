@@ -149,13 +149,14 @@ def _build_status_body() -> str:
 
 
 def _authorized_chat(chat_id) -> bool:
-    """Only TELEGRAM_CHAT_ID may use commands and callbacks (when CHAT_ID is set)."""
+    """Only chats listed in TELEGRAM_ALLOWED_CHAT_IDS may use commands and callbacks (when any id is set)."""
     if chat_id is None:
         return False
-    cid = str(config.TELEGRAM_CHAT_ID or "").strip()
-    if not cid:
+    allowed = getattr(config, "TELEGRAM_ALLOWED_CHAT_IDS", ()) or ()
+    if not allowed:
         return True
-    return str(chat_id).strip() == cid
+    sid = str(chat_id).strip()
+    return sid in allowed
 
 
 def _send_chunks(
@@ -504,6 +505,13 @@ def _handle_text_command(msg: dict) -> None:
         return
 
     if not _authorized_chat(chat_id):
+        if text.startswith("/"):
+            print(
+                "[LISTENER] Rejected slash command (unauthorized chat_id=%r). "
+                "Set TELEGRAM_CHAT_ID in .env to this id or a comma-separated list "
+                "(e.g. private id + supergroup -100...). Allowed now: %s"
+                % (chat_id, ",".join(config.TELEGRAM_ALLOWED_CHAT_IDS) or "(none)"),
+            )
         return
 
     cmd = text.split()[0].split("@", 1)[0].lower()
@@ -646,7 +654,10 @@ def poll_loop() -> None:
 
                 if not _authorized_chat(chat_id):
                     _toast("Nicht autorisiert.")
-                    print(f"[LISTENER] Rejected callback chat_id={chat_id!r}")
+                    print(
+                        "[LISTENER] Rejected callback chat_id=%r (allowed: %s)"
+                        % (chat_id, ",".join(config.TELEGRAM_ALLOWED_CHAT_IDS) or "(none)"),
+                    )
                     continue
 
                 if raw.startswith("menu:"):

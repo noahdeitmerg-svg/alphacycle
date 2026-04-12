@@ -20,7 +20,22 @@ TWITTER_BEARER = (os.getenv("TWITTER_BEARER", "") or "").strip()
 CLAUDE_API_KEY = (os.getenv("CLAUDE_API_KEY", "") or "").strip()
 
 TELEGRAM_BOT_TOKEN = (os.getenv("TELEGRAM_BOT_TOKEN", "") or "").strip()
-TELEGRAM_CHAT_ID = (os.getenv("TELEGRAM_CHAT_ID", "") or "").strip()
+
+
+def _parse_telegram_allowed_chat_ids(raw: str) -> tuple[str, ...]:
+    """Comma or semicolon separated chat ids (private DM, group, supergroup). No spaces issues: strip each."""
+    out: list[str] = []
+    for part in (raw or "").replace(";", ",").split(","):
+        s = part.strip()
+        if s:
+            out.append(s)
+    return tuple(out)
+
+
+_telegram_chat_raw = (os.getenv("TELEGRAM_CHAT_ID", "") or "").strip()
+TELEGRAM_ALLOWED_CHAT_IDS: tuple[str, ...] = _parse_telegram_allowed_chat_ids(_telegram_chat_raw)
+# First id: default target for outbound approvals / summaries when send_* omits chat_id.
+TELEGRAM_CHAT_ID = TELEGRAM_ALLOWED_CHAT_IDS[0] if TELEGRAM_ALLOWED_CHAT_IDS else ""
 # screen -S <name> for /logbot and /logtg (Telegram tail of scrollback via hardcopy -h).
 SCREEN_SESSION_BOT = (os.getenv("SCREEN_SESSION_BOT", "xbot") or "xbot").strip()
 SCREEN_SESSION_TG = (os.getenv("SCREEN_SESSION_TG", "tg") or "tg").strip()

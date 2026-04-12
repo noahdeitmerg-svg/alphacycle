@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10 (Hero Orbit: Labels/Score/Ring/Dot Komplettfix CSS)
+**Zuletzt aktualisiert:** 2026-04-10 (x-bot: Telegram multi-chat_id + Gruppen-Doku)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-10) — x-bot Telegram: mehrere TELEGRAM_CHAT_ID, Listener-Log
+- **Datei(en):** `alphacycle-x-bot/config.py` (`TELEGRAM_ALLOWED_CHAT_IDS`, erste ID bleibt `TELEGRAM_CHAT_ID` fuer Sends), `alphacycle-x-bot/telegram_listener.py` (`_authorized_chat` gegen Menge; Log bei abgelehnten Slash-Commands; Callback-Log mit erlaubter Liste), `alphacycle-x-bot/verify_env.py`, `alphacycle-x-bot/.env.example`, `alphacycle-x-bot/RUN_24_7.md`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was wurde geaendert:** Gruppe + DM gleichzeitig erlaubbar; Supergroup-ID nicht mehr nur exakt eine Zelle.
+- **Warum:** Listener verglich nur mit einer ID — Gruppe oft `-100…`, Deploy/.env oft nur DM.
+- **Status:** nach Commit/Push
 
 ## Letzter Session-Status (2026-04-10) — Hero Orbit Komplettfix (index.html CSS)
 - **Datei(en):** `index.html` (`.orbit-label` Basis ohne translate(-50%,-50%); `.ol-dv`/`.ol-ac` rechts mit `left:108%` + `translateY(-50%)`; `.ol-ex` unten `top:108%` + `translateX(-50%)`; `.ol-rr`/`.ol-eu` mit `right:108%`/`left:auto` + Text nach links; `.orbit-dot` z-index 10, Labels z-index 5; `#btc-card.hero-card .gauge-wrap` flex center + z-index 6; `.gauge-center` gap/padding/margin 0; Ring-Mask 84%/86%; Mobile 700px/400px nur Font + 105% Offsets; doppelte `.gauge-center`/`.ol-*`-Regeln entfernt), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`

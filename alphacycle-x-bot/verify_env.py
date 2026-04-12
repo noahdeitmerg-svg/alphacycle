@@ -19,7 +19,13 @@ def main() -> None:
     _line("TWITTER_ACCESS_SECRET", config.TWITTER_ACCESS_SECRET)
     _line("CLAUDE_API_KEY", config.CLAUDE_API_KEY)
     _line("TELEGRAM_BOT_TOKEN", config.TELEGRAM_BOT_TOKEN)
-    _line("TELEGRAM_CHAT_ID", config.TELEGRAM_CHAT_ID)
+    _line("TELEGRAM_CHAT_ID (default outbound)", config.TELEGRAM_CHAT_ID)
+    n_allowed = len(getattr(config, "TELEGRAM_ALLOWED_CHAT_IDS", ()) or ())
+    if n_allowed > 1:
+        print(
+            f"TELEGRAM_ALLOWED_CHAT_IDS: count={n_allowed} (all may use /commands and inline buttons; "
+            "first id is default for approvals if send omits chat_id)."
+        )
     if config.TWITTER_BEARER and len(config.TWITTER_BEARER) < 80:
         print("Hint: Bearer usually long; len<80 may be truncated in .env (line break?).")
     if config.TWITTER_API_SECRET and len(config.TWITTER_API_SECRET) < 40:
