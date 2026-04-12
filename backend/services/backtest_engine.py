@@ -38,6 +38,8 @@ WINDOW_200W = 200  # 200 weekly data points = 200-week MA
 CACHE_FILE = Path("/tmp/backtest_cache.json")
 DAILY_CACHE_FILE = Path("/tmp/daily_full_cache.json")
 CSV_PATH = Path(__file__).resolve().parent.parent / "data" / "btc_daily_kraken.csv"
+# Bump when daily merge or daily-ARC methodology changes; stale files rebuild on next load.
+DAILY_PRICE_CACHE_EPOCH = "20260410-arc-daily-parity"
 
 
 async def _fetch_since(since_ts: int) -> List[Dict[str, Any]]:
@@ -267,10 +269,40 @@ async def _load_or_build_daily_cache() -> List[Dict[str, Any]]:
     """
     today = datetime.utcnow().date().isoformat()
 
-    # Try file cache first
+    # Try file cache first (wrapped dict with epoch; legacy bare list is discarded once)
     if DAILY_CACHE_FILE.exists():
         try:
-            cached = json.loads(DAILY_CACHE_FILE.read_text())
+            raw = json.loads(DAILY_CACHE_FILE.read_text())
+            cached: Optional[List[Dict[str, Any]]] = None
+            if isinstance(raw, list):
+                logger.info(
+                    "Daily cache legacy format (bare list): removing for epoch %s",
+                    DAILY_PRICE_CACHE_EPOCH,
+                )
+                try:
+                    DAILY_CACHE_FILE.unlink()
+                except OSError:
+                    pass
+            elif isinstance(raw, dict) and isinstance(raw.get("daily_bars"), list):
+                if raw.get("epoch") != DAILY_PRICE_CACHE_EPOCH:
+                    logger.info(
+                        "Daily cache epoch mismatch (%s != %s): removing file",
+                        raw.get("epoch"),
+                        DAILY_PRICE_CACHE_EPOCH,
+                    )
+                    try:
+                        DAILY_CACHE_FILE.unlink()
+                    except OSError:
+                        pass
+                else:
+                    cached = raw["daily_bars"]
+            else:
+                logger.warning("Daily cache unknown shape: removing file")
+                try:
+                    DAILY_CACHE_FILE.unlink()
+                except OSError:
+                    pass
+
             if cached and isinstance(cached, list) and len(cached) > 2000:
                 last_date = cached[-1]["date"]
                 if last_date >= today:
@@ -305,7 +337,8 @@ async def _load_or_build_daily_cache() -> List[Dict[str, Any]]:
                         seen.add(item["date"])
                         deduped.append(item)
                 cached = sorted(deduped, key=lambda x: x["date"])
-                DAILY_CACHE_FILE.write_text(json.dumps(cached))
+                payload = {"epoch": DAILY_PRICE_CACHE_EPOCH, "daily_bars": cached}
+                DAILY_CACHE_FILE.write_text(json.dumps(payload))
                 logger.info("Daily cache incremental update: %s points to %s", len(cached), cached[-1]["date"])
                 return cached
         except Exception as e:
@@ -385,7 +418,9 @@ async def _load_or_build_daily_cache() -> List[Dict[str, Any]]:
     # 5. Save to file cache
     if merged:
         try:
-            DAILY_CACHE_FILE.write_text(json.dumps(merged))
+            DAILY_CACHE_FILE.write_text(
+                json.dumps({"epoch": DAILY_PRICE_CACHE_EPOCH, "daily_bars": merged})
+            )
         except Exception:
             pass
         logger.info(

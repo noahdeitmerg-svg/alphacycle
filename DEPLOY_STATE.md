@@ -1,8 +1,13 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10 (backtest_engine daily full liq parity + Hi/Lo)
+**Zuletzt aktualisiert:** 2026-04-10 (daily_full_cache epoch + wrapped JSON)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-10) — daily_full_cache.json epoch (auto-rebuild)
+- **Datei(en):** `backend/services/backtest_engine.py` (`DAILY_PRICE_CACHE_EPOCH`, Dateiinhalt `{"epoch", "daily_bars"}`; Legacy-Liste und alte Epochen werden geloescht, dann Full-Rebuild), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was wurde geaendert:** Nach Methodik-Aenderungen reicht Epochen-Bump; kein manuelles `rm` noetig solange Deploy/Refresh laeuft.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-10) — run_daily_backtest_full: Net-Liq Impulse + Hi/Lo
 - **Datei(en):** `backend/services/backtest_engine.py` (`_get_net_liq_impulse_score`; in `run_daily_backtest_full` nur: macro_liq aus Impulse statt `_get_net_liq_score`; MA aus `daily_high`, DD aus `drawdown_score_hl(..., daily_low)`), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
