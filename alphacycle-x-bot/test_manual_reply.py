@@ -1,5 +1,8 @@
 """
-Manual OAuth 1.0a post test (same path as poster.post_reply).
+Manual OAuth 1.0a post test (debug only).
+
+Replies are no longer posted via API from poster.py; this script still exercises
+create_tweet(in_reply_to) for local OAuth debugging.
 
 Usage (from alphacycle-x-bot directory, with env vars set):
   python3 test_manual_reply.py

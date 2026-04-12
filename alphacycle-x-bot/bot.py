@@ -19,22 +19,6 @@ import scanner
 import reply_engine
 
 
-def _infer_post_mode(reply_settings: str | None) -> tuple[str, str]:
-    """
-    Map Twitter reply_settings to posting mode.
-    Only everyone: API after Telegram approval. All other non-empty values: copy-paste only.
-    Empty/missing: auto (scanner/API may omit the field; treat like open replies).
-    Returns (post_mode, normalized_display_string).
-    """
-    s = (reply_settings or "").strip()
-    if not s:
-        return "auto", ""
-    sl = s.lower().replace("_", "")
-    if sl == "everyone":
-        return "auto", s
-    return "manual_only", s
-
-
 def _configure_schedule_utc() -> None:
     """Make schedule.every().day.at(DAILY_POST_TIME) fire at that clock time in the process TZ (tzset for UTC)."""
     if sys.platform != "win32" and hasattr(time, "tzset"):
@@ -199,15 +183,6 @@ def run_cycle():
                     )
                     continue
 
-            rs = (tweet.get("reply_settings") or "").strip()
-            post_mode, rs_disp = _infer_post_mode(rs)
-            _logger.info(
-                "[SCANNER] @%s reply_settings=%s mode=%s",
-                tweet["author"],
-                rs or "(empty)",
-                post_mode,
-            )
-
             tw_url = _tweet_url(tweet["author"], tweet["id"])
             if not database.insert_pending_reply(
                 tweet["id"],
@@ -216,8 +191,6 @@ def run_cycle():
                 reply_text,
                 approach_key or "",
                 pattern_key or "",
-                post_mode=post_mode,
-                reply_settings=rs_disp or rs,
             ):
                 print(
                     f"[BOT] Pending row already exists for tweet {tweet['id']} — skip duplicate queue"
@@ -229,8 +202,6 @@ def run_cycle():
                 reply_text,
                 tweet["id"],
                 tweet["author"],
-                post_mode=post_mode,
-                reply_settings=rs_disp or rs or "",
                 qa_status=qa_status if config.QA_ENABLED else None,
                 qa_attempts=qa_attempts if config.QA_ENABLED else None,
             )

@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-12 (x-bot: QA Feedback + Retry-Guide + Zone STOP)
+**Zuletzt aktualisiert:** 2026-04-12 (x-bot: Replies nur Telegram, kein X-Reply-API)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-12) — x-bot: Replies nur Telegram (kein create_tweet Reply)
+- **Datei(en):** `alphacycle-x-bot/poster.py` (`post_reply` 2 Telegram-Nachrichten, `complete_approved_reply`; X-API nur noch `post_daily_post`), `alphacycle-x-bot/bot.py` (kein `reply_settings` / `post_mode`), `alphacycle-x-bot/scanner.py` (kein `reply_settings` in `tweet_fields`), `alphacycle-x-bot/telegram_bot.py` (`send_approval` ohne Mode-Zeilen; `send_post_outcome_two_part` entfernt), `alphacycle-x-bot/telegram_listener.py` (`complete_approved_reply`), `alphacycle-x-bot/RUN_24_7.md`, `alphacycle-x-bot/test_manual_reply.py`, `alphacycle-x-bot/test_telegram_approval.py`, `alphacycle-x-bot/test_telegram_post_real.py`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was wurde geaendert:** Replies: kein `create_tweet(in_reply_to)` mehr — nach POST-Button nur Telegram-Handoff + DB (`log_reply`, `insert_reply_history`, `paste`-Stat). Daily Posts unveraendert per API. Weniger 403-Logs und Wartezeit fuer Replies.
+- **Warum:** X verbietet AI-Reply-Bots ohne separate Genehmigung.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-12) — x-bot: QA spezifischer + Replacement-Guide + Zone-STOP
 - **Datei(en):** `alphacycle-x-bot/prompts/qa_system.txt` (FAIL `banned_word_"..."`, Regel 10 `zone_label_"..."`), `alphacycle-x-bot/growth_engine.py` (`_build_qa_replacement_guide`, Retry-`extra_instruction`), `alphacycle-x-bot/prompts/reply_system.txt` (STOP Regel 6: keine Zonennamen als Labels), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`

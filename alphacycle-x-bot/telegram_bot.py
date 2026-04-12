@@ -37,8 +37,6 @@ def send_approval(
     reply_text: str,
     tweet_id: str,
     username: str,
-    post_mode: str = "auto",
-    reply_settings: str = "",
     qa_status: str | None = None,
     qa_attempts: int | None = None,
 ) -> bool:
@@ -47,8 +45,6 @@ def send_approval(
         return False
 
     u = (username or "").strip().lstrip("@")
-    rs = (reply_settings or "").strip() or "(unknown)"
-    mode = (post_mode or "auto").strip() or "auto"
     rt = (reply_text or "").strip()
 
     if qa_status:
@@ -58,10 +54,10 @@ def send_approval(
                 "New AlphaCycle Reply Candidate\n\n"
                 f"✅ QA: PASS (attempt {att})\n"
                 f"Account: @{u}\n"
-                f"Tweet: {tweet_url}\n"
-                f"Mode: {mode}\n\n"
+                f"Tweet: {tweet_url}\n\n"
                 "Reply:\n"
                 f"{rt}\n\n"
+                "POST: send copy instructions to this chat (no X API).\n"
                 "Approve?"
             )
         elif qa_status.startswith("FAIL_3x"):
@@ -74,10 +70,10 @@ def send_approval(
                 "New AlphaCycle Reply Candidate\n\n"
                 f"⚠️ QA: FAILED 3x ({reasons}) — check carefully\n"
                 f"Account: @{u}\n"
-                f"Tweet: {tweet_url}\n"
-                f"Mode: {mode}\n\n"
+                f"Tweet: {tweet_url}\n\n"
                 "Reply:\n"
                 f"{rt}\n\n"
+                "POST: send copy instructions to this chat (no X API).\n"
                 "Approve?"
             )
         else:
@@ -85,19 +81,19 @@ def send_approval(
                 "New AlphaCycle Reply Candidate\n\n"
                 f"QA: {qa_status}\n"
                 f"Account: @{u}\n"
-                f"Tweet: {tweet_url}\n"
-                f"Mode: {mode}\n\n"
+                f"Tweet: {tweet_url}\n\n"
                 "Reply:\n"
                 f"{rt}\n\n"
+                "POST: send copy instructions to this chat (no X API).\n"
                 "Approve?"
             )
     else:
         body = (
-            f"Reply ready — {mode}\n\n"
+            "Reply ready\n\n"
             f"Tweet: {tweet_url}\n"
-            f"Author: @{u}\n"
-            f"Reply setting: {rs}\n\n"
-            "Tap POST to send (API or copy-paste if blocked). Reply text follows in the next message."
+            f"Author: @{u}\n\n"
+            "POST: send copy instructions to this chat (no X API). "
+            "Reply text follows in the next message."
         )
 
     max_len = 4096
@@ -139,46 +135,6 @@ def send_approval(
         print("[TELEGRAM] approval info sent but plain reply message failed")
         return False
     return True
-
-
-def send_post_outcome_two_part(
-    author: str,
-    tweet_id: str,
-    reply_text: str,
-    reply_settings: str,
-    post_mode: str,
-    result_line: str,
-) -> bool:
-    """
-    After POST: info message + plain reply only (copy-paste path / result notice).
-    result_line: e.g. Auto-posted, API blocked, or Restricted.
-    """
-    if not config.TELEGRAM_BOT_TOKEN or not config.TELEGRAM_CHAT_ID:
-        return False
-    a = (author or "").strip().lstrip("@")
-    rs = (reply_settings or "").strip() or "(unknown)"
-    url = f"https://x.com/{a}/status/{tweet_id}"
-    body = (
-        f"Reply ready — {post_mode}\n\n"
-        f"Tweet: {url}\n"
-        f"Author: @{a}\n"
-        f"Reply setting: {rs}\n\n"
-        f"{result_line}\n\n"
-        f"[MANUAL_REPLY] tweet_id={tweet_id} author={a}"
-    )[:4096]
-    payload = {"chat_id": config.TELEGRAM_CHAT_ID, "text": body}
-    req_url = f"{_api_base()}/sendMessage"
-    try:
-        r = requests.post(req_url, json=payload, timeout=45)
-        if not r.ok:
-            print(f"[TELEGRAM] send_post_outcome info failed: {r.status_code}")
-            return False
-        if not (r.json() or {}).get("ok"):
-            return False
-    except Exception as e:
-        print(f"[TELEGRAM] send_post_outcome error: {e}")
-        return False
-    return send_plain_message((reply_text or "").strip())
 
 
 def send_daily_post_approval(post_text: str, pending_id: str) -> bool:

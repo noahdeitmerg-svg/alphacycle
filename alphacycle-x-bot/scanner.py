@@ -9,17 +9,6 @@ import database
 logger = logging.getLogger(__name__)
 
 
-def _tweet_reply_settings_str(tweet) -> str:
-    """Normalize Twitter API reply_settings for storage and mode logic."""
-    rs = getattr(tweet, "reply_settings", None)
-    if rs is None:
-        return ""
-    v = getattr(rs, "value", None)
-    if v is not None:
-        return str(v).strip()
-    return str(rs).strip()
-
-
 def _tweet_has_blocked_keyword(tweet_text: str) -> bool:
     t = (tweet_text or "").lower()
     for kw in config.BLOCKED_KEYWORDS:
@@ -67,24 +56,12 @@ def get_latest_tweets(account_spec: str, client: tweepy.Client) -> list[dict]:
             return []
 
         handle = (user.data.username or spec).strip()
-        try:
-            tweets = client.get_users_tweets(
-                user.data.id,
-                max_results=5,
-                tweet_fields=["created_at", "public_metrics", "reply_settings"],
-                exclude=["retweets", "replies"],
-            )
-        except Exception as e:
-            logger.warning(
-                "[SCANNER] get_users_tweets with reply_settings failed (%s); retry without",
-                e,
-            )
-            tweets = client.get_users_tweets(
-                user.data.id,
-                max_results=5,
-                tweet_fields=["created_at", "public_metrics"],
-                exclude=["retweets", "replies"],
-            )
+        tweets = client.get_users_tweets(
+            user.data.id,
+            max_results=5,
+            tweet_fields=["created_at", "public_metrics"],
+            exclude=["retweets", "replies"],
+        )
 
         if not tweets.data:
             return []
@@ -128,7 +105,6 @@ def get_latest_tweets(account_spec: str, client: tweepy.Client) -> list[dict]:
                 "text": tweet.text,
                 "likes": likes,
                 "age_seconds": int(age),
-                "reply_settings": _tweet_reply_settings_str(tweet),
             })
 
         return results

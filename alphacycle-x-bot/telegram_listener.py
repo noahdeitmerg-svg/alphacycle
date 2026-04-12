@@ -662,27 +662,21 @@ def poll_loop() -> None:
                     print(
                         f"[LOG] telegram approval received: POST tweet_id={tweet_id} (from={from_user})"
                     )
-                    result = poster.post_reply(tweet_id)
-                    if result == "posted":
-                        _toast("Reply gesendet.")
+                    result = poster.complete_approved_reply(tweet_id)
+                    if result == "telegram":
+                        _toast("Anleitung gesendet.")
                         _chat(
                             f"Du hast POST gedrückt (Reply).\n"
                             f"Tweet-ID: {tweet_id}\n"
-                            f"Ergebnis: Reply wurde auf X veröffentlicht."
-                        )
-                    elif result == "manual":
-                        _toast("API blockiert — manuell posten.")
-                        _chat(
-                            f"Du hast POST gedrückt (Reply).\n"
-                            f"Tweet-ID: {tweet_id}\n"
-                            f"Ergebnis: API blockiert; Copy/Paste-Anleitung wurde gesendet."
+                            f"Ergebnis: Zwei Telegram-Nachrichten (Link + Text) wurden gesendet; "
+                            f"kein X-API-Versuch."
                         )
                     else:
-                        _toast("Post fehlgeschlagen (Log auf Server).")
+                        _toast("Telegram-Versand fehlgeschlagen (Log auf Server).")
                         _chat(
                             f"Du hast POST gedrückt (Reply).\n"
                             f"Tweet-ID: {tweet_id}\n"
-                            f"Ergebnis: fehlgeschlagen — Server-Log prüfen (OAuth/X API)."
+                            f"Ergebnis: fehlgeschlagen — Server-Log prüfen (Telegram sendMessage)."
                         )
                 elif raw.startswith("skip:"):
                     tweet_id = raw[5:].strip()
