@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10 (Backtest: daily-only, deprecated weekly paths removed)
+**Zuletzt aktualisiert:** 2026-04-10 (ARC source purity: snapshot arc_score chain, arc-summary decision placeholder)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-10) — ARC source purity (snapshot + arc-summary placeholder)
+- **Datei(en):** `backend/main.py` (`get_snapshot`: `arc_score` nur noch `arc_summary.arc_score` oder Analyzer-`arc_score` oder `50`, kein `combined_score`/`alpha_cycle_position`; `get_arc_summary`: initiales `out["decision"]` = `"HOLD"` statt Combined-`signal`), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was wurde geaendert:** Sekundaere ARC-Quellen im Snapshot entfernt; Decision-Placeholder neutral bis echte Phase-/Positionslogik laeuft (`compute_arc_score` unveraendert).
+- **Warum:** Combined/Cycle-Position sind kein Ersatz fuer den ARC aus `compute_arc_score`.
+- **Status:** nach Commit/Push
 
 ## Letzter Session-Status (2026-04-10) — Remove deprecated weekly backtest; daily-only graceful empty
 - **Datei(en):** `backend/services/backtest_engine.py` (entfernt: `run_backtest`, `run_daily_backtest`, woechentlicher Kraken-Cache `_load_or_build_cache`/`_fetch_btc_history`/`_fetch_since`, `_get_net_liq_score`; `<1400` Punkte: `logger.error` + `{"results":[],"error":"insufficient daily history"}` statt Weekly-Fallback; ARC VALIDATION: `logger.debug`; kein `run_backtest`-Vergleich mehr), `backend/main.py` (Import und alle Calls nur `run_daily_backtest_full`; Fallbacks zu `run_backtest` entfernt; Startup-Cache-Clear ohne `/tmp/backtest_cache.json`), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`

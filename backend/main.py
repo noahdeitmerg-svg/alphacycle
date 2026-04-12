@@ -1042,7 +1042,7 @@ async def get_arc_summary(request: Request):
         "eth_score":   round(c["eth_scores"].get("eth_score", 50.0), 1),
         "macro_score": round(mac.get("macro_score", 50.0), 1),
         "regime":      mac.get("regime", "NEUTRAL") or "NEUTRAL",
-        "decision":    com.get("signal", "HOLD") or "HOLD",
+        "decision":    "HOLD",
         "confidence":  round(com.get("confidence", 50.0), 1),
         "fear_greed":  raw["fear_greed"]["current"],
         "eth_btc_signal": get_eth_btc_signal(eth_btc_ratio) if eth_btc_ratio is not None else None,
@@ -2075,8 +2075,6 @@ async def get_snapshot(request: Request):
         }
         arc_score = (
             analysis.get("arc_summary", {}).get("arc_score")
-            or analysis.get("combined")
-            or analysis.get("alpha_cycle_position")
             or analysis.get("arc_score")
             or 50
         )
