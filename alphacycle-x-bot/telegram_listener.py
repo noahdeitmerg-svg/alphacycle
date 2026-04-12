@@ -376,7 +376,7 @@ def _handle_menu_callback(
     key = raw[5:].strip().lower()
     if key in ("menu", "start", ""):
         toast("Menue")
-        telegram_bot.send_main_menu(chat_id)
+        telegram_bot.send_main_menu(chat_id, reply_to_message_id=reply_mid)
         return
     if key == "help":
         toast("Hilfe")
@@ -531,12 +531,45 @@ def _strip_bot_mentions(low: str, bun: str | None) -> str:
     return " ".join(low.replace(f"@{bun}", " ").split())
 
 
-def _message_invokes_bot(msg: dict, low: str) -> bool:
-    """Reply to this bot, or @username in text (privacy groups need mention for non-commands)."""
+def _entity_text_utf16(text: str, offset: int, length: int) -> str:
+    """MessageEntity offset/length are UTF-16 code units (Telegram Bot API)."""
+    if length <= 0 or offset < 0 or not text:
+        return ""
+    try:
+        u16 = text.encode("utf-16-le")
+        raw = u16[2 * offset : 2 * (offset + length)]
+        return raw.decode("utf-16-le")
+    except Exception:
+        return ""
+
+
+def _entity_mentions_this_bot(msg: dict, text: str) -> bool:
+    """True if a mention / text_mention entity refers to this bot (works when plain @string differs)."""
+    bid = _bot_id_from_token()
+    bun = (_get_bot_username_lower() or "").strip().lower()
+    for ent in msg.get("entities") or []:
+        t = ent.get("type")
+        if t == "text_mention":
+            uid = (ent.get("user") or {}).get("id")
+            if bid is not None and uid == bid:
+                return True
+        if t == "mention" and bun:
+            off = int(ent.get("offset", 0))
+            ln = int(ent.get("length", 0))
+            frag = _entity_text_utf16(text, off, ln).strip().lower()
+            if frag == f"@{bun}":
+                return True
+    return False
+
+
+def _message_invokes_bot(msg: dict, low: str, text: str) -> bool:
+    """Reply to this bot, @username in text, or Telegram mention entity (groups / privacy)."""
     bid = _bot_id_from_token()
     rt = msg.get("reply_to_message") or {}
     fu = rt.get("from") or {}
     if bid is not None and fu.get("id") == bid:
+        return True
+    if _entity_mentions_this_bot(msg, text):
         return True
     bun = _get_bot_username_lower()
     if bun and f"@{bun}" in low:
@@ -551,25 +584,38 @@ def _execute_slash_command(chat_id, cmd: str, reply_to_message_id: int | None = 
         return
 
     if cmd in ("/start", "/menu"):
-        telegram_bot.send_main_menu(chat_id)
+        telegram_bot.send_main_menu(chat_id, reply_to_message_id=reply_to_message_id)
         return
 
     if cmd == "/help":
-        telegram_bot.send_main_menu(chat_id)
-        telegram_bot.send_feedback_message(_build_help_body(), chat_id=chat_id)
+        telegram_bot.send_main_menu(chat_id, reply_to_message_id=reply_to_message_id)
+        telegram_bot.send_feedback_message(
+            _build_help_body(),
+            chat_id=chat_id,
+            reply_to_message_id=reply_to_message_id,
+        )
         return
 
     if cmd == "/status":
-        telegram_bot.send_feedback_message(_build_status_body(), chat_id=chat_id)
+        telegram_bot.send_feedback_message(
+            _build_status_body(),
+            chat_id=chat_id,
+            reply_to_message_id=reply_to_message_id,
+        )
         return
     if cmd == "/ping":
-        telegram_bot.send_feedback_message("pong — Listener antwortet.", chat_id=chat_id)
+        telegram_bot.send_feedback_message(
+            "pong — Listener antwortet.",
+            chat_id=chat_id,
+            reply_to_message_id=reply_to_message_id,
+        )
         return
 
     if cmd == "/scan":
         telegram_bot.send_feedback_message(
             "Starte einen Scan-Zyklus (bot.py --once) ...",
             chat_id=chat_id,
+            reply_to_message_id=reply_to_message_id,
         )
         code, out = _run_bot_cli(["--once"])
         head = f"Exit {code}\n"
@@ -580,6 +626,7 @@ def _execute_slash_command(chat_id, cmd: str, reply_to_message_id: int | None = 
         telegram_bot.send_feedback_message(
             "Daily-Post wird erzeugt und zur Freigabe gesendet (bot.py --queue-daily) ...",
             chat_id=chat_id,
+            reply_to_message_id=reply_to_message_id,
         )
         code, out = _run_bot_cli(["--queue-daily"])
         head = f"Exit {code}\n"
@@ -631,11 +678,17 @@ def _handle_text_command(msg: dict) -> None:
                     return
 
                 if low in _MENU_TRIGGERS or first in _MENU_TRIGGERS:
-                    telegram_bot.send_main_menu(chat_id)
+                    telegram_bot.send_main_menu(
+                        chat_id,
+                        reply_to_message_id=msg.get("message_id"),
+                    )
                     return
 
-                if _message_invokes_bot(msg, low):
-                    telegram_bot.send_main_menu(chat_id)
+                if _message_invokes_bot(msg, low, text):
+                    telegram_bot.send_main_menu(
+                        chat_id,
+                        reply_to_message_id=msg.get("message_id"),
+                    )
                     return
 
             return
@@ -674,7 +727,11 @@ def _handle_text_command(msg: dict) -> None:
         return
 
     cmd = text.split()[0].split("@", 1)[0].lower()
-    _execute_slash_command(chat_id, cmd, msg.get("message_id"))
+    _execute_slash_command(
+        chat_id,
+        cmd,
+        reply_to_message_id=msg.get("message_id"),
+    )
 
 
 def preflight() -> bool:

@@ -206,9 +206,13 @@ def answer_callback_query(
         print(f"[TELEGRAM] answerCallbackQuery error: {e}")
 
 
-def send_main_menu(chat_id: int | str | None = None) -> bool:
+def send_main_menu(
+    chat_id: int | str | None = None,
+    reply_to_message_id: int | None = None,
+) -> bool:
     """
     Inline keyboard: same actions as /status, /ping, /scan, /queuedaily, /logbot, /logtg, /help.
+    reply_to_message_id: optional thread anchor (e.g. user message that @mentioned the bot).
     """
     cid = chat_id if chat_id is not None else config.TELEGRAM_CHAT_ID
     if not config.TELEGRAM_BOT_TOKEN or not cid:
@@ -250,11 +254,13 @@ def send_main_menu(chat_id: int | str | None = None) -> bool:
             {"text": "Hilfe (Text)", "callback_data": "menu:help"},
         ],
     ]
-    payload = {
+    payload: dict = {
         "chat_id": cid,
         "text": text[:4096],
         "reply_markup": {"inline_keyboard": rows},
     }
+    if reply_to_message_id is not None:
+        payload["reply_to_message_id"] = reply_to_message_id
     url = f"{_api_base()}/sendMessage"
     try:
         r = requests.post(url, json=payload, timeout=45)
