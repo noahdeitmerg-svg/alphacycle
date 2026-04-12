@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10 (ARC Extreme Condition Boosts Backtest = Live)
+**Zuletzt aktualisiert:** 2026-04-10 (index.html Hero Orbit Clarity)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-10) — Hero Orbit Clarity (CSS/JS, keine ARC-Aenderung)
+- **Datei(en):** `index.html` (Orbit-Ring Mask 88/89, Glow box-shadow, feste Label-Farben ol-*, active text-shadow, inner ring inset 14px, `#hero-regime-context` kompakter, `_getCycleDescription()` kuerzere Texte, `highlightOrbitZone` ohne inline `color`), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was wurde geaendert:** Ring sichtbarer, Labels dauerhaft farbig, Kontextzeile kuerzer; Mobile Context max-width 120px bei 700px.
+- **Warum:** Lesbarkeit Hero Orbit; Live vs. Doku konsistent.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-10) — ARC Extreme Condition Boosts (Backtest = Live)
 - **Datei(en):** `backend/services/backtest_engine.py` (nach jeder ARC-Gewichtssumme: identische Boost-Logik wie `compute_arc_score()`, dann clamp), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
