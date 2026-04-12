@@ -94,6 +94,30 @@ async def fetch_kraken_prices(pair: str = "XBTUSD", days: int = 730) -> list[flo
     logger.info(f"Kraken {pair}: {len(prices)}d")
     return prices
 
+
+async def fetch_kraken_ohlc_latest(pair: str = "XBTUSD") -> dict:
+    """Fetch latest daily OHLC from Kraken. Returns {high, low, close}."""
+    since = int(time.time()) - 3 * 86400
+    data = await _get(
+        "https://api.kraken.com/0/public/OHLC",
+        params={"pair": pair, "interval": 1440, "since": since},
+    )
+    if not data or data.get("error") or "result" not in data:
+        return {}
+    keys = [k for k in data["result"] if k != "last"]
+    if not keys:
+        return {}
+    candles = data["result"][keys[0]]
+    if not candles:
+        return {}
+    last = candles[-1]
+    return {
+        "high": _sf(last[2]),
+        "low": _sf(last[3]),
+        "close": _sf(last[4]),
+    }
+
+
 async def fetch_kraken_ticker(pair: str = "XBTUSD") -> dict:
     """Kraken spot ticker."""
     data = await _get(

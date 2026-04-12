@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10 (x-bot: Telegram Menue bei @mention + Entity-Erkennung)
+**Zuletzt aktualisiert:** 2026-04-10 (Live ARC: Kraken Tages-Hi/Lo wie Daily-Backtest)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-10) — Live ARC Hi/Lo aligned mit Daily-Backtest
+- **Datei(en):** `backend/fetcher.py` (`fetch_kraken_ohlc_latest`: Kraken OHLC 1440, letzte Kerze high/low/close), `backend/main.py` (`refresh_cache`: `CACHE["ohlc_latest"]`; `get_arc_summary`, `_save_today_snapshot`, `get_history_daily`, `get_backtest`: `compute_arc_score` mit `weekly_high`/`weekly_low` aus Cache), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was wurde geaendert:** Nach jedem `fetch_all()` wird die aktuelle Tageskerze (XBTUSD) geholt; Live-ARC und Chart-Overrides nutzen dieselbe MA-/Drawdown-Hi/Lo-Logik wie `run_daily_backtest_full()`. `/api/backtest` patcht den letzten Punkt mit Live-Preis und Display-Score wie spezifiziert.
+- **Warum:** Hero (arc-summary) und ARC-Chart (Daily-Historie) wichen ab, weil Live ohne Tages-High/Low gerechnet wurde.
+- **Status:** in progress (Commit/Push)
 
 ## Letzter Session-Status (2026-04-10) — x-bot: send_main_menu bei Mention (Entities + reply_to)
 - **Datei(en):** `alphacycle-x-bot/telegram_bot.py` (`send_main_menu`: optional `reply_to_message_id`), `alphacycle-x-bot/telegram_listener.py` (`_entity_text_utf16`, `_entity_mentions_this_bot`, `_message_invokes_bot` mit `text`; Menue-/Slash-Pfade mit `reply_to`), `DEPLOY_STATE.md`

@@ -140,6 +140,13 @@ async def refresh_cache(force: bool = False):
         try:
             raw = await fetch_all()
 
+            try:
+                from fetcher import fetch_kraken_ohlc_latest
+
+                ohlc_latest = await fetch_kraken_ohlc_latest()
+            except Exception:
+                ohlc_latest = {}
+
             btc_p  = raw["btc_prices"]
             eth_p  = raw["eth_prices"]
             walcl  = [item["v"] for item in raw.get("walcl_series", [])]
@@ -207,6 +214,7 @@ async def refresh_cache(force: bool = False):
                 "combined":     combined,
                 "score_history":hist,
                 "refreshed_at": ts,
+                "ohlc_latest":  ohlc_latest or {},
             })
             _last_refresh = now
             # Invalidate heavy endpoint response cache and derived histories after fresh data
@@ -350,12 +358,15 @@ def _save_today_snapshot() -> dict:
 
         walcl = [item["v"] for item in raw.get("walcl_series", [])]
         stable = [item["v"] for item in raw.get("stable_series", [])]
+        _ohlc = c.get("ohlc_latest", {})
         real_arc = compute_arc_score(
             raw.get("btc_prices", []),
             fg_value,
             walcl,
             stable,
             raw.get("net_liq_series"),
+            weekly_high=_ohlc.get("high"),
+            weekly_low=_ohlc.get("low"),
         )
 
         snapshot = {
@@ -1015,6 +1026,7 @@ async def get_arc_summary(request: Request):
     tga_current = float(tga_series[-1]["v"]) if tga_series else None
     walcl = [item["v"] for item in raw.get("walcl_series", [])]
     stable = [item["v"] for item in raw.get("stable_series", [])]
+    _ohlc = c.get("ohlc_latest", {})
     current_arc = round(
         compute_arc_score(
             raw.get("btc_prices", []),
@@ -1022,8 +1034,8 @@ async def get_arc_summary(request: Request):
             walcl,
             stable,
             raw.get("net_liq_series"),
-            weekly_high=None,
-            weekly_low=None,
+            weekly_high=_ohlc.get("high"),
+            weekly_low=_ohlc.get("low"),
         ),
         1,
     )
@@ -1631,9 +1643,36 @@ async def get_backtest(request: Request):
     """
     try:
         if CACHE.get("backtest_results"):
-            return api_response({"results": CACHE["backtest_results"]})
-        data = await run_daily_backtest_full()
-        return api_response(data)
+            results = list(CACHE["backtest_results"])
+        else:
+            data = await run_daily_backtest_full()
+            results = list((data.get("results") or []) if isinstance(data, dict) else [])
+        c = CACHE
+        if c and c.get("raw"):
+            raw = c["raw"]
+            walcl = [item["v"] for item in raw.get("walcl_series", [])]
+            stable = [item["v"] for item in raw.get("stable_series", [])]
+            _ohlc = c.get("ohlc_latest", {})
+            try:
+                live_arc = compute_arc_score(
+                    raw.get("btc_prices", []),
+                    raw.get("fear_greed", {}).get("current", 50.0),
+                    walcl,
+                    stable,
+                    raw.get("net_liq_series"),
+                    weekly_high=_ohlc.get("high"),
+                    weekly_low=_ohlc.get("low"),
+                )
+                btc_prices = raw.get("btc_prices", [])
+                live_price = float(btc_prices[-1]) if btc_prices else 0.0
+                if results:
+                    disp = round(arc_display_score(live_arc), 2)
+                    results[-1]["score"] = disp
+                    results[-1]["score_display"] = disp
+                    results[-1]["price"] = round(live_price, 2)
+            except Exception:
+                pass
+        return api_response({"results": results})
     except Exception as e:
         logger.exception("Backtest endpoint failed")
         return api_response({"results": [], "error": str(e)})
@@ -1829,12 +1868,15 @@ async def get_history_daily(request: Request):
             walcl = [item["v"] for item in raw.get("walcl_series", [])]
             stable = [item["v"] for item in raw.get("stable_series", [])]
             try:
+                _ohlc = c.get("ohlc_latest", {})
                 live_arc = compute_arc_score(
                     raw.get("btc_prices", []),
                     raw.get("fear_greed", {}).get("current", 50.0),
                     walcl,
                     stable,
                     raw.get("net_liq_series"),
+                    weekly_high=_ohlc.get("high"),
+                    weekly_low=_ohlc.get("low"),
                 )
                 btc_prices = raw.get("btc_prices", [])
                 live_price = float(btc_prices[-1]) if btc_prices else results[-1]["price"]
