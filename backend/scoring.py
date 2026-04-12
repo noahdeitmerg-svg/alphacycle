@@ -439,7 +439,16 @@ def compute_arc_score(
         liq_score = s["macro_liq"]
 
     fg_score = fg_to_score(fear_greed)
-    arc = ma_score * 0.35 + dd_score * 0.25 + liq_score * 0.25 + fg_score * 0.15
+    try:
+        from arc_config import ARC_WEIGHTS
+    except ImportError:
+        from backend.arc_config import ARC_WEIGHTS
+    arc = (
+        ma_score * ARC_WEIGHTS["trend"]
+        + dd_score * ARC_WEIGHTS["drawdown"]
+        + liq_score * ARC_WEIGHTS["liquidity"]
+        + fg_score * ARC_WEIGHTS["sentiment"]
+    )
 
     if ma_score > 78 and fg_score > 82:
         arc += 7.0

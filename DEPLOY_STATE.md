@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10 (arc_config.py ARC single source of truth)
+**Zuletzt aktualisiert:** 2026-04-10 (ARC_WEIGHTS enforcement scoring + backtest_engine)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-10) — ARC_CONFIG enforcement (ARC_WEIGHTS live)
+- **Datei(en):** `backend/scoring.py` (`compute_arc_score`: Import ARC_WEIGHTS, arc aus Dict-Gewichten), `backend/services/backtest_engine.py` (Modulimport ARC_WEIGHTS + drei ARC-Blöcke), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was wurde geaendert:** Keine numerische Aenderung der Formel (weiter 0.35/0.25/0.25/0.15); Gewichte kommen nur noch aus `arc_config.ARC_WEIGHTS`. `assert_weights_sum()` beim Import von arc_config bleibt aktiv.
+- **Warum:** arc_config war nur dokumentarisch; Enforcement verhindert stillen Drift gegenueber arc_config.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-10) — arc_config.py Single Source of Truth (ARC)
 - **Datei(en):** `backend/arc_config.py` (neu), `backend/scoring.py` (Docstring-Hinweis zu `arc_config.ARC_WEIGHTS`), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
@@ -758,7 +764,7 @@
 
 ## Architecture Lock (NEVER change without architect approval)
 ARC Formula (unified, research-validated): ma_200w*0.35 + drawdown*0.25 + liquidity*0.25 + fear_greed*0.15
-Single source of truth: `backend/arc_config.py` (ARC_WEIGHTS, ARC_ZONES, ARC_FORMULA_VERSION). Import `arc_config` when needed - never duplicate hardcoded weights elsewhere.
+Single source of truth: `backend/arc_config.py` (ARC_WEIGHTS, ARC_ZONES, ARC_FORMULA_VERSION). **Enforced:** `compute_arc_score()` and `backtest_engine` read `ARC_WEIGHTS` at runtime; do not duplicate numeric weights elsewhere.
 Use fg_to_score(fear_greed) for F&G input. Same formula in scoring.compute_arc_score(), backtest_engine, and /api/arc-summary.
 DO NOT modify weights. DO NOT add scoring components.
 **ARC output**: compute_arc_score() returns clamp(arc) — raw ARC range (empirical ~22-78). No rescaling. Momentum from backtest via scoring.compute_arc_momentum(arc_history, days=30).

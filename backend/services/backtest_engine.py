@@ -27,8 +27,10 @@ ZONE_NAMES = ["Deep Value", "Accumulation", "Expansion", "Risk Rising", "Euphori
 
 try:
     from scoring import drawdown_score, drawdown_score_hl, ma_deviation_score, safe_float, fg_to_score, arc_display_score
+    from arc_config import ARC_WEIGHTS
 except ImportError:  # pragma: no cover
     from backend.scoring import drawdown_score, drawdown_score_hl, ma_deviation_score, safe_float, fg_to_score, arc_display_score
+    from backend.arc_config import ARC_WEIGHTS
 
 
 HTTP_TIMEOUT = httpx.Timeout(60.0, connect=10.0)
@@ -563,10 +565,10 @@ async def run_backtest() -> Dict[str, Any]:
 
             macro_liq = _get_net_liq_score(item["date"], net_liq_by_date, prices_so_far)
             arc = (
-                ma_200w_score * 0.35
-                + dd_score * 0.25
-                + macro_liq * 0.25
-                + fg_score * 0.15
+                ma_200w_score * ARC_WEIGHTS["trend"]
+                + dd_score * ARC_WEIGHTS["drawdown"]
+                + macro_liq * ARC_WEIGHTS["liquidity"]
+                + fg_score * ARC_WEIGHTS["sentiment"]
             )
             arc = max(0.0, min(100.0, arc))
 
@@ -751,10 +753,10 @@ async def run_daily_backtest(days: int = 400) -> Dict[str, Any]:
 
             # ARC formula (locked weights)
             arc = (
-                ma_200w_score * 0.35
-                + dd_score * 0.25
-                + macro_liq * 0.25
-                + fg_score * 0.15
+                ma_200w_score * ARC_WEIGHTS["trend"]
+                + dd_score * ARC_WEIGHTS["drawdown"]
+                + macro_liq * ARC_WEIGHTS["liquidity"]
+                + fg_score * ARC_WEIGHTS["sentiment"]
             )
             arc = max(0.0, min(100.0, arc))
 
@@ -882,10 +884,10 @@ async def run_daily_backtest_full() -> Dict[str, Any]:
             macro_liq = _get_net_liq_score(item["date"], net_liq_by_date, prices_so_far)
 
             arc = (
-                ma_200w_score * 0.35
-                + dd_score * 0.25
-                + macro_liq * 0.25
-                + fg_score * 0.15
+                ma_200w_score * ARC_WEIGHTS["trend"]
+                + dd_score * ARC_WEIGHTS["drawdown"]
+                + macro_liq * ARC_WEIGHTS["liquidity"]
+                + fg_score * ARC_WEIGHTS["sentiment"]
             )
             arc = max(0.0, min(100.0, arc))
 
