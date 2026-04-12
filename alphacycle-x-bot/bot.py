@@ -146,8 +146,8 @@ def run_cycle():
                 f"{config.MIN_TWEET_AGE_SECONDS}s–{config.MAX_TWEET_AGE_SECONDS}s, "
                 f"min {config.MIN_LIKES_TO_REPLY} likes, no RT/reply; "
                 "then blocked keywords, not already scanned/replied, author spacing, "
-                "max 2 replies per @ per UTC day. Widen: .env MAX_TWEET_AGE_SECONDS (e.g. 43200), "
-                "MIN_LIKES_TO_REPLY=2."
+                f"max {config.MAX_REPLIES_PER_ACCOUNT_PER_DAY} replies per @ per UTC day. "
+                "Widen: .env SCAN_TWEET_MAX_AGE / MAX_TWEET_AGE_SECONDS, MIN_LIKES_TO_REPLY."
             )
             return
 

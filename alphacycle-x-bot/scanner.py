@@ -142,7 +142,10 @@ def scan_tweets() -> list[dict]:
                     tweet["id"], author, "author_spacing"
                 )
                 continue
-            if database.count_replies_to_author_today_utc(author) >= 2:
+            if (
+                database.count_replies_to_author_today_utc(author)
+                >= config.MAX_REPLIES_PER_ACCOUNT_PER_DAY
+            ):
                 logger.info("[SCANNER] Skipped @%s: same_account_limit (daily_reply_limit)", author)
                 database.log_scanned(
                     tweet["id"], author, "daily_reply_limit"

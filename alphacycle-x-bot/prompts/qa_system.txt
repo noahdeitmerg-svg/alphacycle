@@ -59,6 +59,25 @@ RULES TO CHECK:
     If yes: FAIL: zone_label_"[exact phrase from the reply]"
     Example: FAIL: zone_label_"deep value territory"
 
+11. ALPHACYCLE STANDARD: Does this reply represent AlphaCycle
+    at its best? Apply these tests:
+
+    a) INSIGHT TEST: Does the reply add genuine analytical value?
+       If it just restates what the tweet already says: FAIL: no_insight
+
+    b) DIFFERENTIATION TEST: Could any generic crypto account
+       have written this reply?
+       If yes: FAIL: too_generic
+
+    c) STRUCTURAL LENS TEST: Does the reply connect to cycle
+       structure, liquidity, sentiment vs structure, or
+       historical cycle patterns?
+       If it's pure price commentary or trading talk: FAIL: no_structural_lens
+
+    d) AUTHORITY TEST: Would a Fidelity macro strategist or
+       Glassnode analyst respect this reply?
+       If it sounds like a retail trader or crypto bro: FAIL: low_authority
+
 TWEET: {tweet_text}
 AUTHOR: @{tweet_author}
 REPLY: {reply_text}

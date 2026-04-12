@@ -146,21 +146,23 @@ TRACKED_ACCOUNTS = TIER_1_ACCOUNTS + TIER_2_ACCOUNTS + TIER_3_ACCOUNTS
 # Temporarily empty for higher reply throughput during testing; restore list to tighten.
 BLOCKED_KEYWORDS: list = []
 
-# Reply rate caps (also referenced as REPLY_LIMIT_* in docs).
-MAX_REPLIES_PER_HOUR = 10
-MAX_REPLIES_PER_DAY = 30
+# Reply / scanner limits (quality balance). Override via .env.
+REPLY_LIMIT_HOURLY = int(os.getenv("REPLY_LIMIT_HOURLY", "3"))
+REPLY_LIMIT_DAILY = int(os.getenv("REPLY_LIMIT_DAILY", "15"))
+SCAN_TWEET_MAX_AGE = int(os.getenv("SCAN_TWEET_MAX_AGE", "14400"))
+MAX_REPLIES_PER_ACCOUNT_PER_DAY = int(os.getenv("MAX_REPLIES_PER_ACCOUNT_PER_DAY", "2"))
+
+MAX_REPLIES_PER_HOUR = REPLY_LIMIT_HOURLY
+MAX_REPLIES_PER_DAY = REPLY_LIMIT_DAILY
+
 # Default 3600 = 60 min between scan cycles (50 tracked accounts; override SCAN_INTERVAL_SECONDS in .env for 30 min).
 SCAN_INTERVAL_SECONDS = int(os.getenv("SCAN_INTERVAL_SECONDS", "3600"))
 
-REPLY_DELAY_MIN = 30
-REPLY_DELAY_MAX = 120
-REPLY_DELAY_MIN = 90
-REPLY_DELAY_MAX = 300
+REPLY_DELAY_MIN = int(os.getenv("REPLY_DELAY_MIN", "90"))
+REPLY_DELAY_MAX = int(os.getenv("REPLY_DELAY_MAX", "300"))
 
 MIN_TWEET_AGE_SECONDS = int(os.getenv("MIN_TWEET_AGE_SECONDS", "10"))
-# Wider window = more candidates (Telegram /scan can still yield 0 if all tweets are old/low-likes/spaced-out).
-MAX_TWEET_AGE_SECONDS = int(os.getenv("MAX_TWEET_AGE_SECONDS", "21600"))
-MIN_LIKES_TO_REPLY = int(os.getenv("MIN_LIKES_TO_REPLY", "0"))
-MIN_LIKES_TO_REPLY = int(os.getenv("MIN_LIKES_TO_REPLY", "1"))
+MAX_TWEET_AGE_SECONDS = int(os.getenv("MAX_TWEET_AGE_SECONDS", str(SCAN_TWEET_MAX_AGE)))
+MIN_LIKES_TO_REPLY = int(os.getenv("MIN_LIKES_TO_REPLY", "5"))
 
 DB_PATH = str(_BASE_DIR / "database.db")

@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-12 (x-bot: Replies nur Telegram, kein X-Reply-API)
+**Zuletzt aktualisiert:** 2026-04-12 (x-bot: Scanner-Limits + QA Regel 11 + Reply-Quality-Absatz)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-12) — x-bot: Scanner-Limits + QA Standard (Regel 11)
+- **Datei(en):** `alphacycle-x-bot/config.py` (`REPLY_LIMIT_*`, `SCAN_TWEET_MAX_AGE`, `MIN_LIKES_TO_REPLY=5`, `MAX_REPLIES_PER_ACCOUNT_PER_DAY`; Aliase `MAX_REPLIES_PER_*`), `alphacycle-x-bot/scanner.py` (taegliches Account-Limit aus Config), `alphacycle-x-bot/bot.py` (Hinweistext), `alphacycle-x-bot/prompts/qa_system.txt` (Regel 11 ALPHACYCLE STANDARD), `alphacycle-x-bot/prompts/reply_system.txt` (Quality-Absatz nach STOP), `alphacycle-x-bot/growth_engine.py` (`_build_qa_replacement_guide` fuer no_insight / too_generic / no_structural_lens / low_authority), `alphacycle-x-bot/.env.example`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was wurde geaendert:** Weniger Kandidaten-Volumen (4h-Fenster, min. 5 Likes, 3/h 15/Tag, max 2 Replies pro @/Tag); QA verschärft mit vier Zusatztests und Retry-Guides; Master-Reply mit Worth-Posting-Messaging.
+- **Warum:** Balance zwischen genug Kandidaten und exzellenter Reply-Qualität.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-12) — x-bot: Replies nur Telegram (kein create_tweet Reply)
 - **Datei(en):** `alphacycle-x-bot/poster.py` (`post_reply` 2 Telegram-Nachrichten, `complete_approved_reply`; X-API nur noch `post_daily_post`), `alphacycle-x-bot/bot.py` (kein `reply_settings` / `post_mode`), `alphacycle-x-bot/scanner.py` (kein `reply_settings` in `tweet_fields`), `alphacycle-x-bot/telegram_bot.py` (`send_approval` ohne Mode-Zeilen; `send_post_outcome_two_part` entfernt), `alphacycle-x-bot/telegram_listener.py` (`complete_approved_reply`), `alphacycle-x-bot/RUN_24_7.md`, `alphacycle-x-bot/test_manual_reply.py`, `alphacycle-x-bot/test_telegram_approval.py`, `alphacycle-x-bot/test_telegram_post_real.py`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`

@@ -432,6 +432,35 @@ def _build_qa_replacement_guide(failures: list[str]) -> str:
             "sales",
             "\nRemove any sales language. You observe, you don't sell.",
         )
+    if "no_insight" in blob:
+        add(
+            "no_insight",
+            "\nYour reply just restated the tweet. Add something NEW."
+            "\nWhat dimension did the author miss? Liquidity? Leverage?"
+            "\nHistorical parallel? Structural context? Add ONE.",
+        )
+    if "too_generic" in blob:
+        add(
+            "too_generic",
+            "\nYour reply was too generic. Any account could write this."
+            "\nMake it specific: use a number, a timeframe, a structural"
+            "\nobservation that only someone tracking cycle risk would know.",
+        )
+    if "no_structural_lens" in blob:
+        add(
+            "no_structural_lens",
+            "\nYour reply had no structural cycle lens."
+            "\nConnect it to: liquidity direction, leverage levels,"
+            "\nsentiment vs structure divergence, or cycle positioning."
+            "\nIf the tweet is about price, reframe to structure.",
+        )
+    if "low_authority" in blob:
+        add(
+            "low_authority",
+            "\nYour reply sounded like retail commentary."
+            "\nWrite like a macro strategist. Precise. Measured."
+            "\nNo slang. No hype. No casual language.",
+        )
     return "".join(parts)
 
 
