@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-13 (TASK_PIPELINE: T-013 Bot Self-Learning)
+**Zuletzt aktualisiert:** 2026-04-14 (PRE-DEPLOY VALIDATION + Push)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-14) — PRE-DEPLOY VALIDATION (kein Code-Fix)
+- **Datei(en):** Validierung: `alphacycle-x-bot/growth_engine.py`, `alphacycle-x-bot/reply_engine.py`, `alphacycle-x-bot/deploy-server/deploy.py`; Prompts `alphacycle-x-bot/prompts/reply_system.txt`, `post_system.txt`, `qa_system.txt`; `DEPLOY_STATE.md`
+- **Was:** Syntax/Imports: IDE-Linter ohne Befund auf den genannten `.py`-Dateien. Platzhalter: `reply_system` (`{market_context}`, `{arc_data_block}`, `{approach}`, `{reply_pattern}`, `{hook_instruction}`, `{tweet_author}`, `{tweet_text}`, `{reply_history}`), `post_system` (`{market_context}`, `{arc_data_block}`, `{post_type}`, `{posted_topics}`), `qa_system` (`{factual_reference}`, `{tweet_text}`, `{tweet_author}`, `{reply_text}`) konsistent mit `growth_engine.build_*` (`.replace`, kein `str.format` auf Rohtext). Keine Aenderung an Env-Referenzen noetig. Lokales `python -m compileall` in dieser Session nicht ausfuehrbar (kein Python im PATH); VPS/CI kann compileall optional nachziehen.
+- **Warum:** Pre-Deploy Checkliste vor Push.
+- **Status:** commit + push mit Message `deploy: alphacycle update — validated`
 
 ## Letzter Session-Status (2026-04-13) — TASK_PIPELINE: T-013 Bot Self-Learning (BACKLOG)
 - **Datei(en):** `docs/TASK_PIPELINE.md` (neuer Eintrag T-013), `DEPLOY_STATE.md`
