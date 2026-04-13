@@ -8,7 +8,7 @@
 - **Datei(en):** `backend/scoring.py` (`arc_display_score(..., k: float = 0.0)` Default nur), `backend/arc_config.py` (`ARC_FORMULA_VERSION` **"1.1"**), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
 - **Was wurde geaendert:** Stretch-Formel bleibt; Default k=0 macht sie zum No-Op (x*(1+0*x^2)=x), damit UI/API-Display dem rohen ARC entspricht; Versionsstring fuer Methodik-Tracking erhoeht.
 - **Warum:** k=1.2 erzeugte Dead Zones (Raw-Randbereiche auf 0/100 geklemmt).
-- **Status:** in progress (Commit/Push)
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-10) — index.html UX Refinement (minimal)
 - **Datei(en):** `index.html` (`renderSignalSummary` nur noch hide; `renderDecisionInterpretation` ohne Risk-List-Fill; CSS: `.dec-layer-3` aus, PF/HR/Decision-Labels, engerer Hero-Abstand), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
