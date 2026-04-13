@@ -19,23 +19,22 @@ Before performing any task, load knowledge in this order:
 
 ```
 1. docs/SYSTEM_TRUTH.md           → Immutable rules (ARC formula, zones, locked constants)
-2. docs/AI_MASTER_CONTEXT.md      → System architecture (stack summary)
-3. docs/AI_AGENT_ROLES.md         → Your specific role, allowed/forbidden actions
-4. docs/AI_MASTER_PROMPT.md       → This file — behavioral rules
-5. docs/alphacycle_context.md     → Extended architecture, APIs, pipeline
-6. DEPLOY_STATE.md                → What is currently deployed, latest changes
-7. .cursor/rules/permanent-fixes.mdc → Architectural decisions that must never be reverted
+2. docs/AI_MASTER_CONTEXT.md      → Full system architecture (merged stack doc)
+3. docs/AI_AGENT_ROLES.md         → Your specific role, allowed/forbidden actions, init protocol
+4. docs/AI_MASTER_PROMPT.md       → This file — behavioral rules + Cursor appendix
+5. DEPLOY_STATE.md                → What is currently deployed, latest changes
+6. .cursor/rules/permanent-fixes.mdc → Architectural decisions that must never be reverted
 ```
 
 If any of these files are not available, STOP and request them before proceeding.
 
 ---
 
-## ARC v1.1 LOCK RULES
+## ARC v1.2 LOCK RULES
 
 ```
 IMMUTABLE:
-├── ARC_WEIGHTS: trend=0.35, drawdown=0.25, liquidity=0.25, sentiment=0.15
+├── ARC_WEIGHTS: trend=0.35, drawdown=0.30, liquidity=0.15, sentiment=0.20
 ├── Zone Boundaries: <30 / <40 / <60 / <70
 ├── ECB: trend+sentiment dual-extreme boost (±3/±7)
 ├── compute_arc_score() is the ONLY valid ARC source
@@ -60,7 +59,7 @@ Layer 1: ARC Whitepaper (conceptual foundation)
     ↓
 Layer 2: SYSTEM_TRUTH.md (immutable code-level rules)
     ↓
-Layer 3: AI_MASTER_CONTEXT.md + alphacycle_context.md (architecture)
+Layer 3: AI_MASTER_CONTEXT.md (architecture)
     ↓
 Layer 4: AI_AGENT_ROLES.md (your specific role)
     ↓
@@ -167,4 +166,82 @@ Resume at supabase.com/dashboard. Cronjob ping runs every 5 days to prevent.
 ---
 
 *This prompt is version-controlled. Changes require Noah's approval.*
-*ARC Version: v1.1 · Last updated: 2026-04-10*
+*ARC Version: v1.2 · Last updated: 2026-04-12*
+
+---
+
+## CURSOR-SPECIFIC APPENDIX
+
+> Merged from former `docs/CURSOR_MASTERPROMPT.md`. Read this section before any repo edit in Cursor.
+
+### Project layout
+
+```
+alphacycle-main/
+├── backend/
+│   ├── Dockerfile          ← only this file in folder (no stray space-named duplicate)
+│   ├── main.py             ← FastAPI endpoints
+│   ├── fetcher.py          ← external API calls
+│   ├── scoring.py          ← scoring algorithms
+│   ├── liquidity_engine.py ← liquidity regime engine
+│   ├── analyzer.py         ← CycleAnalyzer
+│   ├── decision_engine.py  ← decision engine
+│   ├── cycle_anchor.py     ← cycle anchor
+│   ├── requirements.txt
+│   └── services/
+│       └── backtest_engine.py
+├── index.html              ← single-file frontend
+├── alphacycle-x-bot/       ← X bot + Telegram
+├── docs/                   ← four canonical docs only (see README)
+└── DEPLOY_STATE.md         ← deployment status (keep current)
+```
+
+### ARC index (must match `arc_config` + `compute_arc_score`)
+
+```
+ma_200w * 0.35 + drawdown * 0.30 + liquidity * 0.15 + fear_greed * 0.20
+```
+
+Weights and version live in `backend/arc_config.py`. Do not change without explicit approval, research, and version bump per `SYSTEM_TRUTH.md` §11.
+
+### Five zones (locked)
+
+| Zone | Integer band | Backend `get_zone_name` | Frontend `phaseOf` |
+|------|----------------|-------------------------|----------------------|
+| Deep Value | 0–29 | `<= 29` | `< 30` |
+| Accumulation | 30–39 | `<= 39` | `<= 39` |
+| Expansion | 40–59 | `<= 59` | `<= 59` |
+| Risk Rising | 60–69 | `<= 69` | `<= 69` |
+| Euphoria | 70–100 | else | else |
+
+### Permanent fixes — never revert casually
+
+High-level reminders (full detail always in `.cursor/rules/permanent-fixes.mdc`):
+
+- **fetcher.py:** Kraken primary prices; OKX funding (not Binance/Bybit on Railway); gather layout per permanent-fixes; CoinCap global data rules.
+- **scoring.py:** `drawdown_score` short-series guard; `compute_btc_score` returns `short_term`; `macro_liq` window logic; `compute_arc_score` uses `ARC_WEIGHTS`; ECB rules.
+- **main.py:** no Unicode in string literals; `/api/arc-summary` + `/api/analyzer` active; liquidity key `macro_liq`; regime/decision defaults.
+- **liquidity_engine.py:** `bond_score` from absolute yield level, not broken trend mapping.
+- **Dockerfile:** single file under `backend/`; bind `0.0.0.0:$PORT`; workers=1 for Railway.
+- **index.html:** `BACKEND_URL` Railway production; `Promise.allSettled`; blur-gate structure; Data Inspector rules; phase/zone consistency per permanent-fixes.
+
+### Data sources (summary)
+
+| Source | Role | Notes |
+|--------|------|-------|
+| Kraken | BTC/ETH OHLC + ticker | Primary prices |
+| OKX | Funding | Public API, Railway-safe |
+| Alternative.me | Fear & Greed | Daily |
+| DeFiLlama | TVL / stablecoins | |
+| FRED | WALCL, TGA, RRP, 10Y | Weekly liquidity cadence |
+| CoinGecko / CoinCap | Fallbacks | Rate limits — follow fetcher merge rules |
+
+### Active endpoints (non-exhaustive)
+
+See `AI_MASTER_CONTEXT.md` §11 for the full table. Always verify in `backend/main.py` before documenting new routes.
+
+### After each deploy (manual smoke)
+
+1. `https://alphacycle-production.up.railway.app/health` returns `{"status":"ok",...}`
+2. Dashboard loads; Data Inspector toggles open
+3. Spot-check: BTC price present, ARC not stuck at 50, regime/decision populated, funding OKX or N/A, bond score sane (not clamped 100 from old bug)

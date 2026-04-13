@@ -20,7 +20,7 @@ NOAH (Owner) — Strategic decisions, final approval
 
 ## 1. QUANT RESEARCH AGENT
 
-**Mission:** Ensure ARC methodology (version in `arc_config`, currently v1.1) is correct, consistent, and defensible.
+**Mission:** Ensure ARC methodology (version in `arc_config`, currently **v1.2**) is correct, consistent, and defensible.
 
 **Responsibilities:**
 - Audit ARC formula implementation against `arc_config.py`
@@ -36,8 +36,8 @@ NOAH (Owner) — Strategic decisions, final approval
 - `backend/scoring.py` (implementation)
 - `backend/services/backtest_engine.py` (backtest logic)
 - `backend/historical_returns.py` (forward return calculations)
-- `SYSTEM_TRUTH.md` (immutable rules)
-- `docs/alphacycle_context.md` (system context)
+- `docs/SYSTEM_TRUTH.md` (immutable rules)
+- `docs/AI_MASTER_CONTEXT.md` (full architecture)
 
 **Allowed Actions:**
 - Analyze signals and distributions
@@ -79,11 +79,11 @@ QUANT RESEARCH REPORT
 - Infrastructure management (Railway, Supabase, Hetzner VPS)
 
 **Knowledge Sources:**
-- All files in `SYSTEM_TRUTH.md`
-- `docs/alphacycle_ai_operating_manual_COMPLETE.md`
+- All rules in `docs/SYSTEM_TRUTH.md`
+- `docs/AI_MASTER_CONTEXT.md`
+- `docs/AI_MASTER_PROMPT.md`
 - `DEPLOY_STATE.md`
 - `.cursor/rules/permanent-fixes.mdc`
-- `docs/CURSOR_MASTERPROMPT.md`
 - Full codebase (backend + frontend)
 
 **Allowed Actions:**
@@ -104,9 +104,10 @@ QUANT RESEARCH REPORT
 **Prompt Format (mandatory):**
 ```
 BEVOR du anfängst:
-1. Lies docs/alphacycle_ai_operating_manual_COMPLETE.md
-2. Lies DEPLOY_STATE.md
-3. Lies .cursor/rules/permanent-fixes.mdc
+1. Lies docs/SYSTEM_TRUTH.md
+2. Lies docs/AI_MASTER_CONTEXT.md
+3. Lies DEPLOY_STATE.md
+4. Lies .cursor/rules/permanent-fixes.mdc
 
 [CHANGES]
 
@@ -139,7 +140,7 @@ git push
 - `alphacycle-x-bot/reply_engine.py` (reply generation)
 - `alphacycle-x-bot/config.py` (tracked accounts, limits)
 - Live ARC data from `/api/arc-summary`
-- `SYSTEM_TRUTH.md` (for accurate ARC references)
+- `docs/SYSTEM_TRUTH.md` (for accurate ARC references)
 
 **Allowed Actions:**
 - Write and optimize post content
@@ -185,9 +186,9 @@ git push
 
 **Knowledge Sources:**
 - `index.html` (frontend)
-- `docs/alphacycle_context.md` (dashboard structure, blur-gates)
-- `SYSTEM_TRUTH.md` (zone names, language rules)
-- `docs/alphacycle_ai_operating_manual_COMPLETE.md` (design principles)
+- `docs/AI_MASTER_CONTEXT.md` (dashboard structure, blur-gates)
+- `docs/SYSTEM_TRUTH.md` (zone names, language rules)
+- `docs/AI_MASTER_PROMPT.md` (behavioral rules)
 - Screenshot-based visual feedback from Noah
 
 **Allowed Actions:**
@@ -220,11 +221,143 @@ VALIDATION: [how to verify]
 ## Cross-Agent Rules
 
 1. **No agent modifies `arc_config.py`** — methodology is locked
-2. **All agents read `SYSTEM_TRUTH.md`** before any task
+2. **All agents read `docs/SYSTEM_TRUTH.md`** before any task
 3. **Only System Architect writes Cursor prompts** — other agents write specs
 4. **Only Cursor modifies code** — no agent directly edits files
 5. **Every code change updates** `DEPLOY_STATE.md` and `permanent-fixes.mdc`
 6. **Conflicts with SYSTEM_TRUTH** must be flagged and escalated to Noah
+
+---
+
+## AI Agent Initialization Protocol
+
+Every AI agent entering the AlphaCycle project must follow this initialization sequence before performing any work. This ensures consistency, prevents contradictions, and maintains system integrity across all AI-assisted workflows.
+
+### Step 1 — Read Foundation Documents
+
+Before any action, the agent must read and internalize:
+
+```
+REQUIRED READING:
+1. docs/SYSTEM_TRUTH.md                 — Immutable rules, ARC v1.2 formula, zones, ECB, display rules
+2. docs/AI_MASTER_CONTEXT.md           — Complete system architecture (merged former context + manuals)
+3. docs/AI_AGENT_ROLES.md              — This file — agent definitions and boundaries
+4. docs/AI_MASTER_PROMPT.md            — Behavioral rules and Cursor-specific appendix
+```
+
+If any document is unavailable, the agent must request it before proceeding.
+
+### Step 2 — Identify Role
+
+Each AI agent operates within a defined role. Roles do not overlap.
+
+```
+AGENT ROLES:
+┌─────────────┬──────────────────────────────────────────────────┐
+│ Agent       │ Role                                             │
+├─────────────┼──────────────────────────────────────────────────┤
+│ ChatGPT     │ Operating Brain — Strategy, planning, review     │
+│ Claude      │ Prompt Forge — Content, prompts, architecture    │
+│ Cursor      │ Code Execution — Implementation only             │
+│ Midjourney  │ Visual Engine — Brand imagery                    │
+│ Perplexity  │ Research — Market research, competitor analysis  │
+│ Grok        │ X Intelligence — Platform-specific insights      │
+└─────────────┴──────────────────────────────────────────────────┘
+```
+
+An agent must never act outside its defined role without explicit instruction from Noah.
+
+### Step 3 — Confirm System Constraints
+
+Before performing any work, the agent must confirm awareness of these locked constraints:
+
+```
+LOCKED — NEVER MODIFY (without Noah approval + version bump where applicable):
+├── ARC Formula weights (v1.2): ma_200w x 0.35 + drawdown x 0.30 + liquidity x 0.15 + fear_greed x 0.20
+├── ARC Zone Boundaries: 0-29 / 30-39 / 40-59 / 60-69 / 70-100
+├── ARC Zone Names: Deep Value / Accumulation / Expansion / Risk Rising / Euphoria
+├── ARC Component Names: Trend, Drawdown, Sentiment, Liquidity
+├── ARC Full Name: AlphaCycle Risk Composite
+├── Data Sources: Kraken, FRED, Alternative.me, DeFiLlama, OKX
+├── Brand Voice: Structural, calm, analytical, never hypey
+├── Content Rules: No $BTC, no hashtags, no emojis, no predictions
+└── Product Truth: Measures risk, does not predict price
+```
+
+If any instruction conflicts with these constraints, the agent must flag the conflict and refuse to proceed until Noah resolves it.
+
+#### Methodology Protection
+
+AI agents may assist with analysis, explanation, or visualization.
+
+However, AI agents are strictly prohibited from modifying the ARC methodology or introducing alternative scoring systems without explicit approval from Noah.
+
+AlphaCycle methodology is considered locked intellectual property.
+
+### Step 4 — Workflow Compliance
+
+No agent modifies production code or live systems directly.
+
+```
+WORKFLOW:
+1. Noah requests work
+2. Planning agent (ChatGPT or Claude) designs the solution
+3. Planning agent generates a Cursor implementation prompt
+4. Cursor implements the code
+5. Code is pushed to GitHub
+6. Noah deploys via git pull on VPS
+7. DEPLOY_STATE.md and permanent-fixes.mdc are updated
+```
+
+Cursor is strictly an execution engine. Cursor must never make architectural decisions or modify system logic beyond the instructions explicitly provided in the implementation prompt.
+
+Every Cursor prompt must begin with:
+
+```
+BEVOR du anfaengst: Lies DEPLOY_STATE.md und permanent-fixes.mdc vollstaendig.
+NACHDEM du fertig bist: Aktualisiere DEPLOY_STATE.md und permanent-fixes.mdc
+mit allen Aenderungen dieser Session, dann:
+git add DEPLOY_STATE.md .cursor/rules/permanent-fixes.mdc && git commit -m 'docs: DEPLOY_STATE update' && git push
+```
+
+No exceptions.
+
+### Step 5 — Context Verification
+
+Before generating any public-facing content, the agent must verify:
+
+```
+CONTENT VERIFICATION:
+├── Does this reinforce AlphaCycle as Bitcoin Cycle Intelligence?
+├── Does this sound like a real operator brand, not generic crypto?
+├── Does this strengthen trust?
+├── Does this match what the product actually does?
+├── Is every claim factually consistent with current ARC data?
+├── Are there maximum 2 data points (posts) or 260 characters (replies)?
+└── Would the target audience (macro/cycle analysts) respect this?
+```
+
+If any check fails, the content must be revised before output.
+
+### AI Methodology Protection
+
+AI agents must treat the AlphaCycle methodology as protected system logic.
+
+Agents may:
+
+- analyze signals
+- explain ARC behavior
+- generate visualizations
+- assist with documentation
+
+Agents may NOT:
+
+- redesign ARC components
+- introduce alternative composites
+- change signal definitions
+- modify weighting structures
+
+Any suggestion that alters the ARC methodology must be explicitly labeled as a "theoretical discussion" and cannot be implemented without Noah's approval.
 
 ---
 

@@ -1,15 +1,15 @@
-> **Before working on this repository:**
-> 1. Read `docs/SYSTEM_TRUTH.md` (immutable rules)
-> 2. Read `docs/AI_MASTER_CONTEXT.md` (system architecture)
-> 3. Read `docs/AI_AGENT_ROLES.md` (your role)
-> 4. Read `docs/AI_MASTER_PROMPT.md` (behavioral rules)
+> **Before working on this repository, read these 4 documents in order:**
+> 1. `docs/SYSTEM_TRUTH.md` — Immutable rules, ARC v1.2 formula
+> 2. `docs/AI_MASTER_CONTEXT.md` — Complete system architecture
+> 3. `docs/AI_AGENT_ROLES.md` — Agent definitions + initialization protocol
+> 4. `docs/AI_MASTER_PROMPT.md` — Behavioral rules + Cursor workflow
 
 # Alpha Cycle Intelligence
 
 Proprietary crypto market cycle intelligence platform.
 Real-time BTC, ETH, and Macro cycle scoring.
 
-**Production backend:** `https://alphacycle-production.up.railway.app` (see `index.html` `BACKEND_URL`). Docs: `DEPLOY_STATE.md`, `docs/alphacycle_context.md`, `docs/alphacycle_ai_operating_manual.md`.
+**Production backend:** `https://alphacycle-production.up.railway.app` (see `index.html` `BACKEND_URL`). Deploy log: `DEPLOY_STATE.md`. Canonical docs: the four files listed above under `docs/`.
 
 ---
 

@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10 (X-Bot reply_system.txt Master-Prompt v2)
+**Zuletzt aktualisiert:** 2026-04-12 (Docs Consolidation — 9 zu 4 Dateien)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-12) — Docs Consolidation
+- **Datei(en):** `docs/SYSTEM_TRUTH.md`, `docs/AI_MASTER_CONTEXT.md`, `docs/AI_AGENT_ROLES.md`, `docs/AI_MASTER_PROMPT.md`, `README.md`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`; geloescht: `docs/alphacycle_ai_operating_manual.md`, `docs/alphacycle_ai_operating_manual_COMPLETE.md`, `docs/AlphaCycle-AI-Manual-Sections-11-13-FINAL-v2.md`, `docs/alphacycle_context.md`, `docs/CURSOR_MASTERPROMPT.md`
+- **Was wurde geaendert:** Neun Doku-Pfade auf **vier** konsolidiert (kein Code). `AI_MASTER_CONTEXT.md` enthaelt u.a. Masterprompt-System, Phase-1-Ziele, Known Issues, Emergency, API-Tabelle, Signal Architecture (7 Layer, Formel **v1.2**), Long-Term Vision; `AI_AGENT_ROLES.md` um **AI Agent Initialization Protocol** erweitert; `AI_MASTER_PROMPT.md` um **CURSOR-SPECIFIC APPENDIX** (ehem. CURSOR_MASTERPROMPT); `SYSTEM_TRUTH.md` auf **ARC v1.2** Gewichte; README Pflichtlesefolge auf 4 Dateien; `permanent-fixes.mdc` Pflichtlesepfad angepasst.
+- **Warum:** Eine kanonische Doku-Schicht ohne redundante Markdown-Dateien.
+- **Status:** in progress (commit/push folgt)
 
 ## Letzter Session-Status (2026-04-10) — X-Bot Reply-Prompt (reply_system.txt)
 - **Datei(en):** `alphacycle-x-bot/prompts/reply_system.txt`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
@@ -29,7 +35,7 @@
 - **Status:** pushed to GitHub
 
 ## Chronik-Hinweis (Stand 2026-04-10)
-Alle Abschnitte **unterhalb** des Eintrags „Doku-Sync“ bzw. ab älteren „Letzter Session-Status“-Daten sind **Archiv**. Sie können veraltete Formulierungen enthalten (z. B. Blur-Gate-Listen mit `gate-cycle-overview` als „free“, Default **k=1.2** für `arc_display_score`, **$19/mo**, `phaseOf(arc_display)` im Hero, Snapshot-„Bug“). **Maßgeblich für den Live-Stand:** oberste Session-Einträge, `docs/alphacycle_context.md`, `.cursor/rules/permanent-fixes.mdc`, sowie `index.html` / `main.py` / `scoring.py` im Repo.
+Alle Abschnitte **unterhalb** des Eintrags „Doku-Sync“ bzw. ab älteren „Letzter Session-Status“-Daten sind **Archiv**. Sie können veraltete Formulierungen enthalten (z. B. Blur-Gate-Listen mit `gate-cycle-overview` als „free“, Default **k=1.2** für `arc_display_score`, **$19/mo**, `phaseOf(arc_display)` im Hero, Snapshot-„Bug“). **Maßgeblich für den Live-Stand:** oberste Session-Einträge, `docs/AI_MASTER_CONTEXT.md` + die drei weiteren Kern-Dokus unter `docs/`, `.cursor/rules/permanent-fixes.mdc`, sowie `index.html` / `main.py` / `scoring.py` im Repo.
 
 ## Letzter Session-Status (2026-04-10) — TEST_CHECKLIST + DEPLOY_STATE Chronik bereinigt
 - **Datei(en):** `TEST_CHECKLIST.md`, `DEPLOY_STATE.md`

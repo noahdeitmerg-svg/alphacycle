@@ -1,5 +1,5 @@
 # AlphaCycle — SYSTEM TRUTH
-# Immutable Rules · Extracted from Production Code · ARC v1.1
+# Immutable Rules · Extracted from Production Code · ARC v1.2
 
 > **These rules are LOCKED. No AI agent may modify them without explicit approval from Noah + version bump.**
 
@@ -8,19 +8,19 @@
 ## 1. ARC FORMULA (LOCKED)
 
 ```
-ARC = ma_200w × 0.35 + drawdown × 0.25 + liquidity × 0.25 + fear_greed × 0.15
+ARC = ma_200w × 0.35 + drawdown × 0.30 + liquidity × 0.15 + fear_greed × 0.20
 ```
 
 **Source:** `backend/arc_config.py` → `ARC_WEIGHTS`
-**Version:** ARC v1.1 (`ARC_FORMULA_VERSION` in `backend/arc_config.py`)
+**Version:** ARC v1.2 (`ARC_FORMULA_VERSION` in `backend/arc_config.py`)
 **Constraint:** `sum(ARC_WEIGHTS.values()) == 1.0` — enforced by `assert_weights_sum()` on import
 
 ```python
 ARC_WEIGHTS = {
     "trend":     0.35,
-    "drawdown":  0.25,
-    "liquidity": 0.25,
-    "sentiment": 0.15,
+    "drawdown":  0.30,
+    "liquidity": 0.15,
+    "sentiment": 0.20,
 }
 ```
 
@@ -56,7 +56,7 @@ def arc_display_score(arc_raw: float, k: float = 0.0) -> float:
 
 - **Default `k=0`:** UI/API display equals raw ARC (no stretch). Optional `k > 0` keeps the legacy sigmoid-style stretch for special cases only.
 - Internal ARC math uses `arc_raw`. Hero zone **name** uses raw `arc_score` in `index.html`; gauge number uses `arc_display` (same as raw when k=0).
-- Zone bands for API / HR “YOU ARE HERE” / zone history follow raw score rules in `permanent-fixes.mdc` and `alphacycle_context.md`.
+- Zone bands for API / HR “YOU ARE HERE” / zone history follow raw score rules in `permanent-fixes.mdc` and `AI_MASTER_CONTEXT.md` (Boundary Implementation).
 
 ---
 
@@ -136,8 +136,8 @@ When daily high/low are passed into `compute_arc_score` (`weekly_high` / `weekly
 
 ## 11. METHODOLOGY GOVERNANCE
 
-Changes require: research justification → backtest evaluation → public documentation → version bump (v1.0 → v1.1). Must preserve historical reproducibility.
+Changes require: research justification → backtest evaluation → public documentation → version bump (e.g. v1.1 → v1.2). Must preserve historical reproducibility.
 
 ---
 
-*ARC Version: v1.1 · Last verified: 2026-04-10*
+*ARC Version: v1.2 · Last verified: 2026-04-12*
