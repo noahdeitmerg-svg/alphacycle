@@ -10,7 +10,7 @@ Beim Bearbeiten von backend/fetcher.py, backend/main.py, backend/scoring.py oder
 
 ## Vor jeder Änderung
 - DEPLOY_STATE.md im Repo-Root prüfen und die dort genannten "Permanent Fixes" einhalten.
-- **AI Knowledge Stack (Pflicht-Reihenfolge laut README):** `docs/SYSTEM_TRUTH.md`, `docs/AI_MASTER_CONTEXT.md`, `docs/AI_AGENT_ROLES.md`, `docs/AI_MASTER_PROMPT.md`, `docs/AI_AGENT_MASTERPROMPTS.md` (Masterprompts pro Agent; widerspricht niemals SYSTEM_TRUTH).
+- **AI Knowledge Stack (Pflicht-Reihenfolge laut README):** `docs/SYSTEM_TRUTH.md`, `docs/AI_MASTER_CONTEXT.md`, `docs/AI_AGENT_ROLES.md`, `docs/AI_MASTER_PROMPT.md`, `docs/AI_AGENT_MASTERPROMPTS.md` (Masterprompts pro Agent; widerspricht niemals SYSTEM_TRUTH), `docs/SYSTEM_STATE.md` (Projekt-Snapshot), `docs/TASK_PIPELINE.md` (Task-IDs und Status).
 - Zusaetzlich: **`docs/AI_MASTER_CONTEXT.md`** (vollstaendige Architektur inkl. Zonen/Blur-Gates/APIs; konsolidiert aus ehem. `alphacycle_context.md` + Operating Manuals). **Zonen-Grenzen** in Doku: `AI_MASTER_CONTEXT.md` §2.3 / `SYSTEM_TRUTH.md` §4 (`get_zone_name` / `phaseOf` / fuenf Baender).
 
 ## Nach jeder Änderung (PFLICHT)

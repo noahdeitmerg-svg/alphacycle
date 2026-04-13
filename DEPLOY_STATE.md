@@ -1,14 +1,20 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10 (README: Pflichtlese + AI_AGENT_MASTERPROMPTS)
+**Zuletzt aktualisiert:** 2026-04-10 (README: Pflichtlese 1–7 + SYSTEM_STATE + TASK_PIPELINE)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-10) — README: SYSTEM_STATE + TASK_PIPELINE (Kontinuitaet)
+- **Datei(en):** `README.md` (Pflichtlese 6–7), `docs/SYSTEM_STATE.md` (Meilensteine/T-001 vs. v1.2, Doku-Stack 7 Dateien, Pending-Consolidation-Hinweis), `docs/TASK_PIPELINE.md` (T-001 DEPLOYED, T-007 entblockt, C-009), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc` (Stack um SYSTEM_STATE + TASK_PIPELINE), `docs/AI_AGENT_MASTERPROMPTS.md` (Reading-order 1–7)
+- **Was:** Offizielle 7er-Leseliste; Projektgedaechtnis-Dateien mit Live-Stand abgestimmt; kein Anwendungscode.
+- **Warum:** AI-Sessions sollen Status und Task-Queue ohne Ratespiel finden.
+- **Status:** pushed to GitHub (commit 2/2)
 
 ## Letzter Session-Status (2026-04-10) — README: fuenfte Pflichtdatei AI_AGENT_MASTERPROMPTS
 - **Datei(en):** `README.md` (Pflichtlese 1–5 inkl. `docs/AI_AGENT_MASTERPROMPTS.md`), `docs/AI_AGENT_MASTERPROMPTS.md` (Kopfverweis auf README-Reihenfolge), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc` (AI Knowledge Stack um Masterprompts ergaenzt)
 - **Was:** Masterprompts-Doku offiziell in die Einstiegsliste aufgenommen; kein Code.
 - **Warum:** Einheitliche Agenten-Prompts auffindbar fuer neue Sessions.
-- **Status:** in progress (commit 1/2)
+- **Status:** pushed to GitHub (commit 1/2)
 
 ## Letzter Session-Status (2026-04-10) — qa_system: Regel 12 recycled_data, 13 topic_hijack
 - **Datei(en):** `alphacycle-x-bot/prompts/qa_system.txt` (neu: Regel 12 Boilerplate-Metrik-Stack; Regel 13 falsche Eroeffnung vs. Tweet-Thema), `alphacycle-x-bot/growth_engine.py` (`_build_qa_replacement_guide`: `recycled_data`, `topic_hijack`), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`

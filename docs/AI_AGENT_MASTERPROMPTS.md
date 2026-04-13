@@ -1,7 +1,7 @@
 # AlphaCycle — AI Agent Masterprompts
 # Production System Manual · ARC v1.2
 
-> **Reading order:** Follow `README.md` at the repository root (mandatory doc list, currently items 1–5+). After loading the four core stack files, use this document for copy-paste **masterprompts per agent** (six agents below).
+> **Reading order:** Follow `README.md` at the repository root (mandatory doc list, items 1–7). After loading the four core stack files, use this document for copy-paste **masterprompts per agent** (six agents below).
 
 ---
 
