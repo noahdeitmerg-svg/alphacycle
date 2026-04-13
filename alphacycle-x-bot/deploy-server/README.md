@@ -43,12 +43,11 @@ Inhalt (Beispiel — echte Werte einsetzen):
 ```bash
 export GITHUB_WEBHOOK_SECRET="your-long-random-secret"
 export BOT_REPO_PATH="/root/alphacycle-repo/alphacycle-x-bot"
-export TELEGRAM_BOT_TOKEN="optional-same-or-other-bot"
-export TELEGRAM_CHAT_ID="optional"
+# TELEGRAM_* optional hier — siehe unten
 ```
 
 - **`BOT_REPO_PATH`**: Verzeichnis mit `restart-screens.sh` und `git pull`-Ziel (Repo-Root ist **eine Ebene darueber** — `deploy.py` fuehrt `git pull` in `BOT_REPO_PATH` aus).
-- **X-Bot-Keys** liegen in **`/root/alphacycle-repo/alphacycle-x-bot/.env`** (neben `config.py`) — das ist **getrennt** von `deploy-server.env`.
+- **Deploy-Telegram:** `deploy.py` laedt **`TELEGRAM_BOT_TOKEN`** und **`TELEGRAM_CHAT_ID`** aus **`BOT_REPO_PATH/.env`** (dieselbe Datei wie der X-Bot), wenn dort Werte stehen — und **ueberschreibt** damit leere oder Platzhalter-Werte aus der Shell/`deploy-server.env`. Echte Token nur in **`alphacycle-x-bot/.env`** zu pflegen reicht; in `deploy-server.env` duerfen die Zeilen fehlen oder Platzhalter bleiben (nach `pip install -r` inkl. `python-dotenv`).
 
 Alten Deploy-Prozess ggf. beenden, dann **Screen mit venv + env-Datei**:
 

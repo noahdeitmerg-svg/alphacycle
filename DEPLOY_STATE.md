@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-14 (deploy-server README: @reboot crontab)
+**Zuletzt aktualisiert:** 2026-04-14 (deploy-server: Telegram aus Bot-.env)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-14) — deploy.py: TELEGRAM aus BOT_REPO_PATH/.env
+- **Datei(en):** `alphacycle-x-bot/deploy-server/deploy.py` (`_merge_telegram_from_bot_env`, `dotenv_values`), `alphacycle-x-bot/deploy-server/requirements.txt` (`python-dotenv>=1.0.0`), `alphacycle-x-bot/deploy-server/README.md`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was:** Deploy-Telegram nutzt dieselben `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` wie der X-Bot aus **`BOT_REPO_PATH/.env`**, wenn Shell-Wert fehlt oder Platzhalter (`optional`, `optional-gleicher-bot`); echte Werte in `deploy-server.env` bleiben Vorrang.
+- **Warum:** Keine doppelte Pflege; Nutzer hatte Token nur in Bot-`.env`.
+- **Status:** pushed to GitHub — VPS: `cd .../deploy-server && . .venv/bin/activate && pip install -r requirements.txt`, Deploy-Screen neu starten.
 
 ## Letzter Session-Status (2026-04-14) — deploy-server README: @reboot crontab (venv + deploy-server.env)
 - **Datei(en):** `alphacycle-x-bot/deploy-server/README.md`, `DEPLOY_STATE.md`

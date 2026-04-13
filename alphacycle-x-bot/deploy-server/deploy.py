@@ -8,6 +8,7 @@ import hashlib
 import hmac
 import os
 import subprocess
+from pathlib import Path
 
 import requests
 from fastapi import FastAPI, HTTPException, Request
@@ -16,6 +17,33 @@ app = FastAPI()
 
 WEBHOOK_SECRET = os.getenv("GITHUB_WEBHOOK_SECRET", "")
 REPO_PATH = os.getenv("BOT_REPO_PATH", "/root/alphacycle-repo/alphacycle-x-bot")
+
+
+def _merge_telegram_from_bot_env() -> None:
+    """
+    Read TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID from BOT_REPO_PATH/.env
+    when set there (same file as bot.py). Values override empty or
+    placeholder shell env so deploy-server.env can omit Telegram lines.
+    """
+    p = Path(REPO_PATH) / ".env"
+    if not p.is_file():
+        return
+    try:
+        from dotenv import dotenv_values
+    except ImportError:
+        return
+    vals = dotenv_values(p)
+    for key in ("TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID"):
+        raw = (vals.get(key) or "").strip()
+        if not raw:
+            continue
+        cur = (os.environ.get(key) or "").strip().strip('"').lower()
+        placeholders = {"", "optional", "optional-gleicher-bot"}
+        if cur in placeholders or not os.environ.get(key):
+            os.environ[key] = raw
+
+
+_merge_telegram_from_bot_env()
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
 
