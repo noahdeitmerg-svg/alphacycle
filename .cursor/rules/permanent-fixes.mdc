@@ -10,7 +10,7 @@ Beim Bearbeiten von backend/fetcher.py, backend/main.py, backend/scoring.py oder
 
 ## Vor jeder Änderung
 - DEPLOY_STATE.md im Repo-Root prüfen und die dort genannten "Permanent Fixes" einhalten.
-- **AI Knowledge Stack (Pflicht-Reihenfolge laut README):** `docs/SYSTEM_TRUTH.md`, `docs/AI_MASTER_CONTEXT.md`, `docs/AI_AGENT_ROLES.md`, `docs/AI_MASTER_PROMPT.md`.
+- **AI Knowledge Stack (Pflicht-Reihenfolge laut README):** `docs/SYSTEM_TRUTH.md`, `docs/AI_MASTER_CONTEXT.md`, `docs/AI_AGENT_ROLES.md`, `docs/AI_MASTER_PROMPT.md`, `docs/AI_AGENT_MASTERPROMPTS.md` (Masterprompts pro Agent; widerspricht niemals SYSTEM_TRUTH).
 - Zusaetzlich: **`docs/AI_MASTER_CONTEXT.md`** (vollstaendige Architektur inkl. Zonen/Blur-Gates/APIs; konsolidiert aus ehem. `alphacycle_context.md` + Operating Manuals). **Zonen-Grenzen** in Doku: `AI_MASTER_CONTEXT.md` §2.3 / `SYSTEM_TRUTH.md` §4 (`get_zone_name` / `phaseOf` / fuenf Baender).
 
 ## Nach jeder Änderung (PFLICHT)
@@ -19,7 +19,7 @@ Beim Bearbeiten von backend/fetcher.py, backend/main.py, backend/scoring.py oder
 - **Alles pushen**: `git add` (betroffene Dateien inkl. DEPLOY_STATE.md und ggf. permanent-fixes.mdc), `git commit` mit aussagekräftiger Message, `git push`. Keine Session beenden ohne Push.
 
 ## NEVER / ALWAYS — Docs canon (2026-04-12)
-- **NEVER** wieder parallele „Wahrheits“-Markdowns neben den **vier** Kern-Dateien unter `docs/` (`SYSTEM_TRUTH.md`, `AI_MASTER_CONTEXT.md`, `AI_AGENT_ROLES.md`, `AI_MASTER_PROMPT.md`) einfuehren (kein zweites `alphacycle_context.md`, kein paralleles `CURSOR_MASTERPROMPT.md` im Root).
+- **NEVER** parallele „Wahrheits“-Markdowns neben der **README-Pflichtliste** einfuehren (kein zweites `alphacycle_context.md`, kein paralleles `CURSOR_MASTERPROMPT.md` im Root, keine Kopie von `SYSTEM_TRUTH.md` unter anderem Namen). Die Kuratliste umfasst u. a. `SYSTEM_TRUTH.md`, `AI_MASTER_CONTEXT.md`, `AI_AGENT_ROLES.md`, `AI_MASTER_PROMPT.md`, `AI_AGENT_MASTERPROMPTS.md`, `SYSTEM_STATE.md`, `TASK_PIPELINE.md` (exakte Reihenfolge und Beschreibung: Root-`README.md`).
 - **ALWAYS** README-Kopfzeile und diese Regel aktualisieren, wenn sich die Pflicht-Leseliste aendert.
 - **Grund:** Docs-Konsolidierung — eine Quelle, keine Drift zwischen Context/Manual/Cursor-Prompt.
 

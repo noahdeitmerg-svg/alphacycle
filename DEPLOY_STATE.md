@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10 (qa_system Regeln 12–13 + QA retry guides)
+**Zuletzt aktualisiert:** 2026-04-10 (README: Pflichtlese + AI_AGENT_MASTERPROMPTS)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-10) — README: fuenfte Pflichtdatei AI_AGENT_MASTERPROMPTS
+- **Datei(en):** `README.md` (Pflichtlese 1–5 inkl. `docs/AI_AGENT_MASTERPROMPTS.md`), `docs/AI_AGENT_MASTERPROMPTS.md` (Kopfverweis auf README-Reihenfolge), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc` (AI Knowledge Stack um Masterprompts ergaenzt)
+- **Was:** Masterprompts-Doku offiziell in die Einstiegsliste aufgenommen; kein Code.
+- **Warum:** Einheitliche Agenten-Prompts auffindbar fuer neue Sessions.
+- **Status:** in progress (commit 1/2)
 
 ## Letzter Session-Status (2026-04-10) — qa_system: Regel 12 recycled_data, 13 topic_hijack
 - **Datei(en):** `alphacycle-x-bot/prompts/qa_system.txt` (neu: Regel 12 Boilerplate-Metrik-Stack; Regel 13 falsche Eroeffnung vs. Tweet-Thema), `alphacycle-x-bot/growth_engine.py` (`_build_qa_replacement_guide`: `recycled_data`, `topic_hijack`), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
