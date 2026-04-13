@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10 (UX: hellere Typo, weniger Abstand Hero–HR)
+**Zuletzt aktualisiert:** 2026-04-10 (UX: Signal Summary JS, PF/HR fein, Risk-Layer aus)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-10) — index.html UX Refinement (minimal)
+- **Datei(en):** `index.html` (`renderSignalSummary` nur noch hide; `renderDecisionInterpretation` ohne Risk-List-Fill; CSS: `.dec-layer-3` aus, PF/HR/Decision-Labels, engerer Hero-Abstand), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was wurde geaendert:** Signal Summary bleibt zuverlaessig zu; Risk/Reward-Block aus; Interpretation kompakter; HR-Focus/Context-Lesbarkeit; Hero–Historical weniger Luft.
+- **Warum:** CSS wurde von JS ueberschrieben; redundanter dritter Interpretations-Layer; verbleibende Display-Probleme.
+- **Status:** in progress (Commit/Push)
 
 ## Letzter Session-Status (2026-04-10) — index.html: Typo heller, Hero–Historical enger
 - **Datei(en):** `index.html` (`:root` --tx-sec/--tx-ter/--tx-dim heller; Zonen `.hz-label`/`.hz-range` sichtbarer; `#gate-hero` margin-bottom 10px; `.dashboard-context-rule` + Label; `.sec-badge` Kontrast; UX-Block Eyebrows/dec-layer), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`

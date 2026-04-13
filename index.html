@@ -1857,7 +1857,7 @@ body::before {
 }
 #gate-hero,
 #gate-hero.blur-gate {
-  margin-bottom: 10px !important;
+  margin-bottom: 8px !important;
 }
 .module-secondary {
   margin-bottom: 24px !important;
@@ -3758,12 +3758,16 @@ canvas.sparkline {
 #signal-summary { display: none !important; }
 
 #btc-card.hero-card .hero-zones {
-  margin-bottom: 2px !important;
+  margin-bottom: 0 !important;
 }
 
 #arc-methodology {
-  margin-top: 2px !important;
-  margin-bottom: 2px !important;
+  margin: 0 !important;
+  padding-top: 4px !important;
+}
+
+#btc-card.hero-card {
+  padding-bottom: 1rem !important;
 }
 
 .dashboard-context-rule {
@@ -3797,16 +3801,33 @@ canvas.sparkline {
 }
 
 #decision-card .decision-note {
+  padding: 6px 20px !important;
+  font-size: 8px !important;
+  opacity: 0.6 !important;
+}
+
+.dec-layer-3 {
+  display: none !important;
+}
+
+.dec-layer-1 {
   padding: 8px 20px !important;
-  font-size: 9px !important;
+}
+.dec-layer-2 {
+  padding: 8px 20px !important;
+}
+.dec-layer-zone {
+  font-size: 11px !important;
+  margin-bottom: 2px !important;
 }
 
 .dec-layer {
   padding: 10px 20px !important;
 }
 .dec-layer-text {
-  font-size: 9px !important;
+  font-size: 8px !important;
   line-height: 1.4 !important;
+  max-width: 400px !important;
   color: rgba(255, 255, 255, 0.8) !important;
 }
 .dec-layer-list li {
@@ -3837,7 +3858,14 @@ canvas.sparkline {
   color: rgba(255, 255, 255, 0.82) !important;
 }
 
-.decision-value, .ca-value, .hr-dominant-return {
+.decision-label {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+.decision-value {
+  color: rgba(255, 255, 255, 0.95) !important;
+  font-size: 1.3rem !important;
+}
+.ca-value, .hr-dominant-return {
   color: rgba(255, 255, 255, 0.95) !important;
 }
 
@@ -3854,6 +3882,8 @@ canvas.sparkline {
 .hr-focus-zone {
   font-size: 14px !important;
   font-weight: 700 !important;
+  opacity: 1 !important;
+  color: inherit !important;
 }
 .hr-dominant-range {
   font-size: 10px !important;
@@ -3875,8 +3905,13 @@ canvas.sparkline {
 .hr-focus-meta,
 .hist-returns-card .hr-zone-wr,
 .hist-returns-card .hr-zone-count {
-  font-size: 10px !important;
+  font-size: 11px !important;
   color: rgba(255, 255, 255, 0.5) !important;
+  opacity: 0.7 !important;
+}
+.hr-context-line {
+  opacity: 0.6 !important;
+  font-size: 9px !important;
 }
 </style>
 </head>
@@ -5802,33 +5837,9 @@ function updatePhaseBanner() {
 }
 
 function renderSignalSummary() {
+  // Signal Summary permanently disabled — redundant with Hero + Positioning Framework
   var el = document.getElementById('signal-summary');
-  if (!el) return;
-
-  var arcSum = S.arcSummary;
-  if (!arcSum || arcSum.arc_score == null) {
-    el.style.display = 'none';
-    return;
-  }
-  el.style.display = 'block';
-
-  var score = arcSum.arc_display != null ? arcSum.arc_display : arcSum.arc_score;
-  var rawScore = arcSum.arc_score;
-  var zoneName = arcSum.zone_name || 'Unknown';
-  var col = scoreColor(rawScore);
-
-  var zoneEl = document.getElementById('signal-summary-zone');
-  if (zoneEl) {
-    zoneEl.textContent = zoneName.toUpperCase() + ' PHASE · ARC ' + Math.round(score);
-    zoneEl.style.color = col || '#fff';
-  }
-
-  el.style.borderLeftColor = col || 'var(--btc)';
-
-  var contextEl = document.getElementById('signal-summary-context');
-  if (contextEl) contextEl.style.display = 'none';
-  var allocEl = document.getElementById('signal-summary-allocation');
-  if (allocEl) allocEl.style.display = 'none';
+  if (el) el.style.display = 'none';
 }
 
 function toggleHeroComponents() {
@@ -6173,12 +6184,8 @@ function updateUI() {
       posEl.appendChild(li);
     });
 
-    riskEl.innerHTML = '';
-    riskReward.forEach(function(t) {
-      var li = document.createElement('li');
-      li.textContent = t;
-      riskEl.appendChild(li);
-    });
+    // RISK/REWARD layer (.dec-layer-3) hidden in UI — do not populate list
+    if (riskEl) riskEl.innerHTML = '';
 
     wrap.style.display = 'block';
   }
