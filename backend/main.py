@@ -1689,6 +1689,7 @@ async def get_backtest(request: Request):
                 btc_prices = raw.get("btc_prices", [])
                 live_price = float(btc_prices[-1]) if btc_prices else 0.0
                 if results:
+                    results[-1] = dict(results[-1])
                     disp = round(arc_display_score(live_arc), 2)
                     results[-1]["score"] = disp
                     results[-1]["score_display"] = disp
@@ -1813,14 +1814,15 @@ async def get_historical_returns(request: Request):
             btc = c["btc_scores"]
             walcl = [x["v"] for x in raw.get("walcl_series", [])]
             stable = [x["v"] for x in raw.get("stable_series", [])]
+            _ohlc = c.get("ohlc_latest", {})
             current_arc = compute_arc_score(
                 raw.get("btc_prices", []),
                 raw.get("fear_greed", {}).get("current", 50.0),
                 walcl,
                 stable,
                 raw.get("net_liq_series"),
-                weekly_high=None,
-                weekly_low=None,
+                weekly_high=_ohlc.get("high"),
+                weekly_low=_ohlc.get("low"),
             )
             btc_prices = raw.get("btc_prices", [])
             btc_price = float(btc_prices[-1]) if btc_prices else 0.0
@@ -1903,6 +1905,7 @@ async def get_history_daily(request: Request):
                 )
                 btc_prices = raw.get("btc_prices", [])
                 live_price = float(btc_prices[-1]) if btc_prices else results[-1]["price"]
+                results[-1] = dict(results[-1])
                 results[-1]["score"] = round(live_arc, 2)
                 results[-1]["score_display"] = round(arc_display_score(live_arc), 2)
                 results[-1]["price"] = round(live_price, 2)
