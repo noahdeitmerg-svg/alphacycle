@@ -88,3 +88,25 @@ Port **9000/tcp** muss offen sein (z. B. `ufw allow 9000/tcp`).
 ## Production
 
 Bei sensiblen Repos: HTTPS (Reverse Proxy) statt Klartext-HTTP fuer die Webhook-URL.
+
+## Nach Server-Reboot (`@reboot` in crontab, einmalig)
+
+Cron hat ein **minimales PATH** — **volle Pfade** fuer `screen`/`bash` nutzen (auf dem VPS ggf. `which screen` pruefen, meist `/usr/bin/screen`).
+
+```bash
+crontab -e
+```
+
+Zwei Zeilen (Pfade anpassen falls dein Repo woanders liegt). **Wichtig:** Deploy **nicht** mit nacktem `uvicorn` ohne venv und ohne `deploy-server.env` (Webhook-Secret).
+
+```cron
+@reboot sleep 15 && /bin/bash -lc 'cd /root/alphacycle-repo/alphacycle-x-bot && ./restart-screens.sh'
+@reboot sleep 25 && /usr/bin/screen -dmS deploy bash -lc 'cd /root/alphacycle-repo/alphacycle-x-bot/deploy-server && . .venv/bin/activate && . /root/deploy-server.env && exec uvicorn deploy:app --host 0.0.0.0 --port 9000'
+```
+
+- Erste Zeile: **`xbot`** + **`tg`** (wie manuell `./restart-screens.sh`).
+- Zweite Zeile: **`deploy`** etwas spaeter, damit Dateisystem/Netz nach Reboot stabil ist; gleiches Muster wie bei manuellem Screen-Start (`.venv` + **`/root/deploy-server.env`**).
+
+**Falsch:** `@reboot ... screen -dmS deploy uvicorn deploy:app ...` **ohne** `bash -lc` mit activate + env-Datei — entspricht nicht dem laufenden Setup.
+
+Nach naechstem Reboot pruefen: `screen -ls`, `curl -s http://127.0.0.1:9000/health`.

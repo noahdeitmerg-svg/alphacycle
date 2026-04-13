@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-14 (deploy-server README: VPS-Schritte korrigiert)
+**Zuletzt aktualisiert:** 2026-04-14 (deploy-server README: @reboot crontab)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-14) — deploy-server README: @reboot crontab (venv + deploy-server.env)
+- **Datei(en):** `alphacycle-x-bot/deploy-server/README.md`, `DEPLOY_STATE.md`
+- **Was:** Neuer Abschnitt „Nach Server-Reboot“: zwei `@reboot`-Zeilen (`restart-screens.sh` per `/bin/bash -lc`; `deploy` per `screen … bash -lc` mit `.venv` + `/root/deploy-server.env` + `uvicorn`); Warnung gegen nacktes `screen … uvicorn`; Hinweis auf minimales Cron-PATH (`/usr/bin/screen`). Doppelten „Production“-Block entfernt.
+- **Warum:** Vorschlag nur mit nacktem uvicorn waere nach Reboot kaputt; `bashssh`-Tippfehler im Chat — korrekt ist `ssh` + README als Quelle.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-14) — deploy-server README (Schritt 1–3 kanonisch)
 - **Datei(en):** `alphacycle-x-bot/deploy-server/README.md`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc` (VPS-Screen-Zeile korrigiert)
