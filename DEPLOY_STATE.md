@@ -10,6 +10,12 @@
 - **Warum:** Deploy AI Knowledge Stack — einheitlicher Einstieg fuer Agents.
 - **Status:** pushed to GitHub
 
+## Letzter Session-Status (2026-04-10) — Root-Doku nach docs/ verschoben (Abschluss)
+- **Datei(en):** `AlphaCycle-AI-Manual-Sections-11-13-FINAL-v2.md`, `CURSOR_MASTERPROMPT.md` (Repo-Root geloescht; Inhalte bereits unter `docs/` nach `git add docs/`)
+- **Was wurde geaendert:** Verschiebung konsistent gemacht; Pfade in `docs/AI_AGENT_ROLES.md`, `docs/AI_MASTER_CONTEXT.md` auf `docs/CURSOR_MASTERPROMPT.md` angepasst.
+- **Warum:** Keine Duplikate Root vs. docs; Links stimmen.
+- **Status:** pushed to GitHub
+
 ## Letzter Session-Status (2026-04-10) — Doku-Sync (README, docs, Regeln, Kommentare)
 - **Datei(en):** `README.md`, `docs/alphacycle_context.md`, `docs/alphacycle_ai_operating_manual.md`, `docs/alphacycle_ai_operating_manual_COMPLETE.md`, `AlphaCycle-AI-Manual-Sections-11-13-FINAL-v2.md`, `backend/arc_config.py` (Docstring-Version), `backend/scoring.py` (`arc_display_score`-Docstring), `.cursor/rules/permanent-fixes.mdc`, `DEPLOY_STATE.md`
 - **Was wurde geaendert:** Blur-Gate-Tabelle und X-Bot-Limits an `index.html`/`config.py` angeglichen; Snapshot-Bug-Hinweise entfernt (Parameter ist verdrahtet); Beehiiv durch Supabase `/api/subscribe` ersetzt; ARC v1.1 + Default k=0 fuer Display dokumentiert; FIX 57 / Phase-UI / Blur-Gates in permanent-fixes mit Hero raw / HR raw konsolidiert; Frontend-Zeilenzahl ~8700+.

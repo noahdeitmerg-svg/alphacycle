@@ -278,7 +278,7 @@ alphacycle/
 │   ├── AI_MASTER_PROMPT.md             # Universal loading prompt
 │   └── alphacycle_context.md           # Legacy (superseded by this file)
 ├── DEPLOY_STATE.md                     # Deployment tracking
-├── CURSOR_MASTERPROMPT.md              # Cursor-specific instructions
+├── docs/CURSOR_MASTERPROMPT.md         # Cursor-specific instructions
 ├── .cursor/rules/permanent-fixes.mdc   # Permanent architectural decisions
 └── Procfile                            # Railway config
 ```

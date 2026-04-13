@@ -83,7 +83,7 @@ QUANT RESEARCH REPORT
 - `docs/alphacycle_ai_operating_manual_COMPLETE.md`
 - `DEPLOY_STATE.md`
 - `.cursor/rules/permanent-fixes.mdc`
-- `CURSOR_MASTERPROMPT.md`
+- `docs/CURSOR_MASTERPROMPT.md`
 - Full codebase (backend + frontend)
 
 **Allowed Actions:**
