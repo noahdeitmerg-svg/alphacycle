@@ -397,6 +397,21 @@ def _build_qa_replacement_guide(failures: list[str]) -> str:
             "\nYour reply sounded like AI. Rewrite completely."
             "\nUse shorter words. Be direct. Sound like a sharp trader at a bar.",
         )
+    if "topic_hijack" in blob:
+        add(
+            "hijack",
+            "\nYour opening ignored the author's topic. First sentence must"
+            "\nengage THEIR subject (oil, tariffs, Fed, etc.). Earn crypto"
+            "\nlater in the reply if at all — never open with Bitcoin/stablecoins"
+            "\nwhen they did not.",
+        )
+    if "recycled_data" in blob:
+        add(
+            "recycled",
+            "\nDo not stack boilerplate metrics (drawdown %, stablecoins,"
+            "\npercentiles, leverage flushed, structural risk lows, smart money)."
+            "\nPick ONE angle tied to the tweet, or zero numbers.",
+        )
     if "generic_opener" in blob:
         add(
             "generic",

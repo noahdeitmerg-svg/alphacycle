@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10 (reply_system: CURRENT MARKET CONTEXT + Historical Reference Facts)
+**Zuletzt aktualisiert:** 2026-04-10 (qa_system Regeln 12–13 + QA retry guides)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-10) — qa_system: Regel 12 recycled_data, 13 topic_hijack
+- **Datei(en):** `alphacycle-x-bot/prompts/qa_system.txt` (neu: Regel 12 Boilerplate-Metrik-Stack; Regel 13 falsche Eroeffnung vs. Tweet-Thema), `alphacycle-x-bot/growth_engine.py` (`_build_qa_replacement_guide`: `recycled_data`, `topic_hijack`), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was:** Haiku-QA kann jetzt explizit FAIL `recycled_data` und `topic_hijack` liefern; Sonnet-Retry bekommt passende HOW-TO-FIX-Zeilen.
+- **Warum:** Alignment mit Reply-Master (kein Daten-Recycling, erste Satz = deren Thema).
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-10) — X-Bot reply_system: kanonische Historien-Fakten
 - **Datei(en):** `alphacycle-x-bot/prompts/reply_system.txt` (neu: `=== CURRENT MARKET CONTEXT ===` nach INTERNAL SNAPSHOT; danach `=== HISTORICAL REFERENCE DATA ===` mit erlaubter Faktenliste + Unsicherheits-REGEL; COVID Maerz vs. Oil negativ April 2020 explizit), `alphacycle-x-bot/prompts/qa_system.txt` (Regel 9: historische Fallen Maerz vs. April 2020 / falsche Datums-Claims), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`

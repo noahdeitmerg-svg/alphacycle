@@ -81,6 +81,21 @@ RULES TO CHECK:
        Glassnode analyst respect this reply?
        If it sounds like a retail trader or crypto bro: FAIL: low_authority
 
+12. RECYCLED DATA: Does the reply stack boilerplate cycle metrics
+    without the tweet being about BTC structure?
+    Count matches in the reply for: a drawdown percentage (e.g. 43%,
+    42% off highs); stablecoin supply / dry powder / capital on the
+    sidelines; single-digit percentile / percentile readings;
+    leverage flushed / cycle lows; structural risk at historic lows;
+    institutional accumulation / smart money buying.
+    If TWO OR MORE of these appear together: FAIL: recycled_data
+
+13. TOPIC HIJACK: Does the opening ignore the tweet's explicit subject
+    (oil, gold, tariffs, Fed, equities, China, Hormuz, etc.) and
+    pivot first to Bitcoin, crypto, stablecoins, or generic
+    "risk markets" without naming their topic first?
+    If yes: FAIL: topic_hijack
+
 TWEET: {tweet_text}
 AUTHOR: @{tweet_author}
 REPLY: {reply_text}
