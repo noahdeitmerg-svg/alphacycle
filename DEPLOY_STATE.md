@@ -8,7 +8,7 @@
 - **Datei(en):** `index.html` (`renderSignalSummary` nur noch hide; `renderDecisionInterpretation` ohne Risk-List-Fill; CSS: `.dec-layer-3` aus, PF/HR/Decision-Labels, engerer Hero-Abstand), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
 - **Was wurde geaendert:** Signal Summary bleibt zuverlaessig zu; Risk/Reward-Block aus; Interpretation kompakter; HR-Focus/Context-Lesbarkeit; Hero–Historical weniger Luft.
 - **Warum:** CSS wurde von JS ueberschrieben; redundanter dritter Interpretations-Layer; verbleibende Display-Probleme.
-- **Status:** in progress (Commit/Push)
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-10) — index.html: Typo heller, Hero–Historical enger
 - **Datei(en):** `index.html` (`:root` --tx-sec/--tx-ter/--tx-dim heller; Zonen `.hz-label`/`.hz-range` sichtbarer; `#gate-hero` margin-bottom 10px; `.dashboard-context-rule` + Label; `.sec-badge` Kontrast; UX-Block Eyebrows/dec-layer), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
