@@ -22,7 +22,7 @@ def safe_float(v: Any, fb: float = 0.0) -> float:
 def clamp(v: Any, lo: float = 0.0, hi: float = 100.0) -> float:
     return max(lo,min(hi,safe_float(v,(lo+hi)/2)))
 
-def arc_display_score(arc_raw: float, k: float = 1.2) -> float:
+def arc_display_score(arc_raw: float, k: float = 0.0) -> float:
     """Nur fuer UI-Output. Interne Berechnungen nutzen arc_raw.
     k=1.2 optimal (verhindert 0-Werte bei echten Extrempunkten).
     Sigmoid-style stretch: Raw 25->~15.6, 50->50, 75->~84.4."""

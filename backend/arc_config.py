@@ -11,7 +11,7 @@ Formula: ma_200w*0.35 + drawdown*0.25 + liquidity*0.25 + fear_greed*0.15
 from __future__ import annotations
 
 # Version identifier - bump on ANY methodology change
-ARC_FORMULA_VERSION: str = "1.0"
+ARC_FORMULA_VERSION: str = "1.1"
 
 # Locked weights - these must match compute_arc_score() in scoring.py
 # and all ARC calculations in backtest_engine.py
