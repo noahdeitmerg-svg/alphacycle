@@ -10,7 +10,7 @@ AlphaCycle is a live Bitcoin Cycle Intelligence SaaS. It classifies the current 
 
 - **Product:** https://alphacycle.app
 - **Backend:** FastAPI on Railway
-- **Frontend:** Single-file `index.html` (~8800 lines)
+- **Frontend:** Single-file `index.html` (~8700+ lines)
 - **Auth/DB:** Supabase
 - **Payments:** Stripe ($49/mo, 7-day trial)
 - **X Bot:** Python on Hetzner VPS
@@ -34,13 +34,14 @@ AlphaCycle is a live Bitcoin Cycle Intelligence SaaS. It classifies the current 
 | X Bot (scan, generate, post) | ✅ Live | Hetzner VPS (`~/alphacycle-bot/`) |
 | Stripe Integration | ⏳ Test mode | Awaiting legal structure |
 | Alert Emails | ⏳ Planned | After paid tier launch |
-| Snapshot Endpoint | ⚠️ Bug | `days_since_top` param missing in `build_snapshot()` |
+| Snapshot Endpoint | ✅ | `build_snapshot(..., days_since_top=...)` wired in `main.py` |
 
 ### Locked Constants (NEVER modify):
 
 1. **ARC Formula:** `ma_200w × 0.35 + drawdown × 0.25 + liquidity × 0.25 + fear_greed × 0.15`
 2. **Zone Boundaries:** 0–29 / 30–39 / 40–59 / 60–69 / 70–100 — Deep Value / Accumulation / Expansion / Risk Rising / Euphoria (gleich `get_zone_name()` / `phaseOf()`; siehe `docs/alphacycle_context.md` 2.3–2.4)
 3. **ARC = "AlphaCycle Risk Composite"**
+4. **Version / display:** `ARC_FORMULA_VERSION` in `backend/arc_config.py` (aktuell **1.1**); `arc_display_score(..., k=0.0)` default — Display = Raw ohne Stretch
 
 ---
 
@@ -269,7 +270,7 @@ Before any prompt is approved, check:
 | Priority | Task | Status |
 |---|---|---|
 | 1 | Hero Orbit Mobile Fix (labels, ring size, overlaps) | 🔄 In progress |
-| 2 | Snapshot Bug Fix (`days_since_top`) | ⏳ Pending |
+| 2 | Snapshot (`days_since_top`) | ✅ Done |
 | 3 | X Bot optimization (reply quality, SKIP logic) | 🔄 In progress |
 | 4 | Auth "failed to fetch" bug | ⏳ Needs investigation |
 
@@ -295,7 +296,7 @@ Paid tier: $49/mo with 7-day trial
 ## 9. KNOWN ISSUES & TECH DEBT
 
 1. **CoinCap API failing:** `FAILED https://api.coincap.io/v2/assets: [Errno -2]` — not critical, data comes from other sources
-2. **`days_since_top` snapshot bug:** `build_snapshot()` doesn't accept the param
+2. ~~**`days_since_top` snapshot bug**~~ — Resolved: `snapshot.build_snapshot` includes `days_since_top`; API snapshot path passes it.
 3. **Auth "failed to fetch":** Supabase connection issue — needs DevTools investigation
 4. **CSS specificity wars:** Multiple `!important` overrides accumulated from iterative prompts — needs consolidation pass
 5. **Landing page hardcoded values:** "+151%" and zone names need manual updates when backtest data changes
@@ -330,7 +331,7 @@ Check Railway dashboard → Deployments → latest build logs. If build fails, c
 
 ---
 
-*Last updated: 2026-04-11*
+*Last updated: 2026-04-10*
 *This document is maintained by Claude (Prompt Forge) and Noah.*
 *For technical system details, see `docs/alphacycle_context.md`.*
 
@@ -677,7 +678,7 @@ LIVE:
 PLANNED:
 ├── Paid SaaS tier (Stripe, $19-49/month)
 ├── Alert system (zone changes, structural shifts via email/Telegram)
-├── Newsletter (weekly ARC report via Beehiiv)
+├── Email capture: POST `/api/subscribe` → Supabase `email_captures` (no Beehiiv server-side sync)
 ├── Blur-gate system (free tier sees ARC score, paid tier sees components + backtest)
 ├── Enhanced backtest with 5-zone granularity
 └── Track record documentation (predicted vs actual outcomes)

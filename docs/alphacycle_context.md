@@ -11,7 +11,7 @@ AlphaCycle is a live Bitcoin Cycle Intelligence SaaS that classifies the current
 - **Live:** https://alphacycle.app
 - **Production:** https://alphacycle-production.up.railway.app
 - **GitHub:** https://github.com/noahdeitmerg-svg/alphacycle
-- **Stack:** FastAPI + Python 3.12 on Railway, single-file `index.html` (~8800 lines), Supabase Auth/DB, Stripe
+- **Stack:** FastAPI + Python 3.12 on Railway, single-file `index.html` (~8700+ lines), Supabase Auth/DB, Stripe
 - **Owner:** Noah (sole operator, based in Brazil BRT timezone)
 - **Languages:** Code + docs in English, internal communication in German
 
@@ -28,6 +28,12 @@ ARC = ma_200w × 0.35 + drawdown × 0.25 + liquidity × 0.25 + fear_greed × 0.1
 - **Weights sum to 1.0** (35 + 25 + 25 + 15)
 - All 4 components produce 0–100 scores before weighting
 - Output: 0–100 composite score
+
+### 2.1a Version and display transform
+
+- **`backend/arc_config.py`:** `ARC_FORMULA_VERSION = "1.1"` — bump only with explicit methodology approval.
+- **`arc_display_score(arc_raw, k=0.0)` in `backend/scoring.py`:** Default **k = 0** means **display equals raw** for API/UI (no stretch). Passing `k > 0` keeps the legacy sigmoid-style stretch for special outputs only.
+- **Hero in `index.html`:** Large ARC number and orbit use `arc_display` (same as raw when k=0); zone **name** under the gauge uses **raw** `arc_score` via `phaseOf(arcRaw)` (see permanent-fixes: Hero label + HR “YOU ARE HERE”).
 
 ### 2.2 Components
 
@@ -62,10 +68,10 @@ Related: `zoneKey`, `renderDecisionInterpretation()`, Historical Returns grids �
 
 ### 2.5 Data Pipeline
 
-- **CSV:** `backend/data/btc_daily_kraken.csv` (3817 rows, 2013-10-06 to 2024-03-30)
-- **Gap Bridge:** CryptoCompare API fills Jan–Mar 2024 gap
-- **Live:** Kraken API for daily OHLC from 2024-03-31 onward
-- **Backtest:** `run_daily_backtest_full()` produces 3135 daily data points (2017-08-17 → present)
+- **CSV:** `backend/data/btc_daily_kraken.csv` (~3817 OHLC rows; file ~3818 lines including header). Start date ~2013-10-06. Merged with gap bridge + live Kraken in `_load_or_build_daily_cache()`.
+- **Gap Bridge:** CryptoCompare API (optional key) fills historical gaps
+- **Live:** Kraken daily OHLC merged after static + gap data (`_load_or_build_daily_cache` in `backtest_engine`)
+- **Backtest:** `run_daily_backtest_full()` — unified daily ARC; first chart point ~2017 after MA warm-up (see `MIN_DAYS_FOR_MA200W` / backtest docs)
 
 ---
 
@@ -126,7 +132,7 @@ hero-cta-block         (CTA — anonymous only)
 signal-summary         (Zone + ARC score, one line)
 HISTORICAL CONTEXT separator
 gate-historical-returns (Single dominant zone block)
-gate-live-prices       (BTC, ETH, F&G — compact)
+gate-live-prices       (always unlocked — BTC, ETH, F&G)
 gate-decision-engine   (Positioning Framework — linear layout)
 gate-cycle-overview    (Cycle Phase, Days Since Bottom/Top)
 gate-near-term         (30-90D Outlook)
@@ -144,17 +150,22 @@ gate-zone-history      (Zone History table)
 - **Labels:** 5 zone names positioned outside ring (`.ol-dv`, `.ol-ac`, `.ol-ex`, `.ol-rr`, `.ol-eu`)
 - **Functions:** `positionOrbitDot(score)`, `highlightOrbitZone(score)`
 
-### 4.3 Blur-Gate System
+### 4.3 Blur-Gate System (`applyBlurGates()` in `index.html`)
 
-| Gate | Tier | What it shows |
+**Rules:** `effectivePlan` treats `trial` like `paid`. **Free-tier gates** (`gateInfo.tier === 'free'`): locked only when `effectivePlan === 'anonymous'` (signup unlocks). **Paid-tier gates:** locked whenever `effectivePlan !== 'paid'`.
+
+| Gate ID | Tier in code | Lock behavior |
 |---|---|---|
-| gate-hero | free | Score, zone, context |
-| gate-historical-returns | free | Full HR data visible |
-| gate-decision-engine | paid | Positioning Framework |
-| gate-cycle-overview | free | Cycle phase data |
-| gate-near-term | paid | 30-90D outlook |
-| gate-arc-history | paid | 10Y chart |
-| gate-zone-history | paid | Zone history table |
+| gate-hero | free | Anonymous only |
+| gate-historical-returns | free | Anonymous only |
+| gate-cycle-overview | paid | Non–paid users |
+| gate-near-term | paid | Non–paid users |
+| gate-arc-history | paid | Non–paid users |
+| gate-arc-momentum | paid | Non–paid users |
+| gate-decision-engine | paid | Non–paid users |
+| gate-zone-history | paid | Non–paid users |
+| gate-content-export | paid | Non–paid users |
+| gate-live-prices | (not in gateInfo) | **Never locked** — code removes `locked` every run |
 
 ### 4.4 Historical Returns
 
@@ -180,7 +191,7 @@ gate-zone-history      (Zone History table)
 - **Server:** Hetzner VPS (ubuntu-4gb-hel1-2)
 - **Stack:** Python 3 + Tweepy v2 + Anthropic Claude API
 - **Flow:** scan_tweets() → generate_reply() → post_reply()
-- **Limits:** 6/hr, 20/day, 360–1320s random delay before posting
+- **Limits (defaults in `alphacycle-x-bot/config.py`, overridable via env):** e.g. `REPLY_LIMIT_HOURLY` default 3, `REPLY_LIMIT_DAILY` default 15; delay `REPLY_DELAY_MIN`/`MAX` 90–300s; `MIN_LIKES_TO_REPLY` default 5
 - **Reply Rules:** Max 180 chars, curiosity gap, no self-promotion, no financial advice
 - **ARC Context:** Fetches live ARC from `/api/arc-summary` before generating replies
 
@@ -290,7 +301,7 @@ NACHDEM du fertig bist: Aktualisiere DEPLOY_STATE.md und permanent-fixes.mdc mit
 
 - Stripe Live activation (awaiting legal structure — US LLC route)
 - Alert Emails (Resend, after paid tier)
-- Snapshot bug fix (`days_since_top` param)
+- ~~Snapshot `days_since_top`~~ — `build_snapshot()` accepts `days_since_top`; `main.py` passes `st_ctx.get("days_since_top")` (resolved)
 
 ---
 
@@ -298,7 +309,7 @@ NACHDEM du fertig bist: Aktualisiere DEPLOY_STATE.md und permanent-fixes.mdc mit
 
 ```
 alphacycle/
-├── index.html                    # Single-file frontend (~8800 lines)
+├── index.html                    # Single-file frontend (~8700+ lines)
 ├── backend/
 │   ├── main.py                   # FastAPI app, all endpoints
 │   ├── scoring.py                # ARC score computation
@@ -356,5 +367,5 @@ From the March 2026 system audit:
 
 ---
 
-*Last updated: 2026-04-11 (canonical path: docs/alphacycle_context.md)*
+*Last updated: 2026-04-10 (canonical path: docs/alphacycle_context.md)*
 *Maintained by: Claude (Prompt Forge) + Noah*

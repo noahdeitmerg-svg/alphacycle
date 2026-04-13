@@ -341,7 +341,7 @@ LIVE:
 PLANNED:
 ├── Paid SaaS tier (Stripe, $19-49/month)
 ├── Alert system (zone changes, structural shifts via email/Telegram)
-├── Newsletter (weekly ARC report via Beehiiv)
+├── Email capture: POST `/api/subscribe` → Supabase `email_captures` (no Beehiiv server-side sync)
 ├── Blur-gate system (free tier sees ARC score, paid tier sees components + backtest)
 ├── Enhanced backtest with 5-zone granularity
 └── Track record documentation (predicted vs actual outcomes)

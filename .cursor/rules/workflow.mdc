@@ -9,7 +9,7 @@ Nach **jeder** Code-Änderung, jedem Fix und jedem neuen Feature MUSST du folgen
 
 ---
 
-## 1. `deploy-state.md` updaten
+## 1. `DEPLOY_STATE.md` (Repo-Root) updaten
 
 Trage jeden Fix / jedes Feature ein:
 
@@ -25,7 +25,7 @@ Trage jeden Fix / jedes Feature ein:
 
 ---
 
-## 2. `permanent-fixed.mdc` updaten
+## 2. `.cursor/rules/permanent-fixes.mdc` updaten
 
 Wenn ein Bug dauerhaft gefixt wurde, trage ihn ein:
 

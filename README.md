@@ -5,6 +5,8 @@
 Proprietary crypto market cycle intelligence platform.
 Real-time BTC, ETH, and Macro cycle scoring.
 
+**Production backend:** `https://alphacycle-production.up.railway.app` (see `index.html` `BACKEND_URL`). Docs: `DEPLOY_STATE.md`, `docs/alphacycle_context.md`, `docs/alphacycle_ai_operating_manual.md`.
+
 ---
 
 ## 🚀 Deployment Guide (15 minutes total)

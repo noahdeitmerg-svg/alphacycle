@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10 (ARC: arc_display k=0, ARC_FORMULA_VERSION 1.1)
+**Zuletzt aktualisiert:** 2026-04-10 (Doku-Sync + ARC v1.1 / arc_display k=0)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-10) — Doku-Sync (README, docs, Regeln, Kommentare)
+- **Datei(en):** `README.md`, `docs/alphacycle_context.md`, `docs/alphacycle_ai_operating_manual.md`, `docs/alphacycle_ai_operating_manual_COMPLETE.md`, `AlphaCycle-AI-Manual-Sections-11-13-FINAL-v2.md`, `backend/arc_config.py` (Docstring-Version), `backend/scoring.py` (`arc_display_score`-Docstring), `.cursor/rules/permanent-fixes.mdc`, `DEPLOY_STATE.md`
+- **Was wurde geaendert:** Blur-Gate-Tabelle und X-Bot-Limits an `index.html`/`config.py` angeglichen; Snapshot-Bug-Hinweise entfernt (Parameter ist verdrahtet); Beehiiv durch Supabase `/api/subscribe` ersetzt; ARC v1.1 + Default k=0 fuer Display dokumentiert; FIX 57 / Phase-UI / Blur-Gates in permanent-fixes mit Hero raw / HR raw konsolidiert; Frontend-Zeilenzahl ~8700+.
+- **Warum:** Chat- und Betriebsdokumente wichen vom Live-Code ab (Gate-Logik, Limits, E-Mail-Capture, ARC-Display).
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-10) — arc_display_score default k=0 (Display = Raw)
 - **Datei(en):** `backend/scoring.py` (`arc_display_score(..., k: float = 0.0)` Default nur), `backend/arc_config.py` (`ARC_FORMULA_VERSION` **"1.1"**), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`

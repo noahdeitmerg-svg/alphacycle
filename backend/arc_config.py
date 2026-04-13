@@ -5,7 +5,7 @@ Single source of truth for ARC weights, zones, and version.
 LOCKED - NEVER modify without explicit approval from Noah + version bump.
 Any change requires: research justification + backtest validation + CHANGELOG entry.
 
-Current version: ARC v1.0
+Current version: ARC v1.1 (see ARC_FORMULA_VERSION)
 Formula: ma_200w*0.35 + drawdown*0.25 + liquidity*0.25 + fear_greed*0.15
 """
 from __future__ import annotations
