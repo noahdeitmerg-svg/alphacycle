@@ -5,21 +5,21 @@ Single source of truth for ARC weights, zones, and version.
 LOCKED - NEVER modify without explicit approval from Noah + version bump.
 Any change requires: research justification + backtest validation + CHANGELOG entry.
 
-Current version: ARC v1.1 (see ARC_FORMULA_VERSION)
-Formula: ma_200w*0.35 + drawdown*0.25 + liquidity*0.25 + fear_greed*0.15
+Current version: ARC v1.2 (see ARC_FORMULA_VERSION)
+Formula: ma_200w*0.35 + drawdown*0.30 + liquidity*0.15 + fear_greed*0.20
 """
 from __future__ import annotations
 
 # Version identifier - bump on ANY methodology change
-ARC_FORMULA_VERSION: str = "1.1"
+ARC_FORMULA_VERSION: str = "1.2"
 
 # Locked weights - these must match compute_arc_score() in scoring.py
 # and all ARC calculations in backtest_engine.py
 ARC_WEIGHTS: dict[str, float] = {
     "trend":     0.35,
-    "drawdown":  0.25,
-    "liquidity": 0.25,
-    "sentiment": 0.15,
+    "drawdown":  0.30,
+    "liquidity": 0.15,
+    "sentiment": 0.20,
 }
 
 # Zone definitions - must match phaseOf() in index.html and get_zone_name() in main.py

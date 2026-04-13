@@ -4111,7 +4111,7 @@ canvas.sparkline {
     <!-- Method -->
     <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:24px;">
       <div style="font-size:9px;color:#00D4AA;font-family:var(--f-mono);letter-spacing:0.12em;margin-bottom:8px;">HOW THE ARC INDEX WORKS</div>
-      <p style="font-family:var(--f-mono);font-size:11px;color:var(--tx-sec);line-height:1.7;margin:0;">The ARC combines four structural indicators — 200-week moving average deviation (35%), drawdown from ATH (25%), macro liquidity from the Fed balance sheet (25%), and market sentiment via Fear & Greed (15%) — into a single score from 0 to 100. Lower scores = lower risk = better entry. Higher scores = higher risk = reduce exposure.</p>
+      <p style="font-family:var(--f-mono);font-size:11px;color:var(--tx-sec);line-height:1.7;margin:0;">The ARC combines four structural indicators — 200-week moving average deviation (35%), drawdown from ATH (30%), macro liquidity from the Fed balance sheet (15%), and market sentiment via Fear & Greed (20%) — into a single score from 0 to 100. Lower scores = lower risk = better entry. Higher scores = higher risk = reduce exposure.</p>
     </div>
 
     <!-- Timeline -->
@@ -4448,15 +4448,15 @@ canvas.sparkline {
           </div>
           <div id="arc-weights-bar" style="display:flex;border-radius:4px;overflow:hidden;height:6px;margin-bottom:10px;">
             <div style="flex:35;background:#58A6FF;" title="Trend 35%"></div>
-            <div style="flex:25;background:#00B4D8;" title="Drawdown 25%"></div>
-            <div style="flex:25;background:#00D4AA;" title="Liquidity 25%"></div>
-            <div style="flex:15;background:#FF9500;" title="Sentiment 15%"></div>
+            <div style="flex:30;background:#00B4D8;" title="Drawdown 30%"></div>
+            <div style="flex:15;background:#00D4AA;" title="Liquidity 15%"></div>
+            <div style="flex:20;background:#FF9500;" title="Sentiment 20%"></div>
           </div>
           <div class="arc-weights-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;font-size:9px;">
             <div><span style="color:#58A6FF;">&#9632;</span> <span style="color:var(--tx-sec);">Trend (35%)</span><br><span style="color:var(--tx-ter);font-size:8px;">BTC price vs 200-week moving average</span></div>
-            <div><span style="color:#00B4D8;">&#9632;</span> <span style="color:var(--tx-sec);">Drawdown (25%)</span><br><span style="color:var(--tx-ter);font-size:8px;">Distance from all-time high</span></div>
-            <div><span style="color:#00D4AA;">&#9632;</span> <span style="color:var(--tx-sec);">Liquidity (25%)</span><br><span style="color:var(--tx-ter);font-size:8px;">Fed balance sheet net liquidity (WALCL &#8722; TGA &#8722; RRP)</span></div>
-            <div><span style="color:#FF9500;">&#9632;</span> <span style="color:var(--tx-sec);">Sentiment (15%)</span><br><span style="color:var(--tx-ter);font-size:8px;">Crypto Fear &amp; Greed Index</span></div>
+            <div><span style="color:#00B4D8;">&#9632;</span> <span style="color:var(--tx-sec);">Drawdown (30%)</span><br><span style="color:var(--tx-ter);font-size:8px;">Distance from all-time high</span></div>
+            <div><span style="color:#00D4AA;">&#9632;</span> <span style="color:var(--tx-sec);">Liquidity (15%)</span><br><span style="color:var(--tx-ter);font-size:8px;">Fed balance sheet net liquidity (WALCL &#8722; TGA &#8722; RRP)</span></div>
+            <div><span style="color:#FF9500;">&#9632;</span> <span style="color:var(--tx-sec);">Sentiment (20%)</span><br><span style="color:var(--tx-ter);font-size:8px;">Crypto Fear &amp; Greed Index</span></div>
           </div>
           <div style="margin-top:10px;font-size:8px;color:var(--tx-ter);line-height:1.5;">
             Lower scores &#8594; historically stronger entry points.<br>

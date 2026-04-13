@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-12 (Docs Consolidation — 9 zu 4 Dateien)
+**Zuletzt aktualisiert:** 2026-04-12 (ARC v1.2 live in arc_config + UI)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-12) — ARC v1.2 im Code und Frontend
+- **Datei(en):** `backend/arc_config.py` (`ARC_FORMULA_VERSION` **1.2**, `ARC_WEIGHTS` 0.35/0.30/0.15/0.20), `backend/scoring.py` (Docstring `compute_arc_score`), `backend/services/backtest_engine.py` (Modul-Doku + `DAILY_PRICE_CACHE_EPOCH` Bump fuer Daily-Cache-Rebuild), `index.html` (Track-Record-ARC-Text + Paid HOW-ARC Gewichts-Bar/Labels), `.cursor/rules/permanent-fixes.mdc` (arc_config- und ARC-Formel-Zeilen), `DEPLOY_STATE.md`
+- **Was:** Produktionscode entspricht der dokumentierten **ARC v1.2**-Gewichtung; UI-Zahlen angeglichen; permanent-fixes konsistent.
+- **Warum:** Repo war noch auf v1.1-Gewichten; Doku/Produkt sollen nicht auseinanderlaufen.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-12) — Docs Consolidation
 - **Datei(en):** `docs/SYSTEM_TRUTH.md`, `docs/AI_MASTER_CONTEXT.md`, `docs/AI_AGENT_ROLES.md`, `docs/AI_MASTER_PROMPT.md`, `README.md`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`; geloescht: `docs/alphacycle_ai_operating_manual.md`, `docs/alphacycle_ai_operating_manual_COMPLETE.md`, `docs/AlphaCycle-AI-Manual-Sections-11-13-FINAL-v2.md`, `docs/alphacycle_context.md`, `docs/CURSOR_MASTERPROMPT.md`

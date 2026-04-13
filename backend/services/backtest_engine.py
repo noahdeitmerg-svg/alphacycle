@@ -2,7 +2,7 @@
 backtest_engine.py - Alpha Cycle Intelligence v3.0
 
 Authoritative daily ARC history: run_daily_backtest_full() + /tmp/daily_full_cache.json.
-ARC = ma_200w*0.35 + drawdown*0.25 + macro_liq*0.25 + fg_to_score(fear_greed)*0.15.
+ARC uses arc_config.ARC_WEIGHTS: trend*ma_200w + drawdown*dd + liquidity*macro_liq + sentiment*fg_to_score(fear_greed) (v1.2: 0.35/0.30/0.15/0.20).
 macro_liq from FRED Net Liquidity (WALCL - TGA - RRP) when available.
 Return: [{"date": "YYYY-MM-DD", "price": float (close), "high": float, "low": float, "score": float}, ...]
 """
@@ -38,7 +38,7 @@ WINDOW_200W = 200  # 200 weekly data points = 200-week MA (daily [::7] slice in 
 DAILY_CACHE_FILE = Path("/tmp/daily_full_cache.json")
 CSV_PATH = Path(__file__).resolve().parent.parent / "data" / "btc_daily_kraken.csv"
 # Bump when daily merge or daily-ARC methodology changes; stale files rebuild on next load.
-DAILY_PRICE_CACHE_EPOCH = "20260410-arc-daily-parity"
+DAILY_PRICE_CACHE_EPOCH = "20260412-arc-v1.2-weights"
 
 
 def _load_csv_history() -> List[Dict[str, Any]]:

@@ -401,7 +401,7 @@ def compute_arc_score(
     weekly_low: Optional[float] = None,
 ) -> float:
     """
-    Unified ARC formula (research-validated): ma_200w*0.35 + drawdown*0.25 + liquidity*0.25 + fear_greed*0.15.
+    Unified ARC formula (research-validated): ma_200w*0.35 + drawdown*0.30 + liquidity*0.15 + fear_greed*0.20 (weights from arc_config.ARC_WEIGHTS).
     Liquidity for ARC uses impulse (30d/90d change of Net Liquidity); fallback to btc macro_liq if insufficient data.
     weekly_high/weekly_low override ma and drawdown when present (extrempoint detection).
     Weights defined in arc_config.ARC_WEIGHTS - do not hardcode duplicate weights here.
