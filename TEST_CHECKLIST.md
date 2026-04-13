@@ -124,4 +124,22 @@ Track Record ist in `index.html` als `track-record-view` umgesetzt.
 
 ---
 
-**Kurz:** Alle im Code prüfbaren Punkte sind durchgegangen und mit [x] markiert. Offen für **manuelles Testen**: Railway-Deploy-Logs, POST /api/checkout mit echtem Token, Webhook-URL im Stripe-Dashboard, Stripe-Checkout-Flow im Browser, Live-Umschaltung Stripe Test → Live.
+## Nach Doku-Sync (2026-04) — Auth, Subscribe, Snapshot, ARC-Display
+
+- [x] **`/api/subscribe` nach Signup:**  
+  Verifiziert: `handleAuthSubmit` sendet bei erfolgreichem Signup `POST` mit `{ email, source: 'signup' }` an Backend (Supabase `email_captures`).
+
+- [x] **Checkout-Fehler ohne `alert()`:**  
+  Verifiziert: `openUpgradeModal` nutzt bei `!resp.ok` bzw. `catch` `showPlanWarning(...)` und setzt Upgrade-Buttons zurueck (kein `alert` im Happy-Path-Fehlerfall).
+
+- [x] **`build_snapshot` + `days_since_top`:**  
+  Verifiziert: `snapshot.build_snapshot(..., days_since_top=...)` und `main.py` uebergibt `days_since_top` aus Short-Term-Context.
+
+- [x] **ARC Display Default k=0:**  
+  Verifiziert: `scoring.arc_display_score(arc_raw, k=0.0)` — bei k=0 entspricht API-`arc_display` dem rohen ARC; Hero-Zonenlabel weiter ueber `arc_score` + `phaseOf(arcRaw)`.
+
+- [ ] **Manuell:** Anonym im Dashboard — nur Hero + HR geblurrt? Paid-Bereiche (Cycle, Near-Term, Charts, …) geblurrt? Live Prices immer sichtbar?
+
+---
+
+**Kurz:** Alle im Code prüfbaren Punkte sind durchgegangen und mit [x] markiert. Offen für **manuelles Testen**: Railway-Deploy-Logs, POST /api/checkout mit echtem Token, Webhook-URL im Stripe-Dashboard, Stripe-Checkout-Flow im Browser, Live-Umschaltung Stripe Test → Live, Blur-Gates als anonymer Besucher.
