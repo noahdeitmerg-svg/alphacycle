@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10 (Live ARC: volle BTC-Daily-Historie wie Backtest)
+**Zuletzt aktualisiert:** 2026-04-10 (UX: Lesbarkeit, PF-Grid, Zone History aus)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-10) — index.html UX Overhaul (nur CSS/HTML)
+- **Datei(en):** `index.html` (CSS: `#signal-summary` ausgeblendet; Hero-Zonen-/`#arc-methodology`-Abstand; `#decision-card` 2x2 Grid + volle Breite fuer Note/Interpretation; Textkontraste; HR-Focus/Meta-Typo; `#gate-zone-history` per CSS versteckt + HTML-Kommentar), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was wurde geaendert:** Redundantes Signal-Summary aus; weniger Leerraum Hero–HOW ARC WORKS; Positioning Framework kompakter; Zone History unsichtbar bis Daten-Fix; dunkle UI lesbarer.
+- **Warum:** UX/Redundanz; Zone History vs. Live-ARC Inkonsistenz temporaer ausblenden.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-10) — Live ARC: volle BTC-Preishistorie (MA200w wie Backtest)
 - **Datei(en):** `backend/main.py` (`refresh_cache`: nach `fetch_all()` `raw["btc_prices"]` aus `_load_or_build_daily_cache()` wenn >1400 Tage, sonst Kraken-only), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`

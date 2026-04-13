@@ -3758,6 +3758,113 @@ canvas.sparkline {
     min-width: 70px !important;
   }
 }
+
+/* === UX OVERHAUL 2026-04-10 (readability, spacing; no formula/zone/IDs/backend) === */
+#signal-summary { display: none !important; }
+
+#btc-card.hero-card .hero-zones {
+  margin-bottom: 8px !important;
+}
+
+#arc-methodology {
+  margin-top: 4px !important;
+  margin-bottom: 8px !important;
+}
+
+#decision-card .decision-grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 12px 24px !important;
+  padding: 16px 20px !important;
+}
+
+#decision-card .decision-grid > .decision-note,
+#decision-card .decision-grid > #dec-interpretation {
+  grid-column: 1 / -1;
+}
+
+#decision-card .decision-note {
+  padding: 8px 20px !important;
+  font-size: 9px !important;
+}
+
+.dec-layer {
+  padding: 10px 20px !important;
+}
+.dec-layer-text {
+  font-size: 9px !important;
+  line-height: 1.4 !important;
+  color: rgba(255, 255, 255, 0.65) !important;
+}
+.dec-layer-list li {
+  font-size: 8px !important;
+  line-height: 1.3 !important;
+  color: rgba(255, 255, 255, 0.65) !important;
+}
+.dec-layer-title {
+  margin-bottom: 4px !important;
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+@media (max-width: 600px) {
+  #decision-card .decision-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+.card, .decision-card, .hist-returns-card {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.hr-eyebrow {
+  font-size: 9px !important;
+  color: rgba(255, 255, 255, 0.45) !important;
+}
+.ca-label, .cp-eyebrow {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.decision-value, .ca-value, .hr-dominant-return {
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+
+.hr-secondary {
+  opacity: 0.7 !important;
+}
+.hr-secondary-item .hr-sec-label {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+#gate-zone-history { display: none !important; }
+
+.hr-dominant-label,
+.hr-focus-zone {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+}
+.hr-dominant-range {
+  font-size: 10px !important;
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+.hist-returns-card .hr-zone-label {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+}
+.hist-returns-card .hr-zone-range {
+  font-size: 10px !important;
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+.hr-dominant-return,
+.hr-focus-return {
+  color: inherit !important;
+}
+.hr-dominant-meta,
+.hr-focus-meta,
+.hist-returns-card .hr-zone-wr,
+.hist-returns-card .hr-zone-count {
+  font-size: 10px !important;
+  color: rgba(255, 255, 255, 0.5) !important;
+}
 </style>
 </head>
 <body>
@@ -4726,6 +4833,9 @@ canvas.sparkline {
     </div>
   </div>
 
+  <!-- HIDDEN: Zone History temporarily disabled — data mismatch
+       between confirmed zone (Expansion) and live ARC (Accumulation).
+       Re-enable after zone confirmation logic is fixed. -->
   <!-- ── ZONE HISTORY ── -->
   <div id="gate-zone-history" class="blur-gate module-tertiary">
     <div class="blur-content">
