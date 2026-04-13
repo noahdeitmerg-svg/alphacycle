@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-13 (X-Bot: Pipeline Overhaul F1–F5)
+**Zuletzt aktualisiert:** 2026-04-13 (X-Bot: Pipeline-Spezifikation verifiziert + _get_market_context-Zeile)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-13) — X-Bot Pipeline: Audit-Spezifikation 1:1 (_get_market_context)
+- **Datei(en):** `alphacycle-x-bot/growth_engine.py` (`_get_market_context`: `a = float(arc_score) if arc_score else 50.0`), `alphacycle-x-bot/prompts/qa_system.txt` (Regel 11 Textlayout wie FIX-3), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc` (Verifikationshinweis)
+- **Was:** Re-Run derselben Quant-Spezifikation; keine neuen Features, nur exakte Zeile aus Audit + QA-11-Format.
+- **Warum:** Prompt-Vorgabe wortgetreu zu F1/F3.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-13) — alphacycle-x-bot Pipeline (dynamic context, slim reply, QA, pattern retry)
 - **Datei(en):** `alphacycle-x-bot/growth_engine.py` (`_get_market_context(arc_score)` Baender, `_arc_score_float`, `_format_factual_reference`, `build_*` MARKET CONTEXT, `qa_check_reply` + kwargs, QA-Call mit Snapshot), `alphacycle-x-bot/prompts/reply_system.txt` (3 Regeln + 3 Examples + Platzhalter), `alphacycle-x-bot/prompts/post_system.txt` (`{market_context}`), `alphacycle-x-bot/prompts/qa_system.txt` (`{factual_reference}`, Regel 11 NEW INFORMATION), `alphacycle-x-bot/config.py` (**MAX_REPLY_HISTORY=5**), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`

@@ -204,7 +204,7 @@ def _arc_score_float(arc_data: dict[str, Any] | None) -> float:
 def _get_market_context(arc_score: float) -> str:
     """ARC-band macro line for prompts — no hardcoded prices in static .txt files."""
     try:
-        a = float(arc_score)
+        a = float(arc_score) if arc_score else 50.0
     except (TypeError, ValueError):
         a = 50.0
     if a < 30:

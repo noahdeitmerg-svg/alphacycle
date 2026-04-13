@@ -63,12 +63,12 @@ RULES TO CHECK:
     Example: FAIL: zone_label_"deep value territory"
 
 11. NEW INFORMATION CHECK
-    Does the reply contain at least ONE specific observation
-    that the original tweet did not mention?
-    This can be: a year, a comparison, a structural dimension,
-    a data contrast, or a historical reference.
-    If the reply only restates or agrees with the tweet
-    without adding anything new: FAIL: no_new_information
+Does the reply contain at least ONE specific observation
+that the original tweet did not mention?
+This can be: a year, a comparison, a structural dimension,
+a data contrast, or a historical reference.
+If the reply only restates or agrees with the tweet
+without adding anything new: FAIL: no_new_information
 
 12. RECYCLED DATA: Does the reply stack boilerplate cycle metrics
     without the tweet being about BTC structure?
