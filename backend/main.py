@@ -141,6 +141,29 @@ async def refresh_cache(force: bool = False):
             raw = await fetch_all()
 
             try:
+                from services.backtest_engine import _load_or_build_daily_cache
+
+                daily_cache = await _load_or_build_daily_cache()
+                if daily_cache and len(daily_cache) > 1400:
+                    btc_prices_full = [
+                        safe_float(d["price"])
+                        for d in daily_cache
+                        if safe_float(d.get("price")) > 0
+                    ]
+                    raw["btc_prices"] = btc_prices_full
+                    logger.info(
+                        "Full BTC price history loaded: %s days (MA200w requires 1400+)",
+                        len(btc_prices_full),
+                    )
+                else:
+                    logger.warning(
+                        "Daily cache too short (%s points), using Kraken-only prices",
+                        len(daily_cache) if daily_cache else 0,
+                    )
+            except Exception as e:
+                logger.warning("Daily cache load failed, using Kraken-only prices: %s", e)
+
+            try:
                 from fetcher import fetch_kraken_ohlc_latest
 
                 ohlc_latest = await fetch_kraken_ohlc_latest()

@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10 (Live ARC: Kraken Tages-Hi/Lo wie Daily-Backtest)
+**Zuletzt aktualisiert:** 2026-04-10 (Live ARC: volle BTC-Daily-Historie wie Backtest)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-10) — Live ARC: volle BTC-Preishistorie (MA200w wie Backtest)
+- **Datei(en):** `backend/main.py` (`refresh_cache`: nach `fetch_all()` `raw["btc_prices"]` aus `_load_or_build_daily_cache()` wenn >1400 Tage, sonst Kraken-only), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was wurde geaendert:** Live-Scores nutzen dieselbe lange Close-Serie wie `run_daily_backtest_full()` (CSV+Gap+Kraken), nicht nur ~720 Kraken-Tage; verhindert MA102w-Fallback statt MA200w (~7 ARC-Punkte Drift).
+- **Warum:** `fetch_kraken_prices` liefert zu wenig Punkte fuer echte 200W-MA auf Woechentlich-Sampling.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-10) — Live ARC Hi/Lo aligned mit Daily-Backtest
 - **Datei(en):** `backend/fetcher.py` (`fetch_kraken_ohlc_latest`: Kraken OHLC 1440, letzte Kerze high/low/close), `backend/main.py` (`refresh_cache`: `CACHE["ohlc_latest"]`; `get_arc_summary`, `_save_today_snapshot`, `get_history_daily`, `get_backtest`: `compute_arc_score` mit `weekly_high`/`weekly_low` aus Cache), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
