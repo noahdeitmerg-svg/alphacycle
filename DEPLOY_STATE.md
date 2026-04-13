@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10 (TEST_CHECKLIST, DEPLOY_STATE Chronik, ARC k=0)
+**Zuletzt aktualisiert:** 2026-04-10 (AI Knowledge Stack README + Stack-Doku)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-10) — AI Knowledge Stack (README + vier Stack-Dateien)
+- **Datei(en):** `README.md`, `docs/SYSTEM_TRUTH.md`, `docs/AI_MASTER_CONTEXT.md`, `docs/AI_AGENT_ROLES.md`, `docs/AI_MASTER_PROMPT.md`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was wurde geaendert:** README verweist auf die vier Stack-Dokumente als Pflicht-Lesereihenfolge; Stack-Dateien unter `docs/` verifiziert (keine Verschiebung noetig); SYSTEM_TRUTH / AI_MASTER_CONTEXT / AI_MASTER_PROMPT / AI_AGENT_ROLES auf ARC **v1.1**, **arc_display** Default **k=0**, und konsistente Lade-Reihenfolge aktualisiert. Kein Code geaendert.
+- **Warum:** Deploy AI Knowledge Stack — einheitlicher Einstieg fuer Agents.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-10) — Doku-Sync (README, docs, Regeln, Kommentare)
 - **Datei(en):** `README.md`, `docs/alphacycle_context.md`, `docs/alphacycle_ai_operating_manual.md`, `docs/alphacycle_ai_operating_manual_COMPLETE.md`, `AlphaCycle-AI-Manual-Sections-11-13-FINAL-v2.md`, `backend/arc_config.py` (Docstring-Version), `backend/scoring.py` (`arc_display_score`-Docstring), `.cursor/rules/permanent-fixes.mdc`, `DEPLOY_STATE.md`

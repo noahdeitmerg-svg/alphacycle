@@ -1,4 +1,8 @@
-> **Before working on this repository, read [docs/alphacycle_ai_operating_manual.md](docs/alphacycle_ai_operating_manual.md) and [docs/alphacycle_context.md](docs/alphacycle_context.md) to understand the system architecture.**
+> **Before working on this repository:**
+> 1. Read `docs/SYSTEM_TRUTH.md` (immutable rules)
+> 2. Read `docs/AI_MASTER_CONTEXT.md` (system architecture)
+> 3. Read `docs/AI_AGENT_ROLES.md` (your role)
+> 4. Read `docs/AI_MASTER_PROMPT.md` (behavioral rules)
 
 # Alpha Cycle Intelligence
 

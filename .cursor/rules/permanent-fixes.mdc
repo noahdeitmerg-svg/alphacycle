@@ -10,7 +10,8 @@ Beim Bearbeiten von backend/fetcher.py, backend/main.py, backend/scoring.py oder
 
 ## Vor jeder Änderung
 - DEPLOY_STATE.md im Repo-Root prüfen und die dort genannten "Permanent Fixes" einhalten.
-- **`docs/alphacycle_ai_operating_manual.md`** (Agent-Rollen, Dev-Regeln, Masterprompt-System) und **`docs/alphacycle_context.md`** fuer Gesamtarchitektur, ARC-Regeln und Repo-Struktur (Single Source of Truth neben DEPLOY_STATE / dieser Datei). **Zonen-Grenzen** in Doku: Abschnitt **2.3–2.4** in `alphacycle_context.md` (`get_zone_name` / `phaseOf` / fuenf Baender).
+- **AI Knowledge Stack (Pflicht-Reihenfolge laut README):** `docs/SYSTEM_TRUTH.md`, `docs/AI_MASTER_CONTEXT.md`, `docs/AI_AGENT_ROLES.md`, `docs/AI_MASTER_PROMPT.md`.
+- Zusaetzlich: **`docs/alphacycle_context.md`** (erweiterte Architektur, Zonen, APIs) und **`docs/alphacycle_ai_operating_manual.md`** / **`docs/alphacycle_ai_operating_manual_COMPLETE.md`** (Rollen, Dev-Regeln, Betriebsmanual). **Zonen-Grenzen** in Doku: Abschnitt **2.3–2.4** in `alphacycle_context.md` (`get_zone_name` / `phaseOf` / fuenf Baender).
 
 ## Nach jeder Änderung (PFLICHT)
 - **DEPLOY_STATE.md** aktualisieren: neuen Session-Status / Änderungen im Abschnitt „Letzter Session-Status“ dokumentieren (Datum, Kurzbeschreibung).
