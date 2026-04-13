@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-14 (PRE-DEPLOY VALIDATION + Push)
+**Zuletzt aktualisiert:** 2026-04-14 (deploy-server README: VPS-Schritte korrigiert)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-14) — deploy-server README (Schritt 1–3 kanonisch)
+- **Datei(en):** `alphacycle-x-bot/deploy-server/README.md`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc` (VPS-Screen-Zeile korrigiert)
+- **Was:** Schritt 1 (Repo/Cursor) vs. Schritt 2 (VPS: venv, `/root/deploy-server.env`, `bash -lc` mit `cd`+`source`+`uvicorn`), Schritt 3 (GitHub Webhook); Verweis auf GET `/health` und dass POST `/deploy` ohne `X-Hub-Signature-256` bei gesetztem Secret 403 liefert; Trennung Bot-`.env` vs. `deploy-server.env`; kein `bashssh`/kein nacktes `screen … uvicorn` ohne cwd.
+- **Warum:** Anleitung aus Chat-Entwurf war fehleranfaellig; Schritt 1 Code existiert bereits — Doku als Single Source of Truth.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-14) — PRE-DEPLOY VALIDATION (kein Code-Fix)
 - **Datei(en):** Validierung: `alphacycle-x-bot/growth_engine.py`, `alphacycle-x-bot/reply_engine.py`, `alphacycle-x-bot/deploy-server/deploy.py`; Prompts `alphacycle-x-bot/prompts/reply_system.txt`, `post_system.txt`, `qa_system.txt`; `DEPLOY_STATE.md`
