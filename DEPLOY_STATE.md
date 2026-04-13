@@ -8,7 +8,7 @@
 - **Datei(en):** `backend/main.py`
 - **Was:** `GET /api/historical-returns`: `current_arc` = `compute_arc_score(..., weekly_high=_ohlc.get("high"), weekly_low=_ohlc.get("low"))` aus `CACHE["ohlc_latest"]` (kein None mehr). `GET /api/backtest`: vor Live-Override `results[-1] = dict(results[-1])`, damit `CACHE["backtest_results"]` nicht mutiert wird. `GET /api/history-daily`: gleiche shallow-copy des letzten Punkts vor Live-Override.
 - **Warum:** Hero/Chart-Divergenz durch fehlendes Tages-Hi/Lo im Live-Pfad bzw. versehentliches Ueberschreiben des Backtest-Caches.
-- **Status:** in progress bis push
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-14) — deploy.py: TELEGRAM aus BOT_REPO_PATH/.env
 - **Datei(en):** `alphacycle-x-bot/deploy-server/deploy.py` (`_merge_telegram_from_bot_env`, `dotenv_values`), `alphacycle-x-bot/deploy-server/requirements.txt` (`python-dotenv>=1.0.0`), `alphacycle-x-bot/deploy-server/README.md`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
