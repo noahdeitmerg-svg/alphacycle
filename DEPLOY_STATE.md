@@ -8,7 +8,7 @@
 - **Datei(en):** `alphacycle-x-bot/prompts/reply_system.txt` (neu: `=== CURRENT MARKET CONTEXT ===` nach INTERNAL SNAPSHOT; danach `=== HISTORICAL REFERENCE DATA ===` mit erlaubter Faktenliste + Unsicherheits-REGEL; COVID Maerz vs. Oil negativ April 2020 explizit), `alphacycle-x-bot/prompts/qa_system.txt` (Regel 9: historische Fallen Maerz vs. April 2020 / falsche Datums-Claims), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
 - **Was:** Reply-Sonnet nutzt Allowlist fuer Historie; QA-Haiku prueft zusaetzlich offensichtliche Datums-/Ereignisfehler in der generierten Zeile.
 - **Warum:** Faktische Fehler in Replies (z. B. Oil negativ in Maerz) zerstoeren Vertrauen; zentraler Kanon reduziert Halluzinationen.
-- **Status:** in progress (commit + push ausstehend)
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-10) — HOW ARC WORKS Free kohärent mit v1.2
 - **Datei(en):** `index.html` (`#arc-method-free`: Gewichte-Balken 35/30/15/20 + Zeile „ARC v1.2 blend …“), `.cursor/rules/permanent-fixes.mdc` (Trust Layer T-A / Soft-Gate / NEVER-ALWAYS fuer sichtbare Gewichte), `DEPLOY_STATE.md`
