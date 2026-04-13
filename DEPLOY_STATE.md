@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10 (AI Knowledge Stack README + Stack-Doku)
+**Zuletzt aktualisiert:** 2026-04-10 (X-Bot reply_system.txt Master-Prompt v2)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-10) — X-Bot Reply-Prompt (reply_system.txt)
+- **Datei(en):** `alphacycle-x-bot/prompts/reply_system.txt`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was wurde geaendert:** `reply_system.txt` vollstaendig ersetzt: Tweet als Star (70/30), Modi A–D, max 260 Zeichen, eine strukturelle Point, Rotations-Regeln vs. letzte Replies, erweiterte Banned-Woerter, Good/Bad-Beispiele, Checkliste. Pflichtblock `{arc_data_block}` fuer `growth_engine.build_reply_prompt` beibehalten (INTERNAL SNAPSHOT).
+- **Warum:** Schaerferes Reply-Verhalten, weniger generische Macro-Dumps, gleiche Platzhalter-Schnittstelle wie zuvor.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-10) — AI Knowledge Stack (README + vier Stack-Dateien)
 - **Datei(en):** `README.md`, `docs/SYSTEM_TRUTH.md`, `docs/AI_MASTER_CONTEXT.md`, `docs/AI_AGENT_ROLES.md`, `docs/AI_MASTER_PROMPT.md`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
