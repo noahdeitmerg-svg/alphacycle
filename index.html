@@ -4422,6 +4422,15 @@ canvas.sparkline {
           <div style="margin-bottom:10px;color:rgba(255,255,255,0.7);font-size:10px;line-height:1.6;">
             The ARC Index combines four core market signals into a single risk score (0–100):
           </div>
+          <div id="arc-weights-bar-free" style="display:flex;border-radius:4px;overflow:hidden;height:6px;margin-bottom:6px;">
+            <div style="flex:35;background:#58A6FF;" title="Trend 35%"></div>
+            <div style="flex:30;background:#00B4D8;" title="Drawdown 30%"></div>
+            <div style="flex:15;background:#00D4AA;" title="Liquidity 15%"></div>
+            <div style="flex:20;background:#FF9500;" title="Sentiment 20%"></div>
+          </div>
+          <div style="font-size:8px;color:var(--tx-ter);line-height:1.4;margin-bottom:10px;">
+            ARC v1.2 blend: 35% trend / 30% drawdown / 15% liquidity / 20% sentiment (same as live API).
+          </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 20px;font-size:10px;margin-bottom:12px;">
             <div style="color:var(--tx-sec);"><span style="color:#58A6FF;">&#9632;</span> Trend</div>
             <div style="color:var(--tx-sec);"><span style="color:#00B4D8;">&#9632;</span> Drawdown</div>

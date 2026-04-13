@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-12 (ARC v1.2 live in arc_config + UI)
+**Zuletzt aktualisiert:** 2026-04-10 (HOW ARC WORKS Free: Balken + v1.2-Zeile; permanent-fixes Trust Layer)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-10) — HOW ARC WORKS Free kohärent mit v1.2
+- **Datei(en):** `index.html` (`#arc-method-free`: Gewichte-Balken 35/30/15/20 + Zeile „ARC v1.2 blend …“), `.cursor/rules/permanent-fixes.mdc` (Trust Layer T-A / Soft-Gate / NEVER-ALWAYS fuer sichtbare Gewichte), `DEPLOY_STATE.md`
+- **Was:** Anonymous/Free sieht dieselben Proportionen wie Paid; Regelwerk korrigiert (keine veralteten 35/25/25/15 in Trust-Layer-Beschreibung).
+- **Warum:** UI und `arc_config` sollen ohne Widerspruch wirken.
+- **Status:** in progress (commit + push ausstehend)
 
 ## Letzter Session-Status (2026-04-12) — ARC v1.2 im Code und Frontend
 - **Datei(en):** `backend/arc_config.py` (`ARC_FORMULA_VERSION` **1.2**, `ARC_WEIGHTS` 0.35/0.30/0.15/0.20), `backend/scoring.py` (Docstring `compute_arc_score`), `backend/services/backtest_engine.py` (Modul-Doku + `DAILY_PRICE_CACHE_EPOCH` Bump fuer Daily-Cache-Rebuild), `index.html` (Track-Record-ARC-Text + Paid HOW-ARC Gewichts-Bar/Labels), `.cursor/rules/permanent-fixes.mdc` (arc_config- und ARC-Formel-Zeilen), `DEPLOY_STATE.md`
