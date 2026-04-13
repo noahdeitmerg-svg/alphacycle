@@ -68,11 +68,11 @@ const LOGO_DATA_URL = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAA
   --distribution: #f59e0b;
   --bear:         #ef4444;
 
-  /* Text */
-  --tx-pri:   #f0f4ff;
-  --tx-sec:   #8b9dc3;
-  --tx-ter:   #3d5580;
-  --tx-dim:   #1f3360;
+  /* Text (bright on dark dashboard; was too dim blue-grey) */
+  --tx-pri:   #f7f9ff;
+  --tx-sec:   #c8d6ea;
+  --tx-ter:   #aebfcf;
+  --tx-dim:   #8a9db4;
 
   /* Typography */
   --f-display: 'Outfit', sans-serif;
@@ -783,7 +783,7 @@ body::before {
   margin-top: 12px;
   padding-top: 8px;
   border-top: 1px solid rgba(255, 255, 255, 0.04);
-  opacity: 0.6;
+  opacity: 0.9;
 }
 @media(max-width:580px){
   .hero-zones { grid-template-columns: repeat(3, 1fr); }
@@ -806,7 +806,7 @@ body::before {
   font-size: 7px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--tx-ter);
+  color: rgba(255, 255, 255, 0.9);
 }
 .hz-range {
   font-size: 10px;
@@ -818,13 +818,13 @@ body::before {
   font-size: 7px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--tx-ter);
+  color: rgba(255, 255, 255, 0.9);
 }
-.zone-dv  .hz-range { color: rgba(0, 212, 170, 0.7); }
-.zone-ac  .hz-range { color: rgba(0, 180, 216, 0.7); }
-.zone-ex  .hz-range { color: rgba(88, 166, 255, 0.7); }
-.zone-rr  .hz-range { color: rgba(255, 149, 0, 0.7); }
-.zone-eu  .hz-range { color: rgba(255, 59, 59, 0.7); }
+.zone-dv  .hz-range { color: rgba(0, 255, 200, 0.95); }
+.zone-ac  .hz-range { color: rgba(64, 220, 255, 0.95); }
+.zone-ex  .hz-range { color: rgba(140, 190, 255, 0.98); }
+.zone-rr  .hz-range { color: rgba(255, 180, 80, 0.98); }
+.zone-eu  .hz-range { color: rgba(255, 120, 120, 0.98); }
 
 /* Above-fold compact: Ticker + Hero so Decision Engine visible in ~900px */
 .ticker-bar, #ticker-bar, .ticker {
@@ -1395,7 +1395,7 @@ body::before {
 
 /* Zone Bar — immer lesbar (DOM: #btc-card .hero-zones / .hz-range / .hz-label) */
 #btc-card.hero-card .hero-zones {
-  opacity: 0.6 !important;
+  opacity: 0.92 !important;
   margin-top: 16px !important;
 }
 #btc-card.hero-card .hero-zones .hero-zone {
@@ -1406,8 +1406,9 @@ body::before {
   font-weight: 700 !important;
 }
 #btc-card.hero-card .hero-zones .hz-label {
-  font-size: 7px !important;
+  font-size: 8px !important;
   letter-spacing: 0.06em !important;
+  color: rgba(255, 255, 255, 0.92) !important;
 }
 
 /* Extra small phones */
@@ -1854,21 +1855,15 @@ body::before {
 #content-export-section {
   display: none;
 }
-#gate-hero {
-  margin-bottom: 32px;
-}
-
-#gate-hero {
-  margin-bottom: 40px !important;
+#gate-hero,
+#gate-hero.blur-gate {
+  margin-bottom: 10px !important;
 }
 .module-secondary {
   margin-bottom: 24px !important;
 }
 .module-tertiary {
   margin-bottom: 12px !important;
-}
-#gate-hero.blur-gate {
-  margin-bottom: 32px;
 }
 .blur-gate {
   position: relative;
@@ -3763,12 +3758,30 @@ canvas.sparkline {
 #signal-summary { display: none !important; }
 
 #btc-card.hero-card .hero-zones {
-  margin-bottom: 8px !important;
+  margin-bottom: 2px !important;
 }
 
 #arc-methodology {
-  margin-top: 4px !important;
-  margin-bottom: 8px !important;
+  margin-top: 2px !important;
+  margin-bottom: 2px !important;
+}
+
+.dashboard-context-rule {
+  margin: 4px 0 6px !important;
+  padding: 0 4px !important;
+}
+.dashboard-context-rule .dashboard-context-label {
+  color: rgba(255, 255, 255, 0.95) !important;
+  letter-spacing: 0.14em !important;
+}
+
+.sec-badge {
+  color: rgba(255, 255, 255, 0.92) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+}
+.module-tertiary .sec-badge {
+  opacity: 1 !important;
 }
 
 #decision-card .decision-grid {
@@ -3794,16 +3807,16 @@ canvas.sparkline {
 .dec-layer-text {
   font-size: 9px !important;
   line-height: 1.4 !important;
-  color: rgba(255, 255, 255, 0.65) !important;
+  color: rgba(255, 255, 255, 0.8) !important;
 }
 .dec-layer-list li {
   font-size: 8px !important;
   line-height: 1.3 !important;
-  color: rgba(255, 255, 255, 0.65) !important;
+  color: rgba(255, 255, 255, 0.8) !important;
 }
 .dec-layer-title {
   margin-bottom: 4px !important;
-  color: rgba(255, 255, 255, 0.5) !important;
+  color: rgba(255, 255, 255, 0.78) !important;
 }
 
 @media (max-width: 600px) {
@@ -3818,10 +3831,10 @@ canvas.sparkline {
 
 .hr-eyebrow {
   font-size: 9px !important;
-  color: rgba(255, 255, 255, 0.45) !important;
+  color: rgba(255, 255, 255, 0.82) !important;
 }
 .ca-label, .cp-eyebrow {
-  color: rgba(255, 255, 255, 0.5) !important;
+  color: rgba(255, 255, 255, 0.82) !important;
 }
 
 .decision-value, .ca-value, .hr-dominant-return {
@@ -4463,10 +4476,10 @@ canvas.sparkline {
     <div id="signal-summary-context" style="font-family:var(--f-mono);font-size:11px;color:var(--tx-sec);line-height:1.6;">—</div>
   </div>
 
-  <div style="display:flex;align-items:center;gap:12px;margin:0;padding:0 4px;">
-    <div style="flex:1;height:1px;background:var(--border);"></div>
-    <div style="font-family:var(--f-mono);font-size:8px;letter-spacing:0.15em;color:var(--tx-ter);white-space:nowrap;">HISTORICAL CONTEXT</div>
-    <div style="flex:1;height:1px;background:var(--border);"></div>
+  <div class="dashboard-context-rule" style="display:flex;align-items:center;gap:12px;">
+    <div style="flex:1;height:1px;background:var(--border2);"></div>
+    <div class="dashboard-context-label" style="font-family:var(--f-mono);font-size:8px;letter-spacing:0.15em;white-space:nowrap;">HISTORICAL CONTEXT</div>
+    <div style="flex:1;height:1px;background:var(--border2);"></div>
   </div>
 
   <!-- Historical ARC Returns -->
