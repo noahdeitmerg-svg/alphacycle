@@ -181,6 +181,20 @@ QUEUE:
 
 ---
 
+### T-013 — Bot Self-Learning System
+| Field | Value |
+|---|---|
+| Priority | 🔵 BACKLOG |
+| Owner | Prompt Forge (architecture) + Growth Engine (thresholds) |
+| Executor | Cursor Builder |
+| Status | PLANNED — implement after 200+ followers |
+| Description | Store replies + engagement metrics, score replies (likes×1 + replies×2 + reposts×3), rotate top examples into reply prompt dynamically. |
+| Affected Files | `alphacycle-x-bot/learning_engine.py` (neu), `growth_engine.py`, `prompts/reply_system.txt`, `database.py` |
+| Dependency | 200+ followers (engagement data meaningless below that) |
+| Blocker | X API rate limits on Free Tier (100 reads/mo) |
+
+---
+
 ## COMPLETED TASKS (recent)
 
 | ID | Task | Date | Commit |
@@ -222,5 +236,5 @@ Status definitions:
 
 ---
 
-*Last updated: 2026-04-10*
+*Last updated: 2026-04-13*
 *Next update: after T-002 prompt execution or T-007 verification*

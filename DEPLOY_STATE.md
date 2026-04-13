@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-13 (VPS: Auto-Deploy Webhook deploy-server)
+**Zuletzt aktualisiert:** 2026-04-13 (TASK_PIPELINE: T-013 Bot Self-Learning)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-13) — TASK_PIPELINE: T-013 Bot Self-Learning (BACKLOG)
+- **Datei(en):** `docs/TASK_PIPELINE.md` (neuer Eintrag T-013), `DEPLOY_STATE.md`
+- **Was:** Backlog-Task Self-Learning (nach 200+ Followers); keine Code-Aenderung.
+- **Warum:** Roadmap festhalten.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-13) — VPS Auto-Deploy: GitHub Webhook -> git pull -> restart-screens.sh
 - **Datei(en):** `alphacycle-x-bot/deploy-server/deploy.py` (FastAPI POST `/deploy`, GET `/health`, HMAC `X-Hub-Signature-256`, Telegram inline), `alphacycle-x-bot/deploy-server/requirements.txt`, `alphacycle-x-bot/deploy-server/README.md`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
