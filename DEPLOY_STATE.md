@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10 (README: Pflichtlese 1–7 + SYSTEM_STATE + TASK_PIPELINE)
+**Zuletzt aktualisiert:** 2026-04-10 (Track Record Deep Value 12M +236.4%, T-007)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-10) — Track Record #track-dv-return vs /api/historical-returns (T-007)
+- **Datei(en):** `index.html` (#track-dv-return +236.4%, Label Deep Value), `.cursor/rules/permanent-fixes.mdc` (Trust Layer T-C Zahl/Quelle), `docs/SYSTEM_STATE.md`, `docs/TASK_PIPELINE.md`, `docs/AI_MASTER_CONTEXT.md`, `DEPLOY_STATE.md`
+- **Was:** Highlight-Kachel zeigt Zonen-Durchschnitt deep_value.avg_12m (ARC v1.2); vorher +151% / falsches Zonen-Label.
+- **Warum:** Marketing-Zahl = API-Kanon; keine Aenderung an Ereignis-Timeline (+170%/+95% sind konkrete Historien).
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-10) — README: SYSTEM_STATE + TASK_PIPELINE (Kontinuitaet)
 - **Datei(en):** `README.md` (Pflichtlese 6–7), `docs/SYSTEM_STATE.md` (Meilensteine/T-001 vs. v1.2, Doku-Stack 7 Dateien, Pending-Consolidation-Hinweis), `docs/TASK_PIPELINE.md` (T-001 DEPLOYED, T-007 entblockt, C-009), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc` (Stack um SYSTEM_STATE + TASK_PIPELINE), `docs/AI_AGENT_MASTERPROMPTS.md` (Reading-order 1–7)

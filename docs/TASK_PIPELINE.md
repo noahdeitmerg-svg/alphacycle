@@ -29,7 +29,7 @@ QUEUE:
 | Description | Change ARC weights: drawdown 0.25→0.30, liquidity 0.25→0.15, sentiment 0.15→0.20. Version bump 1.0→1.2. |
 | Affected Files | `backend/arc_config.py`, `backend/scoring.py`, `backend/services/backtest_engine.py`, `index.html`, `docs/SYSTEM_TRUTH.md`, `docs/AI_MASTER_CONTEXT.md`, `.cursor/rules/permanent-fixes.mdc`, `DEPLOY_STATE.md` |
 | Risk | All ARC scores change. Historical Returns, Track Record, Landing Page hardcoded values need post-deploy verification. |
-| Post-Deploy | Verify /api/historical-returns, check "+151%" Track Record value, check Landing Page, verify ARC Chart zone bands. |
+| Post-Deploy | Verify /api/historical-returns, #track-dv-return vs zones.deep_value.avg_12m, landing event cards, ARC Chart zone bands. |
 | Prompt Location | Session 5 transcript — full prompt with 8 files + backtest_engine.py hardcoded weight fix |
 
 ---
@@ -112,7 +112,7 @@ QUEUE:
 | Owner | Prompt Forge |
 | Executor | Cursor Builder |
 | Status | **READY** (T-001 deployed — run verification pass) |
-| Description | After ARC v1.2 deploy: verify and fix hardcoded values. Track Record "+151%", Landing Page percentages, any zone-dependent display text. |
+| Description | After ARC v1.2 deploy: verify and fix hardcoded values. Track highlight Deep Value 12M (+236.4% per API), landing narrative numbers if policy changes, any zone-dependent display text. |
 | Affected Files | `index.html` (hardcoded strings), potentially `backend/snapshot.py` |
 | Risk | Medium — wrong numbers visible to users. |
 

@@ -43,7 +43,7 @@ High level: **T-002** Hi/Lo Engine next; **T-007** post-deploy value checks unbl
 | 1 | Zone History data mismatch — confirmed zone "Expansion" but live ARC is Deep Value/Accumulation | Medium | Section hidden via CSS |
 | 2 | CSS specificity accumulation — multiple !important overrides from iterative prompts | Low | Works but fragile |
 | 3 | Orbit labels may overlap ring on some viewports | Low | Prompt written, not deployed |
-| 4 | Landing page hardcoded values (+151%, +604%) will be wrong after v1.2 | Medium | Fix after v1.2 deploy |
+| 4 | Landing / timeline use **event** forward returns (+170%, +95%); Track highlight #track-dv-return must track zones.deep_value.avg_12m | Low | #track-dv-return synced 2026-04-10 (+236.4%) |
 | 5 | Signal Summary JS override — renderSignalSummary() sets display:block | Low | CSS !important wins, but JS should be disabled |
 | 6 | Risk/Reward Profile (dec-layer-3) still renders | Low | Prompt written to hide |
 | 7 | CoinCap API failing (ERR_NAME_NOT_RESOLVED) | None | Non-critical, data from other sources |

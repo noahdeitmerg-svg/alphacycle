@@ -333,7 +333,7 @@ Paid tier: $49/mo with 7-day trial
 2. **`days_since_top` snapshot path:** Resolved in code — `build_snapshot()` accepts `days_since_top`; `main.py` passes `st_ctx.get("days_since_top")` (verify in `DEPLOY_STATE` if regressions appear).
 3. **Auth "failed to fetch":** Supabase connection issue — needs DevTools investigation.
 4. **CSS specificity wars:** Multiple `!important` overrides from iterative prompts — needs consolidation pass.
-5. **Landing page hardcoded values:** "+151%" and zone names need manual updates when backtest data changes.
+5. **Track highlight vs. landing:** `#track-dv-return` must match `/api/historical-returns` `zones.deep_value.avg_12m` (e.g. +236.4% after ARC v1.2); landing/teaser cards use **specific event** forward returns and are not the same as zone averages.
 6. **Zone History data mismatch:** Confirmed zone vs live ARC can disagree — UI section may be hidden pending fix; treat as product risk until resolved.
 7. **Orbit label positioning:** Labels may overlap ring on some viewports.
 
