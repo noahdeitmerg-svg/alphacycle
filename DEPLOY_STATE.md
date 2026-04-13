@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-13 (X-Bot: Pipeline-Spezifikation verifiziert + _get_market_context-Zeile)
+**Zuletzt aktualisiert:** 2026-04-13 (VPS: Auto-Deploy Webhook deploy-server)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-13) — VPS Auto-Deploy: GitHub Webhook -> git pull -> restart-screens.sh
+- **Datei(en):** `alphacycle-x-bot/deploy-server/deploy.py` (FastAPI POST `/deploy`, GET `/health`, HMAC `X-Hub-Signature-256`, Telegram inline), `alphacycle-x-bot/deploy-server/requirements.txt`, `alphacycle-x-bot/deploy-server/README.md`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was:** Optionaler Deploy-Listener Port 9000; kein pm2; nutzt `BOT_REPO_PATH` Default `/root/alphacycle-repo/alphacycle-x-bot` und `./restart-screens.sh`.
+- **Warum:** Push zu main ohne manuelles SSH-git-pull.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-13) — X-Bot Pipeline: Audit-Spezifikation 1:1 (_get_market_context)
 - **Datei(en):** `alphacycle-x-bot/growth_engine.py` (`_get_market_context`: `a = float(arc_score) if arc_score else 50.0`), `alphacycle-x-bot/prompts/qa_system.txt` (Regel 11 Textlayout wie FIX-3), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc` (Verifikationshinweis)
