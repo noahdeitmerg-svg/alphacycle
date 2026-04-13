@@ -10,6 +10,8 @@ FAIL: [reason]
 
 Nothing else. No explanation. No rewrite. Just PASS or FAIL: reason.
 
+{factual_reference}
+
 RULES TO CHECK:
 
 1. CHARACTER COUNT: Is it under 260 characters? Count every character.
@@ -47,12 +49,10 @@ RULES TO CHECK:
 8. LOGIC: Does the reply contradict itself or misread the tweet?
    If yes: FAIL: logic_error
 
-9. FACTUAL: Are numbers and historical claims plausible?
-   Current snapshot: ATH about $126,000. BTC about $72K is about 43% drawdown.
-   F&G below 30 = fearful not euphoric.
-   Historical traps: WTI negative price was April 2020 (not March). COVID crash
-   was March 2020. If the reply cites a specific wrong month/year, price, or
-   percentage for a named event: FAIL: factual_error
+9. FACTUAL: If the reply asserts a specific historical month/year, shock timing,
+   or price level for a named event, is that claim clearly wrong (e.g. mixing
+   March vs April 2020 for oil futures vs equity crash)? If clearly wrong: FAIL: factual_error
+   Do not fail for vague timing ("early 2020") or for omitting numbers.
 
 10. ZONE NAMES AS LABELS: Does the reply use ARC zone names
     as labels or territory markers? Banned phrases:
@@ -62,30 +62,19 @@ RULES TO CHECK:
     If yes: FAIL: zone_label_"[exact phrase from the reply]"
     Example: FAIL: zone_label_"deep value territory"
 
-11. ALPHACYCLE STANDARD: Does this reply represent AlphaCycle
-    at its best? Apply these tests:
-
-    a) INSIGHT TEST: Does the reply add genuine analytical value?
-       If it just restates what the tweet already says: FAIL: no_insight
-
-    b) DIFFERENTIATION TEST: Could any generic crypto account
-       have written this reply?
-       If yes: FAIL: too_generic
-
-    c) STRUCTURAL LENS TEST: Does the reply connect to cycle
-       structure, liquidity, sentiment vs structure, or
-       historical cycle patterns?
-       If it's pure price commentary or trading talk: FAIL: no_structural_lens
-
-    d) AUTHORITY TEST: Would a Fidelity macro strategist or
-       Glassnode analyst respect this reply?
-       If it sounds like a retail trader or crypto bro: FAIL: low_authority
+11. NEW INFORMATION CHECK
+    Does the reply contain at least ONE specific observation
+    that the original tweet did not mention?
+    This can be: a year, a comparison, a structural dimension,
+    a data contrast, or a historical reference.
+    If the reply only restates or agrees with the tweet
+    without adding anything new: FAIL: no_new_information
 
 12. RECYCLED DATA: Does the reply stack boilerplate cycle metrics
     without the tweet being about BTC structure?
-    Count matches in the reply for: a drawdown percentage (e.g. 43%,
-    42% off highs); stablecoin supply / dry powder / capital on the
-    sidelines; single-digit percentile / percentile readings;
+    Count matches in the reply for: a drawdown percentage (numeric % off highs);
+    stablecoin supply / dry powder / capital on the sidelines;
+    single-digit percentile / percentile readings;
     leverage flushed / cycle lows; structural risk at historic lows;
     institutional accumulation / smart money buying.
     If TWO OR MORE of these appear together: FAIL: recycled_data

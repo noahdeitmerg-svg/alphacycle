@@ -187,8 +187,75 @@ def _format_arc_block(arc_data: dict[str, Any] | None) -> str:
     return "\n".join(lines)
 
 
+def _arc_score_float(arc_data: dict[str, Any] | None) -> float:
+    """Prefer display score for banding; fallback raw combined."""
+    a = arc_data or {}
+    for key in ("arc_display", "arc_score", "combined_score"):
+        v = a.get(key)
+        if v is None:
+            continue
+        try:
+            return float(v)
+        except (TypeError, ValueError):
+            continue
+    return 50.0
+
+
+def _get_market_context(arc_score: float) -> str:
+    """ARC-band macro line for prompts — no hardcoded prices in static .txt files."""
+    try:
+        a = float(arc_score)
+    except (TypeError, ValueError):
+        a = 50.0
+    if a < 30:
+        return (
+            "Structural risk at historic lows. "
+            "Cycle positioning favors long time horizons."
+        )
+    if a < 40:
+        return (
+            "Structure resetting. Risk declining but cycle transition not yet confirmed."
+        )
+    if a < 60:
+        return "Mid-cycle. Structure supports continuation. Risk balanced."
+    if a < 70:
+        return (
+            "Structural risk elevating. Cycle maturity increasing. Caution warranted."
+        )
+    return (
+        "Structural risk at historic highs. "
+        "Cycle positioning favors capital preservation."
+    )
+
+
+def _format_factual_reference(
+    arc_score: Any | None,
+    btc_price: Any | None,
+    ath_price: Any | None,
+) -> str:
+    """Single line for qa_system.txt — no hardcoded ATH/BTC in the static prompt file."""
+    try:
+        arv = float(arc_score) if arc_score is not None else 50.0
+    except (TypeError, ValueError):
+        arv = 50.0
+    bp_s = "?"
+    if btc_price is not None:
+        try:
+            bp_s = f"{float(btc_price):,.0f}"
+        except (TypeError, ValueError):
+            bp_s = str(btc_price).strip() or "?"
+    ath_s = "?"
+    if ath_price is not None:
+        try:
+            ath_s = f"{float(ath_price):,.0f}"
+        except (TypeError, ValueError):
+            ath_s = str(ath_price).strip() or "?"
+    return f"FACTUAL REFERENCE: ARC={arv}, BTC=${bp_s}, ATH=${ath_s}"
+
+
 def _format_reply_history(reply_history: Sequence[str] | None) -> str:
-    hist = list(reply_history or [])[:10]
+    cap = max(1, int(getattr(config, "MAX_REPLY_HISTORY", 5)))
+    hist = list(reply_history or [])[:cap]
     if not hist:
         return "(none yet — vary your openers and avoid clichés.)"
     parts = []
@@ -229,19 +296,28 @@ def build_reply_prompt(
     tweet_author: str,
     reply_history: Sequence[str] | None,
     arc_data: dict[str, Any] | None,
+    *,
+    pattern_key: str | None = None,
 ) -> tuple[str, str, str]:
     """
     Build full system-style prompt string for a reply-generation Claude call.
     Randomly picks 1 of 5 approaches and 1 structural pattern (see reply_system.txt).
     40% chance hook = ACTIVE. Returns (system_prompt, approach_key, pattern_key).
+    If pattern_key is set, use that pattern (QA retry / pattern switch) instead of streak pick.
     """
     base = _read_prompt_file("reply_system.txt")
     logger.info("[GROWTH ENGINE] Prompts loaded successfully")
     approach_key = random.choice(REPLY_APPROACH_KEYS)
-    pattern_key = _pick_pattern_avoiding_double_streak()
+    cat = _reply_pattern_catalog()
+    if pattern_key and pattern_key in cat:
+        pattern_key_out = pattern_key
+    elif pattern_key and pattern_key in REPLY_PATTERN_TEXTS:
+        pattern_key_out = pattern_key
+    else:
+        pattern_key_out = _pick_pattern_avoiding_double_streak()
     pattern_body = REPLY_PATTERN_TEXTS.get(
-        pattern_key,
-        f"Pattern: {pattern_key}\nFollow a clear 2–3 sentence structure; stay under 270 characters.",
+        pattern_key_out,
+        f"Pattern: {pattern_key_out}\nFollow a clear 2–3 sentence structure; stay under 270 characters.",
     )
     hook_instruction = (
         HOOK_ACTIVE_LABEL
@@ -252,15 +328,18 @@ def build_reply_prompt(
     logger.info(
         "[GROWTH ENGINE] Reply: approach=%s, pattern=%s, hook=%s",
         approach_key,
-        pattern_key,
+        pattern_key_out,
         has_hook,
     )
     author = tweet_author.lstrip("@")
     text = tweet_text.strip()
     history = _format_reply_history(reply_history)
     arc_block = _format_arc_block(arc_data)
+    band = _get_market_context(_arc_score_float(arc_data))
+    market_ctx = f"MARKET CONTEXT: {band}"
     # Use replace (not str.format) so { } inside tweet_text does not break.
     for key, val in (
+        ("{market_context}", market_ctx),
         ("{arc_data_block}", arc_block),
         ("{approach}", approach_key),
         ("{reply_pattern}", pattern_body.strip()),
@@ -270,7 +349,7 @@ def build_reply_prompt(
         ("{reply_history}", history),
     ):
         base = base.replace(key, val)
-    return base, approach_key, pattern_key
+    return base, approach_key, pattern_key_out
 
 
 def build_post_prompt(
@@ -289,9 +368,12 @@ def build_post_prompt(
     logger.info("[GROWTH ENGINE] Prompts loaded successfully")
     post_type = _pick_post_type(int(day_of_week))
     arc_block = _format_arc_block(arc_data)
+    band = _get_market_context(_arc_score_float(arc_data))
+    market_ctx = f"MARKET CONTEXT: {band}"
     topic_lines = database.get_recent_topics(days=int(config.TOPIC_LOOKBACK_DAYS))
     topics = _join_posted_topics_lines(topic_lines)
     for key, val in (
+        ("{market_context}", market_ctx),
         ("{arc_data_block}", arc_block),
         ("{post_type}", post_type),
         ("{posted_topics}", topics),
@@ -304,10 +386,15 @@ def qa_check_reply(
     tweet_text: str,
     tweet_author: str,
     reply_text: str,
+    *,
+    arc_score: Any | None = None,
+    btc_price: Any | None = None,
+    ath_price: Any | None = None,
 ) -> tuple[bool, str | None]:
     """
     Second Claude call (Haiku): PASS or FAIL: reason.
     Returns (True, None) on PASS, (False, reason) on FAIL or API error.
+    arc_score / btc_price / ath_price: injected into qa_system.txt as {factual_reference}.
     """
     if not getattr(config, "CLAUDE_API_KEY", None):
         logger.warning("[QA] No CLAUDE_API_KEY")
@@ -322,7 +409,9 @@ def qa_check_reply(
     author = (tweet_author or "").strip().lstrip("@")
     t = (tweet_text or "").strip()
     r = (reply_text or "").strip()
+    fact = _format_factual_reference(arc_score, btc_price, ath_price)
     for key, val in (
+        ("{factual_reference}", fact),
         ("{tweet_text}", t),
         ("{tweet_author}", author),
         ("{reply_text}", r),
@@ -427,8 +516,8 @@ def _build_qa_replacement_guide(failures: list[str]) -> str:
     if "factual" in blob:
         add(
             "fact",
-            "\nYour reply had a factual error. ATH=$126,000."
-            "\nDouble-check all numbers before writing.",
+            "\nYour reply had a factual error. Compare claims to the snapshot"
+            "\nand to well-known event timing before writing.",
         )
     if "logic" in blob:
         add(
@@ -507,20 +596,20 @@ def generate_reply_with_qa(
 
     for attempt in range(1, max_a + 1):
         extra = ""
-        if failures:
-            replacement_guide = _build_qa_replacement_guide(failures)
+        force_pattern: str | None = None
+        if attempt > 1:
             extra = (
-                "\n\n=== QA FEEDBACK — YOU MUST FIX THESE ===\n"
-                f"Your previous {len(failures)} attempts failed:\n"
-                + "\n".join(f"Attempt {i + 1}: {r}" for i, r in enumerate(failures))
-                + f"\n\n=== HOW TO FIX ==={replacement_guide}"
-                + "\n\nWrite a COMPLETELY NEW reply. Do not modify the old one."
-                + "\nStart from scratch with a different angle entirely."
+                "Write something completely different from your last attempt."
             )
+            if last_pk:
+                force_pattern = select_different_pattern_key(last_pk)
+            else:
+                force_pattern = select_pattern_key()
         rt, ak, pk = reply_engine.generate_reply(
             tweet,
             extra_instruction=extra,
             arc_data=arc_data,
+            pattern_key=force_pattern,
         )
         if rt:
             last_reply = rt
@@ -535,10 +624,14 @@ def generate_reply_with_qa(
             )
             continue
 
+        ad = arc_data or {}
         passed, reason = qa_check_reply(
             tweet.get("text") or "",
             tweet.get("author") or "",
             rt,
+            arc_score=ad.get("arc_display", ad.get("arc_score")),
+            btc_price=ad.get("btc_price"),
+            ath_price=ad.get("btc_ath"),
         )
         if passed:
             logger.info("[QA] @%s: PASS (attempt %s)", author_log, attempt)

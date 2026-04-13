@@ -9,12 +9,14 @@ def generate_reply(
     tweet: dict,
     extra_instruction: str = "",
     arc_data: dict | None = None,
+    pattern_key: str | None = None,
 ) -> tuple[str | None, str | None, str | None]:
     """
     Build prompt via growth_engine + live ARC from daily_post_engine; call Claude.
     Returns (reply_text, approach_key, pattern_key) for pending row / reply_history.
     optional arc_data: skip refetch when provided (e.g. QA loop).
-    extra_instruction: appended to the user message (QA fix feedback).
+    extra_instruction: appended to the user message (short retry hint only; no QA dump).
+    pattern_key: if set, forces that structural pattern in build_reply_prompt (QA retry).
     """
     if not config.CLAUDE_API_KEY:
         print("[REPLY_ENGINE] No Claude API key set")
@@ -30,6 +32,7 @@ def generate_reply(
             tweet.get("author") or "",
             history,
             arc_data,
+            pattern_key=pattern_key,
         )
     except Exception as e:
         print(f"[REPLY_ENGINE] build_reply_prompt failed: {e}")

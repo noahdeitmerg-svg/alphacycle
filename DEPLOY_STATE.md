@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10 (Track Record Deep Value 12M +236.4%, T-007)
+**Zuletzt aktualisiert:** 2026-04-13 (X-Bot: Pipeline Overhaul F1–F5)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-13) — alphacycle-x-bot Pipeline (dynamic context, slim reply, QA, pattern retry)
+- **Datei(en):** `alphacycle-x-bot/growth_engine.py` (`_get_market_context(arc_score)` Baender, `_arc_score_float`, `_format_factual_reference`, `build_*` MARKET CONTEXT, `qa_check_reply` + kwargs, QA-Call mit Snapshot), `alphacycle-x-bot/prompts/reply_system.txt` (3 Regeln + 3 Examples + Platzhalter), `alphacycle-x-bot/prompts/post_system.txt` (`{market_context}`), `alphacycle-x-bot/prompts/qa_system.txt` (`{factual_reference}`, Regel 11 NEW INFORMATION), `alphacycle-x-bot/config.py` (**MAX_REPLY_HISTORY=5**), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was:** Keine statischen ATH/MARKET-Zeilen in Reply/Post/QA-Prompts; MARKET aus ARC-Score-Baendern; QA-Faktzeile dynamisch; Reply-Prompt stark verkuerzt; QA-Retry nur Pattern-Switch + Kurz-Hinweis (kein QA-Feedback-Append); F5 schon 5.
+- **Warum:** Quant-Audit: Drift, Token-Bloat, subjektive QA-Subtests, Retry-Spirale.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-10) — Track Record #track-dv-return vs /api/historical-returns (T-007)
 - **Datei(en):** `index.html` (#track-dv-return +236.4%, Label Deep Value), `.cursor/rules/permanent-fixes.mdc` (Trust Layer T-C Zahl/Quelle), `docs/SYSTEM_STATE.md`, `docs/TASK_PIPELINE.md`, `docs/AI_MASTER_CONTEXT.md`, `DEPLOY_STATE.md`

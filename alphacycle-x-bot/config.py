@@ -61,7 +61,7 @@ DAILY_POST_TIME = "13:00"
 
 # Growth Engine Settings
 REPLY_HOOK_PROBABILITY = 0.4  # 40% = ca. 2 von 5
-MAX_REPLY_HISTORY = 10
+MAX_REPLY_HISTORY = 5
 TOPIC_LOOKBACK_DAYS = 7
 
 # Structural reply patterns (rotate with approaches; weights sum ~1.0)
