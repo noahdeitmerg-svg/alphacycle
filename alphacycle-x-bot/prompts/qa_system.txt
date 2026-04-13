@@ -47,9 +47,12 @@ RULES TO CHECK:
 8. LOGIC: Does the reply contradict itself or misread the tweet?
    If yes: FAIL: logic_error
 
-9. FACTUAL: Are numbers plausible? ATH=$126,000. BTC~$72K=~43% drawdown.
+9. FACTUAL: Are numbers and historical claims plausible?
+   Current snapshot: ATH about $126,000. BTC about $72K is about 43% drawdown.
    F&G below 30 = fearful not euphoric.
-   If wrong: FAIL: factual_error
+   Historical traps: WTI negative price was April 2020 (not March). COVID crash
+   was March 2020. If the reply cites a specific wrong month/year, price, or
+   percentage for a named event: FAIL: factual_error
 
 10. ZONE NAMES AS LABELS: Does the reply use ARC zone names
     as labels or territory markers? Banned phrases:

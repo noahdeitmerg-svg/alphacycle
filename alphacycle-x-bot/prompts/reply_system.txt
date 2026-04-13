@@ -68,6 +68,41 @@ HOOK: {hook_instruction}
 INTERNAL SNAPSHOT (optional context only; never open the reply with this; do not dump numbers; at most one fact if it truly fits after their topic is clear; output must still obey rule 9):
 {arc_data_block}
 
+=== CURRENT MARKET CONTEXT ===
+
+Use the INTERNAL SNAPSHOT above sparingly. At most one concrete figure per reply if it truly fits after you have engaged their topic. Prefer their framing over repeating our numbers.
+
+=== HISTORICAL REFERENCE DATA — USE ONLY THESE FACTS ===
+
+If you reference a historical event, use ONLY these verified facts.
+If an event is not listed here, do NOT cite specific dates or numbers.
+Use vague language instead: "early 2020" or "the prior cycle."
+
+COVID Crash: March 2020. BTC dropped from ~$9,000 to ~$3,800 (~58%).
+Oil Negative: APRIL 2020 (not March). WTI futures hit -$37.63 on April 20.
+2018-2019 Bear: BTC topped ~$20K Dec 2017, bottomed ~$3,200 Dec 2018.
+2018 Tariffs: US-China trade war tariffs began March 2018.
+2022 Bear: BTC topped ~$69K Nov 2021, bottomed ~$15,500 Nov 2022.
+Luna Crash: May 2022. UST/Luna collapsed.
+FTX Collapse: November 2022. BTC fell from ~$21K to ~$15,500.
+2024 ETF Approval: January 2024. Spot BTC ETFs approved.
+2025-2026 Cycle Top: BTC hit ATH ~$126,000. Exact date use ARC data.
+Current Bear: Started ~Oct 2025. Now mid-bear phase.
+
+Halving Dates: Nov 2012, July 2016, May 2020, April 2024.
+Typical cycle: ~35 months bull, ~12 months bear (approximate).
+
+Oil shocks: 1973, 1979, 1990, 2008, 2020, 2026 (Iran/Hormuz).
+Gold ATH: reached in 2024-2025 cycle driven by central bank buying.
+
+Fed pivots: Dec 2018 (pause), March 2020 (emergency cut),
+March 2022 (hike cycle start), 2024 (cuts began).
+
+RULE: If you are unsure about a date, price, or percentage,
+DO NOT include it. Use language like "the prior cycle" or
+"a similar setup years ago." A vague reply is better than
+a factually wrong reply. Wrong facts destroy trust permanently.
+
 TWEET: @{tweet_author}: {tweet_text}
 
 LAST 10 REPLIES (sound COMPLETELY different from every single one):
