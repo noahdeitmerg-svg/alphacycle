@@ -8,7 +8,7 @@
 - **Datei(en):** `alphacycle-x-bot/config.py` (`MAX_REPLY_GENERATION_CHARS`, Default 260, Env-Override), `alphacycle-x-bot/reply_engine.py` (Clip nach Sonnet), `alphacycle-x-bot/growth_engine.py` (`_enforce_reply_telegram_char_limit` + Fallback-Pattern-Text nutzen dieselbe Konstante; Truncate `[:cap-3]+...`), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
 - **Was:** Vorher Sonnet-Clip 270 vs. Telegram-Haerte 260; jetzt eine Zahl aus `config`, `reply_engine` und Post-QA-Enforcement konsistent.
 - **Warum:** Nutzer-Bestaetigung „ja“ zur Angleichung; weniger Randfaelle zwischen Generation und Python-Check.
-- **Status:** in progress bis push
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-10) — growth_engine: 260 Zeichen nach QA (vor Telegram)
 - **Datei(en):** `alphacycle-x-bot/growth_engine.py` (`_enforce_reply_telegram_char_limit`, Ende von `generate_reply_with_qa`), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
