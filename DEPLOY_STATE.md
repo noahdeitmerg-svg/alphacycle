@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-14 (docs sync + SYSTEM_VERSION 1.3.1)
+**Zuletzt aktualisiert:** 2026-04-14 (index duplicate-id quickfix: landing-now-return)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-14) — index quickfix: duplicate id landing-now-return
+- **Datei(en):** `index.html`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was:** Doppelte ID in Landing/Track-Record Bereich behoben: erstes Element bleibt `id="landing-now-return"`, zweites wurde zu `id="landing-now-return-2"` umbenannt.
+- **Warum:** Duplicate IDs im DOM koennen inkonsistente Selektor-/Script-Treffer verursachen.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-14) — docs sync cleanup + version bump 1.3.1
 - **Datei(en):** `docs/AI_AGENT_MASTERPROMPTS.md`, `docs/AI_MASTER_CONTEXT.md`, `docs/SYSTEM_STATE.md`, `docs/TASK_PIPELINE.md`, `docs/SYSTEM_VERSION.md`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
