@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10 (docs: SYSTEM_VERSION SSOT 1.3 kanonisch)
+**Zuletzt aktualisiert:** 2026-04-10 (permanent-fixes: Multi-Agent Docs-Sync)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-10) — permanent-fixes: Noah-Ping bei relevanter docs-Aenderung
+- **Datei(en):** `.cursor/rules/permanent-fixes.mdc`, `DEPLOY_STATE.md`
+- **Was:** Neuer Bullet unter „Nach jeder Aenderung“: Cursor Builder meldet Noah am Session-Ende explizit, wenn `docs/` geaendert wurde und andere AI-Agenten neu laden muessen (inkl. Hinweis auf SYSTEM_VERSION-Bump wo noetig).
+- **Warum:** Einheitlicher Stand zwischen Prompt Forge, QA, Operating Brain und Cursor.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-10) — SYSTEM_VERSION.md auf Kanon 1.3 (2026-04-13) zurueckgesetzt
 - **Datei(en):** `docs/SYSTEM_VERSION.md`, `DEPLOY_STATE.md`
