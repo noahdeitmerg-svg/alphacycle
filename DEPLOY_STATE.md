@@ -8,7 +8,7 @@
 - **Datei(en):** `docs/SYSTEM_VERSION.md`, `DEPLOY_STATE.md`
 - **Was:** Current Version / Agent-Init / History wie Noah-Vorlage (1.3, Prompt Forge, keine 1.3.1-Zeile); eine „Changed Documents“-Tabelle.
 - **Warum:** SSOT soll exakt der freigegebenen System-Version-Datei entsprechen.
-- **Status:** in progress bis push
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-10) — SYSTEM_VERSION.md (1.3.1) + README Pflichtliste 8 Dateien
 - **Datei(en):** `docs/SYSTEM_VERSION.md` (neu), `README.md`, `docs/SYSTEM_STATE.md`, `.cursor/rules/permanent-fixes.mdc`, `DEPLOY_STATE.md`
