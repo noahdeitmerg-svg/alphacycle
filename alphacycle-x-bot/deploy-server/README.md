@@ -102,6 +102,27 @@ screen -dmS deploy bash -lc 'cd /root/alphacycle-repo/alphacycle-x-bot/deploy-se
 
 **4) Schnelltest „ist es nur der Secret-Mismatch?“** In `/root/deploy-server.env` zeitweise **`GITHUB_WEBHOOK_SECRET=""`** setzen (oder Zeile auskommentieren), Screen wie oben neu starten. In GitHub unter dem Webhook **Recent Deliveries** → fehlgeschlagene Delivery **Redeliver**. Wenn es dann **200** ist → Mismatch bestaetigt; danach **gleiches** Secret auf VPS und GitHub setzen und Screen **wieder** mit echtem Secret starten (**nicht** dauerhaft ohne Secret in Production lassen).
 
+**5) Code-Update auf dem VPS (neues deploy.py):** Nach `git push` muss der Server die Datei haben und der Screen neu starten:
+
+```bash
+cd /root/alphacycle-repo/alphacycle-x-bot
+git pull origin main
+# dann Deploy-Screen wie in Schritt 2 neu starten (quit + screen -dmS deploy bash -lc '...')
+```
+
+**6) Logs bei 403:** `deploy.py` loggt bei abgelehnter Signatur (ohne Secret preiszugeben). Im Screen sichtbar:
+
+```bash
+screen -r deploy
+# nach Redeliver: Zeilen mit "webhook signature" / "deploy_server"
+# Detach: Ctrl+A dann D
+```
+
+- **`webhook signature mismatch`** → Header war `sha256=...`, aber HMAC passt nicht zu `GITHUB_WEBHOOK_SECRET` im Prozess (falsches Secret, oder Secret mit unsichtbarem Zeichen — ab deploy.py-Update wird beim Lesen **`.strip()`** angewendet).
+- **`missing or bad header`** → GitHub sendet keinen gueltigen `X-Hub-Signature-256` (falscher Webhook-Typ, Proxy entfernt Header, oder Request kommt nicht von GitHub).
+
+**7) Nochmal pruefen:** Nur **ein** Webhook-Ziel auf diese URL; **Content type** `application/json`; URL endet mit **`/deploy`**.
+
 ## Firewall
 
 Port **9000/tcp** muss offen sein (z. B. `ufw allow 9000/tcp`).

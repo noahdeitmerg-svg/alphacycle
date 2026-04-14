@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import logging
 import os
 import subprocess
 from pathlib import Path
@@ -15,8 +16,18 @@ from fastapi import FastAPI, HTTPException, Request
 
 app = FastAPI()
 
-WEBHOOK_SECRET = os.getenv("GITHUB_WEBHOOK_SECRET", "")
+logger = logging.getLogger("deploy_server")
+
 REPO_PATH = os.getenv("BOT_REPO_PATH", "/root/alphacycle-repo/alphacycle-x-bot")
+
+
+def _github_webhook_secret() -> str:
+    """
+    Strip whitespace and CR/LF from env (common when deploy-server.env was
+    edited on Windows or has trailing spaces). GitHub signs with the exact
+    secret configured in the webhook UI; VPS value must match those bytes.
+    """
+    return (os.getenv("GITHUB_WEBHOOK_SECRET") or "").strip()
 
 
 def _merge_telegram_from_bot_env() -> None:
@@ -62,25 +73,34 @@ def send_telegram(text: str) -> None:
 
 
 def verify_signature(payload: bytes, signature: str) -> bool:
-    if not WEBHOOK_SECRET:
+    secret = _github_webhook_secret()
+    if not secret:
         return True
-    if not signature or not signature.startswith("sha256="):
+    sig = (signature or "").strip()
+    if not sig.startswith("sha256="):
+        logger.warning(
+            "webhook signature rejected: missing or bad header (body_len=%d)",
+            len(payload),
+        )
         return False
-    mac = hmac.new(
-        WEBHOOK_SECRET.encode("utf-8"),
-        payload,
-        hashlib.sha256,
-    )
+    mac = hmac.new(secret.encode("utf-8"), payload, hashlib.sha256)
     expected = "sha256=" + mac.hexdigest()
-    return hmac.compare_digest(expected, signature)
+    ok = hmac.compare_digest(expected, sig)
+    if not ok:
+        logger.warning(
+            "webhook signature mismatch: body_len=%d secret_len=%d",
+            len(payload),
+            len(secret),
+        )
+    return ok
 
 
 @app.post("/deploy")
 async def deploy(request: Request):
     body = await request.body()
-    signature = request.headers.get("X-Hub-Signature-256", "") or ""
+    signature = (request.headers.get("X-Hub-Signature-256") or "").strip()
 
-    if WEBHOOK_SECRET and not verify_signature(body, signature):
+    if _github_webhook_secret() and not verify_signature(body, signature):
         raise HTTPException(status_code=403, detail="Invalid signature")
 
     try:

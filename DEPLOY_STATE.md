@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10 (deploy-server README: Webhook 403 / Secret)
+**Zuletzt aktualisiert:** 2026-04-14 (deploy-server: Webhook-Signatur strip + Logs)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-14) — deploy-server deploy.py: 403 hart Debugging
+- **Datei(en):** `alphacycle-x-bot/deploy-server/deploy.py`, `alphacycle-x-bot/deploy-server/README.md`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was:** `GITHUB_WEBHOOK_SECRET` und `X-Hub-Signature-256` per **`.strip()`** vor HMAC (CRLF/Whitespace); Secret zur Laufzeit aus `os.getenv` (`_github_webhook_secret()`); bei Ablehnung **`logging.warning`** ohne Secret (body_len, secret_len bzw. fehlender Header). README: Punkte 5–7 (git pull auf VPS, `screen -r deploy` Logs, ein Webhook /json /deploy).
+- **Warum:** Nutzer 403 trotz korrekter URL; hauefig unsichtbare Zeichen in `.env` oder Diagnose ohne Code-Aenderung nicht moeglich.
+- **Status:** pushed to GitHub — **VPS:** `git pull` im Bot-Repo, Deploy-Screen neu starten, dann Redeliver; bei weiterem 403 `screen -r deploy` pruefen.
 
 ## Letzter Session-Status (2026-04-10) — deploy-server README: 403 Webhook Secret-Mismatch
 - **Datei(en):** `alphacycle-x-bot/deploy-server/README.md`, `DEPLOY_STATE.md`
