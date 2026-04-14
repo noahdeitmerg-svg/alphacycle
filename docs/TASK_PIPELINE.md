@@ -96,7 +96,7 @@ QUEUE:
 | Priority | 🟢 LOW |
 | Owner | Prompt Forge |
 | Executor | Cursor Builder |
-| Status | **PARTIAL** — README seven-doc stack + `AI_AGENT_MASTERPROMPTS` / `SYSTEM_STATE` / `TASK_PIPELINE` live; full legacy delete/merge deferred until explicit approval |
+| Status | **PARTIAL** — README eight-doc stack (+ `SYSTEM_VERSION.md`) + `AI_AGENT_MASTERPROMPTS` / `SYSTEM_STATE` / `TASK_PIPELINE` live; full legacy delete/merge deferred until explicit approval |
 | Description | Consolidate 9 documentation files into 4. Merge operating manual + context + sections 11-13 into AI_MASTER_CONTEXT. Merge CURSOR_MASTERPROMPT into AI_MASTER_PROMPT appendix. Add AI_AGENT_MASTERPROMPTS.md. Delete 5 redundant files. |
 | Affected Files | `docs/` (all files), `README.md`, `DEPLOY_STATE.md`, `permanent-fixes.mdc` |
 | Risk | No code impact. Documentation only. |

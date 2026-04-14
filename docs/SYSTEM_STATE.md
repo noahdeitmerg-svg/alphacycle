@@ -22,7 +22,7 @@ AlphaCycle is live at https://alphacycle.app with a functional dashboard, ARC en
 | X Bot (scan, reply, daily posts) | ✅ Live on Hetzner VPS |
 | Telegram Approval System | ✅ Live |
 | Stripe Integration | ⏳ Test mode (awaiting LLC) |
-| AI Knowledge Stack | ✅ README mandatory list: 7 documents |
+| AI Knowledge Stack | ✅ README mandatory list: 8 documents |
 | AI Agent System | ✅ 6 agents defined with masterprompts |
 | Supabase Auth | ✅ Live (free tier, cronjob keep-alive) |
 | Alert Emails | ⏳ Planned (post-revenue) |
@@ -104,10 +104,11 @@ screen -r tg             # attach to telegram listener
 | AI_MASTER_PROMPT.md | docs/ | ✅ Canon |
 | AI_AGENT_MASTERPROMPTS.md | docs/ | ✅ Six agents, full prompts |
 | SYSTEM_STATE.md | docs/ | ✅ This file |
+| SYSTEM_VERSION.md | docs/ | ✅ Version SSOT (see README order) |
 | TASK_PIPELINE.md | docs/ | ✅ Task IDs and status |
 
 ### Legacy / optional docs
-Long-form manuals (e.g. `alphacycle_ai_operating_manual_COMPLETE.md`) may remain under `docs/` for human deep-dive; **onboarding order** is always the seven files in root `README.md` — no second “truth” file may contradict `SYSTEM_TRUTH.md`.
+Long-form manuals (e.g. `alphacycle_ai_operating_manual_COMPLETE.md`) may remain under `docs/` for human deep-dive; **onboarding order** is always the eight files in root `README.md` — no second “truth” file may contradict `SYSTEM_TRUTH.md`.
 
 ---
 
