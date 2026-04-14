@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10 (docs: SYSTEM_VERSION.md + README 8-doc stack)
+**Zuletzt aktualisiert:** 2026-04-10 (docs: SYSTEM_VERSION SSOT 1.3 kanonisch)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-10) — SYSTEM_VERSION.md auf Kanon 1.3 (2026-04-13) zurueckgesetzt
+- **Datei(en):** `docs/SYSTEM_VERSION.md`, `DEPLOY_STATE.md`
+- **Was:** Current Version / Agent-Init / History wie Noah-Vorlage (1.3, Prompt Forge, keine 1.3.1-Zeile); eine „Changed Documents“-Tabelle.
+- **Warum:** SSOT soll exakt der freigegebenen System-Version-Datei entsprechen.
+- **Status:** in progress bis push
 
 ## Letzter Session-Status (2026-04-10) — SYSTEM_VERSION.md (1.3.1) + README Pflichtliste 8 Dateien
 - **Datei(en):** `docs/SYSTEM_VERSION.md` (neu), `README.md`, `docs/SYSTEM_STATE.md`, `.cursor/rules/permanent-fixes.mdc`, `DEPLOY_STATE.md`
