@@ -317,7 +317,7 @@ def build_reply_prompt(
         pattern_key_out = _pick_pattern_avoiding_double_streak()
     pattern_body = REPLY_PATTERN_TEXTS.get(
         pattern_key_out,
-        f"Pattern: {pattern_key_out}\nFollow a clear 2–3 sentence structure; stay under 270 characters.",
+        f"Pattern: {pattern_key_out}\nFollow a clear 2–3 sentence structure; stay under {config.MAX_REPLY_GENERATION_CHARS} characters.",
     )
     hook_instruction = (
         HOOK_ACTIVE_LABEL
@@ -581,7 +581,7 @@ def _enforce_reply_telegram_char_limit(
     """
     import reply_engine
 
-    max_chars = 260
+    max_chars = int(getattr(config, "MAX_REPLY_GENERATION_CHARS", 260) or 260)
     if not reply_text:
         return reply_text or "", approach_key, pattern_key
     if len(reply_text) <= max_chars:
@@ -599,8 +599,8 @@ def _enforce_reply_telegram_char_limit(
     rt2, ak2, pk2 = reply_engine.generate_reply(
         tweet,
         extra_instruction=(
-            "YOUR LAST REPLY WAS OVER 260 CHARACTERS. "
-            "Write MAX 2 sentences. Be shorter."
+            "YOUR LAST REPLY WAS OVER %s CHARACTERS. "
+            "Write MAX 2 sentences. Be shorter." % max_chars
         ),
         arc_data=arc_data,
         pattern_key=pk_for_retry,
@@ -610,7 +610,7 @@ def _enforce_reply_telegram_char_limit(
     if rt2 and rt2.strip():
         reply_text = rt2.strip()
     if len(reply_text) > max_chars:
-        reply_text = reply_text[:257] + "..."
+        reply_text = reply_text[: max_chars - 3] + "..."
         logger.warning(
             "[QA] Reply truncated to %s chars",
             len(reply_text),

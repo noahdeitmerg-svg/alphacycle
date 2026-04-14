@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10 (X-Bot: Reply 260 Zeichen Python-Haerte)
+**Zuletzt aktualisiert:** 2026-04-10 (X-Bot: MAX_REPLY_GENERATION_CHARS 260)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-10) — reply_engine clip = Telegram-Limit (config 260)
+- **Datei(en):** `alphacycle-x-bot/config.py` (`MAX_REPLY_GENERATION_CHARS`, Default 260, Env-Override), `alphacycle-x-bot/reply_engine.py` (Clip nach Sonnet), `alphacycle-x-bot/growth_engine.py` (`_enforce_reply_telegram_char_limit` + Fallback-Pattern-Text nutzen dieselbe Konstante; Truncate `[:cap-3]+...`), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was:** Vorher Sonnet-Clip 270 vs. Telegram-Haerte 260; jetzt eine Zahl aus `config`, `reply_engine` und Post-QA-Enforcement konsistent.
+- **Warum:** Nutzer-Bestaetigung „ja“ zur Angleichung; weniger Randfaelle zwischen Generation und Python-Check.
+- **Status:** in progress bis push
 
 ## Letzter Session-Status (2026-04-10) — growth_engine: 260 Zeichen nach QA (vor Telegram)
 - **Datei(en):** `alphacycle-x-bot/growth_engine.py` (`_enforce_reply_telegram_char_limit`, Ende von `generate_reply_with_qa`), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`

@@ -64,8 +64,9 @@ def generate_reply(
         if reply.upper() == "SKIP":
             return None, None, None
 
-        if len(reply) > 270:
-            reply = reply[:270]
+        cap = int(getattr(config, "MAX_REPLY_GENERATION_CHARS", 260) or 260)
+        if len(reply) > cap:
+            reply = reply[:cap]
 
         print(f"[REPLY_ENGINE] Generated: {reply}")
         return reply, approach_key, pattern_key

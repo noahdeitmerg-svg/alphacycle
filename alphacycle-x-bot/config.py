@@ -62,6 +62,10 @@ DAILY_POST_TIME = "13:00"
 # Growth Engine Settings
 REPLY_HOOK_PROBABILITY = 0.4  # 40% = ca. 2 von 5
 MAX_REPLY_HISTORY = 5
+# Sonnet reply clip + growth_engine Telegram hard cap (same as reply_system / QA)
+MAX_REPLY_GENERATION_CHARS = max(
+    1, int((os.getenv("MAX_REPLY_GENERATION_CHARS", "260") or "260").strip())
+)
 TOPIC_LOOKBACK_DAYS = 7
 
 # Structural reply patterns (rotate with approaches; weights sum ~1.0)
