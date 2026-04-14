@@ -1,8 +1,12 @@
+import logging
+
 import anthropic
 import config
 import daily_post_engine
 import database
 from growth_engine import build_reply_prompt
+
+logger = logging.getLogger(__name__)
 
 
 def generate_reply(
@@ -38,11 +42,10 @@ def generate_reply(
         print(f"[REPLY_ENGINE] build_reply_prompt failed: {e}")
         return None, None, None
 
-    # Relevance/SKIP gate removed: scanner + Telegram approval are the filters; no second "not_relevant" drop here.
     user_msg = (
-        "Write the reply only. Follow the system instructions. "
-        "Do not output SKIP or any placeholder — always produce reply text for this tweet. "
-        "No preamble."
+        "Follow the system instructions exactly. "
+        "If they require SKIP_OFF_TOPIC for this tweet, output only that token. "
+        "Otherwise write the reply only, no preamble, no other SKIP placeholders."
     )
     if (extra_instruction or "").strip():
         user_msg = user_msg + "\n\n" + (extra_instruction or "").strip()
@@ -57,6 +60,14 @@ def generate_reply(
         )
 
         reply = response.content[0].text.strip()
+        author_log = (tweet.get("author") or "").strip().lstrip("@") or "unknown"
+
+        if reply == "SKIP_OFF_TOPIC":
+            logger.info(
+                "[REPLY] Claude skipped off-topic tweet by @%s",
+                author_log,
+            )
+            return None, approach_key, pattern_key
 
         if not reply:
             return None, None, None

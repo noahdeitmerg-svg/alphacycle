@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-14 (index duplicate-id quickfix: landing-now-return)
+**Zuletzt aktualisiert:** 2026-04-14 (x-bot: scanner overhaul + SKIP_OFF_TOPIC gate)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-14) — x-bot: scanner overhaul + SKIP_OFF_TOPIC (three-layer off-topic defense)
+- **Datei(en):** `alphacycle-x-bot/config.py`, `alphacycle-x-bot/scanner.py`, `alphacycle-x-bot/reply_engine.py`, `alphacycle-x-bot/growth_engine.py`, `alphacycle-x-bot/bot.py`, `alphacycle-x-bot/prompts/reply_system.txt`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was:** Layer 1+2 vor Claude: `BLOCKED_KEYWORDS` erweitert (40+), neu `RELEVANT_KEYWORDS` (70+), Scanner loggt `Blocked: ... keyword` bzw. `Off-topic: ... no relevant keyword` und `log_scanned` mit `off_topic_no_keyword`. Layer 3: `reply_system.txt` beginnt mit SKIP_OFF_TOPIC-Exit vor Identitaet; `reply_engine` wertet exakt `SKIP_OFF_TOPIC` aus (Log, kein QA/Telegram); `generate_reply_with_qa` + `bot.py` brechen ab ohne Pending-Queue (`skipped_off_topic`). Defaults/41 Accounts/qa Regel 14 unveraendert.
+- **Warum:** Weniger API-Kosten und Telegram-Rauschen durch Sport/GM-Tweets; konsistente Vorfilterung plus modellseitiges Off-Topic-Gate.
+- **Status:** in progress (Commit/Push folgt)
 
 ## Letzter Session-Status (2026-04-14) — index quickfix: duplicate id landing-now-return
 - **Datei(en):** `index.html`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`

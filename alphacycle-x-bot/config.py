@@ -97,7 +97,7 @@ QA_MAX_ATTEMPTS = max(1, int(os.getenv("QA_MAX_ATTEMPTS", "3") or "3"))
 # ============================================================
 # TRACKED ACCOUNTS — AlphaCycle Reply Targets
 # 41 Accounts total (10 + 16 + 15). Cleaned 2026-04-13.
-# Read budget: default SCAN_INTERVAL_SECONDS=3600 (60 min) => 50*24=1200 timeline reads/day.
+# Read budget: default SCAN_INTERVAL_SECONDS=3600 (60 min) => 41*24 timeline reads/day.
 #   Override in .env (e.g. 1800) if X read credits allow shorter interval.
 # ============================================================
 
@@ -156,26 +156,159 @@ TRACKED_ACCOUNTS = TIER_1_ACCOUNTS + TIER_2_ACCOUNTS + TIER_3_ACCOUNTS
 # Verify: len(TRACKED_ACCOUNTS) == 41 (10 + 16 + 15)
 
 BLOCKED_KEYWORDS: list = [
+    # Sports
+    "nba",
+    "nfl",
+    "mlb",
+    "nhl",
+    "champions league",
+    "premier league",
+    "baseball",
+    "basketball",
+    "football",
+    "soccer",
+    "touchdown",
+    "strikeout",
+    "slam dunk",
+    "playoffs",
+    "play-in",
+    "double-double",
+    "parlay",
+    "sports betting",
+    "over/under",
+    # Spam/Promo
     "giveaway",
     "airdrop",
     "whitelist",
     "presale",
-    "meme coin",
-    "nft drop",
     "free mint",
     "follow and rt",
     "like and retweet",
     "sponsored",
     "promo",
-    "birthday",
+    # Motivational/Generic
     "good morning",
     "gm everyone",
-    "baseball",
-    "nba",
-    "nfl",
-    "mlb",
-    "sports betting",
-    "parlay",
+    "happy monday",
+    "happy friday",
+    "happy weekend",
+    "let's get after it",
+    "never bet against",
+    "let's go",
+    "lfg",
+    "wagmi",
+    "have a great",
+    # Personal
+    "birthday",
+    "happy birthday",
+    "congratulations",
+    "rip ",
+    "prayers",
+    "my wife",
+    "my kids",
+    "vacation",
+    "holiday",
+]
+
+RELEVANT_KEYWORDS: list = [
+    # Bitcoin/Crypto
+    "bitcoin",
+    "btc",
+    "crypto",
+    "ethereum",
+    "eth",
+    "satoshi",
+    "halving",
+    "mining",
+    "hash rate",
+    "mempool",
+    # Market Structure
+    "market",
+    "bull",
+    "bear",
+    "rally",
+    "correction",
+    "crash",
+    "drawdown",
+    "all-time high",
+    "ath",
+    "cycle",
+    "bottom",
+    "capitulation",
+    "accumulation",
+    "euphoria",
+    # Macro
+    "fed",
+    "fomc",
+    "rate cut",
+    "rate hike",
+    "inflation",
+    "cpi",
+    "ppi",
+    "gdp",
+    "recession",
+    "employment",
+    "jobs",
+    "treasury",
+    "yield",
+    "bond",
+    "credit",
+    "spread",
+    # Liquidity
+    "liquidity",
+    "stablecoin",
+    "tether",
+    "usdt",
+    "usdc",
+    "defi",
+    "tvl",
+    "funding rate",
+    "leverage",
+    "margin",
+    "open interest",
+    # Assets
+    "gold",
+    "oil",
+    "dollar",
+    "dxy",
+    "equity",
+    "equities",
+    "s&p",
+    "nasdaq",
+    "dow",
+    "vix",
+    "commodities",
+    # Geopolitics (market-relevant)
+    "tariff",
+    "sanctions",
+    "iran",
+    "hormuz",
+    "war",
+    "geopolitical",
+    "trade war",
+    "china",
+    # Institutional
+    "etf",
+    "blackrock",
+    "fidelity",
+    "saylor",
+    "microstrategy",
+    "institutional",
+    "whale",
+    "reserve",
+    # Onchain
+    "onchain",
+    "on-chain",
+    "wallet",
+    "exchange flow",
+    "coinbase",
+    "binance",
+    # Sentiment
+    "fear",
+    "greed",
+    "sentiment",
+    "risk",
+    "volatility",
 ]
 
 # Reply / scanner limits (quality balance). Override via .env.
@@ -187,7 +320,7 @@ MAX_REPLIES_PER_ACCOUNT_PER_DAY = int(os.getenv("MAX_REPLIES_PER_ACCOUNT_PER_DAY
 MAX_REPLIES_PER_HOUR = REPLY_LIMIT_HOURLY
 MAX_REPLIES_PER_DAY = REPLY_LIMIT_DAILY
 
-# Default 3600 = 60 min between scan cycles (50 tracked accounts; override SCAN_INTERVAL_SECONDS in .env for 30 min).
+# Default 3600 = 60 min between scan cycles (41 tracked accounts; override SCAN_INTERVAL_SECONDS in .env for 30 min).
 SCAN_INTERVAL_SECONDS = int(os.getenv("SCAN_INTERVAL_SECONDS", "3600"))
 
 REPLY_DELAY_MIN = int(os.getenv("REPLY_DELAY_MIN", "30"))

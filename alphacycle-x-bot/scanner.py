@@ -9,11 +9,20 @@ import database
 logger = logging.getLogger(__name__)
 
 
-def _tweet_has_blocked_keyword(tweet_text: str) -> bool:
-    t = (tweet_text or "").lower()
+def _first_blocked_keyword(tweet_text: str) -> str | None:
+    tweet_lower = (tweet_text or "").lower()
     for kw in config.BLOCKED_KEYWORDS:
         s = (kw or "").strip()
-        if s and s.lower() in t:
+        if s and s.lower() in tweet_lower:
+            return s
+    return None
+
+
+def _tweet_has_relevant_keyword(tweet_text: str) -> bool:
+    tweet_lower = (tweet_text or "").lower()
+    for kw in getattr(config, "RELEVANT_KEYWORDS", ()) or ():
+        s = (kw or "").strip()
+        if s and s.lower() in tweet_lower:
             return True
     return False
 
@@ -123,10 +132,24 @@ def scan_tweets() -> list[dict]:
 
         for tweet in tweets:
             author = tweet["author"]
-            if _tweet_has_blocked_keyword(tweet["text"]):
-                logger.info("[SCANNER] Skipped @%s: blocked_keyword", author)
+            blocked_kw = _first_blocked_keyword(tweet.get("text") or "")
+            if blocked_kw:
+                logger.info(
+                    "[SCANNER] Blocked: @%s — keyword '%s'",
+                    author,
+                    blocked_kw,
+                )
                 database.log_scanned(
                     tweet["id"], author, "blocked_keyword"
+                )
+                continue
+            if not _tweet_has_relevant_keyword(tweet.get("text") or ""):
+                logger.info(
+                    "[SCANNER] Off-topic: @%s — no relevant keyword",
+                    author,
+                )
+                database.log_scanned(
+                    tweet["id"], author, "off_topic_no_keyword"
                 )
                 continue
             if database.already_scanned(tweet["id"]):

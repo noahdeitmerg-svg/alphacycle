@@ -145,7 +145,7 @@ def run_cycle():
                 "[BOT] Filters: tweet age "
                 f"{config.MIN_TWEET_AGE_SECONDS}s–{config.MAX_TWEET_AGE_SECONDS}s, "
                 f"min {config.MIN_LIKES_TO_REPLY} likes, no RT/reply; "
-                "then blocked keywords, not already scanned/replied, author spacing, "
+                "then blocked + relevant-keyword filters, not already scanned/replied, author spacing, "
                 f"max {config.MAX_REPLIES_PER_ACCOUNT_PER_DAY} replies per @ per UTC day. "
                 "Widen: .env SCAN_TWEET_MAX_AGE / MAX_TWEET_AGE_SECONDS, MIN_LIKES_TO_REPLY."
             )
@@ -177,11 +177,28 @@ def run_cycle():
                 )
                 qa_status = None
                 qa_attempts = 1
-                if not reply_text:
-                    database.log_scanned(
-                        tweet["id"], tweet["author"], "no_reply_generated"
-                    )
+                if reply_text is None:
+                    if approach_key and pattern_key:
+                        database.log_scanned(
+                            tweet["id"], tweet["author"], "skipped_off_topic"
+                        )
+                    else:
+                        database.log_scanned(
+                            tweet["id"], tweet["author"], "no_reply_generated"
+                        )
                     continue
+
+            if reply_text is None and qa_status == "SKIP_OFF_TOPIC":
+                database.log_scanned(
+                    tweet["id"], tweet["author"], "skipped_off_topic"
+                )
+                continue
+
+            if not reply_text:
+                database.log_scanned(
+                    tweet["id"], tweet["author"], "no_reply_generated"
+                )
+                continue
 
             tw_url = _tweet_url(tweet["author"], tweet["id"])
             if not database.insert_pending_reply(

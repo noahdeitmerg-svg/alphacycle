@@ -621,12 +621,12 @@ def _enforce_reply_telegram_char_limit(
 def generate_reply_with_qa(
     tweet: dict,
     arc_data: dict | None = None,
-) -> tuple[str, str, int, str | None, str | None]:
+) -> tuple[str | None, str | None, int, str | None, str | None]:
     """
     Sonnet reply + Haiku QA loop (up to QA_MAX_ATTEMPTS).
-    Always returns a non-empty reply_text (placeholder if needed).
     Returns: reply_text, qa_status, attempts, approach_key, pattern_key
-    qa_status: \"PASS\" or \"FAIL_3x:reasons\"
+    reply_text is None when Claude returns SKIP_OFF_TOPIC (no Telegram, no QA).
+    qa_status: \"PASS\", \"SKIP_OFF_TOPIC\", or \"FAIL_3x:reasons\"
     """
     import reply_engine
 
@@ -635,6 +635,8 @@ def generate_reply_with_qa(
 
     if not getattr(config, "QA_ENABLED", True):
         rt, ak, pk = reply_engine.generate_reply(tweet, arc_data=arc_data)
+        if rt is None and ak is not None and pk is not None:
+            return None, "SKIP_OFF_TOPIC", 0, ak, pk
         if not rt:
             rt = _QA_PLACEHOLDER_REPLY
         rt, ak, pk = _enforce_reply_telegram_char_limit(rt, tweet, arc_data, ak, pk)
@@ -662,6 +664,12 @@ def generate_reply_with_qa(
             arc_data=arc_data,
             pattern_key=force_pattern,
         )
+        if rt is None and ak is not None and pk is not None:
+            logger.info(
+                "[REPLY] SKIP_OFF_TOPIC @%s — no QA, not queued",
+                author_log,
+            )
+            return None, "SKIP_OFF_TOPIC", 0, ak, pk
         if rt:
             last_reply = rt
             last_ak = ak
