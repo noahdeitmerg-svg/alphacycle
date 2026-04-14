@@ -8,7 +8,7 @@
 - **Datei(en):** `alphacycle-x-bot/growth_engine.py` (`_enforce_reply_telegram_char_limit`, Ende von `generate_reply_with_qa`), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
 - **Was:** Nach QA (PASS, QA aus, oder FAIL_3x-Fallback): `len(reply_text) > 260` -> ein Sonnet-Retry mit anderem `pattern_key` + Kurz-Anweisung; wenn weiterhin zu lang: `[:257] + "..."`. `qa_system.txt` unveraendert (weicher Hinweis bleibt).
 - **Warum:** Haiku kann keine zuverlaessige Zeichenzahl liefern; Telegram soll keine >260-Zeichen-Freigaben mehr bekommen.
-- **Status:** in progress bis push
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-10) — Hi/Lo Engine: Live ARC = Backtest (OHLC)
 - **Datei(en):** `backend/main.py`
