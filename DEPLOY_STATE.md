@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-14 (x-bot: hard 260 + QA opener-ban)
+**Zuletzt aktualisiert:** 2026-04-14 (x-bot config sync: keywords/accounts/defaults)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-14) — x-bot config sync (Growth Engine specs)
+- **Datei(en):** `alphacycle-x-bot/config.py`, `alphacycle-x-bot/prompts/qa_system.txt`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was:** `qa_system.txt` Regel 14 (`FAIL: repetitive_opener`) bleibt aktiv; `BLOCKED_KEYWORDS` in `config.py` von leer auf 20 Eintraege gesetzt; Tracking-Listen bereinigt auf 41 Accounts (10+16+15) mit aktualisiertem Verify-Kommentar; Defaults angepasst: `REPLY_LIMIT_HOURLY` 5, `MIN_LIKES_TO_REPLY` 0, `REPLY_DELAY_MIN/MAX` 30/120 (Env-Overrides unveraendert).
+- **Warum:** Bot-Config an Growth-Engine-Specs synchronisieren (weniger Off-Topic-Targets, klarere Reply-Filter, produktiveres Default-Rate-Profil).
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-14) — x-bot: hard 260-char check + QA opener ban
 - **Datei(en):** `alphacycle-x-bot/poster.py`, `alphacycle-x-bot/prompts/qa_system.txt`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`

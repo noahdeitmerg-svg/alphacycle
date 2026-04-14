@@ -96,7 +96,7 @@ QA_MAX_ATTEMPTS = max(1, int(os.getenv("QA_MAX_ATTEMPTS", "3") or "3"))
 
 # ============================================================
 # TRACKED ACCOUNTS — AlphaCycle Reply Targets
-# 50 Accounts total (10 + 20 + 20 — not 60; tiers sum to 50).
+# 41 Accounts total (10 + 16 + 15). Cleaned 2026-04-13.
 # Read budget: default SCAN_INTERVAL_SECONDS=3600 (60 min) => 50*24=1200 timeline reads/day.
 #   Override in .env (e.g. 1800) if X read credits allow shorter interval.
 # ============================================================
@@ -124,16 +124,12 @@ TIER_2_ACCOUNTS = [
     "100trillionUSD",
     "MartyBent",
     "ErikVoorhees",
-    "balaji",
     "FossGregfoss",
     "real_vijay",
     "MarkYusko",
     "LawrenceLepard",
     "TuurDemeester",
-    "KevinSvenson",
     "TimmerFidelity",
-    "DoctorProfit",
-    "JSeyff",
     "cburniske",
 ]
 
@@ -141,18 +137,13 @@ TIER_3_ACCOUNTS = [
     "CryptoCon_",
     "TechDev_52",
     "in2cryptoversee",
-    "TheRealPlanC",
     "therationalroot",
-    "VentureCoinist",
     "MacroAlf",
     "TXMCtrades",
     "GameofTrades_",
     "fejau_inc",
     "PositiveCrypto",
-    "CryptoCred",
-    "milesdeutscher",
     "MacroScope17",
-    "Trader_XO",
     "stackhodler",
     "ecoinometrics",
     "coinmetrics",
@@ -162,13 +153,33 @@ TIER_3_ACCOUNTS = [
 
 TRACKED_ACCOUNTS = TIER_1_ACCOUNTS + TIER_2_ACCOUNTS + TIER_3_ACCOUNTS
 
-# Verify: len(TRACKED_ACCOUNTS) == 50 (10 + 20 + 20)
+# Verify: len(TRACKED_ACCOUNTS) == 41 (10 + 16 + 15)
 
-# Temporarily empty for higher reply throughput during testing; restore list to tighten.
-BLOCKED_KEYWORDS: list = []
+BLOCKED_KEYWORDS: list = [
+    "giveaway",
+    "airdrop",
+    "whitelist",
+    "presale",
+    "meme coin",
+    "nft drop",
+    "free mint",
+    "follow and rt",
+    "like and retweet",
+    "sponsored",
+    "promo",
+    "birthday",
+    "good morning",
+    "gm everyone",
+    "baseball",
+    "nba",
+    "nfl",
+    "mlb",
+    "sports betting",
+    "parlay",
+]
 
 # Reply / scanner limits (quality balance). Override via .env.
-REPLY_LIMIT_HOURLY = int(os.getenv("REPLY_LIMIT_HOURLY", "3"))
+REPLY_LIMIT_HOURLY = int(os.getenv("REPLY_LIMIT_HOURLY", "5"))
 REPLY_LIMIT_DAILY = int(os.getenv("REPLY_LIMIT_DAILY", "15"))
 SCAN_TWEET_MAX_AGE = int(os.getenv("SCAN_TWEET_MAX_AGE", "14400"))
 MAX_REPLIES_PER_ACCOUNT_PER_DAY = int(os.getenv("MAX_REPLIES_PER_ACCOUNT_PER_DAY", "2"))
@@ -179,11 +190,11 @@ MAX_REPLIES_PER_DAY = REPLY_LIMIT_DAILY
 # Default 3600 = 60 min between scan cycles (50 tracked accounts; override SCAN_INTERVAL_SECONDS in .env for 30 min).
 SCAN_INTERVAL_SECONDS = int(os.getenv("SCAN_INTERVAL_SECONDS", "3600"))
 
-REPLY_DELAY_MIN = int(os.getenv("REPLY_DELAY_MIN", "90"))
-REPLY_DELAY_MAX = int(os.getenv("REPLY_DELAY_MAX", "300"))
+REPLY_DELAY_MIN = int(os.getenv("REPLY_DELAY_MIN", "30"))
+REPLY_DELAY_MAX = int(os.getenv("REPLY_DELAY_MAX", "120"))
 
 MIN_TWEET_AGE_SECONDS = int(os.getenv("MIN_TWEET_AGE_SECONDS", "10"))
 MAX_TWEET_AGE_SECONDS = int(os.getenv("MAX_TWEET_AGE_SECONDS", str(SCAN_TWEET_MAX_AGE)))
-MIN_LIKES_TO_REPLY = int(os.getenv("MIN_LIKES_TO_REPLY", "5"))
+MIN_LIKES_TO_REPLY = int(os.getenv("MIN_LIKES_TO_REPLY", "0"))
 
 DB_PATH = str(_BASE_DIR / "database.db")
