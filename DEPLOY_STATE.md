@@ -8,7 +8,7 @@
 - **Datei(en):** `docs/SYSTEM_VERSION.md` (neu), `README.md`, `docs/SYSTEM_STATE.md`, `.cursor/rules/permanent-fixes.mdc`, `DEPLOY_STATE.md`
 - **Was:** Versions-SSOT im Repo; README-Reihenfolge um `SYSTEM_VERSION.md` erweitert (nach `SYSTEM_STATE`, vor `TASK_PIPELINE`); Agent-Init-Phrase **1.3.1** + ARC v1.2; SYSTEM_STATE + permanent-fixes Stack-Zeilen angeglichen.
 - **Warum:** Einheitliche Systemversion fuer Agents; Patch-Bump laut SYSTEM_VERSION.md Regeln bei docs-Aenderung.
-- **Status:** in progress bis push
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-10) — reply_engine clip = Telegram-Limit (config 260)
 - **Datei(en):** `alphacycle-x-bot/config.py` (`MAX_REPLY_GENERATION_CHARS`, Default 260, Env-Override), `alphacycle-x-bot/reply_engine.py` (Clip nach Sonnet), `alphacycle-x-bot/growth_engine.py` (`_enforce_reply_telegram_char_limit` + Fallback-Pattern-Text nutzen dieselbe Konstante; Truncate `[:cap-3]+...`), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
