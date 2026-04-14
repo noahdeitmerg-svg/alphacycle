@@ -197,6 +197,18 @@ def post_daily_post(pending_id: str) -> bool:
     if len(text) > 280:
         text = text[:277] + "..."
 
+    MAX_REPLY_CHARS = 260
+    if text and len(text) > MAX_REPLY_CHARS:
+        logger.warning(f"[HARD_LIMIT] Reply too long: {len(text)} chars. Truncating.")
+        truncated = text[:257]
+        last_period = truncated.rfind(".")
+        last_dash = truncated.rfind("—")
+        cut_point = max(last_period, last_dash)
+        if cut_point > 150:
+            text = text[: cut_point + 1]
+        else:
+            text = truncated.rsplit(" ", 1)[0].rstrip() + "..."
+
     try:
         client = get_client()
         response = client.create_tweet(text=text, user_auth=True)

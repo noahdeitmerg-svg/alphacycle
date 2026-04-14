@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-14 (deploy-server: Webhook-Signatur strip + Logs)
+**Zuletzt aktualisiert:** 2026-04-14 (x-bot: hard 260 + QA opener-ban)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-14) — x-bot: hard 260-char check + QA opener ban
+- **Datei(en):** `alphacycle-x-bot/poster.py`, `alphacycle-x-bot/prompts/qa_system.txt`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was:** Letzte Station vor `tweepy.Client.create_tweet` (`poster.post_daily_post`) hat jetzt harten 260-Zeichen-Check mit Satzende-Cut (`.` oder `—`) und Fallback-`...`; `qa_system.txt` erweitert um **Regel 14** (`FAIL: repetitive_opener` bei Start mit "Everyone"/"Everyone's").
+- **Warum:** Keine abgeschnittenen X-Posts mehr vor API-Call und weniger repetitive Reply-Templates am Satzanfang.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-14) — deploy-server deploy.py: 403 hart Debugging
 - **Datei(en):** `alphacycle-x-bot/deploy-server/deploy.py`, `alphacycle-x-bot/deploy-server/README.md`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`

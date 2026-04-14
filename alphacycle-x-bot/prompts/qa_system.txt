@@ -85,6 +85,12 @@ without adding anything new: FAIL: no_new_information
     "risk markets" without naming their topic first?
     If yes: FAIL: topic_hijack
 
+14. REPETITIVE OPENER: Does the reply start with "Everyone"
+    or "Everyone's"?
+    If yes: FAIL: repetitive_opener
+    Replies must NOT start with "Everyone" — it has become
+    a repetitive template. Start with the specific topic instead.
+
 TWEET: {tweet_text}
 AUTHOR: @{tweet_author}
 REPLY: {reply_text}
