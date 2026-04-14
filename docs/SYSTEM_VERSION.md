@@ -5,9 +5,9 @@
 ## Current Version
 
 ```
-SYSTEM VERSION: 1.3
-DATE: 2026-04-13
-UPDATED BY: Prompt Forge → Cursor Builder
+SYSTEM VERSION: 1.3.1
+DATE: 2026-04-14
+UPDATED BY: Cursor Builder
 ```
 
 ---
@@ -28,14 +28,11 @@ UPDATED BY: Prompt Forge → Cursor Builder
 
 | Document | Change |
 |---|---|
-| SYSTEM_TRUTH.md | ARC v1.2 weights (35/30/15/20) |
-| AI_AGENT_MASTERPROMPTS.md | 6 agents validated, v1.2 lock |
-| AI_AGENT_ROLES.md | Expanded from 4 to 6 agents |
-| AI_MASTER_PROMPT.md | Document Sync Protocol added |
-| SYSTEM_STATE.md | T-001, T-002, Bot Pipeline, Auto-Deploy marked deployed |
-| TASK_PIPELINE.md | Execution order updated, completed tasks logged |
-| DEPLOY_STATE.md | 4 new deploy entries |
-| SYSTEM_VERSION.md | Created (this file) |
+| AI_AGENT_MASTERPROMPTS.md | QA section synced to 14-rule system (repetitive opener) |
+| AI_MASTER_CONTEXT.md | X-bot scan/limits updated to 41 accounts and current defaults |
+| SYSTEM_STATE.md | Snapshot timestamp refreshed |
+| TASK_PIPELINE.md | Added C-010 completion and refreshed update timestamp |
+| SYSTEM_VERSION.md | Patch bump to 1.3.1 (this file) |
 
 ---
 
@@ -49,7 +46,7 @@ Before performing any task, every agent must:
 3. Load docs/AI_AGENT_MASTERPROMPTS.md (your section)
 4. Load docs/SYSTEM_STATE.md
 5. Load docs/SYSTEM_VERSION.md (this file)
-6. State: "System version 1.3 confirmed. ARC v1.2."
+6. State: "System version 1.3.1 confirmed. ARC v1.2."
 7. Load DEPLOY_STATE.md
 8. Wait for task
 ```
@@ -62,6 +59,7 @@ If the agent's version does not match this file: stop and request updated docume
 
 | Version | Date | Changes |
 |---|---|---|
+| 1.3.1 | 2026-04-14 | Docs sync patch: QA rule count, X-bot account/limit references, pipeline/state refresh |
 | 1.3 | 2026-04-13 | ARC v1.2, Hi/Lo Engine, Auto-Deploy, Bot Pipeline v2, AI Architecture (6 agents, 8 docs) |
 | 1.2 | 2026-04-12 | ARC weights updated (25/25→30/15), backtest engine cleaned, zone boundaries normalized |
 | 1.1 | 2026-04-10 | Display transform k=0, reply prompt v2, docs structure created |
@@ -71,7 +69,7 @@ If the agent's version does not match this file: stop and request updated docume
 
 ## Version Bump Rules
 
-- **Patch (1.3 → 1.3.1):** Doc updates, typo fixes, task status changes
+- **Patch (1.3.1 → 1.3.2):** Doc updates, typo fixes, task status changes
 - **Minor (1.3 → 1.4):** New features deployed, infrastructure changes, agent role changes
 - **Major (1.3 → 2.0):** ARC methodology change, fundamental architecture redesign
 

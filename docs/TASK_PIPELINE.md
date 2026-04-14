@@ -208,6 +208,7 @@ QUEUE:
 | C-007 | Docs structure (docs/ folder + README reference) | 2026-04-11 | ab417c0 |
 | C-008 | Reply system prompt v2 (70/30 rule, rotation) | 2026-04-10 | fb082f7 |
 | C-009 | ARC v1.2 weights in code + UI + docs | 2026-04-12 | see DEPLOY_STATE |
+| C-010 | X-bot config sync (keywords, 41 accounts, defaults) | 2026-04-14 | ed13483 |
 
 ---
 
@@ -236,5 +237,5 @@ Status definitions:
 
 ---
 
-*Last updated: 2026-04-13*
+*Last updated: 2026-04-14*
 *Next update: after T-002 prompt execution or T-007 verification*

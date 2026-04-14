@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-14 (x-bot config sync: keywords/accounts/defaults)
+**Zuletzt aktualisiert:** 2026-04-14 (docs sync + SYSTEM_VERSION 1.3.1)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-14) — docs sync cleanup + version bump 1.3.1
+- **Datei(en):** `docs/AI_AGENT_MASTERPROMPTS.md`, `docs/AI_MASTER_CONTEXT.md`, `docs/SYSTEM_STATE.md`, `docs/TASK_PIPELINE.md`, `docs/SYSTEM_VERSION.md`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was:** Drift bereinigt: QA-Sektion auf 14 Regeln (inkl. repetitive opener), X-bot Referenzen auf 41 Accounts und aktuelle Defaults (5/hr, likes 0, 30-120s), `SYSTEM_STATE`/`TASK_PIPELINE` Zeitstempel + C-010 Completion aktualisiert, `SYSTEM_VERSION` auf 1.3.1 gepatcht.
+- **Warum:** Doku-SSOT an den live Repo-Stand angleichen, damit nachgelagerte GPT/Claude-Agenten keinen veralteten Kontext laden.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-14) — x-bot config sync (Growth Engine specs)
 - **Datei(en):** `alphacycle-x-bot/config.py`, `alphacycle-x-bot/prompts/qa_system.txt`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`

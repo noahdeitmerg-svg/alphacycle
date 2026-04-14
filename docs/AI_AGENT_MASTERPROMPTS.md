@@ -458,7 +458,7 @@ Noah → GROWTH ENGINE → Content Specs → Prompt Forge → QA → Cursor → 
 - Max 260 characters for replies, max 2 data points per post
 - 40% curiosity hook, 60% pure insight
 
-**QA System (13 Rules):** Character count, tweet reference, zero predictions, no banned words, no brand mentions, no sales language, no AI sound, logic consistency, factual accuracy, no zone labels, insight test, recycled data check, topic hijack check.
+**QA System (14 Rules):** Character count, tweet reference, zero predictions, no banned words, no brand mentions, no sales language, no AI sound, logic consistency, factual accuracy, no zone labels, insight test, recycled data check, topic hijack check, repetitive-opener check ("Everyone"/"Everyone's").
 
 **Tracked Accounts (41):**
 - Tier 1 (10): RaoulGMI, LynAldenContact, APompliano, nic_carter, CryptoHayes, WClemente, krugermacro, willywoo, BitcoinMagazine, GlassnodeAlerts

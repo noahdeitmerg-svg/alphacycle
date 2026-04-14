@@ -156,5 +156,5 @@ AFTER:  trend=0.35  drawdown=0.30  liquidity=0.15  sentiment=0.20
 
 ---
 
-*Last updated: 2026-04-10*
+*Last updated: 2026-04-14*
 *Next update: after T-002 deploy or major infra change*
