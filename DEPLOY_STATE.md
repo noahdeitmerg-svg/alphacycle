@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10 (feat: Hi/Lo Engine live ARC parity)
+**Zuletzt aktualisiert:** 2026-04-10 (X-Bot: Reply 260 Zeichen Python-Haerte)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-10) — growth_engine: 260 Zeichen nach QA (vor Telegram)
+- **Datei(en):** `alphacycle-x-bot/growth_engine.py` (`_enforce_reply_telegram_char_limit`, Ende von `generate_reply_with_qa`), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was:** Nach QA (PASS, QA aus, oder FAIL_3x-Fallback): `len(reply_text) > 260` -> ein Sonnet-Retry mit anderem `pattern_key` + Kurz-Anweisung; wenn weiterhin zu lang: `[:257] + "..."`. `qa_system.txt` unveraendert (weicher Hinweis bleibt).
+- **Warum:** Haiku kann keine zuverlaessige Zeichenzahl liefern; Telegram soll keine >260-Zeichen-Freigaben mehr bekommen.
+- **Status:** in progress bis push
 
 ## Letzter Session-Status (2026-04-10) — Hi/Lo Engine: Live ARC = Backtest (OHLC)
 - **Datei(en):** `backend/main.py`

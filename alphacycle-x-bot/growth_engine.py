@@ -568,6 +568,56 @@ def _build_qa_replacement_guide(failures: list[str]) -> str:
     return "".join(parts)
 
 
+def _enforce_reply_telegram_char_limit(
+    reply_text: str,
+    tweet: dict,
+    arc_data: dict | None,
+    approach_key: str | None,
+    pattern_key: str | None,
+) -> tuple[str, str | None, str | None]:
+    """
+    Hard cap 260 chars after QA (Python counts; QA prompt is soft only).
+    One Sonnet retry with a shorter instruction; then truncate if still over.
+    """
+    import reply_engine
+
+    max_chars = 260
+    if not reply_text:
+        return reply_text or "", approach_key, pattern_key
+    if len(reply_text) <= max_chars:
+        return reply_text, approach_key, pattern_key
+
+    logger.warning(
+        "[QA] Reply too long (%s chars), retrying shorter",
+        len(reply_text),
+    )
+    pk_for_retry = (
+        select_different_pattern_key(pattern_key.strip())
+        if (pattern_key or "").strip()
+        else select_pattern_key()
+    )
+    rt2, ak2, pk2 = reply_engine.generate_reply(
+        tweet,
+        extra_instruction=(
+            "YOUR LAST REPLY WAS OVER 260 CHARACTERS. "
+            "Write MAX 2 sentences. Be shorter."
+        ),
+        arc_data=arc_data,
+        pattern_key=pk_for_retry,
+    )
+    ak = ak2 if ak2 is not None else approach_key
+    pk = pk2 if pk2 is not None else pattern_key
+    if rt2 and rt2.strip():
+        reply_text = rt2.strip()
+    if len(reply_text) > max_chars:
+        reply_text = reply_text[:257] + "..."
+        logger.warning(
+            "[QA] Reply truncated to %s chars",
+            len(reply_text),
+        )
+    return reply_text, ak, pk
+
+
 def generate_reply_with_qa(
     tweet: dict,
     arc_data: dict | None = None,
@@ -587,6 +637,7 @@ def generate_reply_with_qa(
         rt, ak, pk = reply_engine.generate_reply(tweet, arc_data=arc_data)
         if not rt:
             rt = _QA_PLACEHOLDER_REPLY
+        rt, ak, pk = _enforce_reply_telegram_char_limit(rt, tweet, arc_data, ak, pk)
         return rt, "PASS", 1, ak, pk
 
     failures: list[str] = []
@@ -635,6 +686,7 @@ def generate_reply_with_qa(
         )
         if passed:
             logger.info("[QA] @%s: PASS (attempt %s)", author_log, attempt)
+            rt, ak, pk = _enforce_reply_telegram_char_limit(rt, tweet, arc_data, ak, pk)
             return rt, "PASS", attempt, ak, pk
 
         fail_reason = reason or "unknown"
@@ -653,4 +705,7 @@ def generate_reply_with_qa(
         max_a,
     )
     out = last_reply or _QA_PLACEHOLDER_REPLY
+    out, last_ak, last_pk = _enforce_reply_telegram_char_limit(
+        out, tweet, arc_data, last_ak, last_pk
+    )
     return out, f"FAIL_3x:{summary}", max_a, last_ak, last_pk
