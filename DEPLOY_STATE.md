@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-10 (permanent-fixes: Multi-Agent Docs-Sync)
+**Zuletzt aktualisiert:** 2026-04-10 (deploy-server README: Webhook 403 / Secret)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-10) — deploy-server README: 403 Webhook Secret-Mismatch
+- **Datei(en):** `alphacycle-x-bot/deploy-server/README.md`, `DEPLOY_STATE.md`
+- **Was:** Neuer Abschnitt nach Schritt 3: VPS `grep GITHUB_WEBHOOK`, GitHub Secret bytegenau, Screen-Neustart mit venv+env (kein nacktes uvicorn), optional leeres Secret + Redeliver zum Verifizieren.
+- **Warum:** Hauefige 403-Ursache; Nutzer-Anleitung hatte Zeilen zusammengeklebt / falsches Screen-Pattern.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-10) — permanent-fixes: Noah-Ping bei relevanter docs-Aenderung
 - **Datei(en):** `.cursor/rules/permanent-fixes.mdc`, `DEPLOY_STATE.md`

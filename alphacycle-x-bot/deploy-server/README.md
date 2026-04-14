@@ -80,6 +80,28 @@ Repository → **Settings** → **Webhooks** → **Add webhook**
 
 Nach Push zu `main`: Webhook triggert Pull in `BOT_REPO_PATH` und `restart-screens.sh`; optional Telegram-Meldung aus `deploy.py`.
 
+### 403 / „Invalid signature“ — Secret stimmt nicht
+
+GitHub sendet `X-Hub-Signature-256`; `deploy.py` vergleicht mit **`GITHUB_WEBHOOK_SECRET`** aus dem **Prozess** (kommt aus `source /root/deploy-server.env` im Screen — siehe Schritt 2). Abweichung → **403**.
+
+**1) VPS — Secret anzeigen (nur pruefen, nicht im Chat posten):**
+
+```bash
+ssh root@YOUR_VPS_IP
+grep GITHUB_WEBHOOK /root/deploy-server.env
+```
+
+**2) GitHub — Webhook bearbeiten:** Repository → **Settings** → **Webhooks** → dein Webhook → **Edit** → **Secret**. Muss **bytegenau** wie in `deploy-server.env` sein: keine Leerzeichen am Anfang/Ende, kein Zeilenumbruch in der Zeile, keine Anfuehrungszeichen in GitHub (GitHub speichert das Secret opaque).
+
+**3) Secret geaendert?** Deploy-Screen **neu starten** (damit der Prozess die neue env laedt) — **immer** mit venv + env-Datei (nicht nacktes `uvicorn`):
+
+```bash
+screen -S deploy -X quit 2>/dev/null || true
+screen -dmS deploy bash -lc 'cd /root/alphacycle-repo/alphacycle-x-bot/deploy-server && source .venv/bin/activate && source /root/deploy-server.env && exec uvicorn deploy:app --host 0.0.0.0 --port 9000'
+```
+
+**4) Schnelltest „ist es nur der Secret-Mismatch?“** In `/root/deploy-server.env` zeitweise **`GITHUB_WEBHOOK_SECRET=""`** setzen (oder Zeile auskommentieren), Screen wie oben neu starten. In GitHub unter dem Webhook **Recent Deliveries** → fehlgeschlagene Delivery **Redeliver**. Wenn es dann **200** ist → Mismatch bestaetigt; danach **gleiches** Secret auf VPS und GitHub setzen und Screen **wieder** mit echtem Secret starten (**nicht** dauerhaft ohne Secret in Production lassen).
+
 ## Firewall
 
 Port **9000/tcp** muss offen sein (z. B. `ufw allow 9000/tcp`).
