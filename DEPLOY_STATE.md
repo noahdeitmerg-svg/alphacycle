@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-14 (x-bot: reply_system — remove Fidelity FINAL TEST)
+**Zuletzt aktualisiert:** 2026-04-14 (x-bot: reply_system — banned patterns, ratio, paste test + FINAL TEST)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-14) — x-bot: reply_system — Banned Patterns + 70/30 + Paste Test + FINAL TEST
+- **Datei(en):** `alphacycle-x-bot/prompts/reply_system.txt`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was:** Nach **BANNED WORDS**: **BANNED REPLY PATTERNS** (8 Strukturen), **RATIO RULE** (70/30), **PASTE TEST**; **FINAL TEST** (Fidelity) wieder direkt vor der Output-Zeile. Kein Python/QA/Config.
+- **Warum:** Weniger generische Claude-Templates; Tweet-Spezifitaet erzwingen.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-14) — x-bot: reply_system — FINAL TEST (Fidelity) entfernt
 - **Datei(en):** `alphacycle-x-bot/prompts/reply_system.txt`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`, `docs/SYSTEM_VERSION.md`, `docs/TASK_PIPELINE.md`
