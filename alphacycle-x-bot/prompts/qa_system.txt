@@ -61,10 +61,6 @@ RULES:
 13. REPETITIVE OPENER: Starts with "Everyone" or "Everyone's"?
     FAIL: repetitive_opener
 
-14. ANALYST TEST: Would a macro cycle analyst at Fidelity
-    write this publicly? If no:
-    FAIL: not_analyst_grade
-
 TWEET: {tweet_text}
 AUTHOR: @{tweet_author}
 REPLY: {reply_text}

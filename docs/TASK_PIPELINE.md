@@ -216,6 +216,10 @@ QUEUE:
 
 - [x] `len(TRACKED_ACCOUNTS) == 42` (11 + 16 + 15; Tier 1 inkl. NoLimitGains)
 
+**C-012 / QA — validation**
+
+- [x] `qa_system.txt`: **13** Regeln (letzte = **repetitive_opener**, **KEIN** analyst_test / `not_analyst_grade`)
+
 ---
 
 ## TASK FLOW DIAGRAM
