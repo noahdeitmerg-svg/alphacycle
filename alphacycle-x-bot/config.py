@@ -96,8 +96,8 @@ QA_MAX_ATTEMPTS = max(1, int(os.getenv("QA_MAX_ATTEMPTS", "3") or "3"))
 
 # ============================================================
 # TRACKED ACCOUNTS — AlphaCycle Reply Targets
-# 41 Accounts total (10 + 16 + 15). Cleaned 2026-04-13.
-# Read budget: default SCAN_INTERVAL_SECONDS=3600 (60 min) => 41*24 timeline reads/day.
+# 42 Accounts total (11 + 16 + 15). Cleaned 2026-04-13.
+# Read budget: default SCAN_INTERVAL_SECONDS=3600 (60 min) => 42*24 timeline reads/day.
 #   Override in .env (e.g. 1800) if X read credits allow shorter interval.
 # ============================================================
 
@@ -112,6 +112,7 @@ TIER_1_ACCOUNTS = [
     "willywoo",
     "BitcoinMagazine",
     "GlassnodeAlerts",
+    "NoLimitGains",
 ]
 
 TIER_2_ACCOUNTS = [
@@ -153,7 +154,7 @@ TIER_3_ACCOUNTS = [
 
 TRACKED_ACCOUNTS = TIER_1_ACCOUNTS + TIER_2_ACCOUNTS + TIER_3_ACCOUNTS
 
-# Verify: len(TRACKED_ACCOUNTS) == 41 (10 + 16 + 15)
+# Verify: len(TRACKED_ACCOUNTS) == 42 (11 + 16 + 15)
 
 BLOCKED_KEYWORDS: list = [
     # Sports

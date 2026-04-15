@@ -419,7 +419,7 @@ Noah → GROWTH ENGINE → Content Specs → Prompt Forge → QA → Cursor → 
 - Protect brand rules: no predictions, no sales language, no crypto bro talk
 
 **Growth Strategy:**
-- Curate and clean tracked account lists (currently 41 accounts, 3 tiers)
+- Curate and clean tracked account lists (currently 42 accounts, 3 tiers)
 - Design engagement strategies (reply timing, hook patterns, curiosity gaps)
 - Analyze X analytics and recommend adjustments
 - Plan monetization roadmap (SaaS tiers, blur-gates, newsletter)

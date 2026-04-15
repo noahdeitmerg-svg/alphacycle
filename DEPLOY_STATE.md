@@ -1,12 +1,18 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-14 (x-bot: scanner overhaul + SKIP_OFF_TOPIC gate)
+**Zuletzt aktualisiert:** 2026-04-14 (x-bot: Tier 1 +NoLimitGains, 42 tracked)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-04-14) — x-bot: Tier 1 +NoLimitGains (42 tracked)
+- **Datei(en):** `alphacycle-x-bot/config.py`, `docs/AI_MASTER_CONTEXT.md`, `docs/AI_AGENT_MASTERPROMPTS.md`, `docs/TASK_PIPELINE.md`, `docs/SYSTEM_VERSION.md`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was:** `TIER_1_ACCOUNTS` um **NoLimitGains** ergaenzt (11 Eintraege); Kommentare/Verify auf **42** Accounts (11+16+15); Doku + `SYSTEM_VERSION` 1.3.2 + Pipeline **C-011**.
+- **Warum:** Validation / SSOT: `len(TRACKED_ACCOUNTS) == 42`.
+- **Status:** pushed to GitHub
+
 ## Letzter Session-Status (2026-04-14) — x-bot: scanner overhaul + SKIP_OFF_TOPIC (three-layer off-topic defense)
 - **Datei(en):** `alphacycle-x-bot/config.py`, `alphacycle-x-bot/scanner.py`, `alphacycle-x-bot/reply_engine.py`, `alphacycle-x-bot/growth_engine.py`, `alphacycle-x-bot/bot.py`, `alphacycle-x-bot/prompts/reply_system.txt`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
-- **Was:** Layer 1+2 vor Claude: `BLOCKED_KEYWORDS` erweitert (40+), neu `RELEVANT_KEYWORDS` (70+), Scanner loggt `Blocked: ... keyword` bzw. `Off-topic: ... no relevant keyword` und `log_scanned` mit `off_topic_no_keyword`. Layer 3: `reply_system.txt` beginnt mit SKIP_OFF_TOPIC-Exit vor Identitaet; `reply_engine` wertet exakt `SKIP_OFF_TOPIC` aus (Log, kein QA/Telegram); `generate_reply_with_qa` + `bot.py` brechen ab ohne Pending-Queue (`skipped_off_topic`). Defaults/41 Accounts/qa Regel 14 unveraendert.
+- **Was:** Layer 1+2 vor Claude: `BLOCKED_KEYWORDS` erweitert (40+), neu `RELEVANT_KEYWORDS` (70+), Scanner loggt `Blocked: ... keyword` bzw. `Off-topic: ... no relevant keyword` und `log_scanned` mit `off_topic_no_keyword`. Layer 3: `reply_system.txt` beginnt mit SKIP_OFF_TOPIC-Exit vor Identitaet; `reply_engine` wertet exakt `SKIP_OFF_TOPIC` aus (Log, kein QA/Telegram); `generate_reply_with_qa` + `bot.py` brechen ab ohne Pending-Queue (`skipped_off_topic`). Defaults/qa Regel 14 unveraendert; Tier-Liste siehe spaeterer Eintrag (+NoLimitGains, 42).
 - **Warum:** Weniger API-Kosten und Telegram-Rauschen durch Sport/GM-Tweets; konsistente Vorfilterung plus modellseitiges Off-Topic-Gate.
 - **Status:** pushed to GitHub
 

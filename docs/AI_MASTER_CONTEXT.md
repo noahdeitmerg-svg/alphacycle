@@ -202,7 +202,7 @@ Hidden via CSS + JS (`display: none`). Redundant with Hero + Positioning Framewo
 |---|---|
 | Server | Hetzner VPS (`ubuntu-4gb-hel1-2`, `95.216.152.31`) |
 | Stack | Python 3 + Tweepy v2 + Anthropic Claude API |
-| Scan | **41** tracked accounts (10+16+15 tiers); default **3600s** scan interval (see `config.py` / `.env`) |
+| Scan | **42** tracked accounts (11+16+15 tiers); default **3600s** scan interval (see `config.py` / `.env`) |
 | Limits | Defaults include **REPLY_LIMIT_HOURLY=5**, **REPLY_LIMIT_DAILY=15**, **MIN_LIKES_TO_REPLY=0**, delay **30-120s**, author spacing + per-account daily caps (see `permanent-fixes.mdc` X-Bot section) |
 | Reply rules | Target **max 260** chars in prompts/QA; Telegram handoff for posts/replies (no blind auto-post to X for replies) |
 | ARC Context | Fetches live from `/api/arc-summary` |
