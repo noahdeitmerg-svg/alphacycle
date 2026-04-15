@@ -1,8 +1,15 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-14 (V-001 step 7 — Telegram daily approval with image)
+**Zuletzt aktualisiert:** 2026-04-14 (sofort-massnahmen: limits + website embargo + no-link prompts)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-14) — Sofort-Massnahmen: Config + Prompts no-link
+- **Datei(en):** `alphacycle-x-bot/config.py`, `alphacycle-x-bot/prompts/post_system.txt`, `alphacycle-x-bot/prompts/reply_system.txt` (verifiziert unveraendert ohne URL), `alphacycle-x-bot/daily_post_engine.py`, `alphacycle-x-bot/growth_engine.py` (verifiziert ohne Link-Injection), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was:** Defaults angepasst: `REPLY_LIMIT_HOURLY=10`, `REPLY_LIMIT_DAILY=30`, `MAX_REPLIES_PER_ACCOUNT_PER_DAY=3`, `SCAN_INTERVAL_SECONDS=1800`. Website-Embargo gesetzt: `WEBSITE_EMBARGO = True`, `DAILY_POST_DASHBOARD_URL = \"\"`. `post_system.txt` bereinigt: 7 link-freie Share-Lines + harte No-Link-Regel. `reply_system.txt` auf Links geprueft (keine URL-Vorkommen). In `daily_post_engine.py` Capture-Only-Kommentare bei `DAILY_POST_DASHBOARD_URL` (keine Post-Text-Injection).  
+- **Warum:** Sofort hoehere Reply-Kadenz + striktes Website-Embargo bis Noah Freigabe erteilt.
+- **PLANNED:** Reply-back notification system. When someone replies to @Real_AlphaCycle's reply, send Telegram alert so Noah can reply back immediately. Priority: HIGH (75x algorithm weight for reply threads).
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-14) — V-001 Schritt 7: Telegram Daily Approval mit Bild
 - **Datei(en):** `alphacycle-x-bot/bot.py`, `alphacycle-x-bot/telegram_bot.py`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`

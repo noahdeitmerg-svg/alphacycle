@@ -344,6 +344,8 @@ def _screenshot_playwright(out_path: Path) -> bool:
             browser = p.chromium.launch(headless=True)
             try:
                 page = browser.new_page(viewport={"width": 1400, "height": 900})
+                # DISABLED: website embargo — no links until Noah lifts restriction.
+                # DAILY_POST_DASHBOARD_URL is capture-only, never injected into post text.
                 page.goto(
                     config.DAILY_POST_DASHBOARD_URL,
                     wait_until="domcontentloaded",
@@ -375,6 +377,8 @@ def _screenshot_selenium(out_path: Path) -> bool:
         driver = webdriver.Chrome(options=opts)
         try:
             driver.set_page_load_timeout(90)
+            # DISABLED: website embargo — no links until Noah lifts restriction.
+            # DAILY_POST_DASHBOARD_URL is capture-only, never injected into post text.
             driver.get(config.DAILY_POST_DASHBOARD_URL)
             time.sleep(5)
             driver.save_screenshot(str(out_path))

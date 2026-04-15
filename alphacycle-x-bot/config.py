@@ -54,7 +54,10 @@ ALPHACYCLE_PUBLIC_BASE = (
     os.getenv("ALPHACYCLE_PUBLIC_BASE", "https://alphacycle-production.up.railway.app")
     or ""
 ).strip().rstrip("/")
-DAILY_POST_DASHBOARD_URL = (os.getenv("DAILY_POST_DASHBOARD_URL", "https://alphacycle.app") or "").strip()
+# WEBSITE EMBARGO: Do not mention alphacycle.app in any automated content
+# until Noah explicitly lifts this restriction. No links in posts or replies.
+WEBSITE_EMBARGO = True
+DAILY_POST_DASHBOARD_URL = ""  # disabled until website is ready
 
 # Daily Post Schedule (UTC)
 DAILY_POST_TIME = "13:00"
@@ -97,8 +100,8 @@ QA_MAX_ATTEMPTS = max(1, int(os.getenv("QA_MAX_ATTEMPTS", "3") or "3"))
 # ============================================================
 # TRACKED ACCOUNTS — AlphaCycle Reply Targets
 # 42 Accounts total (11 + 16 + 15). Cleaned 2026-04-14.
-# Read budget: default SCAN_INTERVAL_SECONDS=3600 (60 min) => 42*24 timeline reads/day.
-#   Override in .env (e.g. 1800) if X read credits allow shorter interval.
+# Read budget: default SCAN_INTERVAL_SECONDS=1800 (30 min) => 42*48 timeline reads/day.
+#   Override in .env if X read credits require a longer interval.
 # ============================================================
 
 TIER_1_ACCOUNTS = [
@@ -348,16 +351,16 @@ RELEVANT_KEYWORDS: list = [
 ]
 
 # Reply / scanner limits (quality balance). Override via .env.
-REPLY_LIMIT_HOURLY = int(os.getenv("REPLY_LIMIT_HOURLY", "5"))
-REPLY_LIMIT_DAILY = int(os.getenv("REPLY_LIMIT_DAILY", "15"))
+REPLY_LIMIT_HOURLY = int(os.getenv("REPLY_LIMIT_HOURLY", "10"))
+REPLY_LIMIT_DAILY = int(os.getenv("REPLY_LIMIT_DAILY", "30"))
 SCAN_TWEET_MAX_AGE = int(os.getenv("SCAN_TWEET_MAX_AGE", "14400"))
-MAX_REPLIES_PER_ACCOUNT_PER_DAY = int(os.getenv("MAX_REPLIES_PER_ACCOUNT_PER_DAY", "2"))
+MAX_REPLIES_PER_ACCOUNT_PER_DAY = int(os.getenv("MAX_REPLIES_PER_ACCOUNT_PER_DAY", "3"))
 
 MAX_REPLIES_PER_HOUR = REPLY_LIMIT_HOURLY
 MAX_REPLIES_PER_DAY = REPLY_LIMIT_DAILY
 
-# Default 3600 = 60 min between scan cycles (42 tracked accounts; override SCAN_INTERVAL_SECONDS in .env for 30 min).
-SCAN_INTERVAL_SECONDS = int(os.getenv("SCAN_INTERVAL_SECONDS", "3600"))
+# Default 1800 = 30 min between scan cycles (42 tracked accounts).
+SCAN_INTERVAL_SECONDS = int(os.getenv("SCAN_INTERVAL_SECONDS", "1800"))
 
 REPLY_DELAY_MIN = int(os.getenv("REPLY_DELAY_MIN", "30"))
 REPLY_DELAY_MAX = int(os.getenv("REPLY_DELAY_MAX", "120"))

@@ -29,8 +29,17 @@ STRUCTURE EVERY POST:
 3. Structural reading — what the data shows
 4. Share line — one memorable closer
 
-SHARE LINES (use exactly one):
-"Structure before emotion." | "Not a prediction. A measurement." | "Cycles reward patience." | "Liquidity leads. Price follows." | "Sentiment changes fast. Structure changes slowly."
+SHARE LINES (use exactly one — NO links):
+"Structure before emotion."
+"Not a prediction. A measurement."
+"Sentiment changes fast. Structure changes slowly."
+"Cycles reward patience."
+"Liquidity leads. Price follows."
+"The structure moved. Most won't notice for months."
+"Consensus is late. Structure is early."
+
+NEVER include links, URLs, or website addresses in the post body.
+No links. Zero. Not even in the last line.
 
 RULES:
 - 4-8 lines. Mobile readable.
