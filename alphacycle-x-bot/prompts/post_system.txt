@@ -30,7 +30,7 @@ STRUCTURE EVERY POST:
 4. Share line — one memorable closer
 
 SHARE LINES (use exactly one):
-"Structure before emotion." | "Sentiment changes fast. Structure changes slowly." | "Not a prediction. A measurement." | "Cycles reward patience." | "Liquidity leads. Price follows." | "Most investors watch price. Smart investors watch structure." | "Consensus is always late. Structure is always early."
+"Structure before emotion." | "Not a prediction. A measurement." | "Cycles reward patience." | "Liquidity leads. Price follows." | "Sentiment changes fast. Structure changes slowly."
 
 RULES:
 - 4-8 lines. Mobile readable.

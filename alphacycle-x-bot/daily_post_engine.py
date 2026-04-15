@@ -35,6 +35,7 @@ _DAILY_POST_OVERLOAD_MAX_ATTEMPTS = 3
 
 
 def _strip_alphacycle_app_link(text: str) -> str:
+    # DISABLED: dashboard link removed until website ready
     cleaned = (text or "").strip()
     cleaned = re.sub(r"https?://(?:www\.)?alphacycle\.app\S*", "", cleaned, flags=re.I)
     cleaned = re.sub(r"\balphacycle\.app\b", "", cleaned, flags=re.I)

@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-14 (V-001 signal visual for daily X post)
+**Zuletzt aktualisiert:** 2026-04-14 (V-001 step 6 — remove alphacycle.app from post outputs)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-14) — V-001 Schritt 6: Link-freie Share Lines / Post-Output
+- **Datei(en):** `alphacycle-x-bot/prompts/post_system.txt`, `alphacycle-x-bot/daily_post_engine.py`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was:** `post_system.txt` Share-Lines auf 5 link-freie Varianten reduziert (ohne `alphacycle.app`). In `daily_post_engine.py` bleibt `DAILY_POST_DASHBOARD_URL` nur fuer Screenshot-Capture; Post-Text wird weiterhin ueber `_strip_alphacycle_app_link()` bereinigt (`# DISABLED: dashboard link removed until website ready`).
+- **Warum:** Keine Website-Links in User-facing Daily Posts solange Dashboard/Website noch nicht final freigegeben ist.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-14) — V-001: ARC Signal Visual (Daily Post PNG)
 - **Datei(en):** `alphacycle-x-bot/signal_visual.py`, `alphacycle-x-bot/poster.py`, `alphacycle-x-bot/daily_post_engine.py`, `alphacycle-x-bot/requirements.txt`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
