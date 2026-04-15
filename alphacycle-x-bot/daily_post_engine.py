@@ -34,6 +34,14 @@ _DAILY_POST_OVERLOAD_MAX_SLEEP = 1200
 _DAILY_POST_OVERLOAD_MAX_ATTEMPTS = 3
 
 
+def _strip_alphacycle_app_link(text: str) -> str:
+    cleaned = (text or "").strip()
+    cleaned = re.sub(r"https?://(?:www\.)?alphacycle\.app\S*", "", cleaned, flags=re.I)
+    cleaned = re.sub(r"\balphacycle\.app\b", "", cleaned, flags=re.I)
+    cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
+    return cleaned.strip()
+
+
 def _is_claude_overloaded(exc: BaseException) -> bool:
     """HTTP 529 / overloaded_error from Anthropic messages API."""
     code = getattr(exc, "status_code", None)
@@ -277,6 +285,7 @@ def generate_daily_post(
         try:
             text = _call_model(client, config.CLAUDE_MODEL)
             if text:
+                text = _strip_alphacycle_app_link(text)
                 logger.info("generate_daily_post: generated %s chars", len(text))
                 return text, post_type
         except Exception as e:
@@ -295,6 +304,7 @@ def generate_daily_post(
             try:
                 text = _call_model(client, fb)
                 if text:
+                    text = _strip_alphacycle_app_link(text)
                     logger.warning(
                         "generate_daily_post: succeeded with fallback model %s (primary was 529)",
                         fb,

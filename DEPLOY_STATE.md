@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-14 (docs sync 1.3.6 — TASK_PIPELINE C-013, MASTERPROMPTS, scanner context)
+**Zuletzt aktualisiert:** 2026-04-14 (V-001 signal visual for daily X post)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-14) — V-001: ARC Signal Visual (Daily Post PNG)
+- **Datei(en):** `alphacycle-x-bot/signal_visual.py`, `alphacycle-x-bot/poster.py`, `alphacycle-x-bot/daily_post_engine.py`, `alphacycle-x-bot/requirements.txt`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was:** Neues `signal_visual.py` (1200x675 PNG, dunkler Hintergrund `#0a0a0f`, zentraler ARC-Score + Zonen-Glow-Ring, Zone/BTC/Datum, ohne `alphacycle.app` im Bild). In `poster.py` neue `post_tweet_with_image()` (OAuth1 media upload + v2 create_tweet) und Daily-Flow: zuerst Signal-Visual posten, bei Fehler text-only Fallback. In `daily_post_engine.py` Link-Guard gegen `alphacycle.app` im generierten Post-Text. `requirements.txt` um `httpx>=0.25.0` erweitert (`Pillow` war bereits vorhanden).
+- **Warum:** taeglicher Post als teilbares Visual statt nur Text; robuste Degradation bei Media-Fehlern; kein `alphacycle.app` bis Dashboard final ist.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-14) — Docs sync 1.3.6 + Session-Ende Multi-Agent
 - **Datei(en):** `docs/SYSTEM_VERSION.md`, `docs/TASK_PIPELINE.md`, `docs/AI_MASTER_CONTEXT.md`, `docs/AI_AGENT_MASTERPROMPTS.md`, `docs/SYSTEM_STATE.md`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`

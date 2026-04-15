@@ -1,5 +1,7 @@
+import asyncio
 import logging
 import random
+import re
 import time
 from datetime import datetime, timezone
 
@@ -44,6 +46,15 @@ def get_client() -> tweepy.Client:
     )
 
 
+def _sanitize_daily_text(text: str) -> str:
+    cleaned = (text or "").strip()
+    # V-001: no alphacycle.app link in daily post text.
+    cleaned = re.sub(r"https?://(?:www\.)?alphacycle\.app\S*", "", cleaned, flags=re.I)
+    cleaned = re.sub(r"\balphacycle\.app\b", "", cleaned, flags=re.I)
+    cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
+    return cleaned.strip()
+
+
 def _enforce_rate_limits() -> bool:
     hourly = database.replies_last_hour()
     if hourly >= config.MAX_REPLIES_PER_HOUR:
@@ -75,6 +86,30 @@ def post_reply(reply_text: str, tweet_author: str, tweet_id: str) -> bool:
     else:
         logger.error("[POSTER] Telegram send failed ok1=%s ok2=%s @%s", ok1, ok2, a)
     return bool(ok1 and ok2)
+
+
+def post_tweet_with_image(text: str, image_bytes) -> dict:
+    """Post tweet with image via tweepy v1.1 media upload + v2 tweet."""
+    # Media Upload braucht OAuth1 (v1.1 API)
+    auth = tweepy.OAuth1UserHandler(
+        config.TWITTER_API_KEY,
+        config.TWITTER_API_SECRET,
+        config.TWITTER_ACCESS_TOKEN,
+        config.TWITTER_ACCESS_SECRET,
+    )
+    api_v1 = tweepy.API(auth)
+
+    image_bytes.seek(0)
+    media = api_v1.media_upload(filename="arc_signal.png", file=image_bytes)
+
+    client = get_client()
+    response = client.create_tweet(
+        text=text,
+        media_ids=[media.media_id],
+        user_auth=True,
+    )
+    logger.info("[POSTER] Tweet with image posted: %s", response)
+    return response
 
 
 def complete_approved_reply(tweet_id: str) -> str:
@@ -193,7 +228,7 @@ def post_daily_post(pending_id: str) -> bool:
         database.try_transition_daily_status(pending_id, "approved", "pending")
         return False
 
-    text = post_text
+    text = _sanitize_daily_text(post_text)
     if len(text) > 280:
         text = text[:277] + "..."
 
@@ -210,8 +245,17 @@ def post_daily_post(pending_id: str) -> bool:
             text = truncated.rsplit(" ", 1)[0].rstrip() + "..."
 
     try:
-        client = get_client()
-        response = client.create_tweet(text=text, user_auth=True)
+        response = None
+        try:
+            from signal_visual import generate_from_api
+
+            image_buf, _arc_data = asyncio.run(generate_from_api(config.ARC_API_URL))
+            response = post_tweet_with_image(text, image_buf)
+            logger.info("[DAILY] Posted with Signal Visual")
+        except Exception as e:
+            logger.warning("[DAILY] Signal Visual failed: %s — posting text-only", e)
+            client = get_client()
+            response = client.create_tweet(text=text, user_auth=True)
 
         if response.data:
             new_id = getattr(response.data, "id", None)
