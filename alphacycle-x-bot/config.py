@@ -62,7 +62,7 @@ DAILY_POST_TIME = "13:00"
 # Growth Engine Settings
 REPLY_HOOK_PROBABILITY = 0.4  # 40% = ca. 2 von 5
 MAX_REPLY_HISTORY = 5
-# Sonnet reply clip + growth_engine Telegram hard cap (same as reply_system / QA)
+# Primary Claude (Opus) reply clip + growth_engine Telegram hard cap (same as reply_system / QA)
 MAX_REPLY_GENERATION_CHARS = max(
     1, int((os.getenv("MAX_REPLY_GENERATION_CHARS", "260") or "260").strip())
 )
@@ -76,9 +76,9 @@ REPLY_PATTERNS = {
     "structural_insight": 0.20,
 }
 
-# Claude Model
-CLAUDE_MODEL = "claude-sonnet-4-20250514"
-# Daily post only: if Sonnet returns 529 overloaded, try this model immediately (often different capacity).
+# Claude Model (replies + daily posts via daily_post_engine; Opus is higher cost than Sonnet)
+CLAUDE_MODEL = "claude-opus-4-6"
+# Daily post only: if primary returns 529 overloaded, try this model immediately (often different capacity).
 # Set CLAUDE_MODEL_DAILY_FALLBACK=none (or off/false/0) to disable fallback (primary + long sleeps only).
 _CLAUDE_FB = (os.getenv("CLAUDE_MODEL_DAILY_FALLBACK") or "").strip()
 if _CLAUDE_FB.lower() in ("none", "off", "false", "0"):
@@ -96,7 +96,7 @@ QA_MAX_ATTEMPTS = max(1, int(os.getenv("QA_MAX_ATTEMPTS", "3") or "3"))
 
 # ============================================================
 # TRACKED ACCOUNTS — AlphaCycle Reply Targets
-# 42 Accounts total (11 + 16 + 15). Cleaned 2026-04-13.
+# 42 Accounts total (11 + 16 + 15). Cleaned 2026-04-14.
 # Read budget: default SCAN_INTERVAL_SECONDS=3600 (60 min) => 42*24 timeline reads/day.
 #   Override in .env (e.g. 1800) if X read credits allow shorter interval.
 # ============================================================
@@ -212,7 +212,6 @@ BLOCKED_KEYWORDS: list = [
 ]
 
 RELEVANT_KEYWORDS: list = [
-    # Bitcoin/Crypto
     "bitcoin",
     "btc",
     "crypto",
@@ -222,8 +221,6 @@ RELEVANT_KEYWORDS: list = [
     "halving",
     "mining",
     "hash rate",
-    "mempool",
-    # Market Structure
     "market",
     "bull",
     "bear",
@@ -236,9 +233,7 @@ RELEVANT_KEYWORDS: list = [
     "cycle",
     "bottom",
     "capitulation",
-    "accumulation",
     "euphoria",
-    # Macro
     "fed",
     "fomc",
     "rate cut",
@@ -255,7 +250,6 @@ RELEVANT_KEYWORDS: list = [
     "bond",
     "credit",
     "spread",
-    # Liquidity
     "liquidity",
     "stablecoin",
     "tether",
@@ -265,9 +259,7 @@ RELEVANT_KEYWORDS: list = [
     "tvl",
     "funding rate",
     "leverage",
-    "margin",
     "open interest",
-    # Assets
     "gold",
     "oil",
     "dollar",
@@ -279,7 +271,6 @@ RELEVANT_KEYWORDS: list = [
     "dow",
     "vix",
     "commodities",
-    # Geopolitics (market-relevant)
     "tariff",
     "sanctions",
     "iran",
@@ -288,7 +279,6 @@ RELEVANT_KEYWORDS: list = [
     "geopolitical",
     "trade war",
     "china",
-    # Institutional
     "etf",
     "blackrock",
     "fidelity",
@@ -297,14 +287,10 @@ RELEVANT_KEYWORDS: list = [
     "institutional",
     "whale",
     "reserve",
-    # Onchain
     "onchain",
     "on-chain",
     "wallet",
     "exchange flow",
-    "coinbase",
-    "binance",
-    # Sentiment
     "fear",
     "greed",
     "sentiment",
@@ -321,7 +307,7 @@ MAX_REPLIES_PER_ACCOUNT_PER_DAY = int(os.getenv("MAX_REPLIES_PER_ACCOUNT_PER_DAY
 MAX_REPLIES_PER_HOUR = REPLY_LIMIT_HOURLY
 MAX_REPLIES_PER_DAY = REPLY_LIMIT_DAILY
 
-# Default 3600 = 60 min between scan cycles (41 tracked accounts; override SCAN_INTERVAL_SECONDS in .env for 30 min).
+# Default 3600 = 60 min between scan cycles (42 tracked accounts; override SCAN_INTERVAL_SECONDS in .env for 30 min).
 SCAN_INTERVAL_SECONDS = int(os.getenv("SCAN_INTERVAL_SECONDS", "3600"))
 
 REPLY_DELAY_MIN = int(os.getenv("REPLY_DELAY_MIN", "30"))

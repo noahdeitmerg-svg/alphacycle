@@ -205,6 +205,7 @@ Hidden via CSS + JS (`display: none`). Redundant with Hero + Positioning Framewo
 | Scan | **42** tracked accounts (11+16+15 tiers); default **3600s** scan interval (see `config.py` / `.env`) |
 | Limits | Defaults include **REPLY_LIMIT_HOURLY=5**, **REPLY_LIMIT_DAILY=15**, **MIN_LIKES_TO_REPLY=0**, delay **30-120s**, author spacing + per-account daily caps (see `permanent-fixes.mdc` X-Bot section) |
 | Reply rules | Target **max 260** chars in prompts/QA; Telegram handoff for posts/replies (no blind auto-post to X for replies) |
+| Primary Claude | **`claude-opus-4-6`** in `config.CLAUDE_MODEL` for **replies and daily posts** (higher API cost than Sonnet; monitor usage). QA remains **Haiku** (`QA_MODEL`). |
 | ARC Context | Fetches live from `/api/arc-summary` |
 
 **Bot files:**

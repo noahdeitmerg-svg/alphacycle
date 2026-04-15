@@ -452,122 +452,6 @@ _QA_PLACEHOLDER_REPLY = (
 )
 
 
-def _build_qa_replacement_guide(failures: list[str]) -> str:
-    """Append-once blocks keyed by failure patterns (Haiku FAIL reasons)."""
-    blob = " ".join(failures).lower()
-    parts: list[str] = []
-    seen: set[str] = set()
-
-    def add(key: str, text: str) -> None:
-        if key not in seen:
-            seen.add(key)
-            parts.append(text)
-
-    if "banned_word" in blob or "zone_label" in blob:
-        add(
-            "zone_banned",
-            "\nDo NOT use ARC zone names as labels."
-            "\nInstead of 'deep value territory' write 'historic structural lows'"
-            "\nInstead of 'deep value zone' write 'single-digit percentile readings'"
-            "\nInstead of 'accumulation phase' write 'structural positioning'"
-            "\nInstead of 'accumulation zone' write 'low-risk structural environment'"
-            "\nNever use zone names directly. Describe what they mean.",
-        )
-    if "contains_prediction" in blob or "prediction" in blob:
-        add(
-            "pred",
-            "\nDo NOT predict what happens next."
-            "\nReplace any 'will', 'next', 'coming' + outcome with an observation."
-            "\nDescribe what IS, not what WILL BE.",
-        )
-    if "ai_sound" in blob:
-        add(
-            "ai",
-            "\nYour reply sounded like AI. Rewrite completely."
-            "\nUse shorter words. Be direct. Sound like a sharp trader at a bar.",
-        )
-    if "topic_hijack" in blob:
-        add(
-            "hijack",
-            "\nYour opening ignored the author's topic. First sentence must"
-            "\nengage THEIR subject (oil, tariffs, Fed, etc.). Earn crypto"
-            "\nlater in the reply if at all — never open with Bitcoin/stablecoins"
-            "\nwhen they did not.",
-        )
-    if "recycled_data" in blob:
-        add(
-            "recycled",
-            "\nDo not stack boilerplate metrics (drawdown %, stablecoins,"
-            "\npercentiles, leverage flushed, structural risk lows, smart money)."
-            "\nPick ONE angle tied to the tweet, or zero numbers.",
-        )
-    if "generic_opener" in blob:
-        add(
-            "generic",
-            "\nYour first sentence was generic. Start by referencing"
-            "\na SPECIFIC claim or data point from the original tweet.",
-        )
-    if "over_260" in blob:
-        add(
-            "len",
-            "\nYour reply was too long. Maximum 260 characters."
-            "\nCut to 2 sentences maximum.",
-        )
-    if "factual" in blob:
-        add(
-            "fact",
-            "\nYour reply had a factual error. Compare claims to the snapshot"
-            "\nand to well-known event timing before writing.",
-        )
-    if "logic" in blob:
-        add(
-            "logic",
-            "\nYour reply had a logic error. Read the tweet again carefully."
-            "\nMake sure your commentary matches what the author actually said.",
-        )
-    if "brand" in blob:
-        add(
-            "brand",
-            "\nNever mention AlphaCycle, ARC, our dashboard, or our model."
-            "\nUse 'structural risk composite' or 'risk percentile readings' instead.",
-        )
-    if "sales" in blob:
-        add(
-            "sales",
-            "\nRemove any sales language. You observe, you don't sell.",
-        )
-    if "no_insight" in blob:
-        add(
-            "no_insight",
-            "\nYour reply just restated the tweet. Add something NEW."
-            "\nWhat dimension did the author miss? Liquidity? Leverage?"
-            "\nHistorical parallel? Structural context? Add ONE.",
-        )
-    if "too_generic" in blob:
-        add(
-            "too_generic",
-            "\nYour reply was too generic. Any account could write this."
-            "\nMake it specific: use a number, a timeframe, a structural"
-            "\nobservation that only someone tracking cycle risk would know.",
-        )
-    if "no_structural_lens" in blob:
-        add(
-            "no_structural_lens",
-            "\nYour reply had no structural cycle lens."
-            "\nConnect it to: liquidity direction, leverage levels,"
-            "\nsentiment vs structure divergence, or cycle positioning."
-            "\nIf the tweet is about price, reframe to structure.",
-        )
-    if "low_authority" in blob:
-        add(
-            "low_authority",
-            "\nYour reply sounded like retail commentary."
-            "\nWrite like a macro strategist. Precise. Measured."
-            "\nNo slang. No hype. No casual language.",
-        )
-    return "".join(parts)
-
-
 def _enforce_reply_telegram_char_limit(
     reply_text: str,
     tweet: dict,
@@ -577,7 +461,7 @@ def _enforce_reply_telegram_char_limit(
 ) -> tuple[str, str | None, str | None]:
     """
     Hard cap 260 chars after QA (Python counts; QA prompt is soft only).
-    One Sonnet retry with a shorter instruction; then truncate if still over.
+    One primary-model retry with a shorter instruction; then truncate if still over.
     """
     import reply_engine
 
@@ -623,7 +507,9 @@ def generate_reply_with_qa(
     arc_data: dict | None = None,
 ) -> tuple[str | None, str | None, int, str | None, str | None]:
     """
-    Sonnet reply + Haiku QA loop (up to QA_MAX_ATTEMPTS).
+    Opus reply (config.CLAUDE_MODEL) + Haiku QA loop (up to QA_MAX_ATTEMPTS).
+    On QA FAIL: new generation with select_different_pattern_key only;
+    extra_instruction is a short angle hint (no QA feedback dump).
     Returns: reply_text, qa_status, attempts, approach_key, pattern_key
     reply_text is None when Claude returns SKIP_OFF_TOPIC (no Telegram, no QA).
     qa_status: \"PASS\", \"SKIP_OFF_TOPIC\", or \"FAIL_3x:reasons\"
@@ -652,7 +538,7 @@ def generate_reply_with_qa(
         force_pattern: str | None = None
         if attempt > 1:
             extra = (
-                "Write something completely different from your last attempt."
+                "Write something completely different. Use a different angle."
             )
             if last_pk:
                 force_pattern = select_different_pattern_key(last_pk)

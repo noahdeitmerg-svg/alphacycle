@@ -1,8 +1,15 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-14 (x-bot: Tier 1 +NoLimitGains, 42 tracked)
+**Zuletzt aktualisiert:** 2026-04-14 (x-bot: Reply System v3 — Opus + prompts)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-14) — x-bot: Reply System v3 (Opus + Prompt-Overhaul)
+- **Datei(en):** `alphacycle-x-bot/config.py`, `alphacycle-x-bot/prompts/reply_system.txt`, `alphacycle-x-bot/prompts/qa_system.txt`, `alphacycle-x-bot/growth_engine.py`, `docs/AI_MASTER_CONTEXT.md`, `docs/SYSTEM_VERSION.md`, `docs/TASK_PIPELINE.md`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was:** `CLAUDE_MODEL` auf **claude-opus-4-6** (gleiche Variable fuer **Replies und Daily Posts** in `daily_post_engine`); **QA_MODEL** unveraendert Haiku. Neue `reply_system.txt` (STEP 1-4, 7 Angles A-G, Beispiele inkl. JPM/UK gilt, Historical Reference Data, BANNED WORDS, SKIP_OFF_TOPIC in Step 1). Neue `qa_system.txt` (14 Regeln inkl. **not_analyst_grade**, **repetitive_opener**). `generate_reply_with_qa`: bei QA-FAIL nur **Pattern-Wechsel** + feste `extra_instruction` (*Write something completely different. Use a different angle.*); unbenutzte **`_build_qa_replacement_guide`** entfernt. `RELEVANT_KEYWORDS` an Spec angepasst (weiter 70+ Eintraege).
+- **Warum:** hoehere Reply-Qualitaet / Compliance; klarerer Flow statt QA-Feedback-Stapel.
+- **Kosten / Risiko (Noah):** Opus liegt grob **~5x** ueber Sonnet **pro Token/Call**. Grobe Groessenordnung bei voller Nutzung (z. B. 15 Replies/Tag + QA + Retries, plus **Daily Post** mit demselben Modell): eher **mehrere USD/Tag** statt ~1-2 mit Sonnet — **Usage in Anthropic Console 2-3 Tage beobachten**. Wenn Budget zu hoch: in `.env` **`CLAUDE_MODEL`** wieder auf guenstigeres Modell (z. B. Sonnet) setzen oder Daily separat aus Opus nehmen (Code-Aenderung, aktuell **nicht** getrennt).
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-14) — x-bot: Tier 1 +NoLimitGains (42 tracked)
 - **Datei(en):** `alphacycle-x-bot/config.py`, `docs/AI_MASTER_CONTEXT.md`, `docs/AI_AGENT_MASTERPROMPTS.md`, `docs/TASK_PIPELINE.md`, `docs/SYSTEM_VERSION.md`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
