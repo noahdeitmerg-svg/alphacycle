@@ -194,7 +194,7 @@ def send_main_menu(
     reply_to_message_id: int | None = None,
 ) -> bool:
     """
-    Inline keyboard: same actions as /status, /ping, /scan, /queuedaily, /logbot, /logtg, /help.
+    Inline keyboard: same actions as /status, /ping, /scan, /queuedaily, /health, /cmd, /logbot, /logtg, /help.
     reply_to_message_id: optional thread anchor (e.g. user message that @mentioned the bot).
     """
     cid = chat_id if chat_id is not None else config.TELEGRAM_CHAT_ID
@@ -209,6 +209,8 @@ def send_main_menu(
         "Ping — Listener erreichbar?\n"
         "Scan jetzt — ein Scan-Zyklus (wie bot.py --once).\n"
         "Daily in Queue — Daily-Post erzeugen + Freigabe in Telegram.\n"
+        "Health Check — 20s Schnellcheck (Head, Screens, Pillow/httpx).\n"
+        "Command — sicheren Shell-Befehl ausfuehren (/cmd ...).\n"
         "Banner — Screenshot alphacycle.app Hero (1500x500), optional X-Header.\n"
         f"Log {sb} — letzte Zeilen Screen-Scrollback (bot.py).\n"
         f"Log {st} — letzte Zeilen Scrollback (dieser Listener).\n"
@@ -224,6 +226,10 @@ def send_main_menu(
         [
             {"text": "Scan jetzt", "callback_data": "menu:scan"},
             {"text": "Daily in Queue", "callback_data": "menu:queuedaily"},
+        ],
+        [
+            {"text": "Health Check", "callback_data": "menu:health"},
+            {"text": "Command Help", "callback_data": "menu:cmdhelp"},
         ],
         [
             {"text": "Banner", "callback_data": "menu:banner"},

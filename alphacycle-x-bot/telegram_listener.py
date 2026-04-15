@@ -6,6 +6,7 @@ Run alongside: python3 bot.py
 import asyncio
 import os
 import re
+import shlex
 import sqlite3
 import subprocess
 import sys
@@ -23,6 +24,7 @@ import telegram_bot
 
 # UTC calendar day (YYYY-MM-DD) for which we already sent the 23:00 summary.
 _summary_sent_for_utc_date: str | None = None
+_BOT_ROOT = Path(__file__).resolve().parent
 
 
 def _api_base() -> str:
@@ -210,6 +212,106 @@ def _run_bot_cli(extra_args: list[str]) -> tuple[int, str]:
     return r.returncode, combined or "(no output)"
 
 
+def _run_shell_command(cmd_text: str, timeout_s: int = 30) -> tuple[int, str]:
+    """
+    Execute a single shell-like command safely (no chaining/operators).
+    Intended for Telegram /cmd in authorized chats.
+    """
+    raw = (cmd_text or "").strip()
+    if not raw:
+        return 2, "Empty command."
+    if any(x in raw for x in ("&&", "||", ";", "|", "`", "$(", ">", "<")):
+        return 2, "Unsupported operator. Use one command only (no chaining/pipes/redirection)."
+    try:
+        args = shlex.split(raw)
+    except ValueError as e:
+        return 2, f"Parse error: {e}"
+    if not args:
+        return 2, "Empty command."
+
+    # Tight allowlist for emergency ops in Telegram.
+    allowed_bins = {"screen", "git", "python", "python3", "bash", "ls", "pwd", "whoami", "date"}
+    if args[0] not in allowed_bins:
+        return 2, f"Command not allowed: {args[0]!r}"
+
+    # Restrict risky command families to known-safe patterns.
+    if args[0] == "git":
+        if len(args) < 2 or args[1] not in {"status", "log", "fetch", "pull", "rev-parse"}:
+            return 2, "Allowed git subcommands: status, log, fetch, pull, rev-parse"
+    if args[0] == "screen":
+        if args[1:] != ["-ls"]:
+            return 2, "Only 'screen -ls' is allowed."
+    if args[0] == "bash":
+        if args[1:] != ["./restart-screens.sh"]:
+            return 2, "Only 'bash ./restart-screens.sh' is allowed."
+
+    try:
+        r = subprocess.run(
+            args,
+            cwd=str(_BOT_ROOT),
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=timeout_s,
+            env=os.environ.copy(),
+        )
+    except subprocess.TimeoutExpired:
+        return -1, f"Timeout after {timeout_s}s."
+    except OSError as e:
+        return -1, f"Subprocess error: {e}"
+
+    out = (r.stdout or "").rstrip()
+    err = (r.stderr or "").rstrip()
+    combined = out
+    if err:
+        combined = (out + "\n" + err).strip() if out else err
+    return r.returncode, combined or "(no output)"
+
+
+def _quick_health_check() -> tuple[int, str]:
+    checks = [
+        ("Git Head", ["git", "log", "-1", "--oneline"], 15),
+        ("Screens", ["screen", "-ls"], 15),
+        (
+            "Python deps",
+            [
+                sys.executable,
+                "-c",
+                (
+                    "import PIL, httpx; "
+                    "print('Pillow OK:', PIL.__version__); "
+                    "print('httpx OK:', httpx.__version__)"
+                ),
+            ],
+            20,
+        ),
+    ]
+    lines: list[str] = []
+    overall = 0
+    for title, cmd, timeout_s in checks:
+        try:
+            r = subprocess.run(
+                cmd,
+                cwd=str(_BOT_ROOT),
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                timeout=timeout_s,
+                env=os.environ.copy(),
+            )
+            if r.returncode != 0:
+                overall = 1
+            out = ((r.stdout or "") + ("\n" + (r.stderr or "") if r.stderr else "")).strip()
+            out = out or "(no output)"
+            lines.append(f"[{title}] exit={r.returncode}\n{out}")
+        except Exception as e:
+            overall = 1
+            lines.append(f"[{title}] error: {e}")
+    return overall, "\n\n".join(lines)
+
+
 def _screen_log_tail(session: str, max_lines: int = 150) -> str:
     """
     GNU screen scrollback via hardcopy -h (needs screen session name, e.g. screen -S xbot).
@@ -302,6 +404,8 @@ def _build_help_body() -> str:
         "/ping — Listener lebt\n"
         "/scan — ein Scan-Zyklus (bot.py --once)\n"
         "/queuedaily — Daily jetzt + Freigabe\n"
+        "/health — 20s Schnellcheck (Head, Screens, Pillow/httpx)\n"
+        "/cmd <befehl> — sicherer Einzelbefehl (allowlist)\n"
         "/banner — Dashboard-Hero Screenshot 1500x500 + optional X-Header\n"
         f"/logbot — Screen-Log ({config.SCREEN_SESSION_BOT})\n"
         f"/logtg — Screen-Log ({config.SCREEN_SESSION_TG})\n\n"
@@ -422,6 +526,34 @@ def _handle_menu_callback(
             prefix=f"Daily (--queue-daily)\nExit {code}\n",
         )
         return
+    if key == "health":
+        toast("Health Check …")
+        code, out = _quick_health_check()
+        _send_chunks(
+            chat_id,
+            out,
+            reply_to_message_id=reply_mid,
+            prefix=f"Health Check\nExit {code}\n",
+        )
+        return
+    if key == "cmdhelp":
+        toast("Command Hilfe")
+        telegram_bot.send_feedback_message(
+            (
+                "Command Mode\n"
+                "Nutze: /cmd <befehl>\n\n"
+                "Beispiele:\n"
+                "/cmd screen -ls\n"
+                "/cmd git status --short\n"
+                "/cmd git log -1 --oneline\n"
+                "/cmd bash ./restart-screens.sh\n"
+                "/cmd python -c \"import PIL, httpx; print(PIL.__version__, httpx.__version__)\"\n\n"
+                "Hinweis: Nur sichere Einzelbefehle (allowlist), keine Pipes/&&/;"
+            ),
+            chat_id=chat_id,
+            reply_to_message_id=reply_mid,
+        )
+        return
     if key == "logbot":
         toast(f"Log {config.SCREEN_SESSION_BOT}")
         _send_chunks(
@@ -486,6 +618,8 @@ _TEXT_TO_SLASH = {
     "screentg": "/logtg",
     "screen_tg": "/logtg",
     "banner": "/banner",
+    "health": "/health",
+    "cmd": "/cmd",
     "menu": "/menu",
     "start": "/start",
 }
@@ -577,7 +711,12 @@ def _message_invokes_bot(msg: dict, low: str, text: str) -> bool:
     return False
 
 
-def _execute_slash_command(chat_id, cmd: str, reply_to_message_id: int | None = None) -> None:
+def _execute_slash_command(
+    chat_id,
+    cmd: str,
+    reply_to_message_id: int | None = None,
+    full_text: str = "",
+) -> None:
     """Dispatch /command (same behavior for slash and keyword aliases)."""
     cmd = (cmd or "").strip().split()[0].split("@", 1)[0].lower()
     if not cmd.startswith("/"):
@@ -633,6 +772,40 @@ def _execute_slash_command(chat_id, cmd: str, reply_to_message_id: int | None = 
         _send_chunks(chat_id, out, prefix=head)
         return
 
+    if cmd == "/health":
+        telegram_bot.send_feedback_message(
+            "Starte 20s Health-Check ...",
+            chat_id=chat_id,
+            reply_to_message_id=reply_to_message_id,
+        )
+        code, out = _quick_health_check()
+        _send_chunks(chat_id, out, prefix=f"Health Check\nExit {code}\n")
+        return
+
+    if cmd == "/cmd":
+        raw = (full_text or "").strip()
+        parts = raw.split(maxsplit=1)
+        if len(parts) < 2 or not parts[1].strip():
+            telegram_bot.send_feedback_message(
+                (
+                    "Usage: /cmd <befehl>\n"
+                    "Beispiel: /cmd screen -ls\n"
+                    "Sicherheitsregel: nur Einzelbefehle (keine &&, |, ;, Redirects)."
+                ),
+                chat_id=chat_id,
+                reply_to_message_id=reply_to_message_id,
+            )
+            return
+        user_cmd = parts[1].strip()
+        telegram_bot.send_feedback_message(
+            f"Running: {user_cmd}",
+            chat_id=chat_id,
+            reply_to_message_id=reply_to_message_id,
+        )
+        code, out = _run_shell_command(user_cmd, timeout_s=40)
+        _send_chunks(chat_id, out, prefix=f"Cmd Exit {code}\n")
+        return
+
     if cmd in ("/logbot", "/log_xbot", "/screenbot"):
         log_text = _screen_log_tail(config.SCREEN_SESSION_BOT)
         _send_chunks(chat_id, log_text)
@@ -674,6 +847,7 @@ def _handle_text_command(msg: dict) -> None:
                         chat_id,
                         _TEXT_TO_SLASH[first],
                         msg.get("message_id"),
+                        full_text=_TEXT_TO_SLASH[first],
                     )
                     return
 
@@ -731,6 +905,7 @@ def _handle_text_command(msg: dict) -> None:
         chat_id,
         cmd,
         reply_to_message_id=msg.get("message_id"),
+        full_text=text,
     )
 
 

@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-15 (deploy webhook fallback hard sync)
+**Zuletzt aktualisiert:** 2026-04-15 (telegram health check + command mode)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-15) — Telegram: Health-Check + Command-Button
+- **Datei(en):** `alphacycle-x-bot/telegram_listener.py`, `alphacycle-x-bot/telegram_bot.py`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was:** Telegram-Menue erweitert um `Health Check`-Button (`menu:health`) und `Command Help`-Button (`menu:cmdhelp`). Neuer Slash/Text-Command `/health` fuehrt 20s Schnellcheck aus (Git Head, `screen -ls`, Python-Import `Pillow/httpx`). Neuer `/cmd <befehl>` fuer sichere Einzelbefehle (allowlist, keine Pipes/Chaining/Redirects) in autorisierten Chats.
+- **Warum:** Noah kann Deploy-Zustand direkt in Telegram pruefen und Notfall-Befehle ausfuehren, ohne immer per SSH auf den VPS zu muessen.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-15) — Deploy-Webhook: Auto-Fallback bei git pull Fehler
 - **Datei(en):** `alphacycle-x-bot/deploy-server/deploy.py`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
