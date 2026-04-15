@@ -209,7 +209,7 @@ QUEUE:
 | C-008 | Reply system prompt v2 (70/30 rule, rotation) | 2026-04-10 | fb082f7 |
 | C-009 | ARC v1.2 weights in code + UI + docs | 2026-04-12 | see DEPLOY_STATE |
 | C-010 | X-bot config sync (keywords, 41 accounts, defaults) | 2026-04-14 | ed13483 |
-| C-011 | X-bot Tier 1: +NoLimitGains; 42 tracked (11+16+15) | 2026-04-14 | — |
+| C-011 | X-bot Tier 1: +NoLimitGains; 42 tracked (11+16+15) | 2026-04-14 | 7b1ebd8 |
 
 **C-011 / Prompt FIX 5A — validation**
 
