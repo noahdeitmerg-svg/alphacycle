@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-14 (telegram format: original tweet text included)
+**Zuletzt aktualisiert:** 2026-04-15 (restart-screens venv activation)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-15) — X-Bot restart-screens nutzt .venv
+- **Datei(en):** `alphacycle-x-bot/restart-screens.sh`, `DEPLOY_STATE.md`
+- **Was:** Beide `screen`-Startbefehle aktivieren vor dem Start explizit die virtuelle Umgebung: `source .venv/bin/activate && exec python3 ...` fuer `bot.py` und `telegram_listener.py`.
+- **Warum:** Abhaengigkeiten wie `Pillow`/`httpx` sind in `.venv` installiert; System-Python ohne venv fuehrte zu Startfehlern.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-14) — Telegram Reply Candidate Format: Original + Reply + Metadata
 - **Datei(en):** `alphacycle-x-bot/telegram_bot.py`, `alphacycle-x-bot/bot.py`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`

@@ -22,7 +22,7 @@ quit_matching_screens
 sleep 1
 quit_matching_screens
 
-screen -S xbot -dm bash -lc "cd '${ROOT}' && exec python3 bot.py"
-screen -S tg -dm bash -lc "cd '${ROOT}' && exec python3 telegram_listener.py"
+screen -S xbot -dm bash -lc "cd '${ROOT}' && source .venv/bin/activate && exec python3 bot.py"
+screen -S tg -dm bash -lc "cd '${ROOT}' && source .venv/bin/activate && exec python3 telegram_listener.py"
 echo "Started xbot + tg in ${ROOT}"
 screen -ls
