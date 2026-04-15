@@ -95,6 +95,16 @@ def verify_signature(payload: bytes, signature: str) -> bool:
     return ok
 
 
+def _run_cmd(args: list[str], cwd: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        args,
+        cwd=cwd,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+
 @app.post("/deploy")
 async def deploy(request: Request):
     body = await request.body()
@@ -104,21 +114,24 @@ async def deploy(request: Request):
         raise HTTPException(status_code=403, detail="Invalid signature")
 
     try:
-        result = subprocess.run(
-            ["git", "pull", "origin", "main"],
-            cwd=REPO_PATH,
-            check=True,
-            capture_output=True,
-            text=True,
-        )
-        subprocess.run(
-            ["bash", "./restart-screens.sh"],
-            cwd=REPO_PATH,
-            check=True,
-            capture_output=True,
-            text=True,
-        )
+        fallback_used = False
+        try:
+            result = _run_cmd(["git", "pull", "origin", "main"], REPO_PATH)
+        except subprocess.CalledProcessError as pull_err:
+            fallback_used = True
+            logger.warning(
+                "git pull failed, trying hard sync fallback: rc=%s stderr=%s",
+                pull_err.returncode,
+                (pull_err.stderr or "")[:300],
+            )
+            _run_cmd(["git", "fetch", "origin"], REPO_PATH)
+            result = _run_cmd(["git", "reset", "--hard", "origin/main"], REPO_PATH)
+
+        _run_cmd(["bash", "./restart-screens.sh"], REPO_PATH)
+
         out = (result.stdout or "")[:200]
+        if fallback_used:
+            out = f"[fallback: fetch+reset] {out}"
         send_telegram(
             "\u2705 AlphaCycle Bot deployed successfully\n\n"
             f"<code>{out}</code>"

@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-15 (restart-screens venv activation)
+**Zuletzt aktualisiert:** 2026-04-15 (deploy webhook fallback hard sync)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-15) — Deploy-Webhook: Auto-Fallback bei git pull Fehler
+- **Datei(en):** `alphacycle-x-bot/deploy-server/deploy.py`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was:** `/deploy` versucht weiter zuerst `git pull origin main`. Falls Pull fehlschlaegt (z. B. lokale Drift auf VPS), fuehrt der Webhook automatisch Fallback aus: `git fetch origin` + `git reset --hard origin/main`, danach `restart-screens.sh`. Erfolgs-Telegram markiert den Fallback mit Prefix `[fallback: fetch+reset]`.
+- **Warum:** Deploy soll automatisch recovern und nur im echten Notfall manuellen VPS-Eingriff brauchen.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-15) — X-Bot restart-screens nutzt .venv
 - **Datei(en):** `alphacycle-x-bot/restart-screens.sh`, `DEPLOY_STATE.md`
