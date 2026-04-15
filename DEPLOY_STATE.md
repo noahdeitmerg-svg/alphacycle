@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-14 (sofort-massnahmen: limits + website embargo + no-link prompts)
+**Zuletzt aktualisiert:** 2026-04-14 (telegram format: original tweet text included)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-14) — Telegram Reply Candidate Format: Original + Reply + Metadata
+- **Datei(en):** `alphacycle-x-bot/telegram_bot.py`, `alphacycle-x-bot/bot.py`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was:** Reply-Candidate Nachricht fuer Telegram auf copy-paste Review-Format umgestellt: `Original:` (voller Tweet-Text), `Reply:`, und Abschlusszeile `Chars: ... | Pattern: ...`. Rausgenommen: Copy-Instruction-Noise (`POST: send copy instructions...`) sowie `Approve?` im Reply-Candidate-Body. POST/SKIP-Buttons bleiben aktiv. Aufruf in `bot.py` uebergibt jetzt `tweet["text"]` und `pattern_key`.
+- **Warum:** Noah kann die komplette Candidate-Nachricht direkt an Growth Engine weitergeben und die Reply gegen den Original-Tweet sauber pruefen lassen.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-14) — Sofort-Massnahmen: Config + Prompts no-link
 - **Datei(en):** `alphacycle-x-bot/config.py`, `alphacycle-x-bot/prompts/post_system.txt`, `alphacycle-x-bot/prompts/reply_system.txt` (verifiziert unveraendert ohne URL), `alphacycle-x-bot/daily_post_engine.py`, `alphacycle-x-bot/growth_engine.py` (verifiziert ohne Link-Injection), `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`

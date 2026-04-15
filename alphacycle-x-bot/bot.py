@@ -226,9 +226,11 @@ def run_cycle():
 
             sent = telegram_bot.send_approval(
                 tw_url,
+                tweet["text"],
                 reply_text,
                 tweet["id"],
                 tweet["author"],
+                pattern_key=pattern_key,
                 qa_status=qa_status if config.QA_ENABLED else None,
                 qa_attempts=qa_attempts if config.QA_ENABLED else None,
             )

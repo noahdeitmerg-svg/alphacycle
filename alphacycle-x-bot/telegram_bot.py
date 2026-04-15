@@ -35,9 +35,11 @@ def send_plain_message(text: str) -> bool:
 
 def send_approval(
     tweet_url: str,
+    tweet_text: str,
     reply_text: str,
     tweet_id: str,
     username: str,
+    pattern_key: str | None = None,
     qa_status: str | None = None,
     qa_attempts: int | None = None,
 ) -> bool:
@@ -46,56 +48,26 @@ def send_approval(
         return False
 
     u = (username or "").strip().lstrip("@")
+    ot = (tweet_text or "").strip()
     rt = (reply_text or "").strip()
+    qc = (qa_status or "N/A").strip()
+    _att = int(qa_attempts or 1)
+    if _att > 1 and "attempt" not in qc.lower():
+        qc = f"{qc} (attempt {_att})"
+    pc = (pattern_key or "").strip() or "unknown"
+    cc = len(rt)
 
-    if qa_status:
-        att = int(qa_attempts or 1)
-        if qa_status == "PASS" or qa_status.startswith("PASS"):
-            body = (
-                "New AlphaCycle Reply Candidate\n\n"
-                f"✅ QA: PASS (attempt {att})\n"
-                f"Account: @{u}\n"
-                f"Tweet: {tweet_url}\n\n"
-                "Reply:\n"
-                f"{rt}\n\n"
-                "POST: send copy instructions to this chat (no X API).\n"
-                "Approve?"
-            )
-        elif qa_status.startswith("FAIL_3x"):
-            reasons = (
-                qa_status.split(":", 1)[1].strip()
-                if ":" in qa_status
-                else qa_status
-            )
-            body = (
-                "New AlphaCycle Reply Candidate\n\n"
-                f"⚠️ QA: FAILED 3x ({reasons}) — check carefully\n"
-                f"Account: @{u}\n"
-                f"Tweet: {tweet_url}\n\n"
-                "Reply:\n"
-                f"{rt}\n\n"
-                "POST: send copy instructions to this chat (no X API).\n"
-                "Approve?"
-            )
-        else:
-            body = (
-                "New AlphaCycle Reply Candidate\n\n"
-                f"QA: {qa_status}\n"
-                f"Account: @{u}\n"
-                f"Tweet: {tweet_url}\n\n"
-                "Reply:\n"
-                f"{rt}\n\n"
-                "POST: send copy instructions to this chat (no X API).\n"
-                "Approve?"
-            )
-    else:
-        body = (
-            "Reply ready\n\n"
-            f"Tweet: {tweet_url}\n"
-            f"Author: @{u}\n\n"
-            "POST: send copy instructions to this chat (no X API). "
-            "Reply text follows in the next message."
-        )
+    body = (
+        "New AlphaCycle Reply Candidate\n\n"
+        f"✅ QA: {qc}\n"
+        f"Account: @{u}\n"
+        f"Tweet: {tweet_url}\n\n"
+        "Original:\n"
+        f"\"{ot}\"\n\n"
+        "Reply:\n"
+        f"{rt}\n\n"
+        f"Chars: {cc} | Pattern: {pc}"
+    )
 
     max_len = 4096
     if len(body) > max_len:
@@ -129,12 +101,6 @@ def send_approval(
         print(f"[TELEGRAM] sendMessage error: {e}")
         return False
 
-    if qa_status:
-        return True
-
-    if not send_plain_message(rt):
-        print("[TELEGRAM] approval info sent but plain reply message failed")
-        return False
     return True
 
 
