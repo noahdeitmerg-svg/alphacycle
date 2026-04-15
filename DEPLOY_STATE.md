@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-14 (x-bot: scanner Tier 1 bypass + RELEVANT_KEYWORDS)
+**Zuletzt aktualisiert:** 2026-04-14 (docs sync 1.3.6 — TASK_PIPELINE C-013, MASTERPROMPTS, scanner context)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-14) — Docs sync 1.3.6 + Session-Ende Multi-Agent
+- **Datei(en):** `docs/SYSTEM_VERSION.md`, `docs/TASK_PIPELINE.md`, `docs/AI_MASTER_CONTEXT.md`, `docs/AI_AGENT_MASTERPROMPTS.md`, `docs/SYSTEM_STATE.md`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was:** **SYSTEM_VERSION 1.3.6**. **TASK_PIPELINE:** C-013 (Scanner 9cd6dee), C-012-Validation an aktuelles **reply_system** (FINAL TEST + Patterns). **AI_MASTER_CONTEXT** §5.1: Scanner-Stufen + Tier-1-Bypass + Webhook-Deploy. **AI_AGENT_MASTERPROMPTS** Growth Engine: **42** Accounts, **13** QA-Regeln, Tier-Listen = `config.py`. **SYSTEM_STATE:** Webhook-Deploy-Hinweis. **permanent-fixes:** Session-Ende-Doku-Pflicht; **kein** Zwang zu lokalem Windows-`python`-Import fuer Bot — Validierung auf VPS via GitHub-Webhook.
+- **Warum:** SSOT / keine Drift; Noah wuenschte Session-Ende-Docs + klare Agent-Reload-Hinweise; X-Bot laeuft per Webhook, nicht lokalem PATH.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-14) — x-bot: scanner Tier 1 bypass + RELEVANT_KEYWORDS
 - **Datei(en):** `alphacycle-x-bot/scanner.py`, `alphacycle-x-bot/config.py`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`

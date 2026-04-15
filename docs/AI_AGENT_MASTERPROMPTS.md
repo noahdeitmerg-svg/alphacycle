@@ -458,12 +458,14 @@ Noah → GROWTH ENGINE → Content Specs → Prompt Forge → QA → Cursor → 
 - Max 260 characters for replies, max 2 data points per post
 - 40% curiosity hook, 60% pure insight
 
-**QA System (14 Rules):** Character count, tweet reference, zero predictions, no banned words, no brand mentions, no sales language, no AI sound, logic consistency, factual accuracy, no zone labels, insight test, recycled data check, topic hijack check, repetitive-opener check ("Everyone"/"Everyone's").
+**QA System (13 Rules):** Same intent as legacy 14-rule doc minus analyst-grade test; includes **repetitive_opener** ("Everyone"/"Everyone's") as final rule. See `prompts/qa_system.txt` in repo.
 
-**Tracked Accounts (41):**
-- Tier 1 (10): RaoulGMI, LynAldenContact, APompliano, nic_carter, CryptoHayes, WClemente, krugermacro, willywoo, BitcoinMagazine, GlassnodeAlerts
+**Tracked Accounts (42) — SSOT `alphacycle-x-bot/config.py`:**
+- Tier 1 (11): RaoulGMI, LynAldenContact, APompliano, nic_carter, CryptoHayes, WClemente, krugermacro, willywoo, BitcoinMagazine, GlassnodeAlerts, NoLimitGains
 - Tier 2 (16): _Checkmatey_, DylanLeClair, LukeGromen, JeffBooth, PrestonPysh, danheld, 100trillionUSD, MartyBent, ErikVoorhees, FossGregfoss, real_vijay, MarkYusko, LawrenceLepard, TuurDemeester, TimmerFidelity, cburniske
-- Tier 3 (15): CryptoCon_, TechDev_52, in2cryptoversee, therationalroot, MacroAlf, TXMCtrades, GameofTrades_, fejau_inc, PositiveCrypto, stackhodler, ecoinometrics, MacroCharts, KobeissiLetter
+- Tier 3 (15): CryptoCon_, TechDev_52, in2cryptoversee, therationalroot, MacroAlf, TXMCtrades, GameofTrades_, fejau_inc, PositiveCrypto, MacroScope17, stackhodler, ecoinometrics, coinmetrics, MacroCharts, KobeissiLetter
+
+**Scanner:** Tier 1 bypasses **RELEVANT_KEYWORDS** only; **BLOCKED_KEYWORDS** still apply to all tiers.
 
 **Bot Config:** 5/hr, 15/day, 2/account/day, max tweet age 4h, delay 30-120s, replies via Telegram copy-paste (X blocks AI reply bots), posts via API.
 

@@ -5,7 +5,7 @@
 ## Current Version
 
 ```
-SYSTEM VERSION: 1.3.5
+SYSTEM VERSION: 1.3.6
 DATE: 2026-04-14
 UPDATED BY: Cursor Builder
 ```
@@ -28,11 +28,13 @@ UPDATED BY: Cursor Builder
 
 | Document | Change |
 |---|---|
-| alphacycle-x-bot/prompts/reply_system.txt | Remove FINAL TEST (Fidelity analyst public-write gate) |
-| DEPLOY_STATE.md | Session: reply_system trim |
-| .cursor/rules/permanent-fixes.mdc | reply_system v3 bullet: no FINAL TEST block |
-| docs/TASK_PIPELINE.md | C-012 validation: reply_system no Fidelity FINAL TEST |
-| SYSTEM_VERSION.md | Patch bump to 1.3.5 (this file) |
+| docs/TASK_PIPELINE.md | C-013 scanner; C-012 validation aligned with reply_system (FINAL TEST + patterns) |
+| docs/AI_MASTER_CONTEXT.md | X Bot: scanner two-stage filter + Tier 1 bypass; VPS deploy via webhook |
+| docs/AI_AGENT_MASTERPROMPTS.md | Growth Engine: 42 accounts, 11/16/15 tiers, QA 13 rules, lists synced to config |
+| docs/SYSTEM_STATE.md | X Bot row: GitHub webhook deploy note |
+| .cursor/rules/permanent-fixes.mdc | Session-Ende Docs + X-Bot: no mandatory local python if webhook deploy |
+| DEPLOY_STATE.md | Session: doc sync 1.3.6 + session-ende agent reload |
+| SYSTEM_VERSION.md | Patch bump to 1.3.6 (this file) |
 
 ---
 
@@ -46,7 +48,7 @@ Before performing any task, every agent must:
 3. Load docs/AI_AGENT_MASTERPROMPTS.md (your section)
 4. Load docs/SYSTEM_STATE.md
 5. Load docs/SYSTEM_VERSION.md (this file)
-6. State: "System version 1.3.5 confirmed. ARC v1.2."
+6. State: "System version 1.3.6 confirmed. ARC v1.2."
 7. Load DEPLOY_STATE.md
 8. Wait for task
 ```
@@ -59,6 +61,7 @@ If the agent's version does not match this file: stop and request updated docume
 
 | Version | Date | Changes |
 |---|---|---|
+| 1.3.6 | 2026-04-14 | Doc sync: TASK_PIPELINE C-013, MASTERPROMPTS 42/13, AI_MASTER_CONTEXT scanner; session-ende + webhook note |
 | 1.3.5 | 2026-04-14 | X-bot: reply_system — remove Fidelity FINAL TEST block |
 | 1.3.4 | 2026-04-14 | X-bot: qa_system 13 rules (drop not_analyst_grade / Regel 14) |
 | 1.3.3 | 2026-04-14 | X-bot Reply System v3: Opus primary model, new reply/QA prompts, QA pattern-only retries |

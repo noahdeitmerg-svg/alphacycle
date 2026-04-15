@@ -211,15 +211,21 @@ QUEUE:
 | C-010 | X-bot config sync (keywords, 41 accounts, defaults) | 2026-04-14 | ed13483 |
 | C-011 | X-bot Tier 1: +NoLimitGains; 42 tracked (11+16+15) | 2026-04-14 | 7b1ebd8 |
 | C-012 | Reply System v3: Opus + reply/QA prompts + QA pattern retries | 2026-04-14 | 194447c |
+| C-013 | Scanner: Tier 1 bypass RELEVANT_KEYWORDS + RELEVANT_KEYWORDS expansion | 2026-04-14 | 9cd6dee |
 
 **C-011 / Prompt FIX 5A — validation**
 
 - [x] `len(TRACKED_ACCOUNTS) == 42` (11 + 16 + 15; Tier 1 inkl. NoLimitGains)
 
-**C-012 / QA — validation**
+**C-012 / Reply prompt — validation**
 
 - [x] `qa_system.txt`: **13** Regeln (letzte = **repetitive_opener**, **KEIN** analyst_test / `not_analyst_grade`)
-- [x] `reply_system.txt`: **KEIN** FINAL TEST (Fidelity / public analyst rewrite gate)
+- [x] `reply_system.txt`: **BANNED REPLY PATTERNS** + **RATIO RULE** + **PASTE TEST** + **FINAL TEST** (Fidelity) + Ausgabezeile
+
+**C-013 / Scanner — validation**
+
+- [x] `scanner.py`: Tier 1 (`TIER_1_ACCOUNTS`, case-insensitive) **ueberspringt** RELEVANT_KEYWORDS; **BLOCKED_KEYWORDS** fuer alle Tiers
+- [x] `config.py`: **RELEVANT_KEYWORDS** erweitert (Economy/CBs/Energy/Fixed Income/News) ohne Duplikate zu cpi/ppi/gdp/rally/oil
 
 ---
 

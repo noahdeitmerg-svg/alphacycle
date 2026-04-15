@@ -19,7 +19,7 @@ AlphaCycle is live at https://alphacycle.app with a functional dashboard, ARC en
 |---|---|
 | ARC Engine (v1.2) | ✅ Deployed in repo (Railway follows main) |
 | Dashboard (orbital hero, HR, PF, charts) | ✅ Live, UX refinements pending |
-| X Bot (scan, reply, daily posts) | ✅ Live on Hetzner VPS |
+| X Bot (scan, reply, daily posts) | ✅ Live on Hetzner VPS (deploy: **GitHub webhook → deploy-server** on push to `main`; local Python not required to verify) |
 | Telegram Approval System | ✅ Live |
 | Stripe Integration | ⏳ Test mode (awaiting LLC) |
 | AI Knowledge Stack | ✅ README mandatory list: 8 documents |

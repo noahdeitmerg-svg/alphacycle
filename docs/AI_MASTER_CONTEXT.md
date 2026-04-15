@@ -203,6 +203,8 @@ Hidden via CSS + JS (`display: none`). Redundant with Hero + Positioning Framewo
 | Server | Hetzner VPS (`ubuntu-4gb-hel1-2`, `95.216.152.31`) |
 | Stack | Python 3 + Tweepy v2 + Anthropic Claude API |
 | Scan | **42** tracked accounts (11+16+15 tiers); default **3600s** scan interval (see `config.py` / `.env`) |
+| Scanner filters | (1) **BLOCKED_KEYWORDS** — all tiers (sports/spam etc.). (2) **RELEVANT_KEYWORDS** — **Tier 2+3** only; **Tier 1** (`TIER_1_ACCOUNTS`, match author handle case-insensitive) **skips** step 2 (curated = always on-topic for keyword gate). Expanded macro/economy/CB/energy/fixed-income/news keyword list in `config.py`. |
+| VPS deploy | X-bot code on Hetzner: **push to `main` → GitHub webhook → `deploy-server`** (see `alphacycle-x-bot/deploy-server/README.md`). No requirement for a local Windows Python import check to validate deploy. |
 | Limits | Defaults include **REPLY_LIMIT_HOURLY=5**, **REPLY_LIMIT_DAILY=15**, **MIN_LIKES_TO_REPLY=0**, delay **30-120s**, author spacing + per-account daily caps (see `permanent-fixes.mdc` X-Bot section) |
 | Reply rules | Target **max 260** chars in prompts/QA; Telegram handoff for posts/replies (no blind auto-post to X for replies) |
 | Primary Claude | **`claude-opus-4-6`** in `config.CLAUDE_MODEL` for **replies and daily posts** (higher API cost than Sonnet; monitor usage). QA remains **Haiku** (`QA_MODEL`). |
