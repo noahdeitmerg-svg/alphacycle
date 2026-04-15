@@ -126,6 +126,7 @@ def get_latest_tweets(account_spec: str, client: tweepy.Client) -> list[dict]:
 def scan_tweets() -> list[dict]:
     client = get_client()
     candidates = []
+    tier1_lower = {h.lower() for h in config.TIER_1_ACCOUNTS}
 
     for account in config.TRACKED_ACCOUNTS:
         tweets = get_latest_tweets(account, client)
@@ -143,15 +144,16 @@ def scan_tweets() -> list[dict]:
                     tweet["id"], author, "blocked_keyword"
                 )
                 continue
-            if not _tweet_has_relevant_keyword(tweet.get("text") or ""):
-                logger.info(
-                    "[SCANNER] Off-topic: @%s — no relevant keyword",
-                    author,
-                )
-                database.log_scanned(
-                    tweet["id"], author, "off_topic_no_keyword"
-                )
-                continue
+            if author.lower() not in tier1_lower:
+                if not _tweet_has_relevant_keyword(tweet.get("text") or ""):
+                    logger.info(
+                        "[SCANNER] Off-topic: @%s — no relevant keyword",
+                        author,
+                    )
+                    database.log_scanned(
+                        tweet["id"], author, "off_topic_no_keyword"
+                    )
+                    continue
             if database.already_scanned(tweet["id"]):
                 logger.info("[SCANNER] Skipped @%s: already_scanned", author)
                 continue

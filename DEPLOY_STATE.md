@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-14 (x-bot: reply_system — banned patterns, ratio, paste test + FINAL TEST)
+**Zuletzt aktualisiert:** 2026-04-14 (x-bot: scanner Tier 1 bypass + RELEVANT_KEYWORDS)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-14) — x-bot: scanner Tier 1 bypass + RELEVANT_KEYWORDS
+- **Datei(en):** `alphacycle-x-bot/scanner.py`, `alphacycle-x-bot/config.py`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was:** Stufe 2 **RELEVANT_KEYWORDS** nur fuer **Tier 2+3**; **Tier 1** ueberspringt (Author vs `TIER_1_ACCOUNTS` **case-insensitive**). Stufe 1 **BLOCKED_KEYWORDS** unveraendert fuer alle. **RELEVANT_KEYWORDS** um Economy/Business, Central Banks, Energy, Fixed Income, News-Trigger erweitert; **keine** Duplikate zu cpi/ppi/gdp/rally/oil (bereits in Liste).
+- **Warum:** Weniger False-Positives „off-topic“ bei kuratierten Tier-1-Accounts; breitere Abdeckung fuer Tier 2/3 (z. B. Macro ohne explizites „bitcoin“ im Tweet).
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-14) — x-bot: reply_system — Banned Patterns + 70/30 + Paste Test + FINAL TEST
 - **Datei(en):** `alphacycle-x-bot/prompts/reply_system.txt`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
