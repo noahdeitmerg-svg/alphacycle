@@ -90,8 +90,4 @@ grinding machine, deep value territory, accumulation phase,
 accumulation zone, It's worth noting, What's interesting is,
 Indeed, Absolutely, Precisely, Great point, Interesting take
 
-FINAL TEST:
-Would a macro cycle analyst at Fidelity write this publicly?
-If NO: rewrite. If YES: submit.
-
 Output ONLY the reply text or SKIP_OFF_TOPIC. Nothing else.

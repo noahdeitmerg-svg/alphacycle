@@ -5,7 +5,7 @@
 ## Current Version
 
 ```
-SYSTEM VERSION: 1.3.4
+SYSTEM VERSION: 1.3.5
 DATE: 2026-04-14
 UPDATED BY: Cursor Builder
 ```
@@ -28,11 +28,11 @@ UPDATED BY: Cursor Builder
 
 | Document | Change |
 |---|---|
-| alphacycle-x-bot/prompts/qa_system.txt | Remove Regel 14 (not_analyst_grade); **13** rules, last = **repetitive_opener** |
-| DEPLOY_STATE.md | Session: qa_system 13 rules |
-| .cursor/rules/permanent-fixes.mdc | QA bullets: 13 rules, no analyst_test in QA |
-| docs/TASK_PIPELINE.md | QA validation checklist (13 rules) |
-| SYSTEM_VERSION.md | Patch bump to 1.3.4 (this file) |
+| alphacycle-x-bot/prompts/reply_system.txt | Remove FINAL TEST (Fidelity analyst public-write gate) |
+| DEPLOY_STATE.md | Session: reply_system trim |
+| .cursor/rules/permanent-fixes.mdc | reply_system v3 bullet: no FINAL TEST block |
+| docs/TASK_PIPELINE.md | C-012 validation: reply_system no Fidelity FINAL TEST |
+| SYSTEM_VERSION.md | Patch bump to 1.3.5 (this file) |
 
 ---
 
@@ -46,7 +46,7 @@ Before performing any task, every agent must:
 3. Load docs/AI_AGENT_MASTERPROMPTS.md (your section)
 4. Load docs/SYSTEM_STATE.md
 5. Load docs/SYSTEM_VERSION.md (this file)
-6. State: "System version 1.3.4 confirmed. ARC v1.2."
+6. State: "System version 1.3.5 confirmed. ARC v1.2."
 7. Load DEPLOY_STATE.md
 8. Wait for task
 ```
@@ -59,6 +59,7 @@ If the agent's version does not match this file: stop and request updated docume
 
 | Version | Date | Changes |
 |---|---|---|
+| 1.3.5 | 2026-04-14 | X-bot: reply_system — remove Fidelity FINAL TEST block |
 | 1.3.4 | 2026-04-14 | X-bot: qa_system 13 rules (drop not_analyst_grade / Regel 14) |
 | 1.3.3 | 2026-04-14 | X-bot Reply System v3: Opus primary model, new reply/QA prompts, QA pattern-only retries |
 | 1.3.2 | 2026-04-14 | X-bot: NoLimitGains in Tier 1; 42 tracked accounts; docs + permanent-fixes sync |

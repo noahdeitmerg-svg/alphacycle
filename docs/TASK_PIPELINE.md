@@ -219,6 +219,7 @@ QUEUE:
 **C-012 / QA — validation**
 
 - [x] `qa_system.txt`: **13** Regeln (letzte = **repetitive_opener**, **KEIN** analyst_test / `not_analyst_grade`)
+- [x] `reply_system.txt`: **KEIN** FINAL TEST (Fidelity / public analyst rewrite gate)
 
 ---
 

@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-14 (x-bot: qa_system 13 rules — drop analyst_test)
+**Zuletzt aktualisiert:** 2026-04-14 (x-bot: reply_system — remove Fidelity FINAL TEST)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-14) — x-bot: reply_system — FINAL TEST (Fidelity) entfernt
+- **Datei(en):** `alphacycle-x-bot/prompts/reply_system.txt`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`, `docs/SYSTEM_VERSION.md`, `docs/TASK_PIPELINE.md`
+- **Was:** Block **FINAL TEST** („macro cycle analyst at Fidelity …“) aus `reply_system.txt` geloescht; Ausgabe-Anweisung bleibt („Output ONLY the reply text or SKIP_OFF_TOPIC“). Doku/SSOT angepasst.
+- **Warum:** Konsistent mit QA ohne Analyst-Test; kein doppeltes Gate.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-14) — x-bot: qa_system — Regel 14 entfernt (13 Regeln)
 - **Datei(en):** `alphacycle-x-bot/prompts/qa_system.txt`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`, `docs/SYSTEM_VERSION.md`
