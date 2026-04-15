@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-14 (V-001 step 6 — remove alphacycle.app from post outputs)
+**Zuletzt aktualisiert:** 2026-04-14 (V-001 step 7 — Telegram daily approval with image)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-14) — V-001 Schritt 7: Telegram Daily Approval mit Bild
+- **Datei(en):** `alphacycle-x-bot/bot.py`, `alphacycle-x-bot/telegram_bot.py`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was:** `schedule_daily_post()` erzeugt optional Signal-Visual via `generate_from_api(config.ARC_API_URL)` und uebergibt es an Telegram-Approval. `telegram_bot.send_daily_post_approval(...)` kann nun optional `image_bytes` empfangen und bei Erfolg `sendPhoto` mit Caption + POST/SKIP-Buttons senden; bei Fehler bleibt text-only `sendMessage` aktiv.
+- **Warum:** Daily Approval in Telegram zeigt das reale Share-Asset vor Freigabe; robustes Fallback ohne Flow-Bruch.
+- **Status:** pushed to GitHub
 
 ## Letzter Session-Status (2026-04-14) — V-001 Schritt 6: Link-freie Share Lines / Post-Output
 - **Datei(en):** `alphacycle-x-bot/prompts/post_system.txt`, `alphacycle-x-bot/daily_post_engine.py`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`

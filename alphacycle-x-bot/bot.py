@@ -93,7 +93,17 @@ def schedule_daily_post() -> None:
     ):
         print(f"[DAILY] WARNING: insert pending daily failed id={pending_id}")
         return
-    sent = telegram_bot.send_daily_post_approval(text, pending_id)
+    image_buf = None
+    try:
+        from signal_visual import generate_from_api
+
+        image_buf, _arc_data = asyncio.run(generate_from_api(config.ARC_API_URL))
+        _logger.info("[DAILY] Telegram preview image generated")
+    except Exception as e:
+        _logger.warning("[DAILY] Telegram preview image failed: %s — text-only approval", e)
+        image_buf = None
+
+    sent = telegram_bot.send_daily_post_approval(text, pending_id, image_buf)
     if not sent:
         database.delete_pending_daily_post(pending_id)
         print("[DAILY] Telegram send failed — removed pending daily row")

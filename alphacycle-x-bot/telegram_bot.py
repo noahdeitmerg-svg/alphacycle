@@ -1,6 +1,7 @@
 """
 Send Telegram inline-keyboard approval requests for reply candidates.
 """
+import json
 import os
 
 import requests
@@ -137,7 +138,7 @@ def send_approval(
     return True
 
 
-def send_daily_post_approval(post_text: str, pending_id: str) -> bool:
+def send_daily_post_approval(post_text: str, pending_id: str, image_bytes=None) -> bool:
     """Telegram approval for original daily post (callbacks dpost: / dskip:)."""
     if not config.TELEGRAM_BOT_TOKEN or not config.TELEGRAM_CHAT_ID:
         print("[TELEGRAM] Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID — cannot send daily approval")
@@ -158,28 +159,44 @@ def send_daily_post_approval(post_text: str, pending_id: str) -> bool:
         print("[TELEGRAM] daily post callback_data exceeds 64 bytes — shorten pending_id")
         return False
 
+    reply_markup = {
+        "inline_keyboard": [
+            [
+                {"text": "POST", "callback_data": cb_post},
+                {"text": "SKIP", "callback_data": cb_skip},
+            ]
+        ]
+    }
     payload = {
         "chat_id": config.TELEGRAM_CHAT_ID,
         "text": body,
-        "reply_markup": {
-            "inline_keyboard": [
-                [
-                    {"text": "POST", "callback_data": cb_post},
-                    {"text": "SKIP", "callback_data": cb_skip},
-                ]
-            ]
-        },
+        "reply_markup": reply_markup,
     }
 
-    url = f"{_api_base()}/sendMessage"
     try:
-        r = requests.post(url, json=payload, timeout=45)
+        if image_bytes is not None:
+            # Optional photo preview for daily approval.
+            image_bytes.seek(0)
+            cap = f"Daily Post Preview:\n\n{post_text}"
+            if len(cap) > 1024:
+                cap = cap[:1000] + "\n...(truncated)"
+            url = f"{_api_base()}/sendPhoto"
+            data = {
+                "chat_id": str(config.TELEGRAM_CHAT_ID),
+                "caption": cap,
+                "reply_markup": json.dumps(reply_markup),
+            }
+            files = {"photo": ("arc_signal.png", image_bytes, "image/png")}
+            r = requests.post(url, data=data, files=files, timeout=90)
+        else:
+            url = f"{_api_base()}/sendMessage"
+            r = requests.post(url, json=payload, timeout=45)
         if not r.ok:
-            print(f"[TELEGRAM] sendMessage (daily) failed: {r.status_code} {r.text[:500]}")
+            print(f"[TELEGRAM] daily approval send failed: {r.status_code} {r.text[:500]}")
             return False
         data = r.json()
         if not data.get("ok"):
-            print(f"[TELEGRAM] sendMessage (daily) not ok: {data}")
+            print(f"[TELEGRAM] daily approval send not ok: {data}")
             return False
         print(f"[LOG] telegram daily post approval sent pending_id={pending_id}")
         return True
