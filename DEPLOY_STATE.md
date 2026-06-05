@@ -4,6 +4,12 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-06-05) — Cowork: Landing als Verkaufs-Dramaturgie
+- **Datei(en):** `index.html`, `DEPLOY_STATE.md`
+- **Was:** Landing in eine conversion-optimierte Story umgebaut, damit Erstbesucher sofort Mehrwert + Emotion + Trust + Kaufwunsch haben. Neue Reihenfolge: Hero → **Problem** (Agitation: „buy the top, sell the bottom") → **5 Zonen** erklaert (Klarheit: green=opportunity, red=danger, mit Live-„Right now"-Zone via neuem `landing-now-zone`, JS-gespeist) → **Track Record** (Beweis) → **Benefits** („Trade the cycle, not your feelings", 4 Nutzen) → How it works → Pricing → Newsletter → FAQ → **Final CTA** (emotionaler Abschluss). Staerkere Hero-Subline. Neue CSS-Bausteine (.lp-zones/.lp-now/.lp-benefits/.lp-final/.lp-big-line). JS: `updateUI` setzt `landing-now-zone` + `landing-now-label` aus Live-ARC. Tag-Struktur verifiziert (11/11 sections balanciert).
+- **Warum:** „Jemand der zum ersten Mal kommt versteht sofort den Mehrwert, hat Trust, Emotion und will kaufen."
+- **Status:** committed + pushed (Netlify auto-deploy)
+
 ## Letzter Session-Status (2026-06-05) — Cowork: Landing-Redesign + Blur aus + kein Trial
 - **Datei(en):** `index.html`, `DEPLOY_STATE.md`
 - **Was:** **Komplettes Landing-Redesign** (modern/verkaufsreif): Gradient-Hero mit Gradient-Akzent, Glassmorphism-Cards, radiale Background-Glows, Trust-Strip (8+ Jahre / 3.200+ Datenpunkte / 5 Zonen / live), Track-Record-Cards (verifizierte Zahlen), Feature-Grid „Four signals. One score." mit Gewichten, Pricing 2 Karten (Free / Pro $29 + $278/yr) mit „EARLY ACCESS · FREE DURING LAUNCH"-Badge, Newsletter-Sektion, FAQ, Footer. Eigenes scoped `<style>` (`.lp-*`), alle dynamischen IDs erhalten (landing-arc-score/zone, landing-btc-price, landing-fg, landing-now-*, wl-email/btn/msg, #pricing). **Blur-Gates aus** für Aufbauphase: `window.BUILD_PHASE_OPEN=true` → `applyBlurGates()` entfernt alle Locks (reversibel: false setzen). **7-Tage-Trial komplett entfernt** (alle CTAs → „Get Free Access"/„Create Free Account", Auth-Modal + Dashboard-CTA + Gate-Button-Texte). Lokal per Headless-Render visuell verifiziert.

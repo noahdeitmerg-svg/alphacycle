@@ -4066,6 +4066,23 @@ canvas.sparkline {
     #landing-view .lp-faq-a{font-size:14px;color:var(--lp-mut);line-height:1.6;margin-top:6px;}
     #landing-view .lp-foot{padding:48px 0 64px;text-align:center;}
     #landing-view .lp-disc{max-width:680px;margin:0 auto 18px;font-family:var(--f-mono);font-size:11px;color:var(--lp-dim);line-height:1.6;}
+    #landing-view .lp-lead{font-size:clamp(16px,2.1vw,20px);color:var(--lp-mut);line-height:1.7;max-width:640px;margin:0 auto 14px;text-align:center;}
+    #landing-view .lp-big-line{font-size:clamp(22px,3.2vw,32px);font-weight:800;color:#fff;text-align:center;max-width:740px;margin:18px auto 0;line-height:1.3;}
+    #landing-view .lp-em{background:linear-gradient(100deg,#00D4AA,#58A6FF);-webkit-background-clip:text;background-clip:text;color:transparent;}
+    #landing-view .lp-zones{max-width:780px;margin:0 auto;display:flex;flex-direction:column;gap:10px;}
+    #landing-view .lp-zline{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);}
+    #landing-view .lp-zdot{width:12px;height:12px;border-radius:50%;flex:none;}
+    #landing-view .lp-zname{font-family:var(--f-mono);font-weight:700;font-size:13px;width:128px;flex:none;}
+    #landing-view .lp-zdesc{font-size:13.5px;color:var(--lp-mut);line-height:1.5;flex:1;}
+    #landing-view .lp-zrange{font-family:var(--f-mono);font-size:11px;color:var(--lp-dim);width:56px;flex:none;text-align:right;}
+    #landing-view .lp-now{max-width:600px;margin:26px auto 0;padding:16px 22px;border-radius:14px;background:rgba(0,180,216,0.08);border:1px solid rgba(0,180,216,0.28);text-align:center;font-family:var(--f-mono);font-size:13px;color:var(--lp-ink);}
+    #landing-view .lp-benefits{max-width:660px;margin:0 auto;display:flex;flex-direction:column;gap:16px;}
+    #landing-view .lp-brow{display:flex;gap:14px;align-items:flex-start;}
+    #landing-view .lp-bcheck{color:var(--lp-teal);font-weight:800;font-family:var(--f-mono);flex:none;margin-top:1px;font-size:16px;}
+    #landing-view .lp-btext{font-size:15.5px;color:var(--lp-ink);line-height:1.55;}
+    #landing-view .lp-btext b{color:#fff;}
+    #landing-view .lp-final{text-align:center;padding:60px 24px;border-radius:24px;margin-top:64px;background:linear-gradient(180deg,rgba(0,212,170,0.12),rgba(88,166,255,0.05));border:1px solid rgba(0,212,170,0.25);}
+    @media(max-width:600px){#landing-view .lp-zname{width:104px;font-size:12px;}#landing-view .lp-zrange{display:none;}}
     @media(max-width:860px){#landing-view .lp-grid3,#landing-view .lp-grid4{grid-template-columns:1fr 1fr;}}
     @media(max-width:560px){#landing-view .lp-grid3,#landing-view .lp-grid4,#landing-view .lp-grid2{grid-template-columns:1fr;}#landing-view .lp-hero{padding:48px 0 12px;}}
   </style>
@@ -4076,7 +4093,7 @@ canvas.sparkline {
     <section class="lp-hero">
       <span class="lp-eyebrow">BITCOIN CYCLE INTELLIGENCE</span>
       <h1 class="lp-h1">Know exactly where Bitcoin<br>is in its <span class="lp-grad">cycle.</span></h1>
-      <p class="lp-sub">One transparent score, 0–100, that classifies Bitcoin's market regime from trend, drawdown, sentiment and liquidity. Structure before emotion — backtested to 2017.</p>
+      <p class="lp-sub">One transparent score — 0 to 100 — that tells you whether it's time to buy fear or sell euphoria. No 50 charts. No noise. Just where Bitcoin really is in its cycle.</p>
       <div class="lp-cta-row">
         <button class="lp-btn lp-btn-primary" onclick="openAuthModal('signup')">Get Free Access →</button>
         <a class="lp-btn lp-btn-ghost" href="#" onclick="showDashboard();return false;">View Live Dashboard</a>
@@ -4096,6 +4113,28 @@ canvas.sparkline {
         <span><b>5</b> regime zones</span>
         <span>Updated <b>live</b></span>
       </div>
+    </section>
+
+    <!-- Problem -->
+    <section class="lp-sec">
+      <div class="lp-kicker">THE PROBLEM</div>
+      <h2 class="lp-h2">Most people buy the top<br>and sell the bottom.</h2>
+      <p class="lp-lead">Not because they're careless — because they're human. Greed peaks exactly when risk is highest. Fear peaks exactly when the opportunity is greatest. Emotion is the most expensive thing you bring to a Bitcoin cycle.</p>
+      <p class="lp-big-line">AlphaCycle replaces the emotion with <span class="lp-em">one number.</span></p>
+    </section>
+
+    <!-- The five zones -->
+    <section class="lp-sec">
+      <div class="lp-kicker">ONE SCORE · FIVE ZONES</div>
+      <h2 class="lp-h2">Green is opportunity. Red is danger.</h2>
+      <div class="lp-zones">
+        <div class="lp-zline"><span class="lp-zdot" style="background:#00DC78"></span><span class="lp-zname" style="color:#00DC78">Deep Value</span><span class="lp-zdesc">Maximum fear, maximum opportunity. Historically the strongest entries.</span><span class="lp-zrange">0–29</span></div>
+        <div class="lp-zline"><span class="lp-zdot" style="background:#00B4D8"></span><span class="lp-zname" style="color:#00B4D8">Accumulation</span><span class="lp-zdesc">The base is forming. Smart money quietly builds positions.</span><span class="lp-zrange">30–39</span></div>
+        <div class="lp-zline"><span class="lp-zdot" style="background:#58A6FF"></span><span class="lp-zname" style="color:#58A6FF">Expansion</span><span class="lp-zdesc">The trend is up. The cycle is working in your favour.</span><span class="lp-zrange">40–59</span></div>
+        <div class="lp-zline"><span class="lp-zdot" style="background:#FF9500"></span><span class="lp-zname" style="color:#FF9500">Risk Rising</span><span class="lp-zdesc">Euphoria building. Time to think about taking risk off.</span><span class="lp-zrange">60–69</span></div>
+        <div class="lp-zline"><span class="lp-zdot" style="background:#FF3B3B"></span><span class="lp-zname" style="color:#FF3B3B">Euphoria</span><span class="lp-zdesc">Everyone is greedy. Historically the worst place to buy.</span><span class="lp-zrange">70–100</span></div>
+      </div>
+      <div class="lp-now">Right now, Bitcoin is in <b id="landing-now-zone" style="color:#00B4D8">Accumulation</b> &nbsp;·&nbsp; see what that has meant historically &#8595;</div>
     </section>
 
     <!-- Track Record -->
@@ -4120,6 +4159,18 @@ canvas.sparkline {
         </div>
       </div>
       <div style="text-align:center;margin-top:18px;"><a href="#" onclick="showTrackRecord();return false;" style="font-family:var(--f-mono);font-size:13px;color:var(--lp-teal);text-decoration:none;">See the full track record →</a></div>
+    </section>
+
+    <!-- Benefits -->
+    <section class="lp-sec">
+      <div class="lp-kicker">WHAT CHANGES FOR YOU</div>
+      <h2 class="lp-h2">Trade the cycle, not your feelings.</h2>
+      <div class="lp-benefits">
+        <div class="lp-brow"><span class="lp-bcheck">&#10003;</span><div class="lp-btext"><b>Know where you stand</b> — one glance tells you whether to accumulate, hold, or take risk off.</div></div>
+        <div class="lp-brow"><span class="lp-bcheck">&#10003;</span><div class="lp-btext"><b>Cut through the noise</b> — no more 50 charts and 50 opinions. One transparent score, updated live.</div></div>
+        <div class="lp-brow"><span class="lp-bcheck">&#10003;</span><div class="lp-btext"><b>Buy fear, not hype</b> — see the green zones the crowd is too scared to touch.</div></div>
+        <div class="lp-brow"><span class="lp-bcheck">&#10003;</span><div class="lp-btext"><b>Step aside before the crash</b> — the red zones flag risk while everyone else is still euphoric.</div></div>
+      </div>
     </section>
 
     <!-- How it works -->
@@ -4177,6 +4228,16 @@ canvas.sparkline {
         <div class="lp-card"><div class="lp-faq-q">How is the ARC Index calculated?</div><div class="lp-faq-a">One transparent formula: 200-week trend (35%), drawdown from ATH (30%), Fear &amp; Greed (20%) and Fed net liquidity (15%), blended into a single 0–100 score across five regime zones. Backtested to 2017.</div></div>
         <div class="lp-card"><div class="lp-faq-q">What's free vs Pro?</div><div class="lp-faq-a">Free: live ARC score, zone, prices and historical zone returns. Pro: the Positioning Framework, the 10-year ARC history chart and priority regime alerts. During launch, everything is free.</div></div>
         <div class="lp-card"><div class="lp-faq-q">Can I cancel anytime?</div><div class="lp-faq-a">Yes — monthly, cancel anytime. No lock-in.</div></div>
+      </div>
+    </section>
+
+    <!-- Final CTA -->
+    <section class="lp-sec">
+      <div class="lp-final">
+        <h2 class="lp-h2" style="margin-bottom:14px;">The next cycle is already underway.</h2>
+        <p class="lp-lead" style="margin-bottom:24px;">Know exactly where you are in it — starting today, for free.</p>
+        <button class="lp-btn lp-btn-primary" style="font-size:15px;padding:17px 40px;" onclick="openAuthModal('signup')">Get Free Access &#8594;</button>
+        <div class="lp-note" style="margin-top:12px;">Free during launch · No credit card · Cancel anytime</div>
       </div>
     </section>
 
@@ -6620,7 +6681,11 @@ function updateUI() {
   if (lz && zoneName) { lz.textContent = zoneName.toUpperCase(); lz.style.color = scoreColor(arcScore) || '#00D4AA'; }
   if (lb && btcP) lb.textContent = btcP;
   if (lf && fgV) lf.textContent = fgV;
-  if (ld && arcScore != null && btcP) ld.textContent = 'ARC at ' + arcScore + ' · BTC ' + btcP;
+  if (ld && arcScore != null && btcP) ld.textContent = 'ARC ' + arcScore + ' · BTC ' + btcP;
+  var lnz = document.getElementById('landing-now-zone');
+  if (lnz && zoneName) { lnz.textContent = zoneName; lnz.style.color = scoreColor(arcScore) || '#00B4D8'; }
+  var lnl = document.getElementById('landing-now-label');
+  if (lnl && zoneName) lnl.textContent = 'NOW · ' + zoneName.toUpperCase();
 }
 
 function renderZoneHistory() {
