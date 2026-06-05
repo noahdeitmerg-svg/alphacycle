@@ -4,6 +4,12 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-06-04) — Cowork: Unabhaengige Verifikation + Trust-Fixes
+- **Datei(en):** `backend/scripts/verify_dashboard.py` (neu), `index.html`, `DEPLOY_STATE.md`
+- **Was:** Eigenes Verifikations-Script (`verify_dashboard.py`) zieht Live-API und rechnet Zonen-Forward-Returns unabhaengig nach. Ergebnis: **Datenintegritaet 0 Fehler**, Live-ARC == Backtest (32,5/32,45), Zonengrenzen konsistent, Formel sauber. Die API-`historical-returns` nutzt bewusst "confirmed zone entries" (n≈17) → Deep Value +236% (n=3); **kein Bug, Methodik nicht geaendert** (LOCKED, nur mit Noah). **Korrigiert (overstated/falsch → Wahrheit):** Landing-Teaser + Track-Record-Signale gegen echte Backtest-Daten: Dec→**Nov 2022 ARC 13 / $15.800 / +127%** (war ARC 12 / $16.500 / +170%); Accumulation **Mar 2023 ARC 32 / $22.200 / +225%** (war 34 / $22k / +95%); Risk Rising **Oct 2024 ARC 64 / $67.000**; Cycle-Top ueberall **$124,8k** (war faelschlich $108k); Drawdown **-50%**. Zwei Debug-`console.log` entfernt.
+- **Warum:** Noah-Vorgabe: nichts darf im Dashboard ueberstellt/falsch sein. Trust = Produkt.
+- **Status:** committed + pushed (Netlify auto-deploy)
+
 ## Letzter Session-Status (2026-06-04) — Cowork: Lemon Squeezy Webhook (Auto-Entitlement)
 - **Datei(en):** `backend/main.py`, `DEPLOY_STATE.md`
 - **Was:** Neuer Endpoint **`POST /api/lemonsqueezy-webhook`** (analog Stripe-Webhook, immer 200). Signatur-Pruefung via `X-Signature` HMAC-SHA256 mit **`LEMONSQUEEZY_WEBHOOK_SECRET`** (env). Loest User per `meta.custom_data.user_id` (Fallback: `user_email` → `user_profiles.email`). Setzt `plan` (active/on_trial/past_due/cancelled → paid; expired/unpaid/paused → free) + `subscription_status`. `LS_STATUS_TO_PLAN`-Mapping + `_get_profile_id_by_email()`-Helper. py_compile OK.
