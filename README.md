@@ -7,6 +7,8 @@
 > 6. `docs/SYSTEM_STATE.md` — Current project state, infrastructure, next priorities
 > 7. `docs/SYSTEM_VERSION.md` — System version SSOT (confirm version + ARC lock with agents)
 > 8. `docs/TASK_PIPELINE.md` — Active tasks with IDs, owners, status, affected files
+>
+> **Claude Cowork / neue Sessions ohne Kontext:** danach `docs/COWORK_HANDOVER.md` — vollstaendige operative Uebergabe (Infra, Dateien, Tasks, Drift-Hinweise).
 
 # Alpha Cycle Intelligence
 

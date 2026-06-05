@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-15 (telegram health check + command mode)
+**Zuletzt aktualisiert:** 2026-04-15 (Cowork vollstaendige Projektuebergabe)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-04-15) — Cowork: vollstaendige Projektuebergabe
+- **Datei(en):** `docs/COWORK_HANDOVER.md` (neu), `DEPLOY_STATE.md`, `README.md`
+- **Was:** Ein Dokument fuer Claude Cowork: Pflicht-Leseliste (8 SSOT-Docs), Repo-Map, ARC/Bot/Dashboard/Infra, Tasks, Env-Vars, Smoke-Tests, bekannte Drift (T-002 Hi/Lo im Code, Reply-Limits), Workflow und Start-Checkliste.
+- **Warum:** Cowork soll ohne Chat-Kontext das Projekt end-to-end verstehen und weiterbauen koennen.
+- **Status:** in repo (push bei Noah-Anweisung)
 
 ## Letzter Session-Status (2026-04-15) — Telegram: Health-Check + Command-Button
 - **Datei(en):** `alphacycle-x-bot/telegram_listener.py`, `alphacycle-x-bot/telegram_bot.py`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
