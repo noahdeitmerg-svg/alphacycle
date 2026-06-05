@@ -10,6 +10,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hammerjs/2.0.8/hammer.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/2.0.1/chartjs-plugin-zoom.min.js"></script>
 <style>
   :root{
     --teal:#00D4AA; --teal2:#33e0bd; --blue:#58A6FF; --ink:#e8edf4; --mut:#9aa6b8; --dim:#69748a;
@@ -94,6 +96,12 @@
   #arcChart{width:100%!important;height:420px!important;}
   .chart-legend{display:flex;flex-wrap:wrap;gap:8px 16px;font-family:var(--mono);font-size:11px;color:var(--mut);margin-top:12px;}
   .chart-legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:middle;}
+  .chart-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+  .tf-btn{font-family:var(--mono);font-size:11px;color:var(--mut);background:rgba(255,255,255,0.04);border:1px solid var(--bd);border-radius:8px;padding:5px 12px;cursor:pointer;transition:.15s;}
+  .tf-btn:hover{color:#fff;border-color:var(--bd2);}
+  .tf-btn.on{color:#04130f;background:var(--teal);border-color:var(--teal);font-weight:700;}
+  .tf-hint{font-family:var(--mono);font-size:10px;color:var(--dim);margin-left:auto;}
+  @media(max-width:560px){.tf-hint{display:none;}}
   /* misc */
   .pill{display:inline-block;font-family:var(--mono);font-size:11px;padding:4px 11px;border-radius:999px;border:1px solid var(--bd2);color:var(--ink);}
   .note{font-size:12px;color:var(--dim);font-family:var(--mono);}
@@ -235,7 +243,14 @@
     <div class="sec-eyebrow">ENGINE 7 · 10-YEAR HISTORY</div>
     <div class="sec-h">The ARC Index across every cycle</div>
     <div class="sec-tells">Daily ARC score (line) against BTC price (area) since 2017. The faint bands mark the five regime zones — watch how tops landed in red and bottoms in green.</div>
-    <div class="card chart-wrap"><canvas id="arcChart"></canvas>
+    <div class="card chart-wrap">
+      <div class="chart-toolbar">
+        <button class="tf-btn on" data-r="1y" onclick="setChartRange('1y')">1Y</button>
+        <button class="tf-btn" data-r="all" onclick="setChartRange('all')">10Y</button>
+        <button class="tf-btn" onclick="setChartRange('reset')" title="Reset zoom">&#8635;</button>
+        <span class="tf-hint">scroll to zoom · drag to pan</span>
+      </div>
+      <canvas id="arcChart"></canvas>
       <div class="chart-legend">
         <span><i style="background:var(--teal)"></i>ARC Index</span>
         <span><i style="background:#eab308"></i>BTC Price</span>
@@ -345,30 +360,36 @@ async function loadZones(currentKey){
   }catch(e){ document.getElementById('zoneTable').innerHTML='<div class="note">Historical returns unavailable right now.</div>'; }
 }
 
-let chart;
+let chart, _arcN=0, _arcRange='1y';
+function _registerZoom(){ try{ var z=window.ChartZoom||window['chartjs-plugin-zoom']; if(z&&Chart.registry&&!Chart.registry.plugins.get('zoom')) Chart.register(z); }catch(e){} }
 async function loadChart(){
   try{
     var bt=(await (await fetch(API+'/api/backtest',{cache:'no-store'})).json()).results||[];
     if(!bt.length)return;
-    var step=Math.max(1,Math.floor(bt.length/420));
-    var pts=bt.filter(function(_,i){return i%step===0;});
-    var labels=pts.map(function(r){return r.date.slice(0,10);});
-    var arcD=pts.map(function(r){return r.arc_score;});
-    var priceD=pts.map(function(r){return r.price;});
+    var labels=bt.map(function(r){return r.date.slice(0,10);});
+    var arcD=bt.map(function(r){return r.arc_score;});
+    var priceD=bt.map(function(r){return r.price;});
     var ctx=document.getElementById('arcChart');
     if(chart)chart.destroy();
+    _registerZoom();
     var zonePlugin={id:'zbands',beforeDraw:function(c){var y=c.scales.yArc,a=c.chartArea;if(!y||!a)return;var ctx=c.ctx;var bands=[[0,30,'rgba(0,220,120,0.10)'],[30,40,'rgba(0,180,216,0.10)'],[40,60,'rgba(88,166,255,0.08)'],[60,70,'rgba(255,149,0,0.10)'],[70,100,'rgba(255,59,59,0.11)']];bands.forEach(function(b){var y0=y.getPixelForValue(b[1]),y1=y.getPixelForValue(b[0]);ctx.save();ctx.fillStyle=b[2];ctx.fillRect(a.left,y0,a.right-a.left,y1-y0);ctx.restore();});}};
     var markersPlugin={id:'mk',afterDatasetsDraw:function(c){var meta=c.getDatasetMeta(1);if(!meta||!meta.data||!meta.data.length)return;var x=c.ctx;var last=meta.data[meta.data.length-1];if(last){x.save();x.beginPath();x.arc(last.x,last.y,10,0,6.283);x.fillStyle='rgba(0,212,170,0.25)';x.fill();x.beginPath();x.arc(last.x,last.y,5,0,6.283);x.fillStyle='#00D4AA';x.fill();x.restore();}var pm=c.getDatasetMeta(0);[['2017-12','top'],['2018-12','bot'],['2021-11','top'],['2022-11','bot'],['2025-10','top']].forEach(function(mk){var idx=c.data.labels.findIndex(function(l){return l.indexOf(mk[0])===0;});if(idx<0||!pm.data[idx])return;var p=pm.data[idx];var col=mk[1]==='top'?'#FF3B3B':'#00DC78';x.save();x.fillStyle=col;x.beginPath();if(mk[1]==='top'){x.moveTo(p.x,p.y-12);x.lineTo(p.x-5,p.y-4);x.lineTo(p.x+5,p.y-4);}else{x.moveTo(p.x,p.y+12);x.lineTo(p.x-5,p.y+4);x.lineTo(p.x+5,p.y+4);}x.closePath();x.fill();x.restore();});}};
+    _arcN=labels.length; var oneY=Math.max(0,_arcN-365);
     chart=new Chart(ctx,{type:'line',data:{labels:labels,datasets:[
-      {label:'BTC Price',data:priceD,yAxisID:'yPrice',borderColor:'rgba(234,179,8,0.9)',backgroundColor:'rgba(234,179,8,0.06)',borderWidth:1.2,pointRadius:0,fill:true,tension:0.25},
-      {label:'ARC Index',data:arcD,yAxisID:'yArc',borderColor:'#00D4AA',borderWidth:2,pointRadius:0,tension:0.25}
-    ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{callbacks:{title:function(i){return i[0].label;}}}},scales:{
-      x:{ticks:{color:'#69748a',maxTicksLimit:8,font:{family:'JetBrains Mono',size:10}},grid:{display:false}},
-      yArc:{position:'left',min:0,max:100,ticks:{color:'#69748a',font:{family:'JetBrains Mono',size:10}},grid:{color:'rgba(255,255,255,0.05)'}},
-      yPrice:{position:'right',type:'logarithmic',ticks:{color:'#69748a',font:{family:'JetBrains Mono',size:10},callback:function(v){return '$'+(v>=1000?(v/1000)+'k':v);}},grid:{display:false}}
-    }},plugins:[zonePlugin,markersPlugin]});
+      {label:'BTC Price',data:priceD,yAxisID:'yPrice',borderColor:'rgba(234,179,8,0.9)',backgroundColor:'rgba(234,179,8,0.06)',borderWidth:1.2,pointRadius:0,fill:true,tension:0.2},
+      {label:'ARC Index',data:arcD,yAxisID:'yArc',borderColor:'#00D4AA',borderWidth:2,pointRadius:0,tension:0.2}
+    ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{callbacks:{title:function(i){return i[0].label;}}},
+        zoom:{pan:{enabled:true,mode:'x'},zoom:{wheel:{enabled:true,speed:0.08},pinch:{enabled:true},mode:'x'},limits:{x:{minRange:20}}}},
+      scales:{
+        x:{min:oneY,max:_arcN-1,ticks:{color:'#69748a',maxTicksLimit:8,font:{family:'JetBrains Mono',size:10}},grid:{display:false}},
+        yArc:{position:'left',min:0,max:100,ticks:{color:'#69748a',font:{family:'JetBrains Mono',size:10}},grid:{color:'rgba(255,255,255,0.05)'}},
+        yPrice:{position:'right',type:'logarithmic',ticks:{color:'#69748a',font:{family:'JetBrains Mono',size:10},callback:function(v){return '$'+(v>=1000?(v/1000)+'k':v);}},grid:{display:false}}
+      }},plugins:[zonePlugin,markersPlugin]});
+    window._arcChart=chart;
   }catch(e){}
 }
+function setChartRange(r){ var c=window._arcChart; if(!c)return; if(r==='reset')r=_arcRange; _arcRange=r; try{ if(c.resetZoom)c.resetZoom('none'); }catch(e){} if(r==='1y'){ c.options.scales.x.min=Math.max(0,_arcN-365); c.options.scales.x.max=_arcN-1; } else { c.options.scales.x.min=0; c.options.scales.x.max=_arcN-1; } c.update('none'); document.querySelectorAll('.tf-btn[data-r]').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-r')===r); }); }
 loadAll();
 setInterval(loadAll, 90000);
 </script>
