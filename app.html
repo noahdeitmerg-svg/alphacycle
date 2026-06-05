@@ -6204,9 +6204,11 @@ function updateUI() {
   setText('mac-tag', phaseOf(S.macScore));
 
   // Phases
-  setText('btc-phase', phaseOf(S.btcScore), bCol);
+  // Hero zone label MUST reflect the RAW ARC zone (SYSTEM_TRUTH), not the tactical btcScore.
+  var _heroArcRaw = Number(S.arcSummary?.arc_score ?? S.arcSummary?.arc_display ?? S.combined ?? S.btcScore ?? 50);
+  setText('btc-phase', phaseOf(_heroArcRaw), scoreColor(_heroArcRaw));
   var _heroPh = document.getElementById('btc-phase');
-  if (_heroPh) _heroPh.style.color = scoreColor(combinedScore);
+  if (_heroPh) _heroPh.style.color = scoreColor(_heroArcRaw);
   setText('eth-phase', phaseOf(S.ethScore), eCol);
   setText('mac-phase', phaseOf(S.macScore), mCol);
 
