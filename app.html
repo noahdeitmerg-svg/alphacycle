@@ -8249,11 +8249,11 @@ function renderArcChart(period) {
         if (!yArc || !ca) return;
         var left = ca.left, right = ca.right;
         var zones = [
-          { y0: 0, y1: 29.5, fill: 'rgba(0, 212, 170, 0.42)' },
-          { y0: 29.5, y1: 39.5, fill: 'rgba(0, 180, 216, 0.38)' },
-          { y0: 39.5, y1: 59.5, fill: 'rgba(88, 166, 255, 0.28)' },
-          { y0: 59.5, y1: 69.5, fill: 'rgba(255, 149, 0, 0.42)' },
-          { y0: 69.5, y1: 100, fill: 'rgba(255, 59, 59, 0.50)' }
+          { y0: 0, y1: 29.5, fill: 'rgba(0, 212, 170, 0.14)' },
+          { y0: 29.5, y1: 39.5, fill: 'rgba(0, 180, 216, 0.13)' },
+          { y0: 39.5, y1: 59.5, fill: 'rgba(88, 166, 255, 0.10)' },
+          { y0: 59.5, y1: 69.5, fill: 'rgba(255, 149, 0, 0.14)' },
+          { y0: 69.5, y1: 100, fill: 'rgba(255, 59, 59, 0.16)' }
         ];
         zones.forEach(function(z) {
           var py0 = yArc.getPixelForValue(z.y1);
