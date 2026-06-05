@@ -4,6 +4,13 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-06-04) — Cowork: Funnel Phase A+B (Landing + Lemon Squeezy)
+- **Datei(en):** `index.html`, `DEPLOY_STATE.md`
+- **Was:** (A) Landing zur Sales-Page ausgebaut: prominente **Email-Capture/Waitlist** (`submitWaitlist()` → `POST /api/subscribe`, source `landing_waitlist`), **Annual-Option** ($278/yr, 2 Monate gratis) auf Pro-Karte, **FAQ** (4 Q&A) + **Not-financial-advice-Disclaimer**. (B) **Lemon Squeezy** als Checkout verdrahtet: `window.LEMON_CHECKOUT_URL` / `..._ANNUAL` Config im Head (leer = Stripe-Fallback); `openUpgradeModal()` leitet bei gesetzter URL zum gehosteten LS-Checkout um (email + user_id als custom data fuer Entitlement). Kein US-LLC noetig → Verkauf sofort moeglich sobald Noah LS-Produkt anlegt + URL einsetzt.
+- **Warum:** Funnel + Checkout produktiv schalten ohne LLC; Lead-Capture laeuft sofort.
+- **Noah-Action (Blocker):** LS-Store + Produkt ($29/mo + $278/yr) anlegen, Checkout-URL in `window.LEMON_CHECKOUT_URL` setzen. LS-Webhook fuer Auto-Entitlement (siehe BLOCKERS_FOR_NOAH.md).
+- **Status:** committed + pushed (Netlify auto-deploy)
+
 ## Letzter Session-Status (2026-06-04) — Cowork: UI verkaufsfertig (Phase 1)
 - **Datei(en):** `index.html`, `DEPLOY_STATE.md`
 - **Was:** Dashboard auf 5-Card-Kern-Story reduziert (Live Prices -> Hero ARC -> Historical Returns -> Positioning -> ARC History). Schwache/stale/redundante Cards **reversibel** per CSS-Block versteckt (`#gate-near-term`, `#gate-arc-momentum`, `#gate-cycle-overview`, `#gate-content-export` -> `display:none !important`; Block ist klar kommentiert, loeschen = wiederherstellen). Preis **$49 -> $29/mo** an allen 4 sichtbaren Stellen (Landing-Pricing + 3 Upgrade-Buttons). Pro-Feature-Liste an sichtbare Cards angeglichen (Cycle Analysis/Zone History entfernt). Deutscher ARC-Chart-Platzhalter -> Englisch.

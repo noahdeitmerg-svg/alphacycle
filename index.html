@@ -4028,6 +4028,16 @@ canvas.sparkline {
     <button onclick="openAuthModal('signup')" style="padding:16px 40px;background:#00D4AA;color:#0d1117;border:none;border-radius:8px;font-family:var(--f-mono);font-size:15px;font-weight:700;cursor:pointer;letter-spacing:0.06em;transition:transform 0.15s;box-shadow:0 0 30px rgba(0,212,170,0.25);margin-bottom:12px;">START 7-DAY FREE TRIAL</button>
     <div style="font-size:11px;color:var(--tx-ter);font-family:var(--f-mono);">No credit card required · Cancel anytime</div>
 
+    <!-- Email capture / lead magnet -->
+    <div style="margin-top:32px;width:100%;max-width:460px;">
+      <div style="font-size:10px;color:var(--tx-ter);font-family:var(--f-mono);letter-spacing:0.1em;margin-bottom:8px;">OR GET THE WEEKLY ARC REGIME BRIEF — FREE</div>
+      <div style="display:flex;gap:8px;">
+        <input id="wl-email" type="email" autocomplete="email" placeholder="you@email.com" style="flex:1;padding:11px 12px;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;color:var(--tx-pri);font-family:var(--f-mono);font-size:12px;outline:none;">
+        <button onclick="submitWaitlist()" id="wl-btn" type="button" style="padding:11px 18px;background:transparent;border:1px solid #00D4AA;color:#00D4AA;border-radius:6px;font-family:var(--f-mono);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">SUBSCRIBE</button>
+      </div>
+      <div id="wl-msg" style="font-size:10px;color:var(--tx-ter);font-family:var(--f-mono);margin-top:6px;min-height:14px;"></div>
+    </div>
+
     <!-- Track Record Teaser -->
     <div style="margin-top:48px;width:100%;">
       <div style="font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);letter-spacing:0.15em;margin-bottom:16px;">WHAT ARC TOLD US BEFORE THE MARKET MOVED</div>
@@ -4094,14 +4104,43 @@ canvas.sparkline {
           <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:#00D4AA;color:#0d1117;font-size:8px;font-weight:700;font-family:var(--f-mono);padding:3px 10px;border-radius:4px;letter-spacing:0.1em;">7 DAYS FREE</div>
           <div style="font-size:10px;color:#00D4AA;font-family:var(--f-mono);letter-spacing:0.1em;margin-bottom:8px;">PRO</div>
           <div style="font-size:28px;font-weight:700;color:var(--tx-pri);font-family:var(--f-mono);">$29<span style="font-size:14px;color:var(--tx-ter);">/mo</span></div>
+          <div style="font-size:9px;color:#00D4AA;font-family:var(--f-mono);margin-top:4px;">or $278/yr — 2 months free</div>
           <div style="font-size:10px;color:var(--tx-ter);font-family:var(--f-mono);margin-top:8px;line-height:1.6;">Everything in Free +<br>Positioning Framework<br>ARC History Chart<br>Priority Email Alerts</div>
           <button onclick="openAuthModal('signup')" style="margin-top:16px;padding:10px 20px;background:#00D4AA;color:#0d1117;border:none;border-radius:6px;font-family:var(--f-mono);font-size:11px;font-weight:700;cursor:pointer;">START FREE TRIAL</button>
         </div>
       </div>
     </div>
 
+    <!-- FAQ -->
+    <div style="margin-top:48px;width:100%;max-width:560px;text-align:left;">
+      <div style="font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);letter-spacing:0.15em;margin-bottom:16px;text-align:center;">FREQUENTLY ASKED</div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div>
+          <div style="font-size:12px;color:var(--tx-pri);font-family:var(--f-mono);font-weight:600;">Is this financial advice?</div>
+          <div style="font-size:11px;color:var(--tx-ter);font-family:var(--f-mono);line-height:1.6;margin-top:3px;">No. AlphaCycle is a regime-classification tool. It measures where Bitcoin sits in its cycle structure — it does not predict price or tell you to buy or sell. Educational and informational only.</div>
+        </div>
+        <div>
+          <div style="font-size:12px;color:var(--tx-pri);font-family:var(--f-mono);font-weight:600;">How is the ARC Index calculated?</div>
+          <div style="font-size:11px;color:var(--tx-ter);font-family:var(--f-mono);line-height:1.6;margin-top:3px;">One transparent formula: 200-week trend (35%), drawdown from ATH (30%), Fear &amp; Greed (20%) and Fed net liquidity (15%), blended into a single 0–100 score across five regime zones. Same method, backtested to 2017.</div>
+        </div>
+        <div>
+          <div style="font-size:12px;color:var(--tx-pri);font-family:var(--f-mono);font-weight:600;">What do I get for free vs Pro?</div>
+          <div style="font-size:11px;color:var(--tx-ter);font-family:var(--f-mono);line-height:1.6;margin-top:3px;">Free: live ARC score, zone, live prices and historical zone returns. Pro ($29/mo): the Positioning Framework, the 10-year ARC history chart, and priority email alerts on regime changes.</div>
+        </div>
+        <div>
+          <div style="font-size:12px;color:var(--tx-pri);font-family:var(--f-mono);font-weight:600;">Can I cancel anytime?</div>
+          <div style="font-size:11px;color:var(--tx-ter);font-family:var(--f-mono);line-height:1.6;margin-top:3px;">Yes. Monthly, cancel anytime. The 7-day trial requires no commitment.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Disclaimer -->
+    <div style="margin-top:40px;width:100%;max-width:560px;font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);line-height:1.6;text-align:center;opacity:0.8;">
+      AlphaCycle provides market data and historical analysis for educational purposes only. It is not financial, investment or trading advice. Cryptocurrency is volatile and you can lose money. Past performance does not guarantee future results. Do your own research.
+    </div>
+
     <!-- Footer -->
-    <div style="margin-top:48px;font-size:10px;color:var(--tx-ter);font-family:var(--f-mono);">
+    <div style="margin-top:32px;font-size:10px;color:var(--tx-ter);font-family:var(--f-mono);">
       <a href="#" onclick="showDashboard();return false;" style="color:var(--tx-sec);text-decoration:none;">View Dashboard &#8594;</a>
     </div>
 
@@ -5114,6 +5153,15 @@ if (window.ChartZoom) {
 // Leave as '' to run standalone (direct browser API calls, no backend needed).
 const BACKEND_URL = window.BACKEND_URL || 'https://alphacycle-production.up.railway.app';
 const REFRESH_INTERVAL = 60; // seconds
+
+// ── PAYMENTS: Lemon Squeezy (Merchant of Record) ───────────────────────────
+// Sells subscriptions worldwide without a US LLC; handles global tax.
+// Paste your Lemon Squeezy checkout URL(s) below to go live. While empty,
+// the app falls back to the Stripe /api/checkout flow.
+//   Monthly $29:  https://<store>.lemonsqueezy.com/buy/<variant-id>
+//   Annual:       https://<store>.lemonsqueezy.com/buy/<variant-id>
+window.LEMON_CHECKOUT_URL = window.LEMON_CHECKOUT_URL || '';
+window.LEMON_CHECKOUT_URL_ANNUAL = window.LEMON_CHECKOUT_URL_ANNUAL || '';
 
 document.addEventListener('DOMContentLoaded', () => {
 document.querySelectorAll('img.logo-img').forEach(function(img){ img.src = window.LOGO_DATA_URL; });
@@ -7221,6 +7269,34 @@ function applyBlurGates() {
   updateArcMethodologyGate();
 }
 
+async function submitWaitlist() {
+  var el = document.getElementById('wl-email');
+  var msg = document.getElementById('wl-msg');
+  var btn = document.getElementById('wl-btn');
+  var email = ((el && el.value) || '').trim();
+  if (!email || email.indexOf('@') < 0 || email.indexOf('.') < 0) {
+    if (msg) { msg.style.color = '#f59e0b'; msg.textContent = 'Please enter a valid email.'; }
+    return;
+  }
+  if (btn) { btn.disabled = true; btn.textContent = '...'; }
+  try {
+    var r = await fetch(BACKEND_URL + '/api/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email, source: 'landing_waitlist' }),
+    });
+    if (r.ok) {
+      if (msg) { msg.style.color = '#00D4AA'; msg.textContent = 'You are on the list. Watch your inbox.'; }
+      if (el) el.value = '';
+    } else {
+      if (msg) { msg.style.color = '#f59e0b'; msg.textContent = 'Could not subscribe — please try again.'; }
+    }
+  } catch (e) {
+    if (msg) { msg.style.color = '#f59e0b'; msg.textContent = 'Network error — please try again.'; }
+  }
+  if (btn) { btn.disabled = false; btn.textContent = 'SUBSCRIBE'; }
+}
+
 async function openUpgradeModal() {
   if (!currentUser) {
     openAuthModal('signup');
@@ -7234,6 +7310,16 @@ async function openUpgradeModal() {
 
   if (!session) {
     openAuthModal('login');
+    return;
+  }
+
+  // Lemon Squeezy (Merchant of Record) — preferred while Stripe/LLC pending.
+  // Redirects to the hosted LS checkout; email + user_id passed for entitlement.
+  if (window.LEMON_CHECKOUT_URL) {
+    var lsu = window.LEMON_CHECKOUT_URL;
+    lsu += (lsu.indexOf('?') > -1 ? '&' : '?') + 'checkout[email]=' + encodeURIComponent(currentUser.email || '');
+    if (currentUser.id) lsu += '&checkout[custom][user_id]=' + encodeURIComponent(currentUser.id);
+    window.location.href = lsu;
     return;
   }
 
