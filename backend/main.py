@@ -1557,6 +1557,90 @@ async def stripe_webhook(request: Request):
     return {"received": True}
 
 
+LEMONSQUEEZY_WEBHOOK_SECRET = os.getenv("LEMONSQUEEZY_WEBHOOK_SECRET", "").strip()
+LS_STATUS_TO_PLAN = {
+    "active": "paid", "on_trial": "paid", "past_due": "paid", "cancelled": "paid",
+    "paused": "free", "unpaid": "free", "expired": "free",
+}
+
+
+def _get_profile_id_by_email(email: str) -> Optional[str]:
+    """Resolve a user_profiles id by email (lowercased). None on miss/error."""
+    if not email or not supabase:
+        return None
+    try:
+        r = (
+            supabase.table("user_profiles")
+            .select("id")
+            .eq("email", email.strip().lower())
+            .single()
+            .execute()
+        )
+        if r.data:
+            return r.data.get("id")
+    except Exception:
+        pass
+    return None
+
+
+@app.post("/api/lemonsqueezy-webhook")
+async def lemonsqueezy_webhook(request: Request):
+    """Lemon Squeezy (Merchant of Record) subscription webhooks -> user plan.
+    Always returns 200. Resolves user via meta.custom_data.user_id, fallback email.
+    Set LEMONSQUEEZY_WEBHOOK_SECRET env to enable signature verification."""
+    payload = await request.body()
+    if not LEMONSQUEEZY_WEBHOOK_SECRET:
+        logger.warning("LS webhook not configured (no secret)")
+        return {"received": True}
+    import hmac as _hmac, hashlib as _hashlib
+    digest = _hmac.new(
+        LEMONSQUEEZY_WEBHOOK_SECRET.encode("utf-8"), payload, _hashlib.sha256
+    ).hexdigest()
+    sig = (request.headers.get("X-Signature", "") or "").strip()
+    if not _hmac.compare_digest(digest, sig):
+        logger.warning("LS webhook signature failed")
+        return {"received": True}
+
+    try:
+        body = await request.json()
+    except Exception:
+        return {"received": True}
+
+    meta = body.get("meta", {}) or {}
+    event_name = meta.get("event_name", "")
+    custom = meta.get("custom_data", {}) or {}
+    attrs = (body.get("data", {}) or {}).get("attributes", {}) or {}
+    status = (attrs.get("status") or "").lower()
+    email = attrs.get("user_email") or attrs.get("email") or ""
+    logger.info("LS webhook: %s status=%s", event_name, status)
+
+    if not supabase:
+        return {"received": True}
+
+    user_id = custom.get("user_id") or _get_profile_id_by_email(email)
+    if not user_id:
+        logger.warning("LS webhook: no user resolved (event=%s email=%s)", event_name, email)
+        return {"received": True}
+
+    if event_name == "subscription_expired" or status in ("expired", "unpaid"):
+        plan = "free"
+    else:
+        plan = LS_STATUS_TO_PLAN.get(
+            status,
+            "paid" if event_name in ("subscription_created", "subscription_payment_success") else "free",
+        )
+
+    try:
+        supabase.table("user_profiles").update(
+            {"plan": plan, "subscription_status": status or event_name}
+        ).eq("id", user_id).execute()
+        logger.info("LS webhook: user %s -> plan=%s (%s)", user_id, plan, event_name)
+    except Exception as e:
+        logger.error("LS webhook update failed: %s", e)
+
+    return {"received": True}
+
+
 @app.get("/api/auth/profile")
 @limiter.limit("20/minute")
 async def get_profile(request: Request, user=Security(get_current_user)):

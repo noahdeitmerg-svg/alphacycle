@@ -4,6 +4,13 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-06-04) — Cowork: Lemon Squeezy Webhook (Auto-Entitlement)
+- **Datei(en):** `backend/main.py`, `DEPLOY_STATE.md`
+- **Was:** Neuer Endpoint **`POST /api/lemonsqueezy-webhook`** (analog Stripe-Webhook, immer 200). Signatur-Pruefung via `X-Signature` HMAC-SHA256 mit **`LEMONSQUEEZY_WEBHOOK_SECRET`** (env). Loest User per `meta.custom_data.user_id` (Fallback: `user_email` → `user_profiles.email`). Setzt `plan` (active/on_trial/past_due/cancelled → paid; expired/unpaid/paused → free) + `subscription_status`. `LS_STATUS_TO_PLAN`-Mapping + `_get_profile_id_by_email()`-Helper. py_compile OK.
+- **Warum:** Zahlender LS-Kunde wird automatisch auf Pro geschaltet — kein manuelles Supabase-Editieren.
+- **Noah-Action:** In LS Webhook auf `https://alphacycle-production.up.railway.app/api/lemonsqueezy-webhook` zeigen, Secret in Railway-Env `LEMONSQUEEZY_WEBHOOK_SECRET` setzen.
+- **Status:** committed + pushed (Railway auto-deploy)
+
 ## Letzter Session-Status (2026-06-04) — Cowork: Funnel Phase A+B (Landing + Lemon Squeezy)
 - **Datei(en):** `index.html`, `DEPLOY_STATE.md`
 - **Was:** (A) Landing zur Sales-Page ausgebaut: prominente **Email-Capture/Waitlist** (`submitWaitlist()` → `POST /api/subscribe`, source `landing_waitlist`), **Annual-Option** ($278/yr, 2 Monate gratis) auf Pro-Karte, **FAQ** (4 Q&A) + **Not-financial-advice-Disclaimer**. (B) **Lemon Squeezy** als Checkout verdrahtet: `window.LEMON_CHECKOUT_URL` / `..._ANNUAL` Config im Head (leer = Stripe-Fallback); `openUpgradeModal()` leitet bei gesetzter URL zum gehosteten LS-Checkout um (email + user_id als custom data fuer Entitlement). Kein US-LLC noetig → Verkauf sofort moeglich sobald Noah LS-Produkt anlegt + URL einsetzt.
