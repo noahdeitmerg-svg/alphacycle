@@ -105,6 +105,7 @@
   /* misc */
   .pill{display:inline-block;font-family:var(--mono);font-size:11px;padding:4px 11px;border-radius:999px;border:1px solid var(--bd2);color:var(--ink);}
   .note{font-size:12px;color:var(--dim);font-family:var(--mono);}
+  .pro-teaser{margin-top:16px;padding:14px 18px;border-radius:12px;border:1px solid rgba(0,212,170,0.22);background:rgba(0,212,170,0.05);display:flex;align-items:center;flex-wrap:wrap;gap:6px;}
   .foot{padding:56px 0 60px;text-align:center;}
   .disc{max-width:700px;margin:0 auto;font-family:var(--mono);font-size:11px;color:var(--dim);line-height:1.6;}
   .loading{color:var(--dim);font-family:var(--mono);font-size:13px;}
@@ -263,6 +264,18 @@
     </div>
   </section>
 
+  <!-- REGIME TIMELINE -->
+  <section>
+    <div class="sec-eyebrow">ENGINE 8 · REGIME TIMELINE</div>
+    <div class="sec-h">Every regime change, dated</div>
+    <div class="sec-tells">When ARC crosses a zone boundary, that's the signal that matters. Here are the most recent shifts and what BTC did during each — <b>this is exactly what Pro will alert you to in real time.</b></div>
+    <div id="regimeFeed"><div class="loading">Loading regime timeline…</div></div>
+    <div class="pro-teaser">
+      <span class="pill" style="border-color:rgba(0,212,170,0.4);color:var(--teal);">PRO · COMING SOON</span>
+      <span class="note">Email + Telegram alerts the moment the regime changes &amp; on bottom-formation signals. Free for everyone during launch.</span>
+    </div>
+  </section>
+
   <section class="foot">
     <div class="disc">AlphaCycle provides market data and historical analysis for educational purposes only. It is not financial, investment or trading advice. Cryptocurrency is volatile and you can lose money. Past performance does not guarantee future results.</div>
     <div class="note" style="margin-top:14px;">Updated <span id="updated">–</span> · <a class="nav-link" href="/">alphacycle.app</a></div>
@@ -340,6 +353,7 @@ async function loadAll(){
 
   loadZones(z.k);
   loadChart();
+  loadRegimeFeed();
 }
 
 async function loadZones(currentKey){
@@ -360,6 +374,24 @@ async function loadZones(currentKey){
   }catch(e){ document.getElementById('zoneTable').innerHTML='<div class="note">Historical returns unavailable right now.</div>'; }
 }
 
+async function loadRegimeFeed(){
+  try{
+    var z=await (await fetch(API+'/api/zone-history',{cache:'no-store'})).json();
+    var ph=z.zone_history||[]; var el=document.getElementById('regimeFeed'); if(!el)return;
+    if(!ph.length){ el.innerHTML='<div class="note">Regime timeline unavailable.</div>'; return; }
+    var colr={'Deep Value':'#00DC78','Accumulation':'#00B4D8','Expansion':'#58A6FF','Risk Rising':'#FF9500','Euphoria':'#FF3B3B'};
+    var html='';
+    ph.slice(0,6).forEach(function(p){
+      var c=colr[p.zone]||'#9aa6b8';
+      var period=p.from+(p.to?(' → '+p.to):' → now')+'  ·  '+p.weeks+'w';
+      var ret=(p.return_pct!=null?((p.return_pct>0?'+':'')+Math.round(p.return_pct)+'%'):'');
+      var retc=(p.return_pct>0)?'#22c55e':'#ef4444';
+      var now=p.to?'':'<span class="zhere">NOW</span>';
+      html+='<div class="zrow"><span class="dot" style="background:'+c+'"></span><span class="zn" style="color:'+c+'">'+p.zone+'</span><span class="zd">'+period+'</span>'+now+'<span class="zr" style="color:'+retc+'">'+ret+'</span></div>';
+    });
+    el.innerHTML=html;
+  }catch(e){ var el=document.getElementById('regimeFeed'); if(el)el.innerHTML='<div class="note">Regime timeline unavailable.</div>'; }
+}
 let chart, _arcN=0, _arcRange='1y';
 function _registerZoom(){ try{ var z=window.ChartZoom||window['chartjs-plugin-zoom']; if(z&&Chart.registry&&!Chart.registry.plugins.get('zoom')) Chart.register(z); }catch(e){} }
 async function loadChart(){
