@@ -19,6 +19,28 @@
   [headers.values]
     Cache-Control = "no-cache, no-store, must-revalidate"
 
+# --- Clean URLs (rewrite, URL stays clean) ---
+[[redirects]]
+  from = "/app"
+  to = "/app.html"
+  status = 200
+
+[[redirects]]
+  from = "/privacy"
+  to = "/privacy.html"
+  status = 200
+
+[[redirects]]
+  from = "/terms"
+  to = "/terms.html"
+  status = 200
+
+[[redirects]]
+  from = "/disclaimer"
+  to = "/disclaimer.html"
+  status = 200
+
+# --- SPA-style fallback (only when no static file matches) ---
 [[redirects]]
   from = "/*"
   to = "/index.html"

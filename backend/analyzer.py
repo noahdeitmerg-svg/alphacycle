@@ -521,7 +521,7 @@ def _compute_cycle_position(
 # ─────────────────────────────────────────────────────────────────────────────
 # ALPHA CYCLE POSITION SCORE
 # 0 = cycle bottom (maximum opportunity) | 100 = cycle top (maximum risk)
-# Weights: 35% MA-200W | 25% Drawdown from ATH | 20% Fear&Greed | 20% Liquidity
+# Weights (locked ARC v1.2): 35% MA-200W | 30% Drawdown from ATH | 20% Fear&Greed | 15% Liquidity
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _compute_alpha_cycle_position(
@@ -572,7 +572,7 @@ def _compute_alpha_cycle_position(
     else:
         ma_score = 100.0
 
-    # ── Component 2: Drawdown from ATH (weight: 25%) ─────────────────────────
+    # ── Component 2: Drawdown from ATH (weight: 30%) ─────────────────────────
     # drawdown = 0.0 at ATH, 1.0 = total loss
     drawdown = _clamp((ath - price) / ath, 0.0, 1.0)
 
@@ -588,7 +588,7 @@ def _compute_alpha_cycle_position(
     # Direct use: 0=Extreme Fear (bottom), 100=Extreme Greed (top)
     sentiment_score = fg
 
-    # ── Component 4: Liquidity Score (weight: 20%) ────────────────────────────
+    # ── Component 4: Liquidity Score (weight: 15%) ────────────────────────────
     # Direct use: already normalized 0–100
     # NOTE: macro_score from scoring.py is passed here.
     # Low macro score = tight liquidity = early cycle = LOW position score
@@ -596,11 +596,12 @@ def _compute_alpha_cycle_position(
     liquidity_final = liq
 
     # ── Weighted Final Score ──────────────────────────────────────────────────
+    # Weights aligned to locked ARC formula v1.2 (arc_config.ARC_WEIGHTS): trend .35 / drawdown .30 / liquidity .15 / sentiment .20
     score = (
         ma_score        * 0.35 +
-        drawdown_score  * 0.25 +
+        drawdown_score  * 0.30 +
         sentiment_score * 0.20 +
-        liquidity_final * 0.20
+        liquidity_final * 0.15
     )
 
     return round(_clamp(score), 1)

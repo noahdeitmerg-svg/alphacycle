@@ -118,7 +118,23 @@ _last_refresh = 0.0
 # -- STRIPE CONFIG --------------------------------------------------------------
 STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
+# Price IDs (set these in Railway env — never hardcode keys). Monthly/Yearly preferred; STRIPE_PRICE_ID kept as fallback.
+STRIPE_PRICE_MONTHLY = os.environ.get("STRIPE_PRICE_MONTHLY", "")
+STRIPE_PRICE_YEARLY = os.environ.get("STRIPE_PRICE_YEARLY", "")
 STRIPE_PRICE_ID = os.environ.get("STRIPE_PRICE_ID", "")
+
+
+def _resolve_price_id(plan: str) -> str:
+    """Map a requested plan to a Stripe price id, with safe fallbacks."""
+    plan = (plan or "monthly").lower()
+    if plan in ("yearly", "annual", "year") and STRIPE_PRICE_YEARLY:
+        return STRIPE_PRICE_YEARLY
+    if plan in ("monthly", "month") and STRIPE_PRICE_MONTHLY:
+        return STRIPE_PRICE_MONTHLY
+    # fallbacks: any configured price
+    return STRIPE_PRICE_MONTHLY or STRIPE_PRICE_ID or STRIPE_PRICE_YEARLY
+
+
 stripe.api_key = STRIPE_SECRET_KEY
 
 # -- RATE LIMITING --------------------------------------------------------------
@@ -1393,13 +1409,19 @@ async def subscribe(request: Request, req: SubscribeRequest):
 class CheckoutRequest(BaseModel):
     user_id: str
     email: str
+    plan: str = "monthly"  # "monthly" | "yearly"
+
+
+class PortalRequest(BaseModel):
+    user_id: str
 
 
 @app.post("/api/checkout")
 @limiter.limit("10/minute")
 async def create_checkout(request: Request, req: CheckoutRequest):
     """Create Stripe Checkout Session for subscription upgrade."""
-    if not STRIPE_SECRET_KEY or not STRIPE_PRICE_ID:
+    price_id = _resolve_price_id(req.plan)
+    if not STRIPE_SECRET_KEY or not price_id:
         raise HTTPException(status_code=503, detail="Stripe not configured")
     try:
         customer_id: Optional[str] = None
@@ -1428,19 +1450,51 @@ async def create_checkout(request: Request, req: CheckoutRequest):
         session = stripe.checkout.Session.create(
             customer=customer_id,
             mode="subscription",
-            line_items=[{"price": STRIPE_PRICE_ID, "quantity": 1}],
-            success_url="https://alphacycle.app/#upgrade-success",
-            cancel_url="https://alphacycle.app/#upgrade-cancelled",
+            line_items=[{"price": price_id, "quantity": 1}],
+            success_url="https://alphacycle.app/app?upgrade=success",
+            cancel_url="https://alphacycle.app/app?upgrade=cancelled",
             subscription_data={
-                "trial_period_days": 7,
                 "metadata": {"supabase_user_id": req.user_id},
             },
-            metadata={"supabase_user_id": req.user_id},
+            metadata={"supabase_user_id": req.user_id, "plan": req.plan},
         )
         return {"checkout_url": session.url}
     except Exception as e:
         logger.error("Checkout error: %s", e)
         raise HTTPException(status_code=500, detail="Checkout failed")
+
+
+@app.post("/api/create-portal-session")
+@limiter.limit("10/minute")
+async def create_portal_session(request: Request, req: PortalRequest):
+    """Create a Stripe Billing Portal session so a subscriber can manage/cancel their plan.
+    Billing-only: resolves the existing stripe_customer_id from the profile. Does not create or modify auth."""
+    if not STRIPE_SECRET_KEY:
+        raise HTTPException(status_code=503, detail="Stripe not configured")
+    try:
+        customer_id: Optional[str] = None
+        if supabase:
+            profile = (
+                supabase.table("user_profiles")
+                .select("stripe_customer_id")
+                .eq("id", req.user_id)
+                .single()
+                .execute()
+            )
+            if profile.data and profile.data.get("stripe_customer_id"):
+                customer_id = profile.data["stripe_customer_id"]
+        if not customer_id:
+            raise HTTPException(status_code=404, detail="No billing account found")
+        session = stripe.billing_portal.Session.create(
+            customer=customer_id,
+            return_url="https://alphacycle.app/app",
+        )
+        return {"portal_url": session.url}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Portal error: %s", e)
+        raise HTTPException(status_code=500, detail="Portal session failed")
 
 
 def _get_profile_by_user_id(user_id: str) -> dict:
