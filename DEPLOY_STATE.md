@@ -1,8 +1,14 @@
 # AlphaCycle — Deploy State
-**Zuletzt aktualisiert:** 2026-04-15 (Cowork vollstaendige Projektuebergabe)
+**Zuletzt aktualisiert:** 2026-06-04 (Cowork: X-Bot Kill-Switch — Account geblockt)
 **Aktuelle Version:** live auf Railway (alphacycle-production.up.railway.app)
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
+
+## Letzter Session-Status (2026-06-04) — Cowork: X-Bot Kill-Switch (BOT_PAUSED)
+- **Datei(en):** `alphacycle-x-bot/config.py`, `alphacycle-x-bot/bot.py`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
+- **Was:** X-Account wegen Bot-Erkennung geblockt → Bot pausiert. Neues Flag `config.BOT_PAUSED` (Default **true** = pausiert, Env `BOT_PAUSED=false` zum Reaktivieren). Gates in `bot.py`: `run_cycle()`, `schedule_daily_post()`, `_weekly_banner_job()` brechen bei `BOT_PAUSED` sofort ab; Startup-Log zeigt PAUSED-Banner. Telegram-Listener bleibt aktiv (Control/Health).
+- **Warum:** Kein Scannen/Replies/Daily-Posts/Banner mehr, auch nach Reboot/Redeploy (durable). Sofort-Pause zusaetzlich per VPS `screen -S xbot -X quit`.
+- **Status:** committed + pushed to GitHub (Cowork via PowerShell)
 
 ## Letzter Session-Status (2026-04-15) — Cowork: vollstaendige Projektuebergabe
 - **Datei(en):** `docs/COWORK_HANDOVER.md` (neu), `DEPLOY_STATE.md`, `README.md`

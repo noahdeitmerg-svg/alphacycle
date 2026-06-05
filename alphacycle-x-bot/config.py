@@ -59,6 +59,14 @@ ALPHACYCLE_PUBLIC_BASE = (
 WEBSITE_EMBARGO = True
 DAILY_POST_DASHBOARD_URL = ""  # disabled until website is ready
 
+# BOT PAUSE KILL-SWITCH — X account blocked (bot detection), 2026-06.
+# When True: run_cycle (scan/replies), daily posts, and weekly banner are all skipped.
+# Telegram listener stays up for control/health. Default is PAUSED.
+# Resume later: set BOT_PAUSED=false in .env next to config.py, then ./restart-screens.sh
+BOT_PAUSED = (os.getenv("BOT_PAUSED", "true") or "true").strip().lower() not in (
+    "0", "false", "no", "off",
+)
+
 # Daily Post Schedule (UTC)
 DAILY_POST_TIME = "13:00"
 

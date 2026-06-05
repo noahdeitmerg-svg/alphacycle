@@ -77,6 +77,9 @@ def schedule_daily_post() -> None:
     """
     Daily 13:00 (UTC if TZ=UTC / tzset on Linux): fetch ARC, generate post, queue Telegram approval.
     """
+    if config.BOT_PAUSED:
+        print("[DAILY] PAUSED (config.BOT_PAUSED) — skipping daily post. Resume: BOT_PAUSED=false in .env + restart.")
+        return
     print("[DAILY] schedule_daily_post triggered")
     arc = fetch_arc_data()
     if not arc:
@@ -113,6 +116,9 @@ def _weekly_banner_job() -> None:
     """
     Sunday 12:00 UTC: screenshot alphacycle.app hero -> 1500x500 PNG, optional X header upload.
     """
+    if config.BOT_PAUSED:
+        print("[BANNER] PAUSED (config.BOT_PAUSED) — skipping weekly banner.")
+        return
     print("[BANNER] Weekly banner job triggered")
     try:
         from generate_banner import generate_and_upload_banner
@@ -144,6 +150,9 @@ def _weekly_banner_job() -> None:
 
 
 def run_cycle():
+    if config.BOT_PAUSED:
+        print("[BOT] PAUSED (config.BOT_PAUSED) — skipping scan cycle. Resume: BOT_PAUSED=false in .env + restart.")
+        return
     try:
         print("\n" + "=" * 50)
         print("[BOT] Starting scan cycle...")
@@ -284,6 +293,9 @@ def main():
     if not logging.root.handlers:
         logging.basicConfig(level=logging.INFO, format="%(message)s")
     print("[BOT] AlphaCycle X Bot v2 starting...")
+    if config.BOT_PAUSED:
+        print("[BOT] *** BOT_PAUSED=TRUE — no scanning, no replies, no daily posts, no banner. ***")
+        print("[BOT] *** Telegram listener still works. Resume: BOT_PAUSED=false in .env + ./restart-screens.sh ***")
     print("[BOT] Config: .env auto-loaded from folder containing config.py (python-dotenv).")
     print("[BOT] Mode: replies + daily posts require Telegram approval (run telegram_listener.py).")
     print(f"[BOT] Tracking: {', '.join(config.TRACKED_ACCOUNTS)}")
