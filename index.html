@@ -3878,6 +3878,14 @@ canvas.sparkline {
 
 #gate-zone-history { display: none !important; }
 
+/* MARKETING-READY 2026-06-04 (Cowork): weak/stale/low-value cards hidden for launch.
+   Core story = Live Prices -> Hero ARC -> Historical Returns -> Positioning -> ARC History.
+   Fully reversible: delete this block to restore the cards. */
+#gate-near-term,
+#gate-arc-momentum,
+#gate-cycle-overview,
+#gate-content-export { display: none !important; }
+
 .hr-dominant-label,
 .hr-focus-zone {
   font-size: 14px !important;
@@ -4085,8 +4093,8 @@ canvas.sparkline {
         <div style="background:var(--bg-card);border:2px solid #00D4AA;border-radius:12px;padding:24px 16px;text-align:center;position:relative;">
           <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:#00D4AA;color:#0d1117;font-size:8px;font-weight:700;font-family:var(--f-mono);padding:3px 10px;border-radius:4px;letter-spacing:0.1em;">7 DAYS FREE</div>
           <div style="font-size:10px;color:#00D4AA;font-family:var(--f-mono);letter-spacing:0.1em;margin-bottom:8px;">PRO</div>
-          <div style="font-size:28px;font-weight:700;color:var(--tx-pri);font-family:var(--f-mono);">$49<span style="font-size:14px;color:var(--tx-ter);">/mo</span></div>
-          <div style="font-size:10px;color:var(--tx-ter);font-family:var(--f-mono);margin-top:8px;line-height:1.6;">Everything in Free +<br>Positioning Framework<br>Cycle Analysis<br>ARC History<br>Zone History<br>Email Alerts</div>
+          <div style="font-size:28px;font-weight:700;color:var(--tx-pri);font-family:var(--f-mono);">$29<span style="font-size:14px;color:var(--tx-ter);">/mo</span></div>
+          <div style="font-size:10px;color:var(--tx-ter);font-family:var(--f-mono);margin-top:8px;line-height:1.6;">Everything in Free +<br>Positioning Framework<br>ARC History Chart<br>Priority Email Alerts</div>
           <button onclick="openAuthModal('signup')" style="margin-top:16px;padding:10px 20px;background:#00D4AA;color:#0d1117;border:none;border-radius:6px;font-family:var(--f-mono);font-size:11px;font-weight:700;cursor:pointer;">START FREE TRIAL</button>
         </div>
       </div>
@@ -4858,7 +4866,7 @@ canvas.sparkline {
             <button class="ce-btn arc-chart-btn" id="reset-zoom-arc-btn" type="button" onclick="resetArcZoom()" title="Reset to 2Y view (double-click chart for full range)">↺ RESET</button>
           </div>
         </div>
-        <div id="arc-chart-placeholder" class="arc-chart-placeholder">Historische Daten werden geladen (kann bis zu 15 Sek. dauern)...</div>
+        <div id="arc-chart-placeholder" class="arc-chart-placeholder">Loading 10 years of ARC history (up to 15s)...</div>
         <div id="arc-chart-wrap" style="display:none;">
           <canvas id="arc-history-chart" class="arc-chart-canvas"></canvas>
         </div>
@@ -7178,7 +7186,7 @@ function applyBlurGates() {
         btn.onclick = function() { openAuthModal('signup'); };
         btn.style.cssText = 'padding:12px 24px;border:none;border-radius:8px;font-family:var(--f-mono);font-size:13px;font-weight:700;cursor:pointer;letter-spacing:0.06em;background:#00D4AA;color:#0d1117;transition:transform 0.15s;box-shadow:0 0 20px rgba(0,212,170,0.25);';
       } else {
-        btn.textContent = 'UPGRADE TO PRO — $49/mo';
+        btn.textContent = 'UPGRADE TO PRO — $29/mo';
         btn.onclick = function() { openUpgradeModal(); };
         btn.style.cssText = 'padding:12px 24px;border:none;border-radius:8px;font-family:var(--f-mono);font-size:13px;font-weight:700;cursor:pointer;letter-spacing:0.06em;background:#00D4AA;color:#0d1117;transition:transform 0.15s;box-shadow:0 0 20px rgba(0,212,170,0.25);';
       }
@@ -7262,7 +7270,7 @@ async function openUpgradeModal() {
       }
       btns.forEach(function(b) {
         if (b.textContent === 'REDIRECTING...') {
-          b.textContent = 'UPGRADE TO PRO — $49/mo';
+          b.textContent = 'UPGRADE TO PRO — $29/mo';
           b.disabled = false;
         }
       });
@@ -7279,7 +7287,7 @@ async function openUpgradeModal() {
     showPlanWarning('Checkout temporarily unavailable. Please try again in a moment.');
     btns.forEach(function(b) {
       if (b.textContent === 'REDIRECTING...') {
-        b.textContent = 'UPGRADE TO PRO — $49/mo';
+        b.textContent = 'UPGRADE TO PRO — $29/mo';
         b.disabled = false;
       }
     });

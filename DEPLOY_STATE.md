@@ -4,6 +4,13 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-06-04) — Cowork: UI verkaufsfertig (Phase 1)
+- **Datei(en):** `index.html`, `DEPLOY_STATE.md`
+- **Was:** Dashboard auf 5-Card-Kern-Story reduziert (Live Prices -> Hero ARC -> Historical Returns -> Positioning -> ARC History). Schwache/stale/redundante Cards **reversibel** per CSS-Block versteckt (`#gate-near-term`, `#gate-arc-momentum`, `#gate-cycle-overview`, `#gate-content-export` -> `display:none !important`; Block ist klar kommentiert, loeschen = wiederherstellen). Preis **$49 -> $29/mo** an allen 4 sichtbaren Stellen (Landing-Pricing + 3 Upgrade-Buttons). Pro-Feature-Liste an sichtbare Cards angeglichen (Cycle Analysis/Zone History entfernt). Deutscher ARC-Chart-Platzhalter -> Englisch.
+- **Warum:** Verkaufsfertige, kohaerente UI; guenstigerer Einstieg ($29) laut GTM-Entscheidung; keine stale/halbfertigen Cards mehr sichtbar. Keine ARC-Formel/Zonen-Aenderung.
+- **Offen (naechste UI-Iteration):** dead `.dec-layer-3`-Markup, `#signal-summary` ggf. reaktivieren, console.logs entfernen, RISK-RISING-Zone-Styling, Landing/Track-Record-Zahlen gegen `/api/historical-returns` verifizieren, Annual-Plan-Option.
+- **Status:** committed + pushed (Netlify auto-deploy)
+
 ## Letzter Session-Status (2026-06-04) — Cowork: X-Bot Kill-Switch (BOT_PAUSED)
 - **Datei(en):** `alphacycle-x-bot/config.py`, `alphacycle-x-bot/bot.py`, `DEPLOY_STATE.md`, `.cursor/rules/permanent-fixes.mdc`
 - **Was:** X-Account wegen Bot-Erkennung geblockt → Bot pausiert. Neues Flag `config.BOT_PAUSED` (Default **true** = pausiert, Env `BOT_PAUSED=false` zum Reaktivieren). Gates in `bot.py`: `run_cycle()`, `schedule_daily_post()`, `_weekly_banner_job()` brechen bei `BOT_PAUSED` sofort ab; Startup-Log zeigt PAUSED-Banner. Telegram-Listener bleibt aktiv (Control/Health).
