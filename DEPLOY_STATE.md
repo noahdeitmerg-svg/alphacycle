@@ -4,6 +4,12 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-06-05) — Cowork: Content-Factory + Blocker-Doku + Subscribe bulletproof
+- **Datei(en):** `content-factory/generate.py` (neu), `content-factory/README.md` (neu), `content-factory/.gitignore` (neu), `BLOCKERS_FOR_NOAH.md` (neu), `backend/main.py`, `DEPLOY_STATE.md`
+- **Was:** **Content-Factory** gebaut + getestet: `generate.py` zieht `/api/arc-summary` und rendert branded ARC-Regime-Grafiken (IG 1080x1080 + YT 1920x1080) mit Zonen-Bar/Marker, BTC/F&G/Phase, Disclaimer. Ban-sicher (nur Generierung, Posten via offizielle Scheduler + Mensch-im-Loop; Doku in README + GTM §4). **`/api/subscribe`** kugelsicher: progressive Store-Fallbacks (full → email+source → email), **nie mehr 500**, Lead-Log bei Fehlschlag, `stored`-Flag in Response. **`BLOCKERS_FOR_NOAH.md`**: priorisierte To-dos die nur Noah kann (LS-Account+Webhook-Secret, Supabase `email_captures`-Tabelle, IG/YT-Accounts, optional Bot-SSH-Stop, Stripe später, Email-Versand).
+- **Warum:** Verkauf morgen startklar; Distribution (IG/YT) vorbereitet ohne Ban-Risiko; klare Hand-off-Liste.
+- **Status:** committed + pushed (Railway/Netlify auto-deploy)
+
 ## Letzter Session-Status (2026-06-04) — Cowork: Unabhaengige Verifikation + Trust-Fixes
 - **Datei(en):** `backend/scripts/verify_dashboard.py` (neu), `index.html`, `DEPLOY_STATE.md`
 - **Was:** Eigenes Verifikations-Script (`verify_dashboard.py`) zieht Live-API und rechnet Zonen-Forward-Returns unabhaengig nach. Ergebnis: **Datenintegritaet 0 Fehler**, Live-ARC == Backtest (32,5/32,45), Zonengrenzen konsistent, Formel sauber. Die API-`historical-returns` nutzt bewusst "confirmed zone entries" (n≈17) → Deep Value +236% (n=3); **kein Bug, Methodik nicht geaendert** (LOCKED, nur mit Noah). **Korrigiert (overstated/falsch → Wahrheit):** Landing-Teaser + Track-Record-Signale gegen echte Backtest-Daten: Dec→**Nov 2022 ARC 13 / $15.800 / +127%** (war ARC 12 / $16.500 / +170%); Accumulation **Mar 2023 ARC 32 / $22.200 / +225%** (war 34 / $22k / +95%); Risk Rising **Oct 2024 ARC 64 / $67.000**; Cycle-Top ueberall **$124,8k** (war faelschlich $108k); Drawdown **-50%**. Zwei Debug-`console.log` entfernt.
