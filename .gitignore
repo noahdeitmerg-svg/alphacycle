@@ -12,3 +12,8 @@ venv/
 .vscode/
 alphacycle-x-bot/database.db
 alphacycle-x-bot/artifacts/
+
+# local verification screenshots
+_verify_*.png
+_chart_crop*.png
+
