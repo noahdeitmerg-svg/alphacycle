@@ -4004,145 +4004,187 @@ canvas.sparkline {
 </nav>
 
 <div id="landing-view" style="display:none;">
-  <div style="min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:40px 20px;max-width:720px;margin:0 auto;text-align:center;">
+  <style>
+    #landing-view{--lp-teal:#00D4AA;--lp-blue:#58A6FF;--lp-green:#22c55e;--lp-ink:#e8edf4;--lp-mut:#9aa6b6;--lp-dim:#6b7888;}
+    #landing-view *{box-sizing:border-box;}
+    #landing-view .lp-bg{position:fixed;inset:0;z-index:-1;background:
+      radial-gradient(900px 600px at 12% -8%, rgba(0,212,170,0.16), transparent 60%),
+      radial-gradient(820px 600px at 102% 6%, rgba(88,166,255,0.13), transparent 55%),
+      radial-gradient(700px 520px at 50% 116%, rgba(0,212,170,0.07), transparent 60%),
+      #07090e;}
+    #landing-view .lp{max-width:1080px;margin:0 auto;padding:0 22px;font-family:'Outfit',system-ui,sans-serif;}
+    #landing-view .lp-eyebrow{display:inline-block;font-family:var(--f-mono);font-size:11px;letter-spacing:0.22em;color:var(--lp-teal);border:1px solid rgba(0,212,170,0.3);background:rgba(0,212,170,0.06);padding:6px 14px;border-radius:999px;margin-bottom:22px;}
+    #landing-view .lp-hero{padding:74px 0 26px;text-align:center;}
+    #landing-view .lp-h1{font-size:clamp(38px,6.4vw,74px);font-weight:800;line-height:1.04;letter-spacing:-0.02em;color:#fff;margin:0 0 20px;}
+    #landing-view .lp-grad{background:linear-gradient(100deg,#00D4AA,#58A6FF);-webkit-background-clip:text;background-clip:text;color:transparent;}
+    #landing-view .lp-sub{font-size:clamp(16px,2vw,20px);color:var(--lp-mut);line-height:1.6;max-width:620px;margin:0 auto 30px;}
+    #landing-view .lp-cta-row{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:12px;}
+    #landing-view .lp-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:15px 30px;border-radius:12px;font-family:var(--f-mono);font-weight:700;font-size:14px;letter-spacing:0.04em;cursor:pointer;border:none;transition:transform .15s, box-shadow .15s;text-decoration:none;}
+    #landing-view .lp-btn-primary{background:linear-gradient(100deg,#00D4AA,#33e0bd);color:#04110d;box-shadow:0 10px 38px rgba(0,212,170,0.3);}
+    #landing-view .lp-btn-primary:hover{transform:translateY(-2px);box-shadow:0 16px 50px rgba(0,212,170,0.45);}
+    #landing-view .lp-btn-ghost{background:rgba(255,255,255,0.04);color:var(--lp-ink);border:1px solid rgba(255,255,255,0.14);}
+    #landing-view .lp-btn-ghost:hover{background:rgba(255,255,255,0.08);}
+    #landing-view .lp-note{font-family:var(--f-mono);font-size:12px;color:var(--lp-dim);}
+    #landing-view .lp-card{background:rgba(255,255,255,0.035);border:1px solid rgba(255,255,255,0.08);border-radius:18px;backdrop-filter:blur(8px);}
+    #landing-view .lp-arc{max-width:420px;margin:42px auto 0;padding:26px 30px;text-align:center;position:relative;overflow:hidden;}
+    #landing-view .lp-arc:before{content:'';position:absolute;inset:0;background:radial-gradient(420px 220px at 50% -25%, rgba(0,212,170,0.2), transparent 70%);pointer-events:none;}
+    #landing-view .lp-arc-lbl{font-family:var(--f-mono);font-size:10px;letter-spacing:0.18em;color:var(--lp-dim);}
+    #landing-view .lp-arc-num{font-family:var(--f-mono);font-weight:800;font-size:84px;line-height:1;color:var(--lp-teal);margin:6px 0 2px;}
+    #landing-view .lp-arc-zone{font-family:var(--f-mono);font-weight:700;font-size:15px;letter-spacing:0.08em;color:var(--lp-teal);}
+    #landing-view .lp-arc-row{font-family:var(--f-mono);font-size:12px;color:var(--lp-mut);margin-top:12px;}
+    #landing-view .lp-arc-row b{color:#fff;font-weight:600;}
+    #landing-view .lp-trust{display:flex;flex-wrap:wrap;gap:10px 26px;justify-content:center;margin:34px 0 0;font-family:var(--f-mono);font-size:12px;color:var(--lp-mut);}
+    #landing-view .lp-trust b{color:#fff;}
+    #landing-view .lp-sec{padding:62px 0 0;}
+    #landing-view .lp-kicker{text-align:center;font-family:var(--f-mono);font-size:11px;letter-spacing:0.2em;color:var(--lp-teal);margin-bottom:10px;}
+    #landing-view .lp-h2{text-align:center;font-size:clamp(24px,3.4vw,38px);font-weight:800;letter-spacing:-0.01em;color:#fff;margin:0 0 30px;}
+    #landing-view .lp-grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+    #landing-view .lp-grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+    #landing-view .lp-grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;max-width:760px;margin:0 auto;}
+    #landing-view .lp-tr{padding:20px;text-align:left;}
+    #landing-view .lp-tr-top{font-family:var(--f-mono);font-size:10px;letter-spacing:0.1em;color:var(--lp-dim);}
+    #landing-view .lp-tr-mid{font-family:var(--f-mono);font-size:12px;color:var(--lp-mut);margin-top:6px;}
+    #landing-view .lp-tr-big{font-family:var(--f-mono);font-size:17px;font-weight:800;margin-top:8px;}
+    #landing-view .lp-feat{padding:24px 20px;text-align:left;}
+    #landing-view .lp-feat-ic{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:14px;background:rgba(0,212,170,0.1);border:1px solid rgba(0,212,170,0.22);}
+    #landing-view .lp-feat-t{font-family:var(--f-mono);font-size:13px;font-weight:700;color:#fff;letter-spacing:0.04em;}
+    #landing-view .lp-feat-d{font-size:14px;color:var(--lp-mut);line-height:1.55;margin-top:6px;}
+    #landing-view .lp-feat-w{font-family:var(--f-mono);font-size:11px;color:var(--lp-teal);margin-top:10px;}
+    #landing-view .lp-price{padding:30px 26px;text-align:center;border-radius:18px;}
+    #landing-view .lp-price-pro{border:1px solid rgba(0,212,170,0.5);background:linear-gradient(180deg,rgba(0,212,170,0.08),rgba(255,255,255,0.02));position:relative;}
+    #landing-view .lp-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:linear-gradient(100deg,#00D4AA,#33e0bd);color:#04110d;font-family:var(--f-mono);font-size:9px;font-weight:800;letter-spacing:0.1em;padding:5px 14px;border-radius:999px;white-space:nowrap;}
+    #landing-view .lp-price-tier{font-family:var(--f-mono);font-size:11px;letter-spacing:0.14em;color:var(--lp-mut);}
+    #landing-view .lp-price-amt{font-family:var(--f-mono);font-size:40px;font-weight:800;color:#fff;margin:8px 0 2px;}
+    #landing-view .lp-price-amt span{font-size:15px;color:var(--lp-dim);font-weight:600;}
+    #landing-view .lp-price-list{font-size:13px;color:var(--lp-mut);line-height:1.95;margin:14px 0 20px;}
+    #landing-view .lp-email{display:flex;gap:10px;max-width:460px;margin:0 auto;}
+    #landing-view .lp-input{flex:1;padding:14px 16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:12px;color:#fff;font-family:var(--f-mono);font-size:13px;outline:none;}
+    #landing-view .lp-input:focus{border-color:var(--lp-teal);}
+    #landing-view .lp-faq{max-width:680px;margin:0 auto;text-align:left;display:flex;flex-direction:column;gap:14px;}
+    #landing-view .lp-faq .lp-card{padding:18px 20px;}
+    #landing-view .lp-faq-q{font-family:var(--f-mono);font-size:14px;font-weight:700;color:#fff;}
+    #landing-view .lp-faq-a{font-size:14px;color:var(--lp-mut);line-height:1.6;margin-top:6px;}
+    #landing-view .lp-foot{padding:48px 0 64px;text-align:center;}
+    #landing-view .lp-disc{max-width:680px;margin:0 auto 18px;font-family:var(--f-mono);font-size:11px;color:var(--lp-dim);line-height:1.6;}
+    @media(max-width:860px){#landing-view .lp-grid3,#landing-view .lp-grid4{grid-template-columns:1fr 1fr;}}
+    @media(max-width:560px){#landing-view .lp-grid3,#landing-view .lp-grid4,#landing-view .lp-grid2{grid-template-columns:1fr;}#landing-view .lp-hero{padding:48px 0 12px;}}
+  </style>
+  <div class="lp-bg"></div>
+  <div class="lp">
 
     <!-- Hero -->
-    <div style="margin-bottom:12px;font-size:11px;color:#00D4AA;font-family:var(--f-mono);letter-spacing:0.15em;font-weight:600;">CRYPTO CYCLE INTELLIGENCE</div>
-    <h1 style="font-family:'Outfit',sans-serif;font-size:clamp(28px,5vw,48px);font-weight:700;color:#fff;line-height:1.15;margin:0 0 16px;">Know exactly where<br>Bitcoin is in the cycle.</h1>
-    <p style="font-family:var(--f-mono);font-size:14px;color:var(--tx-sec);line-height:1.7;max-width:500px;margin:0 0 32px;">The AlphaCycle Risk Index combines trend, drawdown, sentiment & liquidity into one score. 0-100. Updated live.</p>
-
-    <!-- Live ARC Preview -->
-    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px 32px;margin-bottom:32px;min-width:280px;">
-      <div style="font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);letter-spacing:0.12em;margin-bottom:8px;">LIVE ARC INDEX</div>
-      <div id="landing-arc-score" style="font-size:48px;font-weight:700;color:#00D4AA;font-family:var(--f-mono);line-height:1;">—</div>
-      <div style="font-size:11px;color:var(--tx-ter);font-family:var(--f-mono);margin-top:2px;">/100</div>
-      <div id="landing-arc-zone" style="font-size:14px;font-weight:600;font-family:var(--f-mono);letter-spacing:0.08em;margin-top:8px;color:#00D4AA;">—</div>
-      <div style="margin-top:12px;font-size:11px;color:var(--tx-ter);font-family:var(--f-mono);">
-        BTC <span id="landing-btc-price" style="color:var(--tx-pri);">—</span>
-        &nbsp;·&nbsp;
-        Fear &amp; Greed <span id="landing-fg" style="color:var(--tx-pri);">—</span>
+    <section class="lp-hero">
+      <span class="lp-eyebrow">BITCOIN CYCLE INTELLIGENCE</span>
+      <h1 class="lp-h1">Know exactly where Bitcoin<br>is in its <span class="lp-grad">cycle.</span></h1>
+      <p class="lp-sub">One transparent score, 0–100, that classifies Bitcoin's market regime from trend, drawdown, sentiment and liquidity. Structure before emotion — backtested to 2017.</p>
+      <div class="lp-cta-row">
+        <button class="lp-btn lp-btn-primary" onclick="openAuthModal('signup')">Get Free Access →</button>
+        <a class="lp-btn lp-btn-ghost" href="#" onclick="showDashboard();return false;">View Live Dashboard</a>
       </div>
-    </div>
+      <div class="lp-note">Free during launch · No credit card</div>
 
-    <!-- CTA -->
-    <button onclick="openAuthModal('signup')" style="padding:16px 40px;background:#00D4AA;color:#0d1117;border:none;border-radius:8px;font-family:var(--f-mono);font-size:15px;font-weight:700;cursor:pointer;letter-spacing:0.06em;transition:transform 0.15s;box-shadow:0 0 30px rgba(0,212,170,0.25);margin-bottom:12px;">START 7-DAY FREE TRIAL</button>
-    <div style="font-size:11px;color:var(--tx-ter);font-family:var(--f-mono);">No credit card required · Cancel anytime</div>
-
-    <!-- Email capture / lead magnet -->
-    <div style="margin-top:32px;width:100%;max-width:460px;">
-      <div style="font-size:10px;color:var(--tx-ter);font-family:var(--f-mono);letter-spacing:0.1em;margin-bottom:8px;">OR GET THE WEEKLY ARC REGIME BRIEF — FREE</div>
-      <div style="display:flex;gap:8px;">
-        <input id="wl-email" type="email" autocomplete="email" placeholder="you@email.com" style="flex:1;padding:11px 12px;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;color:var(--tx-pri);font-family:var(--f-mono);font-size:12px;outline:none;">
-        <button onclick="submitWaitlist()" id="wl-btn" type="button" style="padding:11px 18px;background:transparent;border:1px solid #00D4AA;color:#00D4AA;border-radius:6px;font-family:var(--f-mono);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">SUBSCRIBE</button>
+      <div class="lp-card lp-arc">
+        <div class="lp-arc-lbl">LIVE ARC RISK INDEX</div>
+        <div class="lp-arc-num" id="landing-arc-score">—</div>
+        <div class="lp-arc-zone" id="landing-arc-zone">—</div>
+        <div class="lp-arc-row">BTC <b id="landing-btc-price">—</b> &nbsp;·&nbsp; Fear &amp; Greed <b id="landing-fg">—</b></div>
       </div>
-      <div id="wl-msg" style="font-size:10px;color:var(--tx-ter);font-family:var(--f-mono);margin-top:6px;min-height:14px;"></div>
-    </div>
 
-    <!-- Track Record Teaser -->
-    <div style="margin-top:48px;width:100%;">
-      <div style="font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);letter-spacing:0.15em;margin-bottom:16px;">WHAT ARC TOLD US BEFORE THE MARKET MOVED</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">
-        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:16px;text-align:left;">
-          <div style="font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);">NOV 2022 — DEEP VALUE</div>
-          <div style="font-size:11px;color:var(--tx-sec);font-family:var(--f-mono);margin-top:4px;">ARC 13 · BTC $15,800</div>
-          <div style="font-size:16px;font-weight:700;color:#22c55e;font-family:var(--f-mono);margin-top:4px;">→ +127% in 12 months</div>
+      <div class="lp-trust">
+        <span><b>8+ years</b> backtested</span>
+        <span><b>3,200+</b> daily data points</span>
+        <span><b>5</b> regime zones</span>
+        <span>Updated <b>live</b></span>
+      </div>
+    </section>
+
+    <!-- Track Record -->
+    <section class="lp-sec">
+      <div class="lp-kicker">TRACK RECORD</div>
+      <h2 class="lp-h2">What ARC flagged before the market moved</h2>
+      <div class="lp-grid3">
+        <div class="lp-card lp-tr">
+          <div class="lp-tr-top">NOV 2022 · DEEP VALUE</div>
+          <div class="lp-tr-mid">ARC 13 · BTC $15,800</div>
+          <div class="lp-tr-big" style="color:#22c55e">+127% in 12 months</div>
         </div>
-        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:16px;text-align:left;">
-          <div style="font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);">OCT 2024 — RISK RISING</div>
-          <div style="font-size:11px;color:var(--tx-sec);font-family:var(--f-mono);margin-top:4px;">ARC 64 · BTC $67,000</div>
-          <div style="font-size:16px;font-weight:700;color:#f59e0b;font-family:var(--f-mono);margin-top:4px;">→ Peaked $124.8k, then -50%</div>
+        <div class="lp-card lp-tr">
+          <div class="lp-tr-top">OCT 2024 · RISK RISING</div>
+          <div class="lp-tr-mid">ARC 64 · BTC $67,000</div>
+          <div class="lp-tr-big" style="color:#f59e0b">Peaked $124.8k, then -50%</div>
         </div>
-        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:16px;text-align:left;">
-          <div style="font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);" id="landing-now-label">NOW — ACCUMULATION PHASE</div>
-          <div style="font-size:11px;color:var(--tx-sec);font-family:var(--f-mono);margin-top:4px;" id="landing-now-detail">ARC at 33 · BTC $71k</div>
-          <div style="font-size:16px;font-weight:700;color:#00B4D8;font-family:var(--f-mono);margin-top:4px;" id="landing-now-return">Historically strong accumulation environment</div>
+        <div class="lp-card lp-tr">
+          <div class="lp-tr-top" id="landing-now-label">NOW · ACCUMULATION</div>
+          <div class="lp-tr-mid" id="landing-now-detail">ARC 33 · BTC $63k</div>
+          <div class="lp-tr-big" style="color:#00B4D8" id="landing-now-return">Historically strong accumulation zone</div>
         </div>
       </div>
-    </div>
-    <div style="text-align:center;margin-top:16px;">
-      <a href="#" onclick="showTrackRecord();return false;" style="font-size:11px;color:#00D4AA;font-family:var(--f-mono);text-decoration:none;">View Full Track Record &#8594;</a>
-    </div>
+      <div style="text-align:center;margin-top:18px;"><a href="#" onclick="showTrackRecord();return false;" style="font-family:var(--f-mono);font-size:13px;color:var(--lp-teal);text-decoration:none;">See the full track record →</a></div>
+    </section>
 
     <!-- How it works -->
-    <div style="margin-top:48px;width:100%;">
-      <div style="font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);letter-spacing:0.15em;margin-bottom:16px;">4 COMPONENTS. 1 SCORE. 0-100.</div>
-      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
-        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">
-          <div style="font-size:20px;margin-bottom:4px;">&#128200;</div>
-          <div style="font-size:10px;color:var(--tx-pri);font-family:var(--f-mono);font-weight:600;">TREND</div>
-          <div style="font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);">200-week MA deviation</div>
-        </div>
-        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">
-          <div style="font-size:20px;margin-bottom:4px;">&#128201;</div>
-          <div style="font-size:10px;color:var(--tx-pri);font-family:var(--f-mono);font-weight:600;">DRAWDOWN</div>
-          <div style="font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);">Distance from all-time high</div>
-        </div>
-        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">
-          <div style="font-size:20px;margin-bottom:4px;">&#128561;</div>
-          <div style="font-size:10px;color:var(--tx-pri);font-family:var(--f-mono);font-weight:600;">SENTIMENT</div>
-          <div style="font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);">Fear & Greed Index</div>
-        </div>
-        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;">
-          <div style="font-size:20px;margin-bottom:4px;">&#128176;</div>
-          <div style="font-size:10px;color:var(--tx-pri);font-family:var(--f-mono);font-weight:600;">LIQUIDITY</div>
-          <div style="font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);">Fed balance sheet + stablecoins</div>
-        </div>
+    <section class="lp-sec">
+      <div class="lp-kicker">HOW IT WORKS</div>
+      <h2 class="lp-h2">Four signals. One score.</h2>
+      <div class="lp-grid4">
+        <div class="lp-card lp-feat"><div class="lp-feat-ic">&#128200;</div><div class="lp-feat-t">TREND</div><div class="lp-feat-d">Price relative to the 200-week moving average.</div><div class="lp-feat-w">35% weight</div></div>
+        <div class="lp-card lp-feat"><div class="lp-feat-ic">&#128201;</div><div class="lp-feat-t">DRAWDOWN</div><div class="lp-feat-d">Distance from the all-time high.</div><div class="lp-feat-w">30% weight</div></div>
+        <div class="lp-card lp-feat"><div class="lp-feat-ic">&#128561;</div><div class="lp-feat-t">SENTIMENT</div><div class="lp-feat-d">The crypto Fear &amp; Greed Index.</div><div class="lp-feat-w">20% weight</div></div>
+        <div class="lp-card lp-feat"><div class="lp-feat-ic">&#128167;</div><div class="lp-feat-t">LIQUIDITY</div><div class="lp-feat-d">Fed net liquidity (WALCL - TGA - RRP).</div><div class="lp-feat-w">15% weight</div></div>
       </div>
-    </div>
+    </section>
 
     <!-- Pricing -->
-    <div style="margin-top:48px;width:100%;" id="pricing">
-      <div style="font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);letter-spacing:0.15em;margin-bottom:16px;">PRICING</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:500px;margin:0 auto;">
-        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px 16px;text-align:center;">
-          <div style="font-size:10px;color:var(--tx-ter);font-family:var(--f-mono);letter-spacing:0.1em;margin-bottom:8px;">FREE</div>
-          <div style="font-size:28px;font-weight:700;color:var(--tx-pri);font-family:var(--f-mono);">$0</div>
-          <div style="font-size:10px;color:var(--tx-ter);font-family:var(--f-mono);margin-top:8px;line-height:1.6;">Live Prices<br>ARC Index<br>Historical Returns</div>
-          <button onclick="openAuthModal('signup')" style="margin-top:16px;padding:10px 20px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--tx-sec);font-family:var(--f-mono);font-size:11px;font-weight:600;cursor:pointer;">GET STARTED</button>
+    <section class="lp-sec" id="pricing">
+      <div class="lp-kicker">PRICING</div>
+      <h2 class="lp-h2">Start free. Upgrade when it pays for itself.</h2>
+      <div class="lp-grid2">
+        <div class="lp-card lp-price">
+          <div class="lp-price-tier">FREE</div>
+          <div class="lp-price-amt">$0</div>
+          <div class="lp-price-list">Live ARC score &amp; zone<br>Live BTC / ETH prices<br>Historical zone returns</div>
+          <button class="lp-btn lp-btn-ghost" style="width:100%;" onclick="openAuthModal('signup')">Create Free Account</button>
         </div>
-        <div style="background:var(--bg-card);border:2px solid #00D4AA;border-radius:12px;padding:24px 16px;text-align:center;position:relative;">
-          <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:#00D4AA;color:#0d1117;font-size:8px;font-weight:700;font-family:var(--f-mono);padding:3px 10px;border-radius:4px;letter-spacing:0.1em;">7 DAYS FREE</div>
-          <div style="font-size:10px;color:#00D4AA;font-family:var(--f-mono);letter-spacing:0.1em;margin-bottom:8px;">PRO</div>
-          <div style="font-size:28px;font-weight:700;color:var(--tx-pri);font-family:var(--f-mono);">$29<span style="font-size:14px;color:var(--tx-ter);">/mo</span></div>
-          <div style="font-size:9px;color:#00D4AA;font-family:var(--f-mono);margin-top:4px;">or $278/yr — 2 months free</div>
-          <div style="font-size:10px;color:var(--tx-ter);font-family:var(--f-mono);margin-top:8px;line-height:1.6;">Everything in Free +<br>Positioning Framework<br>ARC History Chart<br>Priority Email Alerts</div>
-          <button onclick="openAuthModal('signup')" style="margin-top:16px;padding:10px 20px;background:#00D4AA;color:#0d1117;border:none;border-radius:6px;font-family:var(--f-mono);font-size:11px;font-weight:700;cursor:pointer;">START FREE TRIAL</button>
+        <div class="lp-card lp-price lp-price-pro">
+          <div class="lp-badge">EARLY ACCESS · FREE DURING LAUNCH</div>
+          <div class="lp-price-tier" style="color:var(--lp-teal)">PRO</div>
+          <div class="lp-price-amt">$29<span>/mo</span></div>
+          <div style="font-family:var(--f-mono);font-size:11px;color:var(--lp-teal);margin-top:2px;">or $278/yr — 2 months free</div>
+          <div class="lp-price-list">Everything in Free, plus<br>Positioning Framework<br>10-year ARC history chart<br>Priority regime-change alerts</div>
+          <button class="lp-btn lp-btn-primary" style="width:100%;" onclick="openAuthModal('signup')">Get Free Access</button>
         </div>
       </div>
-    </div>
+    </section>
+
+    <!-- Newsletter -->
+    <section class="lp-sec">
+      <div class="lp-kicker">NEWSLETTER</div>
+      <h2 class="lp-h2">The Weekly ARC Regime Brief</h2>
+      <p class="lp-sub" style="margin-bottom:22px;">Where Bitcoin sits in its cycle, delivered every week. Free.</p>
+      <div class="lp-email">
+        <input id="wl-email" class="lp-input" type="email" autocomplete="email" placeholder="you@email.com">
+        <button id="wl-btn" type="button" class="lp-btn lp-btn-primary" onclick="submitWaitlist()">Subscribe</button>
+      </div>
+      <div id="wl-msg" style="text-align:center;font-family:var(--f-mono);font-size:12px;color:var(--lp-dim);margin-top:10px;min-height:16px;"></div>
+    </section>
 
     <!-- FAQ -->
-    <div style="margin-top:48px;width:100%;max-width:560px;text-align:left;">
-      <div style="font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);letter-spacing:0.15em;margin-bottom:16px;text-align:center;">FREQUENTLY ASKED</div>
-      <div style="display:flex;flex-direction:column;gap:14px;">
-        <div>
-          <div style="font-size:12px;color:var(--tx-pri);font-family:var(--f-mono);font-weight:600;">Is this financial advice?</div>
-          <div style="font-size:11px;color:var(--tx-ter);font-family:var(--f-mono);line-height:1.6;margin-top:3px;">No. AlphaCycle is a regime-classification tool. It measures where Bitcoin sits in its cycle structure — it does not predict price or tell you to buy or sell. Educational and informational only.</div>
-        </div>
-        <div>
-          <div style="font-size:12px;color:var(--tx-pri);font-family:var(--f-mono);font-weight:600;">How is the ARC Index calculated?</div>
-          <div style="font-size:11px;color:var(--tx-ter);font-family:var(--f-mono);line-height:1.6;margin-top:3px;">One transparent formula: 200-week trend (35%), drawdown from ATH (30%), Fear &amp; Greed (20%) and Fed net liquidity (15%), blended into a single 0–100 score across five regime zones. Same method, backtested to 2017.</div>
-        </div>
-        <div>
-          <div style="font-size:12px;color:var(--tx-pri);font-family:var(--f-mono);font-weight:600;">What do I get for free vs Pro?</div>
-          <div style="font-size:11px;color:var(--tx-ter);font-family:var(--f-mono);line-height:1.6;margin-top:3px;">Free: live ARC score, zone, live prices and historical zone returns. Pro ($29/mo): the Positioning Framework, the 10-year ARC history chart, and priority email alerts on regime changes.</div>
-        </div>
-        <div>
-          <div style="font-size:12px;color:var(--tx-pri);font-family:var(--f-mono);font-weight:600;">Can I cancel anytime?</div>
-          <div style="font-size:11px;color:var(--tx-ter);font-family:var(--f-mono);line-height:1.6;margin-top:3px;">Yes. Monthly, cancel anytime. The 7-day trial requires no commitment.</div>
-        </div>
+    <section class="lp-sec">
+      <div class="lp-kicker">FAQ</div>
+      <h2 class="lp-h2">Questions, answered</h2>
+      <div class="lp-faq">
+        <div class="lp-card"><div class="lp-faq-q">Is this financial advice?</div><div class="lp-faq-a">No. AlphaCycle is a regime-classification tool. It measures where Bitcoin sits in its cycle structure — it does not predict price or tell you to buy or sell. Educational and informational only.</div></div>
+        <div class="lp-card"><div class="lp-faq-q">How is the ARC Index calculated?</div><div class="lp-faq-a">One transparent formula: 200-week trend (35%), drawdown from ATH (30%), Fear &amp; Greed (20%) and Fed net liquidity (15%), blended into a single 0–100 score across five regime zones. Backtested to 2017.</div></div>
+        <div class="lp-card"><div class="lp-faq-q">What's free vs Pro?</div><div class="lp-faq-a">Free: live ARC score, zone, prices and historical zone returns. Pro: the Positioning Framework, the 10-year ARC history chart and priority regime alerts. During launch, everything is free.</div></div>
+        <div class="lp-card"><div class="lp-faq-q">Can I cancel anytime?</div><div class="lp-faq-a">Yes — monthly, cancel anytime. No lock-in.</div></div>
       </div>
-    </div>
-
-    <!-- Disclaimer -->
-    <div style="margin-top:40px;width:100%;max-width:560px;font-size:9px;color:var(--tx-ter);font-family:var(--f-mono);line-height:1.6;text-align:center;opacity:0.8;">
-      AlphaCycle provides market data and historical analysis for educational purposes only. It is not financial, investment or trading advice. Cryptocurrency is volatile and you can lose money. Past performance does not guarantee future results. Do your own research.
-    </div>
+    </section>
 
     <!-- Footer -->
-    <div style="margin-top:32px;font-size:10px;color:var(--tx-ter);font-family:var(--f-mono);">
-      <a href="#" onclick="showDashboard();return false;" style="color:var(--tx-sec);text-decoration:none;">View Dashboard &#8594;</a>
-    </div>
+    <section class="lp-foot">
+      <div class="lp-disc">AlphaCycle provides market data and historical analysis for educational purposes only. It is not financial, investment or trading advice. Cryptocurrency is volatile and you can lose money. Past performance does not guarantee future results. Do your own research.</div>
+      <a href="#" onclick="showDashboard();return false;" style="font-family:var(--f-mono);font-size:12px;color:var(--lp-mut);text-decoration:none;">Open the dashboard →</a>
+    </section>
 
   </div>
 </div>
@@ -4234,8 +4276,8 @@ canvas.sparkline {
 
     <!-- CTA -->
     <div style="text-align:center;margin-top:32px;">
-      <button onclick="openAuthModal('signup')" style="padding:14px 32px;background:#00D4AA;color:#0d1117;border:none;border-radius:8px;font-family:var(--f-mono);font-size:14px;font-weight:700;cursor:pointer;letter-spacing:0.06em;box-shadow:0 0 20px rgba(0,212,170,0.25);">START 7-DAY FREE TRIAL</button>
-      <div style="font-size:10px;color:var(--tx-ter);font-family:var(--f-mono);margin-top:8px;">No credit card required</div>
+      <button onclick="openAuthModal('signup')" style="padding:14px 32px;background:#00D4AA;color:#0d1117;border:none;border-radius:8px;font-family:var(--f-mono);font-size:14px;font-weight:700;cursor:pointer;letter-spacing:0.06em;box-shadow:0 0 20px rgba(0,212,170,0.25);">Get Free Access</button>
+      <div style="font-size:10px;color:var(--tx-ter);font-family:var(--f-mono);margin-top:8px;">Free during launch — no credit card</div>
     </div>
 
   </div>
@@ -5127,7 +5169,7 @@ canvas.sparkline {
                                margin-top:12px; display:none;"></p>
 
     <p style="color:#6b7280; font-size:11px; margin-top:16px; text-align:center;">
-      No credit card required. Free forever.
+      Free during launch. No credit card needed.
     </p>
   </div>
 </div>
@@ -5162,6 +5204,9 @@ const REFRESH_INTERVAL = 60; // seconds
 //   Annual:       https://<store>.lemonsqueezy.com/buy/<variant-id>
 window.LEMON_CHECKOUT_URL = window.LEMON_CHECKOUT_URL || '';
 window.LEMON_CHECKOUT_URL_ANNUAL = window.LEMON_CHECKOUT_URL_ANNUAL || '';
+
+// BUILD PHASE: true = everything free / no blur gates (launch/build-up). Set false to re-enable paywall.
+window.BUILD_PHASE_OPEN = (typeof window.BUILD_PHASE_OPEN === 'boolean') ? window.BUILD_PHASE_OPEN : true;
 
 document.addEventListener('DOMContentLoaded', () => {
 document.querySelectorAll('img.logo-img').forEach(function(img){ img.src = window.LOGO_DATA_URL; });
@@ -7144,6 +7189,12 @@ async function handleSignOut() {
 }
 
 function applyBlurGates() {
+  // BUILD PHASE: all content free, no paywall blur. Set window.BUILD_PHASE_OPEN=false to re-enable gating.
+  if (window.BUILD_PHASE_OPEN !== false) {
+    document.querySelectorAll('.blur-gate').forEach(function(g){ g.classList.remove('locked'); });
+    if (typeof updateArcMethodologyGate === 'function') { try { updateArcMethodologyGate(); } catch (e) {} }
+    return;
+  }
   var effectivePlan = currentPlan;
   if (currentPlan === 'trial') {
     effectivePlan = 'paid';
@@ -7228,7 +7279,7 @@ function applyBlurGates() {
     if (info.tier === 'paid' && isLocked) {
       title.innerHTML = '\u26A1 ' + info.title;
       if (effectivePlan === 'anonymous') {
-        btn.textContent = 'START 7-DAY FREE TRIAL';
+        btn.textContent = 'Get Free Access';
         btn.onclick = function() { openAuthModal('signup'); };
         btn.style.cssText = 'padding:12px 24px;border:none;border-radius:8px;font-family:var(--f-mono);font-size:13px;font-weight:700;cursor:pointer;letter-spacing:0.06em;background:#00D4AA;color:#0d1117;transition:transform 0.15s;box-shadow:0 0 20px rgba(0,212,170,0.25);';
       } else {

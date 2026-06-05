@@ -4,6 +4,12 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-06-05) — Cowork: Landing-Redesign + Blur aus + kein Trial
+- **Datei(en):** `index.html`, `DEPLOY_STATE.md`
+- **Was:** **Komplettes Landing-Redesign** (modern/verkaufsreif): Gradient-Hero mit Gradient-Akzent, Glassmorphism-Cards, radiale Background-Glows, Trust-Strip (8+ Jahre / 3.200+ Datenpunkte / 5 Zonen / live), Track-Record-Cards (verifizierte Zahlen), Feature-Grid „Four signals. One score." mit Gewichten, Pricing 2 Karten (Free / Pro $29 + $278/yr) mit „EARLY ACCESS · FREE DURING LAUNCH"-Badge, Newsletter-Sektion, FAQ, Footer. Eigenes scoped `<style>` (`.lp-*`), alle dynamischen IDs erhalten (landing-arc-score/zone, landing-btc-price, landing-fg, landing-now-*, wl-email/btn/msg, #pricing). **Blur-Gates aus** für Aufbauphase: `window.BUILD_PHASE_OPEN=true` → `applyBlurGates()` entfernt alle Locks (reversibel: false setzen). **7-Tage-Trial komplett entfernt** (alle CTAs → „Get Free Access"/„Create Free Account", Auth-Modal + Dashboard-CTA + Gate-Button-Texte). Lokal per Headless-Render visuell verifiziert.
+- **Warum:** Altes Design war nicht verkaufsreif; Aufbauphase ohne Paywall; kein Trial gewuenscht.
+- **Status:** committed + pushed (Netlify auto-deploy)
+
 ## Letzter Session-Status (2026-06-05) — Cowork: Content-Factory + Blocker-Doku + Subscribe bulletproof
 - **Datei(en):** `content-factory/generate.py` (neu), `content-factory/README.md` (neu), `content-factory/.gitignore` (neu), `BLOCKERS_FOR_NOAH.md` (neu), `backend/main.py`, `DEPLOY_STATE.md`
 - **Was:** **Content-Factory** gebaut + getestet: `generate.py` zieht `/api/arc-summary` und rendert branded ARC-Regime-Grafiken (IG 1080x1080 + YT 1920x1080) mit Zonen-Bar/Marker, BTC/F&G/Phase, Disclaimer. Ban-sicher (nur Generierung, Posten via offizielle Scheduler + Mensch-im-Loop; Doku in README + GTM §4). **`/api/subscribe`** kugelsicher: progressive Store-Fallbacks (full → email+source → email), **nie mehr 500**, Lead-Log bei Fehlschlag, `stored`-Flag in Response. **`BLOCKERS_FOR_NOAH.md`**: priorisierte To-dos die nur Noah kann (LS-Account+Webhook-Secret, Supabase `email_captures`-Tabelle, IG/YT-Accounts, optional Bot-SSH-Stop, Stripe später, Email-Versand).
