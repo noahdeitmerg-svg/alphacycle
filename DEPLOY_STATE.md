@@ -4,6 +4,13 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-06-05) — Cowork: Neue Teal-Landing LIVE (Struktur geaendert!)
+- **Datei(en):** `index.html` (jetzt = LANDING), `app.html` (NEU = das bisherige Dashboard-App-index.html), `netlify.toml`, `DEPLOY_STATE.md`
+- **WICHTIG / STRUKTURAENDERUNG:** Die hochwertige standalone Teal-Landing ist jetzt **`index.html`** (oeffentliche Startseite auf alphacycle.app). Die bisherige FastAPI-gespeiste Dashboard-App (das alte `index.html` mit allen permanent-fixes-Regeln zu Blur-Gates/ARC/Charts/Data-Inspector) ist nach **`app.html`** umbenannt. **Alle `permanent-fixes.mdc`-Regeln, die „index.html" sagen, beziehen sich ab jetzt auf `app.html`.**
+- **Was:** Landing (Teal #00D4AA Marken-Akzent, Instrument Sans + JetBrains Mono, animierter ARC-Gauge mit Live-Fetch, Sticky-Nav, Problem/Solution, 4 Features, 3 Steps, Trust, Pricing $29/$278 mit Toggle, FAQ, Final-CTA) live als Root. CTAs → `/app.html`. App-Routing: anon → `showDashboard()` (Aufbauphase, Blur aus → volles Produkt sichtbar). `netlify.toml`: no-cache auch fuer `/app.html` (SPA-Redirect ist nicht forced → `/app.html` wird direkt ausgeliefert).
+- **Verifiziert live:** `alphacycle.app` = Landing (gauge-card, app.html-Links); `alphacycle.app/app.html` = Dashboard (dashboard-view). 
+- **Status:** committed + pushed (Netlify auto-deploy)
+
 ## Letzter Session-Status (2026-06-05) — Cowork: Landing als Verkaufs-Dramaturgie
 - **Datei(en):** `index.html`, `DEPLOY_STATE.md`
 - **Was:** Landing in eine conversion-optimierte Story umgebaut, damit Erstbesucher sofort Mehrwert + Emotion + Trust + Kaufwunsch haben. Neue Reihenfolge: Hero → **Problem** (Agitation: „buy the top, sell the bottom") → **5 Zonen** erklaert (Klarheit: green=opportunity, red=danger, mit Live-„Right now"-Zone via neuem `landing-now-zone`, JS-gespeist) → **Track Record** (Beweis) → **Benefits** („Trade the cycle, not your feelings", 4 Nutzen) → How it works → Pricing → Newsletter → FAQ → **Final CTA** (emotionaler Abschluss). Staerkere Hero-Subline. Neue CSS-Bausteine (.lp-zones/.lp-now/.lp-benefits/.lp-final/.lp-big-line). JS: `updateUI` setzt `landing-now-zone` + `landing-now-label` aus Live-ARC. Tag-Struktur verifiziert (11/11 sections balanciert).
