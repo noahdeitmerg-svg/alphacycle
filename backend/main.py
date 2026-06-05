@@ -266,6 +266,22 @@ async def refresh_cache(force: bool = False):
             # Save daily ARC snapshot after successful refresh
             _save_today_snapshot()
 
+            # Regime-change alert check (Telegram). Fully guarded — never breaks refresh.
+            try:
+                _ohlc_now = CACHE.get("ohlc_latest", {}) or {}
+                arc_live = compute_arc_score(
+                    btc_p, fg, walcl, stable, net_liq_series,
+                    weekly_high=_ohlc_now.get("high"),
+                    weekly_low=_ohlc_now.get("low"),
+                )
+                _btc_now = safe_float(raw.get("btc_market", {}).get("price")) or (btc_p[-1] if btc_p else None)
+                from alerts import check_and_fire_alerts
+                res = await asyncio.to_thread(check_and_fire_alerts, arc_live, _btc_now)
+                if res.get("status") == "fired":
+                    logger.info("Regime alert fired: %s -> %s", res.get("from"), res.get("to"))
+            except Exception as e:
+                logger.warning("Alert check skipped (non-critical): %s", e)
+
             try:
                 bt_data = await run_daily_backtest_full()
                 bt_results = bt_data.get("results", []) if isinstance(bt_data, dict) else []
