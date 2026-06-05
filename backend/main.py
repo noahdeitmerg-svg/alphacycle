@@ -1345,15 +1345,18 @@ async def subscribe(request: Request, req: SubscribeRequest):
         if "@" not in req.email or "." not in req.email:
             raise HTTPException(status_code=400, detail="Invalid email")
 
-        # Reuse live ARC summary for metadata
-        arc_resp = await get_arc_summary()
-        arc_data = arc_resp if isinstance(arc_resp, dict) else getattr(arc_resp, "body", None)
+        # Best-effort ARC metadata. Never fail the email capture if this errors.
+        arc_data: dict = {}
         try:
-            if not isinstance(arc_data, dict) and arc_data is not None:
-                arc_data = json.loads(arc_data)
-        except Exception:
-            arc_data = {}
-        if not isinstance(arc_data, dict):
+            arc_resp = await get_arc_summary(request)
+            if isinstance(arc_resp, dict):
+                arc_data = arc_resp
+            elif arc_resp is not None:
+                body = getattr(arc_resp, "body", None)
+                if body:
+                    arc_data = json.loads(body)
+        except Exception as meta_e:
+            logger.warning("subscribe: ARC metadata unavailable: %s", meta_e)
             arc_data = {}
 
         if supabase:
@@ -1363,7 +1366,17 @@ async def subscribe(request: Request, req: SubscribeRequest):
                 "arc_score": arc_data.get("arc_display", 0),
                 "zone": arc_data.get("zone_name", ""),
             }
-            supabase.table("email_captures").upsert(payload).execute()
+            try:
+                supabase.table("email_captures").upsert(payload).execute()
+            except Exception as up_e:
+                logger.error("subscribe: upsert failed (%s); retrying minimal insert", up_e)
+                try:
+                    supabase.table("email_captures").insert(
+                        {"email": payload["email"], "source": payload["source"]}
+                    ).execute()
+                except Exception as ins_e:
+                    logger.error("subscribe: minimal insert also failed: %s", ins_e)
+                    raise HTTPException(status_code=500, detail="Subscription failed")
         else:
             logger.warning("Supabase not configured; skipping email_captures upsert")
 
