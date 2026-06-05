@@ -453,7 +453,7 @@ async function loadChart(){
 }
 function setChartRange(r){ var c=window._arcChart; if(!c)return; if(r==='reset')r=_arcRange; _arcRange=r; try{ if(c.resetZoom)c.resetZoom('none'); }catch(e){} if(r==='1y'){ c.options.scales.x.min=Math.max(0,_arcN-365); c.options.scales.x.max=_arcN-1; } else { c.options.scales.x.min=0; c.options.scales.x.max=_arcN-1; } c.update('none'); document.querySelectorAll('.tf-btn[data-r]').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-r')===r); }); }
 // ---- Pro/Free gates (soft, free-signup during launch; Noah wires real auth later) ----
-function applyGates(){var unlocked=false;try{unlocked=localStorage.getItem('ac_unlocked')==='1';}catch(e){}document.querySelectorAll('.pro-gate').forEach(function(s){s.classList.toggle('locked',!unlocked);});}
+function applyGates(){/* Aufbauphase: alles offen, keine Gates. Spaeter wieder gaten: s.classList.toggle('locked', !planIsPaid) */document.querySelectorAll('.pro-gate').forEach(function(s){s.classList.remove('locked');});}
 function unlockPro(){try{localStorage.setItem('ac_unlocked','1');}catch(e){}applyGates();}
 applyGates();
 loadAll();
