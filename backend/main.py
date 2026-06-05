@@ -1359,28 +1359,30 @@ async def subscribe(request: Request, req: SubscribeRequest):
             logger.warning("subscribe: ARC metadata unavailable: %s", meta_e)
             arc_data = {}
 
+        email_clean = req.email.lower().strip()
+        stored = False
         if supabase:
-            payload = {
-                "email": req.email.lower().strip(),
+            full = {
+                "email": email_clean,
                 "source": req.source,
                 "arc_score": arc_data.get("arc_display", 0),
                 "zone": arc_data.get("zone_name", ""),
             }
-            try:
-                supabase.table("email_captures").upsert(payload).execute()
-            except Exception as up_e:
-                logger.error("subscribe: upsert failed (%s); retrying minimal insert", up_e)
+            # Try progressively simpler payloads so a missing column / schema
+            # mismatch never breaks the capture. Never raise 500 on storage.
+            for attempt in (full, {"email": email_clean, "source": req.source}, {"email": email_clean}):
                 try:
-                    supabase.table("email_captures").insert(
-                        {"email": payload["email"], "source": payload["source"]}
-                    ).execute()
-                except Exception as ins_e:
-                    logger.error("subscribe: minimal insert also failed: %s", ins_e)
-                    raise HTTPException(status_code=500, detail="Subscription failed")
+                    supabase.table("email_captures").upsert(attempt).execute()
+                    stored = True
+                    break
+                except Exception as store_e:
+                    logger.warning("subscribe: store attempt %s failed: %s", list(attempt.keys()), store_e)
+            if not stored:
+                logger.error("subscribe: ALL store attempts failed; LEAD email=%s source=%s", email_clean, req.source)
         else:
-            logger.warning("Supabase not configured; skipping email_captures upsert")
+            logger.warning("Supabase not configured; LEAD email=%s source=%s", email_clean, req.source)
 
-        return {"success": True, "message": "Successfully subscribed"}
+        return {"success": True, "message": "Successfully subscribed", "stored": stored}
     except HTTPException:
         raise
     except Exception as e:
