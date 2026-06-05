@@ -4,6 +4,12 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-06-05) — Cowork: Dashboard harmonisiert + Hero-Zonen-Bug gefixt
+- **Datei(en):** `app.html`, `DEPLOY_STATE.md`
+- **Was:** (1) Dashboard-Backdrop an die Teal-Landing angeglichen (Teal/Blau-Glows + Navy-Gradient, additiv/reversibel). (2) **Echter Bug gefixt (per Screenshot verifiziert):** Hero-Zonen-Label nutzte `phaseOf(S.btcScore)` (taktischer BTC-Score) statt des ARC-Scores → zeigte bei ARC 32 faelschlich „DEEP VALUE". Jetzt `phaseOf(_heroArcRaw)` aus `S.arcSummary.arc_score` → korrekt **„ACCUMULATION"** (SYSTEM_TRUTH: Hero-Label = roher ARC-Score). Konsistent mit Orbit-Dot + Beschreibung + Historical-Returns.
+- **Verifikation:** Chrome-Headless-Render (absoluter Output-Pfad noetig) → Hero zeigt „32 / ACCUMULATION". Live `/app.html` enthaelt `_heroArcRaw` + Teal-Backdrop.
+- **Status:** committed + pushed (Netlify auto-deploy)
+
 ## Letzter Session-Status (2026-06-05) — Cowork: Neue Teal-Landing LIVE (Struktur geaendert!)
 - **Datei(en):** `index.html` (jetzt = LANDING), `app.html` (NEU = das bisherige Dashboard-App-index.html), `netlify.toml`, `DEPLOY_STATE.md`
 - **WICHTIG / STRUKTURAENDERUNG:** Die hochwertige standalone Teal-Landing ist jetzt **`index.html`** (oeffentliche Startseite auf alphacycle.app). Die bisherige FastAPI-gespeiste Dashboard-App (das alte `index.html` mit allen permanent-fixes-Regeln zu Blur-Gates/ARC/Charts/Data-Inspector) ist nach **`app.html`** umbenannt. **Alle `permanent-fixes.mdc`-Regeln, die „index.html" sagen, beziehen sich ab jetzt auf `app.html`.**
