@@ -4,6 +4,12 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-06-05) — Cowork: Dashboard-Redesign auf Landing-Niveau + alle Engines
+- **Datei(en):** `app.html`, `DEPLOY_STATE.md`
+- **Was:** Dashboard im Premium-Landing-Design (3-Phasen wie Landing). Theme-Override (am Ende des `<head>`, cascade-last): Landing-Fonts **Instrument Sans + JetBrains Mono**, **Teal-Akzent** durchgaengig (`--btc`/`--alpha-accent` → #00D4AA; ETH bleibt blau), klarere/scannbare **Teal-Section-Header**, mehr Weißraum (`.container`/`.sec-header`/`.blur-gate`-Spacing). **Alle Engine-Cards wieder eingeblendet** (Versteck-Block entfernt): Near-Term, ARC-Momentum, Cycle-Overview, Zone-History, Data-Export. **Hero-Zonen-Bug gefixt** (Label nutzt rohen ARC-Score statt btcScore → 32 = ACCUMULATION). **ARC-Chart Zonen-Baender entschaerft** (0.10–0.16 statt 0.28–0.50, v.a. Euphoria-Rot) → Linien fuehren, premium. **Keine Daten-/Formel-Aenderung** — nur Darstellung. Jede Engine per Headless-Render (Chrome, absoluter Output-Pfad) visuell verifiziert.
+- **Warum:** Noah: Dashboard an Landing angleichen, Engines uebersichtlich, verkaufsfertig ($29/mo-Niveau).
+- **Status:** committed + pushed (Netlify auto-deploy)
+
 ## Letzter Session-Status (2026-06-05) — Cowork: Dashboard harmonisiert + Hero-Zonen-Bug gefixt
 - **Datei(en):** `app.html`, `DEPLOY_STATE.md`
 - **Was:** (1) Dashboard-Backdrop an die Teal-Landing angeglichen (Teal/Blau-Glows + Navy-Gradient, additiv/reversibel). (2) **Echter Bug gefixt (per Screenshot verifiziert):** Hero-Zonen-Label nutzte `phaseOf(S.btcScore)` (taktischer BTC-Score) statt des ARC-Scores → zeigte bei ARC 32 faelschlich „DEEP VALUE". Jetzt `phaseOf(_heroArcRaw)` aus `S.arcSummary.arc_score` → korrekt **„ACCUMULATION"** (SYSTEM_TRUTH: Hero-Label = roher ARC-Score). Konsistent mit Orbit-Dot + Beschreibung + Historical-Returns.
