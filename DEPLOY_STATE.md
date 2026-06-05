@@ -4,6 +4,14 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-06-05) — Cowork: Brand + komplett neues Dashboard (app.html)
+- **Datei(en):** `app.html` (komplett neu gebaut), `dashboard_new.html` (Quelle), `index.html` (Favicon), `assets/logo.png|icon.png|icon-180.png|favicon-32.png` (neu), `content-factory/output/mklogo.py`, `DEPLOY_STATE.md`
+- **Brand:** AlphaCycle-Logo (Gemini) zu Web-Assets verarbeitet (tight crop, Icon-only, Favicon-Groessen) in `assets/`. Logo in Dashboard-Nav, Favicon auf Landing + Dashboard.
+- **Neues Dashboard (volle Design-Freiheit, Daten unveraendert):** `app.html` von Grund auf neu — Premium-Brand-Look (Instrument Sans/JetBrains Mono, Teal, Glass, Glows), animierter ARC-Gauge, emotionaler Hero mit zonen-spezifischem Klartext. **Jede Engine nummeriert + mit „what it tells you"-Erklaerung:** (1) Composite/4 Komponenten, (2) Decision/Positioning, (3) Track Record/Zonen-Returns mit YOU-ARE-HERE, (4) Cycle Clock, (5) Near-Term, (6) Market Context (ETH/BTC, Seasonality, Liquidity), (7) 10J-Chart (Chart.js, ARC+BTC+dezente Zonen). Liest dieselbe Live-API (`/api/arc-summary`, `/api/historical-returns`, `/api/backtest`) — **keine Daten-/Formel-Aenderung**. Mobile responsiv (820/560 Breakpoints, Stats 2-pro-Reihe). Jede Sektion per Chrome-Render verifiziert.
+- **Hinweis:** Das alte `app.html` (Auth/Blur/Stripe-Checkout-Maschinerie) liegt in der Git-Historie; fuer den Bezahl-Launch spaeter von dort reaktivierbar. Aktuelles Dashboard = Aufbauphase, frei/ohne Login.
+- **Verifiziert live:** `/app.html` = neues Dashboard (Engine-Labels, Logo, Chart), `/assets/logo.png` HTTP 200.
+- **Status:** committed + pushed (Netlify auto-deploy)
+
 ## Letzter Session-Status (2026-06-05) — Cowork: Dashboard-Redesign auf Landing-Niveau + alle Engines
 - **Datei(en):** `app.html`, `DEPLOY_STATE.md`
 - **Was:** Dashboard im Premium-Landing-Design (3-Phasen wie Landing). Theme-Override (am Ende des `<head>`, cascade-last): Landing-Fonts **Instrument Sans + JetBrains Mono**, **Teal-Akzent** durchgaengig (`--btc`/`--alpha-accent` → #00D4AA; ETH bleibt blau), klarere/scannbare **Teal-Section-Header**, mehr Weißraum (`.container`/`.sec-header`/`.blur-gate`-Spacing). **Alle Engine-Cards wieder eingeblendet** (Versteck-Block entfernt): Near-Term, ARC-Momentum, Cycle-Overview, Zone-History, Data-Export. **Hero-Zonen-Bug gefixt** (Label nutzt rohen ARC-Score statt btcScore → 32 = ACCUMULATION). **ARC-Chart Zonen-Baender entschaerft** (0.10–0.16 statt 0.28–0.50, v.a. Euphoria-Rot) → Linien fuehren, premium. **Keine Daten-/Formel-Aenderung** — nur Darstellung. Jede Engine per Headless-Render (Chrome, absoluter Output-Pfad) visuell verifiziert.
