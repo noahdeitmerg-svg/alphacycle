@@ -5347,12 +5347,9 @@ let cdTimer;
 let isRefreshing = false;
 
 function showLanding() {
-  var lv = document.getElementById('landing-view');
-  var dv = document.getElementById('dashboard-view');
-  var tr = document.getElementById('track-record-view');
-  if (lv) lv.style.display = 'block';
-  if (dv) dv.style.display = 'none';
-  if (tr) tr.style.display = 'none';
+  // The public landing is now the premium root page (index.html).
+  // The old in-app landing is retired — always send visitors to the real homepage.
+  window.location.href = '/';
 }
 
 function showDashboard() {
