@@ -426,16 +426,44 @@ async function loadChart(){
     if(chart)chart.destroy();
     _registerZoom();
     var zonePlugin={id:'zbands',beforeDraw:function(c){var y=c.scales.yArc,a=c.chartArea;if(!y||!a)return;var ctx=c.ctx;var bands=[[0,30,'rgba(0,220,120,0.10)'],[30,40,'rgba(0,180,216,0.10)'],[40,60,'rgba(88,166,255,0.08)'],[60,70,'rgba(255,149,0,0.10)'],[70,100,'rgba(255,59,59,0.11)']];bands.forEach(function(b){var y0=y.getPixelForValue(b[1]),y1=y.getPixelForValue(b[0]);ctx.save();ctx.fillStyle=b[2];ctx.fillRect(a.left,y0,a.right-a.left,y1-y0);ctx.restore();});}};
-    var markersPlugin={id:'mk',afterDatasetsDraw:function(c){var x=c.ctx;var ar=c.chartArea;var pm=c.getDatasetMeta(0);var am=c.getDatasetMeta(1);
+    var markersPlugin={id:'mk',afterDatasetsDraw:function(c){
+      var x=c.ctx;var ar=c.chartArea;var am=c.getDatasetMeta(1);var arcData=(c.data.datasets[1]||{}).data||[];
+      if(!am||!am.data||!am.data.length)return;
+      function badge(px,py,col,l1,l2,preferAbove){
+        x.save();x.font='700 9px JetBrains Mono';
+        var w=Math.max(x.measureText(l1).width,x.measureText(l2).width)+18,h=30,gap=13;
+        var above=preferAbove;
+        if(above&&py-gap-h<ar.top+2)above=false;
+        if(!above&&py+gap+h>ar.bottom-2)above=true;
+        var by=above?py-gap-h:py+gap;
+        var bx=Math.max(ar.left+2,Math.min(px-w/2,ar.right-w-2));var cx=bx+w/2;
+        // connector
+        x.strokeStyle=col;x.lineWidth=1.2;x.globalAlpha=0.5;
+        x.beginPath();x.moveTo(px,py);x.lineTo(cx,above?by+h:by);x.stroke();x.globalAlpha=1;
+        // badge
+        x.beginPath();if(x.roundRect){x.roundRect(bx,by,w,h,7);}else{x.rect(bx,by,w,h);}
+        x.fillStyle='rgba(8,11,20,0.94)';x.fill();x.strokeStyle=col;x.lineWidth=1.2;x.stroke();
+        x.textAlign='center';x.textBaseline='middle';
+        x.fillStyle=col;x.fillText(l1,cx,by+10);
+        x.fillStyle='#cbd5e1';x.fillText(l2,cx,by+21);
+        x.restore();
+        // glowing dot on the ARC line
+        x.save();
+        x.globalAlpha=0.18;x.fillStyle=col;x.beginPath();x.arc(px,py,9,0,6.283);x.fill();x.globalAlpha=1;
+        x.beginPath();x.arc(px,py,5.5,0,6.283);x.fillStyle=col;x.fill();
+        x.lineWidth=2;x.strokeStyle='rgba(255,255,255,0.55)';x.beginPath();x.arc(px,py,5.5,0,6.283);x.stroke();
+        x.restore();
+      }
       [['2017-12','top'],['2018-12','bot'],['2021-11','top'],['2022-11','bot'],['2025-10','top']].forEach(function(mk){
-        var idx=c.data.labels.findIndex(function(l){return l.indexOf(mk[0])===0;});if(idx<0||!pm.data[idx])return;var p=pm.data[idx];if(p.x<ar.left-2||p.x>ar.right+2)return;
-        var top=mk[0][0]==='t'||mk[1]==='top';var col=mk[1]==='top'?'#FF3B3B':'#00DC78';x.save();
-        x.beginPath();x.arc(p.x,p.y,3.5,0,6.283);x.fillStyle=col;x.fill();
-        x.fillStyle=col;x.beginPath();
-        if(mk[1]==='top'){x.moveTo(p.x,p.y-8);x.lineTo(p.x-6,p.y-18);x.lineTo(p.x+6,p.y-18);x.closePath();x.fill();x.font='700 9px JetBrains Mono';x.textAlign='center';x.fillText('TOP',p.x,p.y-22);}
-        else{x.moveTo(p.x,p.y+8);x.lineTo(p.x-6,p.y+18);x.lineTo(p.x+6,p.y+18);x.closePath();x.fill();x.font='700 9px JetBrains Mono';x.textAlign='center';x.fillText('BOTTOM',p.x,p.y+30);}
-        x.restore();});
-      if(am&&am.data&&am.data.length){var last=am.data[am.data.length-1];if(last&&last.x<=ar.right+2){x.save();x.beginPath();x.arc(last.x,last.y,11,0,6.283);x.fillStyle='rgba(0,212,170,0.22)';x.fill();x.beginPath();x.arc(last.x,last.y,5,0,6.283);x.fillStyle='#00D4AA';x.fill();x.fillStyle='#00D4AA';x.font='700 9px JetBrains Mono';x.textAlign='center';x.fillText('NOW',last.x,last.y-15);x.restore();}}}};
+        var idx=c.data.labels.findIndex(function(l){return l.indexOf(mk[0])===0;});
+        if(idx<0||!am.data[idx])return;var p=am.data[idx];if(p.x<ar.left-2||p.x>ar.right+2)return;
+        var isTop=mk[1]==='top';var col=isTop?'#FF3B3B':'#00DC78';var arcVal=Math.round(arcData[idx]||0);
+        badge(p.x,p.y,col,isTop?'BTC TOP':'BTC BOTTOM','ARC '+arcVal,isTop);
+      });
+      // TODAY / NOW dot at the current ARC point
+      var last=am.data[am.data.length-1];
+      if(last&&last.x<=ar.right+2){x.save();x.beginPath();x.arc(last.x,last.y,12,0,6.283);x.fillStyle='rgba(0,212,170,0.20)';x.fill();x.beginPath();x.arc(last.x,last.y,5.5,0,6.283);x.fillStyle='#00D4AA';x.fill();x.lineWidth=2;x.strokeStyle='rgba(255,255,255,0.6)';x.beginPath();x.arc(last.x,last.y,5.5,0,6.283);x.stroke();x.fillStyle='#00D4AA';x.font='700 9px JetBrains Mono';x.textAlign='center';x.fillText('NOW',last.x,last.y-16);x.restore();}
+    }};
     _arcN=labels.length; var oneY=Math.max(0,_arcN-365);
     chart=new Chart(ctx,{type:'line',data:{labels:labels,datasets:[
       {label:'BTC Price',data:priceD,yAxisID:'yPrice',borderColor:'rgba(234,179,8,0.9)',backgroundColor:'rgba(234,179,8,0.06)',borderWidth:1.2,pointRadius:0,fill:true,tension:0.2},
