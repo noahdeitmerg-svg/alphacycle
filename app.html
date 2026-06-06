@@ -299,21 +299,21 @@
     </div>
   </section>
 
-  <!-- SEASONAL PATTERN (Seasonax-style) -->
+  <!-- SEASONAL PATTERN — actual price + projected seasonal line -->
   <section id="seasSec">
     <div class="sec-eyebrow">ENGINE 6 · SEASONAL PATTERN</div>
-    <div class="sec-h">The average year for BTC &amp; ETH</div>
-    <div class="sec-tells">Each line is the typical journey through a calendar year, averaged over all available history (geometric mean — so one blow-off year can't distort it). It shows <b>when in the year</b> crypto has tended to climb or stall. Read the shape, not the level. Context, not a trade signal.</div>
+    <div class="sec-h">Is Bitcoin seasonally up or down right now?</div>
+    <div class="sec-tells">The real BTC price (last 18 months) with its <b>seasonal tendency projected forward</b> from today — the dashed line follows the average path of the last 12 years through year-end. Read the <b>slope</b>: rising = a seasonally favourable window, falling = a weak one. A tendency, not a forecast or price target.</div>
+    <div class="grid g2" style="margin-bottom:14px">
+      <div class="card bigm"><div class="k">THIS MONTH · <span id="seasTM">–</span></div><div class="v" id="seasTMV" style="font-size:23px;">–</div><div class="s" id="seasTMS">–</div></div>
+      <div class="card bigm"><div class="k">NEXT MONTH · <span id="seasNM">–</span></div><div class="v" id="seasNMV" style="font-size:23px;">–</div><div class="s" id="seasNMS">–</div></div>
+    </div>
     <div class="card chart-wrap">
       <div class="chart-canvas-box" style="height:340px"><canvas id="seasChart"></canvas></div>
       <div class="chart-legend">
-        <span><i style="background:var(--teal)"></i><span id="seasBtcLeg">BTC</span></span>
-        <span><i style="background:#8b5cf6"></i><span id="seasEthLeg">ETH</span></span>
+        <span><i style="background:var(--teal)"></i>BTC price (actual)</span>
+        <span><i style="background:#8b5cf6"></i>Seasonal tendency (projected)</span>
       </div>
-    </div>
-    <div class="grid g2" style="margin-top:14px">
-      <div class="card bigm"><div class="k">BTC · SEASONAL READ</div><div class="v" id="seasBtcV" style="font-size:20px;color:var(--teal)">–</div><div class="s" id="seasBtcS">–</div></div>
-      <div class="card bigm"><div class="k">ETH · SEASONAL READ</div><div class="v" id="seasEthV" style="font-size:20px;color:#8b5cf6">–</div><div class="s" id="seasEthS">–</div></div>
     </div>
     <div class="note" id="seasNote" style="margin-top:6px"></div>
   </section>
@@ -504,32 +504,37 @@ async function loadRSI(){
 }
 
 var _seasChart=null;
-function _monthAt(i){ var mn=['January','February','March','April','May','June','July','August','September','October','November','December']; var st=[0,31,59,90,120,151,181,212,243,273,304,334]; var m=0; for(var k=0;k<12;k++){ if(i>=st[k]) m=k; } return mn[m]; }
+function _seasRead(nameId,vId,sId,m){
+  if(!m){ setText(nameId,'–'); setText(vId,'–'); setText(sId,''); return; }
+  setText(nameId, m.name); var up=(m.dir==='up');
+  setText(vId, up?'Seasonally up':'Seasonally down'); document.getElementById(vId).style.color = up?'#22c55e':'#ef4444';
+  var yrs = up? m.win : (100-m.win);
+  setText(sId, 'median '+(m.median>0?'+':'')+m.median+'% · up in '+m.win+'% of '+m.n+' years');
+}
 async function loadSeasonalPattern(){
   try{
-    var p=await (await fetch(API+'/api/seasonal-pattern',{cache:'no-store'})).json();
-    var mn=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    var st=[0,31,59,90,120,151,181,212,243,273,304,334];
-    var labels=[]; for(var i=0;i<365;i++){ var k=st.indexOf(i); labels.push(k>=0?mn[k]:''); }
-    function _sm(a,w){ if(!a) return a; var h=(w-1)/2,o=[]; for(var i=0;i<a.length;i++){ var s=0,cn=0; for(var j=Math.max(0,i-h);j<=Math.min(a.length-1,i+h);j++){ s+=a[j]; cn++; } o.push(Math.round(s/cn*10)/10); } return o; }
-    var btc=(p.btc&&p.btc.path)?_sm(p.btc.path,11):null, eth=(p.eth&&p.eth.path)?_sm(p.eth.path,11):null;
-    if(window.Chart&&btc){
+    var o=await (await fetch(API+'/api/seasonal-overlay',{cache:'no-store'})).json();
+    _seasRead('seasTM','seasTMV','seasTMS', o.this_month);
+    _seasRead('seasNM','seasNMV','seasNMS', o.next_month);
+    var act=o.actual||[], proj=o.seasonal||[];
+    var labels=act.map(function(x){return x.date;}).concat(proj.slice(1).map(function(x){return x.date;}));
+    var actData=act.map(function(x){return x.price;}); for(var i=1;i<proj.length;i++) actData.push(null);
+    var projData=act.map(function(){return null;}); if(act.length) projData[act.length-1]=act[act.length-1].price;
+    for(var j=1;j<proj.length;j++) projData.push(proj[j].price);
+    if(window.Chart&&act.length){
       if(_seasChart) _seasChart.destroy();
-      var ds=[{label:'BTC',data:btc,borderColor:'#00D4AA',borderWidth:2.6,pointRadius:0,tension:0.4}];
-      if(eth) ds.push({label:'ETH',data:eth,borderColor:'#8b5cf6',borderWidth:2.6,pointRadius:0,tension:0.4});
       _seasChart=new Chart(document.getElementById('seasChart'),{type:'line',
-        data:{labels:labels,datasets:ds},
+        data:{labels:labels,datasets:[
+          {label:'BTC',data:actData,borderColor:'#00D4AA',borderWidth:2.2,pointRadius:0,tension:0.2,spanGaps:false},
+          {label:'Seasonal tendency',data:projData,borderColor:'#8b5cf6',borderWidth:2,borderDash:[5,4],pointRadius:0,tension:0.35,spanGaps:true}
+        ]},
         options:{animation:false,maintainAspectRatio:false,responsive:true,interaction:{mode:'index',intersect:false},
           plugins:{legend:{display:false},zoom:{zoom:{wheel:{enabled:false},pinch:{enabled:false}},pan:{enabled:false}},
-            tooltip:{callbacks:{title:function(it){return _monthAt(it[0].dataIndex);},label:function(c){return c.dataset.label+': '+((c.parsed.y-100>=0?'+':'')+(c.parsed.y-100).toFixed(1))+'% from Jan 1';}}}},
-          scales:{x:{ticks:{color:'#6b7280',maxRotation:0,autoSkip:false,callback:function(v,i){return labels[i]||'';},font:{size:10}},grid:{display:false}},
-            y:{type:'logarithmic',min:90,ticks:{color:'#6b7280',font:{size:10},callback:function(v){return (v-100>=0?'+':'')+Math.round(v-100)+'%';}},grid:{color:'rgba(255,255,255,0.05)'}}}}});
+            tooltip:{callbacks:{title:function(it){return labels[it[0].dataIndex];},label:function(c){return (c.parsed.y!=null?c.dataset.label+': $'+Number(c.parsed.y).toLocaleString('en-US'):'');}}}},
+          scales:{x:{ticks:{color:'#6b7280',maxTicksLimit:9,maxRotation:0,font:{size:10},callback:function(v,i){var d=labels[i]; return d?d.slice(0,7):'';}},grid:{display:false}},
+            y:{type:'logarithmic',ticks:{color:'#6b7280',font:{size:10},callback:function(v){return '$'+(v>=1000?Math.round(v/1000)+'k':v);}},grid:{color:'rgba(255,255,255,0.05)'}}}}});
     }
-    if(p.btc&&p.btc.path){ setText('seasBtcV','Strong '+p.btc.strong+' · weak '+p.btc.weak); setText('seasBtcS', p.btc.years+' yrs ('+p.btc.from+'–'+p.btc.to+') · avg year '+(p.btc.path[364]-100>=0?'+':'')+Math.round(p.btc.path[364]-100)+'%'); }
-    if(p.eth&&p.eth.path){ setText('seasEthV','Strong '+p.eth.strong+' · weak '+p.eth.weak); setText('seasEthS', p.eth.years+' yrs ('+p.eth.from+'–'+p.eth.to+') · avg year '+(p.eth.path[364]-100>=0?'+':'')+Math.round(p.eth.path[364]-100)+'%'); }
-    else { setText('seasEthV','—'); setText('seasEthS','ETH history unavailable right now'); }
-    setText('seasBtcLeg','BTC ('+(p.btc&&p.btc.path?p.btc.years+'y':'–')+')'); setText('seasEthLeg', (p.eth&&p.eth.path)?('ETH ('+p.eth.years+'y)'):'ETH n/a');
-    setText('seasNote','Indexed to the first trading day of each year = 100 (log scale, so % moves compare fairly). Both drift up because crypto trended up over the sample — what matters is the slope: flat or falling stretches are the seasonally weak windows. '+((p.eth&&p.eth.path)?'':'ETH data could not be loaded right now. '));
+    setText('seasNote','The dashed line starts at today’s price and follows the average seasonal shape of the last '+o.years+' years through year-end. It’s a tendency from '+o.years+' years of data — not a forecast or price target. Slope up = seasonally favourable, slope down = seasonally weak.');
   }catch(e){ var el=document.getElementById('seasSec'); if(el) el.style.opacity='0.55'; }
 }
 
