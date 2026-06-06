@@ -286,6 +286,15 @@
     <div class="sec-tells"><b>Contextual only</b> — short-term oscillators. The ARC Index is the primary signal; these add texture on timing.</div>
     <div class="gate-cta"><div class="gate-badge" onclick="unlockPro()">&#128274; Sign up free to unlock</div></div>
     <div class="gate-content">
+    <div class="card" style="margin-bottom:14px;display:flex;gap:20px;align-items:center;flex-wrap:wrap;">
+      <div style="min-width:120px"><div class="k">DAILY RSI (14)</div><div class="v" id="rsiBigV" style="font-size:42px;line-height:1.05;">–</div><div class="s" id="rsiZoneS">–</div></div>
+      <div style="flex:1;min-width:220px;height:96px;"><canvas id="rsiSpark"></canvas></div>
+    </div>
+    <div class="grid g2" style="margin-bottom:14px;">
+      <div class="card bigm"><div class="k">AFTER OVERSOLD &lt;30 · NEXT 30D</div><div class="v" id="rsiOsV" style="font-size:20px;">–</div><div class="s" id="rsiOsS">–</div></div>
+      <div class="card bigm"><div class="k">AFTER OVERBOUGHT &gt;70 · NEXT 30D</div><div class="v" id="rsiObV" style="font-size:20px;">–</div><div class="s" id="rsiObS">–</div></div>
+    </div>
+    <div class="note" id="rsiNote" style="margin-bottom:16px"></div>
     <div class="grid g3" id="nearGrid"><div class="loading">Loading…</div></div>
     </div>
   </section>
@@ -449,7 +458,7 @@ async function loadAll(){
   var NL={rsi:['Oversold','Neutral','Overbought'],mvrv:['Undervalued','Fair Value','Overvalued'],funding:['Low / Bearish','Neutral','Elevated'],puell:['Miner Stress','Healthy','Overheated'],power_law:['Below Fair','Fair Band','Extended'],pi_cycle:['Far from Top','Mid Range','Caution']};
   function nctx(k,v){ var i=v<33?0:(v<66?1:2); var col=v<33?'#00DC78':(v<66?'#FF9500':'#FF3B3B'); return '<div class="ctx" style="color:'+col+'">'+(NL[k]?NL[k][i]:'')+'</div>'; }
   var ng=document.getElementById('nearGrid'); ng.innerHTML='';
-  ['rsi','mvrv','funding','puell','power_law','pi_cycle'].forEach(function(k){ if(st[k]==null)return; var v=Math.round(st[k]); var c=zoneInfo(st[k]).c; var d=document.createElement('div'); d.className='card comp'; d.innerHTML='<div class="top"><span class="nm">'+labels[k]+'</span></div><div class="val" style="color:'+c+'">'+v+'</div>'+nctx(k,v)+'<div class="bar"><i style="width:'+Math.max(2,Math.min(100,st[k]))+'%;background:'+c+'"></i></div>'; ng.appendChild(d); });
+  ['mvrv','funding','puell','power_law','pi_cycle'].forEach(function(k){ if(st[k]==null)return; var v=Math.round(st[k]); var c=zoneInfo(st[k]).c; var d=document.createElement('div'); d.className='card comp'; d.innerHTML='<div class="top"><span class="nm">'+labels[k]+'</span></div><div class="val" style="color:'+c+'">'+v+'</div>'+nctx(k,v)+'<div class="bar"><i style="width:'+Math.max(2,Math.min(100,st[k]))+'%;background:'+c+'"></i></div>'; ng.appendChild(d); });
 
   // context
 
@@ -461,6 +470,37 @@ async function loadAll(){
   loadSeasonality();
   loadCycleSignals();
   loadSeasonalPattern();
+  loadRSI();
+}
+
+var _rsiSpark=null;
+async function loadRSI(){
+  try{
+    var r=await (await fetch(API+'/api/rsi',{cache:'no-store'})).json();
+    var cur=r.rsi; var col=cur<30?'#22c55e':(cur>70?'#ef4444':'#58A6FF');
+    setText('rsiBigV', cur); document.getElementById('rsiBigV').style.color=col;
+    setText('rsiZoneS', r.zone+(cur<30?' — washed out':(cur>70?' — running hot':' — mid-range')));
+    setText('rsiOsV', r.oversold?((r.oversold.median>0?'+':'')+r.oversold.median+'%'):'–'); document.getElementById('rsiOsV').style.color='#22c55e';
+    setText('rsiOsS', r.oversold?(r.oversold.win+'% positive · '+r.oversold.n+' times since 2017'):'—');
+    setText('rsiObV', r.overbought?((r.overbought.median>0?'+':'')+r.overbought.median+'%'):'–'); document.getElementById('rsiObV').style.color=(r.overbought&&r.overbought.median<0?'#ef4444':'#58A6FF');
+    setText('rsiObS', r.overbought?(r.overbought.win+'% positive · '+r.overbought.n+' times since 2017'):'—');
+    var bl=r.baseline?(' Baseline (any day): '+(r.baseline.median>0?'+':'')+r.baseline.median+'% / '+r.baseline.win+'% up.'):'';
+    setText('rsiNote','Wilder 14-day RSI on daily closes. The honest BTC quirk: overbought (>70) has NOT been a reliable sell — momentum often carried higher; oversold (<30, like now) has given a mild edge above baseline.'+bl+' Median forward return over the next 30 days. Context, not a trade signal.');
+    if(window.Chart&&r.recent){
+      if(_rsiSpark) _rsiSpark.destroy();
+      var labs=r.recent.map(function(x){return x.date;}); var vals=r.recent.map(function(x){return x.rsi;});
+      _rsiSpark=new Chart(document.getElementById('rsiSpark'),{type:'line',
+        data:{labels:labs,datasets:[
+          {data:vals,borderColor:col,borderWidth:2,pointRadius:0,tension:0.3},
+          {data:vals.map(function(){return 70;}),borderColor:'rgba(239,68,68,0.35)',borderWidth:1,borderDash:[4,3],pointRadius:0},
+          {data:vals.map(function(){return 30;}),borderColor:'rgba(34,197,94,0.35)',borderWidth:1,borderDash:[4,3],pointRadius:0}
+        ]},
+        options:{animation:false,maintainAspectRatio:false,responsive:true,
+          plugins:{legend:{display:false},zoom:{zoom:{wheel:{enabled:false},pinch:{enabled:false}},pan:{enabled:false}},
+            tooltip:{filter:function(it){return it.datasetIndex===0;},callbacks:{title:function(it){return labs[it[0].dataIndex];},label:function(c){return 'RSI '+c.parsed.y;}}}},
+          scales:{x:{display:false},y:{min:0,max:100,ticks:{color:'#6b7280',font:{size:9},stepSize:50},grid:{color:'rgba(255,255,255,0.05)'}}}}});
+    }
+  }catch(e){}
 }
 
 var _seasChart=null;
