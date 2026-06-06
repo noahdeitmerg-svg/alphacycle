@@ -473,26 +473,30 @@ async function loadSeasonality(){
                 mo<14?'Mid cycle — the historical parabola window (months 8–13)':
                 mo<20?'Late cycle — historically the distribution window':'Deep late cycle — past the typical cycle top';
     setText('seaHphase', phase);
-    var cyc=s.cycle||[]; var labs=cyc.map(function(c){return 'M'+c.mo;});
-    var avg=cyc.map(function(c){return c.avg;}); var cur=cyc.map(function(c){return c.current;});
+    var cby=s.cycles_by_year||{}; var NMO=25; var labs=[]; for(var i=0;i<NMO;i++) labs.push('M'+i);
+    var curKey=s.last_halving?String(new Date(s.last_halving).getUTCFullYear()):null;
+    function _pad(a){ a=a||[]; var o=[]; for(var i=0;i<NMO;i++) o.push(a[i]!=null?a[i]:null); return o; }
     if(window.Chart){
       if(_seaCycleChart){ _seaCycleChart.destroy(); }
+      var ds=[];
+      [['2016','rgba(255,255,255,0.30)'],['2020','rgba(88,166,255,0.70)']].forEach(function(p){
+        if(cby[p[0]]) ds.push({label:p[0]+' cycle',data:_pad(cby[p[0]]),borderColor:p[1],borderWidth:2,borderDash:[4,3],pointRadius:0,tension:0.3,spanGaps:true});
+      });
+      if(curKey&&cby[curKey]) ds.push({label:curKey+' · this cycle',data:_pad(cby[curKey]),borderColor:'#00D4AA',backgroundColor:'rgba(0,212,170,0.08)',borderWidth:2.6,pointRadius:0,tension:0.3,spanGaps:true,fill:true});
       _seaCycleChart=new Chart(document.getElementById('seaCycleChart'),{type:'line',
-        data:{labels:labs,datasets:[
-          {label:'Avg of past cycles',data:avg,borderColor:'rgba(255,255,255,0.40)',borderDash:[5,4],pointRadius:0,borderWidth:2,tension:0.3,spanGaps:true},
-          {label:'This cycle',data:cur,borderColor:'#00D4AA',backgroundColor:'rgba(0,212,170,0.08)',pointRadius:0,borderWidth:2.5,fill:true,tension:0.3,spanGaps:true}
-        ]},
+        data:{labels:labs,datasets:ds},
         options:{animation:false,maintainAspectRatio:false,responsive:true,interaction:{mode:'index',intersect:false},
           plugins:{legend:{display:true,labels:{color:'#9aa6b8',boxWidth:12,font:{size:11}}},zoom:{zoom:{wheel:{enabled:false},pinch:{enabled:false}},pan:{enabled:false}},
             tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+(c.parsed.y!=null?c.parsed.y.toFixed(2)+'x':'n/a');}}}},
           scales:{x:{ticks:{color:'#6b7280',maxRotation:0,autoSkip:true,font:{size:10}},grid:{display:false}},
-            y:{ticks:{color:'#6b7280',font:{size:10},callback:function(v){return v+'x';}},grid:{color:'rgba(255,255,255,0.05)'}}}}});
+            y:{type:'logarithmic',min:0.5,ticks:{color:'#6b7280',font:{size:10},callback:function(v){return (v>=1?v:v.toFixed(1))+'x';}},grid:{color:'rgba(255,255,255,0.05)'}}}}});
     }
-    setText('seaHnote','Indexed to halving day = 1.0x. Dashed line averages the 2016/2020/2024 cycles; teal is the current cycle. Past performance is not future results.');
-    // monthly bars
-    var maxabs=1; (s.months||[]).forEach(function(m){ if(m.avg!=null) maxabs=Math.max(maxabs,Math.abs(m.avg)); });
+    setText('seaHnote','Indexed to halving day = 1.0x (log scale). Each cycle’s peak multiple keeps shrinking — 2016 ran ~16x, 2020 ~7x, this cycle far more muted. Read the shape, not a price target. Past performance is not future results.');
+    // monthly bars — median (robust to single-cycle moonshots like Nov 2013)
+    function _mv(m){ return (m.median!=null?m.median:(m.avg!=null?m.avg:0)); }
+    var maxabs=1; (s.months||[]).forEach(function(m){ maxabs=Math.max(maxabs,Math.abs(_mv(m))); });
     var mhtml=''; (s.months||[]).forEach(function(m){
-      var a=(m.avg!=null?m.avg:0); var pos=a>=0; var w=Math.min(50,Math.abs(a)/maxabs*50); var col=pos?'#22c55e':'#ef4444';
+      var a=_mv(m); var pos=a>=0; var w=Math.min(50,Math.abs(a)/maxabs*50); var col=pos?'#22c55e':'#ef4444';
       mhtml+='<div style="display:flex;align-items:center;gap:8px;margin:3px 0;font-size:12px;">'+
         '<span style="width:30px;color:var(--mut)">'+names[m.month-1]+'</span>'+
         '<div style="flex:1;height:16px;background:rgba(255,255,255,0.04);border-radius:4px;position:relative;">'+
@@ -503,7 +507,7 @@ async function loadSeasonality(){
     });
     document.getElementById('seaMonths').innerHTML=mhtml;
     var qs=(s.quarters||[]).map(function(q){return 'Q'+q.q+' '+(q.avg>0?'+':'')+q.avg+'%';}).join(' · ');
-    setText('seaQnote','Left number = avg monthly return, right = win rate ('+(s.range?s.range.from.slice(0,4):'')+'–'+(s.range?s.range.to.slice(0,4):'')+'). Quarters: '+qs+'.');
+    setText('seaQnote','Bars = median monthly return (robust; a mean would be skewed by single moonshots like Nov 2013). Right = win rate, '+(s.range?s.range.from.slice(0,4):'')+'–'+(s.range?s.range.to.slice(0,4):'')+'. Quarters by mean: '+qs+'.');
     // forward outlook
     var fw=s.forward||[]; var fmax=1; fw.forEach(function(f){fmax=Math.max(fmax,Math.abs(f.cum));});
     var fhtml='<div style="display:flex;flex-direction:column;gap:2px;">';
@@ -519,7 +523,7 @@ async function loadSeasonality(){
     });
     fhtml+='</div>'; document.getElementById('seaFwd').innerHTML=fhtml;
     var d30=(fw[3]?fw[3].cum:null), d90=(fw[12]?fw[12].cum:null);
-    setText('seaFnote','Compounded weekly seasonal average across all years. ~30d '+(d30>0?'+':'')+d30+'% · ~90d '+(d90>0?'+':'')+d90+'%. Seasonal tendency only, not a forecast.');
+    setText('seaFnote','Compounded weekly median (typical) seasonal path across all years. ~30d '+(d30>0?'+':'')+d30+'% · ~90d '+(d90>0?'+':'')+d90+'%. Seasonal tendency only, not a forecast.');
     // year x month heatmap
     var gh='<table style="border-collapse:collapse;font-size:10px;width:100%;min-width:380px;"><tr><td style="color:var(--mut);padding:2px 4px"></td>';
     for(var mi=0;mi<12;mi++) gh+='<td style="color:var(--mut);text-align:center;padding:2px 0">'+names[mi].slice(0,1)+'</td>';
