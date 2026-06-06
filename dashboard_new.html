@@ -298,56 +298,31 @@
     </div>
   </section>
 
-  <!-- SEASONALITY LAB -->
+  <!-- SEASONALITY -->
   <section id="seaSec">
     <div class="sec-eyebrow">ENGINE 6B · SEASONALITY</div>
-    <div class="sec-h">What 9 years of daily data say about timing</div>
-    <div class="sec-tells">Calendar and halving-cycle patterns from every BTC day since 2013. Only statistically reliable signals are shown — coin-flip months stay hidden. Context, not a trade signal.</div>
-
-    <div class="card" style="margin-bottom:14px;">
-      <div class="k">HALVING CLOCK</div>
-      <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:baseline;margin:6px 0 10px;">
-        <div><span id="seaHmo" style="font-size:32px;font-weight:700;color:var(--teal)">–</span><span style="color:var(--mut);font-size:13px"> months since halving</span></div>
-        <div id="seaHphase" style="color:var(--mut);font-size:13px"></div>
-      </div>
-      <div class="chart-canvas-box" style="height:240px"><canvas id="seaCycleChart"></canvas></div>
-      <div class="note" id="seaHnote" style="margin-top:8px"></div>
+    <div class="sec-h">When Bitcoin tends to be strong or weak</div>
+    <div class="sec-tells">From 13 years of daily prices: where we are in the 4-year halving cycle, plus the only calendar months reliable enough to trust (up or down in ≥70% of years). Everything else is hidden as noise. Context, not a trade signal.</div>
+    <div class="grid g4">
+      <div class="card bigm"><div class="k">HALVING CYCLE</div><div class="v" id="seaHmo2" style="font-size:24px;">–</div><div class="s" id="seaHphase">–</div></div>
+      <div class="card bigm"><div class="k">STRONGEST MONTH</div><div class="v" id="seaBest" style="font-size:24px;">–</div><div class="s" id="seaBestS">–</div></div>
+      <div class="card bigm"><div class="k">WEAKEST MONTH</div><div class="v" id="seaWorst" style="font-size:24px;">–</div><div class="s" id="seaWorstS">–</div></div>
+      <div class="card bigm"><div class="k">NEXT 90 DAYS</div><div class="v" id="seaFwd2" style="font-size:24px;">–</div><div class="s" id="seaFwdS">–</div></div>
     </div>
-
-    <div class="grid g2">
-      <div class="card">
-        <div class="k">RELIABLE MONTHLY SIGNALS · high confidence only</div>
-        <div id="seaMonths" style="margin-top:10px"></div>
-        <div class="note" id="seaQnote" style="margin-top:8px"></div>
-      </div>
-      <div class="card">
-        <div class="k">NEXT 30–90 DAYS · confidence-gated</div>
-        <div id="seaFwd" style="margin-top:10px"></div>
-        <div class="note" id="seaFnote" style="margin-top:8px"></div>
-      </div>
-    </div>
-
-    <div class="card" style="margin-top:14px;">
-      <div class="k">YEAR × MONTH HEATMAP · every month, raw (reference)</div>
-      <div id="seaGrid" style="margin-top:10px;overflow-x:auto"></div>
-    </div>
+    <div class="note" id="seaFoot" style="margin-top:6px;"></div>
   </section>
 
   <!-- CYCLE EXTREMES (moving averages) -->
   <section id="cycSec">
     <div class="sec-eyebrow">ENGINE 6C · CYCLE EXTREMES</div>
-    <div class="sec-h">The moving averages that mark tops &amp; bottoms</div>
-    <div class="sec-tells">The classic price-extension signals — the same ones Pi Cycle and Mayer Multiple use — tested across every cycle since 2017. Where they sit now lines up with the ARC read.</div>
+    <div class="sec-h">The averages that mark tops &amp; bottoms</div>
+    <div class="sec-tells">The classic price-extension signals — Pi Cycle, Mayer Multiple, 200-week MA — tested across every cycle since 2013. Where they sit now lines up with the ARC read.</div>
     <div class="grid g3">
-      <div class="card bigm"><div class="k">PI CYCLE TOP · 111d vs 2×350d</div><div class="v" id="cycPiV" style="font-size:23px;">–</div><div class="s" id="cycPiS">distance to the top trigger</div></div>
-      <div class="card bigm"><div class="k">MAYER MULTIPLE · price ÷ 200d</div><div class="v" id="cycMayV" style="font-size:23px;">–</div><div class="s" id="cycMayS">vs the 200-day average</div></div>
-      <div class="card bigm"><div class="k">200-WEEK MA · bottom support</div><div class="v" id="cyc200V" style="font-size:23px;">–</div><div class="s" id="cyc200S">distance from the bear-market floor</div></div>
+      <div class="card bigm"><div class="k">PI CYCLE TOP</div><div class="v" id="cycPiV" style="font-size:24px;">–</div><div class="s" id="cycPiS">distance from a top signal</div></div>
+      <div class="card bigm"><div class="k">MAYER MULTIPLE</div><div class="v" id="cycMayV" style="font-size:24px;">–</div><div class="s" id="cycMayS">price vs the 200-day average</div></div>
+      <div class="card bigm"><div class="k">200-WEEK MA</div><div class="v" id="cyc200V" style="font-size:24px;">–</div><div class="s" id="cyc200S">distance from the bear-market floor</div></div>
     </div>
-    <div class="card" style="margin-top:14px;">
-      <div class="k">PI CYCLE TOP · historical accuracy</div>
-      <div id="cycPiRec" style="margin-top:10px"></div>
-      <div class="note" id="cycNote" style="margin-top:8px"></div>
-    </div>
+    <div class="note" id="cycNote" style="margin-top:6px;"></div>
   </section>
 
   <!-- HISTORY CHART -->
@@ -479,109 +454,49 @@ async function loadAll(){
   loadCycleSignals();
 }
 
+var _seaCycleChart=null;
+async function loadSeasonality(){
+  try{
+    var s=await (await fetch(API+'/api/seasonality',{cache:'no-store'})).json();
+    var names=['January','February','March','April','May','June','July','August','September','October','November','December'];
+    // halving cycle position
+    var mo=s.months_since_halving!=null?s.months_since_halving:0;
+    setText('seaHmo2','Month '+mo);
+    setText('seaHphase', mo<6?'early cycle · accumulation':mo<14?'mid cycle · the run':mo<20?'late cycle · distribution':'deep late cycle · past typical top');
+    // strongest / weakest reliable month
+    var sig=s.month_signals||[];
+    var best=sig.filter(function(m){return m.dir==='up';}).sort(function(a,b){return b.win-a.win;})[0];
+    var worst=sig.filter(function(m){return m.dir==='down';}).sort(function(a,b){return a.win-b.win;})[0];
+    if(best){ setText('seaBest',names[best.month-1]); document.getElementById('seaBest').style.color='#22c55e'; setText('seaBestS','up '+best.win+'% of years · typ '+(best.median>0?'+':'')+best.median+'%'); }
+    else { setText('seaBest','None'); document.getElementById('seaBest').style.color='var(--mut)'; setText('seaBestS','no month reliably up'); }
+    if(worst){ setText('seaWorst',names[worst.month-1]); document.getElementById('seaWorst').style.color='#ef4444'; setText('seaWorstS','down '+(100-worst.win)+'% of years · typ '+worst.median+'%'); }
+    else { setText('seaWorst','None'); document.getElementById('seaWorst').style.color='var(--mut)'; setText('seaWorstS','no month reliably down'); }
+    // next 90 days — only if a real signal
+    var conf=(s.forward||[]).filter(function(f){return f.high_conf;});
+    if(conf.length===0){ setText('seaFwd2','No edge'); document.getElementById('seaFwd2').style.color='var(--mut)'; setText('seaFwdS','no reliable seasonal signal from today'); }
+    else { var f=conf[0]; var up=f.dir==='up'; setText('seaFwd2',up?'Bullish':'Bearish'); document.getElementById('seaFwd2').style.color=up?'#22c55e':'#ef4444'; setText('seaFwdS',f.hor+'d lean · '+(f.median>0?'+':'')+f.median+'% typ · '+f.win+'% yrs up'); }
+    var wk=(s.week_signals||[]).length; var yr=(s.range?s.range.from.slice(0,4)+'–'+s.range.to.slice(0,4):'');
+    setText('seaFoot','Months shown only if up or down in ≥70% of years ('+yr+'). Weekly was checked too — '+(wk?'a few weeks cross 70%, but that is within chance, so treated as noise':'nothing reliable')+'. Context, not a trade signal.');
+  }catch(e){ var el=document.getElementById('seaSec'); if(el) el.style.opacity='0.55'; }
+}
+
 function _fmt(n){ return (n!=null)? Number(n).toLocaleString('en-US') : ''; }
 async function loadCycleSignals(){
   try{
     var c=await (await fetch(API+'/api/cycle-signals',{cache:'no-store'})).json();
     var pi=c.pi||{};
-    if(pi.triggered){ setText('cycPiV','TRIGGERED'); document.getElementById('cycPiV').style.color='#ef4444'; setText('cycPiS','111d crossed above 2×350d — historical top zone'); }
-    else { setText('cycPiV',(pi.gap_pct!=null?('+'+pi.gap_pct+'% away'):'–')); document.getElementById('cycPiV').style.color='#22c55e'; setText('cycPiS','111d ($'+_fmt(pi.ma111)+') must rise to 2×350d ($'+_fmt(pi.ma350x2)+')'); }
-    var may=c.mayer||{}; setText('cycMayV', may.value!=null?(may.value+'x'):'–');
+    if(pi.triggered){ setText('cycPiV','Triggered'); document.getElementById('cycPiV').style.color='#ef4444'; setText('cycPiS','111d crossed above 2×350d — top zone'); }
+    else { setText('cycPiV',(pi.gap_pct!=null?('+'+pi.gap_pct+'%'):'–')); document.getElementById('cycPiV').style.color='#22c55e'; setText('cycPiS','away from a top signal'); }
+    var may=c.mayer||{}; setText('cycMayV', may.value!=null?(may.value+'×'):'–');
     var mc=may.value==null?'#fff':(may.value<1?'#22c55e':(may.value<2.4?'#58A6FF':(may.value<3.5?'#FF9500':'#ef4444')));
     document.getElementById('cycMayV').style.color=mc;
-    setText('cycMayS', may.value!=null?((may.value<1?'below the 200-day avg — undervalued zone':'above the 200-day avg')+' (200d $'+_fmt(may.ma200)+')'):'');
+    setText('cycMayS', may.value!=null?(may.value<1?'below the 200-day avg — undervalued':'above the 200-day avg'):'');
     var w=c.ma200w||{}; var pa=w.pct_above;
     setText('cyc200V', pa!=null?((pa>0?'+':'')+pa+'%'):'–');
-    document.getElementById('cyc200V').style.color=(pa==null?'#fff':(pa<10?'#22c55e':(pa<100?'#58A6FF':'#FF9500')));
-    setText('cyc200S', w.value!=null?('200W MA at $'+_fmt(w.value)+' — the floor that held 2015 / 2018 / 2022'):'');
-    var tops={'2017-12-16':'2017-12-17','2021-04-12':'2021-04-14'};
-    var rec=(pi.crosses||[]).map(function(x){
-      var t=tops[x.date]; var diff=t?Math.round((new Date(t)-new Date(x.date))/86400000):null;
-      return '<div style="display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:13px"><span style="color:var(--mut)">Signal '+x.date+' · $'+_fmt(x.price)+'</span><span style="color:#22c55e;font-weight:700">marked top within '+(diff!=null?diff:'~2')+' day'+(diff===1?'':'s')+'</span></div>';
-    }).join('');
-    document.getElementById('cycPiRec').innerHTML=rec||'<div class="note">No top signal in the data window.</div>';
-    setText('cycNote','Pi Cycle marked the 2017 and 2021 tops to within 1–2 days — the best of every daily-MA pair we tested. It did NOT fire this cycle: the post-ETF run was too muted to push the 111-day above 2×350-day. Right now all three gauges point to the value end, matching the ARC score. Context, not a trade signal.');
+    document.getElementById('cyc200V').style.color=(pa==null?'#fff':(Math.abs(pa)<10?'#22c55e':(pa<100?'#58A6FF':'#FF9500')));
+    setText('cyc200S', pa!=null?(Math.abs(pa)<5?'sitting on the bear-market floor':(pa<0?'below the floor':'above the floor')):'');
+    setText('cycNote','Pi Cycle marked the 2017 and 2021 tops to within 1–2 days — the best daily-average pair we tested. It did not fire this cycle (the post-ETF run stayed too muted). All three now point to the value end, matching the ARC score. Context, not a trade signal.');
   }catch(e){ var el=document.getElementById('cycSec'); if(el) el.style.opacity='0.55'; }
-}
-
-var _seaCycleChart=null;
-async function loadSeasonality(){
-  try{
-    var s=await (await fetch(API+'/api/seasonality',{cache:'no-store'})).json();
-    var names=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    // halving clock
-    setText('seaHmo', s.months_since_halving!=null? s.months_since_halving : '–');
-    var mo=s.months_since_halving||0;
-    var phase = mo<6?'Early cycle — historically the accumulation window':
-                mo<14?'Mid cycle — the historical parabola window (months 8–13)':
-                mo<20?'Late cycle — historically the distribution window':'Deep late cycle — past the typical cycle top';
-    setText('seaHphase', phase);
-    var cby=s.cycles_by_year||{}; var NMO=25; var labs=[]; for(var i=0;i<NMO;i++) labs.push('M'+i);
-    var curKey=s.last_halving?String(new Date(s.last_halving).getUTCFullYear()):null;
-    function _pad(a){ a=a||[]; var o=[]; for(var i=0;i<NMO;i++) o.push(a[i]!=null?a[i]:null); return o; }
-    if(window.Chart){
-      if(_seaCycleChart){ _seaCycleChart.destroy(); }
-      var ds=[];
-      [['2016','rgba(255,255,255,0.30)'],['2020','rgba(88,166,255,0.70)']].forEach(function(p){
-        if(cby[p[0]]) ds.push({label:p[0]+' cycle',data:_pad(cby[p[0]]),borderColor:p[1],borderWidth:2,borderDash:[4,3],pointRadius:0,tension:0.3,spanGaps:true});
-      });
-      if(curKey&&cby[curKey]) ds.push({label:curKey+' · this cycle',data:_pad(cby[curKey]),borderColor:'#00D4AA',backgroundColor:'rgba(0,212,170,0.08)',borderWidth:2.6,pointRadius:0,tension:0.3,spanGaps:true,fill:true});
-      _seaCycleChart=new Chart(document.getElementById('seaCycleChart'),{type:'line',
-        data:{labels:labs,datasets:ds},
-        options:{animation:false,maintainAspectRatio:false,responsive:true,interaction:{mode:'index',intersect:false},
-          plugins:{legend:{display:true,labels:{color:'#9aa6b8',boxWidth:12,font:{size:11}}},zoom:{zoom:{wheel:{enabled:false},pinch:{enabled:false}},pan:{enabled:false}},
-            tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+(c.parsed.y!=null?c.parsed.y.toFixed(2)+'x':'n/a');}}}},
-          scales:{x:{ticks:{color:'#6b7280',maxRotation:0,autoSkip:true,font:{size:10}},grid:{display:false}},
-            y:{type:'logarithmic',min:0.5,ticks:{color:'#6b7280',font:{size:10},callback:function(v){return (v>=1?v:v.toFixed(1))+'x';}},grid:{color:'rgba(255,255,255,0.05)'}}}}});
-    }
-    setText('seaHnote','Indexed to halving day = 1.0x (log scale). Each cycle’s peak multiple keeps shrinking — 2016 ran ~16x, 2020 ~7x, this cycle far more muted. Read the shape, not a price target. Past performance is not future results.');
-    // reliable monthly signals only — confidence-gated (p < 10%)
-    var sig=s.month_signals||[]; var mhtml='';
-    if(sig.length===0){
-      mhtml='<div class="note" style="padding:10px 0">No month clears the confidence bar right now — no calendar bias strong and consistent enough to be unlikely from chance. Nothing shown rather than noise.</div>';
-    }else{
-      sig.forEach(function(m){
-        var up=(m.dir==='up'); var col=up?'#22c55e':'#ef4444'; var arrow=up?'▲':'▼';
-        var upY=Math.round(m.win/100*m.n); var dY=m.n-upY;
-        var cnt= up ? (upY+' of '+m.n+' years up ('+m.win+'%)') : (dY+' of '+m.n+' years down ('+(100-m.win)+'%)');
-        mhtml+='<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.05)">'+
-          '<span style="font-size:16px;color:'+col+'">'+arrow+'</span>'+
-          '<div style="flex:1"><div style="font-weight:700;font-size:14px">'+names[m.month-1]+' — '+(up?'historically up':'historically down')+'</div>'+
-          '<div style="color:var(--mut);font-size:11px">'+cnt+' · typical '+(m.median>0?'+':'')+m.median+'% · p='+m.p+'</div></div>'+
-          '<span style="font-family:var(--mono);font-size:13px;font-weight:700;color:'+col+'">'+(m.median>0?'+':'')+m.median+'%</span></div>';
-      });
-    }
-    document.getElementById('seaMonths').innerHTML=mhtml;
-    var wk=(s.week_signals||[]).length;
-    setText('seaQnote','Win rate = share of past years this month closed positive. Only months with ≥70% directional consistency ('+(s.range?s.range.from.slice(0,4):'')+'–'+(s.range?s.range.to.slice(0,4):'')+', n≥10) are shown; coin-flips hidden. Weekly check: '+(wk?(wk+' of 53 weeks cross 70% — about what chance alone yields, so treated as noise'):'no week clears the bar')+'.');
-    // forward 30/60/90 — verdict only when high-confidence
-    var fw=s.forward||[]; var anyConf=fw.some(function(f){return f.high_conf;});
-    var fhtml='<div style="font-weight:700;font-size:15px;margin-bottom:10px;color:'+(anyConf?'#e5e7eb':'var(--mut)')+'">'+(anyConf?'Seasonal edge detected':'No strong seasonal edge right now')+'</div>';
-    fw.forEach(function(f){
-      var hc=f.high_conf; var up=(f.dir==='up'); var col=hc?(up?'#22c55e':'#ef4444'):'#6b7280';
-      var verdict=hc?(up?'bullish lean':'bearish lean'):'no clear edge';
-      fhtml+='<div style="display:flex;align-items:center;gap:10px;padding:7px 0;font-size:12px;'+(hc?'':'opacity:0.6;')+'">'+
-        '<span style="width:42px;color:var(--mut)">'+f.hor+'d</span>'+
-        '<span style="flex:1;color:'+col+';font-weight:'+(hc?'700':'400')+'">'+verdict+'</span>'+
-        '<span style="font-family:var(--mono);color:var(--mut);font-size:11px">'+(f.median!=null?((f.median>0?'+':'')+f.median+'% · '+f.win+'% yrs up · n='+f.n):'n/a')+'</span></div>';
-    });
-    document.getElementById('seaFwd').innerHTML=fhtml;
-    setText('seaFnote','From today’s calendar date, the actual 30/60/90-day BTC move across every past year. A directional lean is stated only when it’s statistically unlikely to be chance (p < 10%); otherwise no call. Figures are context, not a forecast.');
-    // year x month heatmap
-    var gh='<table style="border-collapse:collapse;font-size:10px;width:100%;min-width:380px;"><tr><td style="color:var(--mut);padding:2px 4px"></td>';
-    for(var mi=0;mi<12;mi++) gh+='<td style="color:var(--mut);text-align:center;padding:2px 0">'+names[mi].slice(0,1)+'</td>';
-    gh+='</tr>';
-    (s.grid||[]).forEach(function(row){
-      gh+='<tr><td style="color:var(--mut);padding:2px 4px">'+row.year+'</td>';
-      row.vals.forEach(function(v){
-        var bg='rgba(255,255,255,0.03)'; var tc='#6b7280';
-        if(v!=null){ var cap=Math.max(-40,Math.min(60,v)); var al=Math.min(0.85,Math.abs(cap)/50+0.12); bg=(v>=0?'rgba(34,197,94,':'rgba(239,68,68,')+al+')'; tc='#e5e7eb'; }
-        gh+='<td style="text-align:center;padding:3px 1px;background:'+bg+';color:'+tc+';border:1px solid rgba(10,14,26,0.6)">'+(v!=null?Math.round(v):'')+'</td>';
-      });
-      gh+='</tr>';
-    });
-    gh+='</table>'; document.getElementById('seaGrid').innerHTML=gh;
-  }catch(e){ var el=document.getElementById('seaSec'); if(el) el.style.opacity='0.55'; }
 }
 
 async function loadZones(currentKey){
@@ -728,7 +643,7 @@ function initCollapse(){
       sec.appendChild(body);
       eye.classList.add('clps');
       var chev=document.createElement('span'); chev.className='chev'; chev.textContent='▾'; eye.appendChild(chev);
-      eye.addEventListener('click',function(){ sec.classList.toggle('collapsed'); if(!sec.classList.contains('collapsed')&&sec.querySelector('#arcChart')){ var c=window._arcChart; if(c) setTimeout(function(){try{c.resize();_autoFitPrice&&_autoFitPrice();}catch(e){}},80); } });
+      eye.addEventListener('click',function(){ sec.classList.toggle('collapsed'); if(!sec.classList.contains('collapsed')){ setTimeout(function(){ try{ if(sec.querySelector('#arcChart')&&window._arcChart){window._arcChart.resize();_autoFitPrice&&_autoFitPrice();} if(sec.querySelector('#seaCycleChart')&&_seaCycleChart){_seaCycleChart.resize();} }catch(e){} },80); } });
     });
   }catch(e){}
 }
