@@ -787,6 +787,70 @@ async def get_seasonal_pattern():
     return data
 
 
+# --- Daily RSI(14) with historical forward-return edge ---
+_RSI_CACHE = {"key": None, "data": None}
+
+@app.get("/api/rsi")
+async def get_rsi(period: int = 14, horizon: int = 30):
+    from datetime import datetime as _dtm
+    import statistics as _st
+    key = f"{_dtm.utcnow().date().isoformat()}|{period}|{horizon}"
+    if _RSI_CACHE["key"] == key and _RSI_CACHE["data"]:
+        return _RSI_CACHE["data"]
+    try:
+        from services.backtest_engine import _load_or_build_daily_cache
+        daily = await _load_or_build_daily_cache()
+    except Exception as ex:
+        raise HTTPException(503, f"price history unavailable: {ex}")
+    rows = [r for r in (daily or []) if r.get("price")]
+    rows.sort(key=lambda r: r["date"])
+    n = len(rows)
+    if n < period + 60:
+        raise HTTPException(503, "insufficient history")
+    p = [r["price"] for r in rows]
+    d = [r["date"][:10] for r in rows]
+    # Wilder's RSI
+    rsi = [None] * n
+    gains = sum(max(p[i] - p[i - 1], 0) for i in range(1, period + 1))
+    losses = sum(max(p[i - 1] - p[i], 0) for i in range(1, period + 1))
+    ag, al = gains / period, losses / period
+    rsi[period] = 100.0 if al == 0 else round(100 - 100 / (1 + ag / al), 1)
+    for i in range(period + 1, n):
+        ch = p[i] - p[i - 1]
+        ag = (ag * (period - 1) + max(ch, 0)) / period
+        al = (al * (period - 1) + max(-ch, 0)) / period
+        rsi[i] = 100.0 if al == 0 else round(100 - 100 / (1 + ag / al), 1)
+    cur = rsi[-1]
+    zone = "Oversold" if cur < 30 else ("Overbought" if cur > 70 else "Neutral")
+
+    def edge(enter):
+        rets = []
+        for i in range(period + 1, n - horizon):
+            if rsi[i - 1] is not None and enter(rsi[i - 1], rsi[i]):
+                rets.append(p[i + horizon] / p[i] - 1)
+        if not rets:
+            return None
+        up = sum(1 for x in rets if x > 0)
+        return {"median": round(_st.median(rets) * 100, 1), "avg": round(_st.mean(rets) * 100, 1),
+                "win": round(up / len(rets) * 100), "n": len(rets)}
+
+    oversold = edge(lambda a, b: a >= 30 and b < 30)      # crosses INTO oversold
+    overbought = edge(lambda a, b: a <= 70 and b > 70)    # crosses INTO overbought
+    # baseline: average horizon-day forward return on any day (for comparison)
+    base_rets = [p[i + horizon] / p[i] - 1 for i in range(period, n - horizon)]
+    baseline = {"median": round(_st.median(base_rets) * 100, 1),
+                "win": round(sum(1 for x in base_rets if x > 0) / len(base_rets) * 100),
+                "n": len(base_rets)} if base_rets else None
+    recent = [{"date": d[i], "rsi": rsi[i]} for i in range(max(period, n - 120), n)]
+    data = {"asof": d[-1], "period": period, "horizon": horizon,
+            "rsi": cur, "zone": zone,
+            "oversold": oversold, "overbought": overbought, "baseline": baseline,
+            "recent": recent}
+    _RSI_CACHE["key"] = key
+    _RSI_CACHE["data"] = data
+    return data
+
+
 # -- HELPERS --------------------------------------------------------------------
 
 def _require_cache() -> dict:
