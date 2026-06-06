@@ -812,14 +812,19 @@ async def get_seasonal_overlay():
     path, ny, _monthly = _seasonal_curve(rows, cur_year)
     if not path:
         raise HTTPException(503, "no seasonal curve")
-    actual = [r for r in rows if r["date"][:4] == str(cur_year)]
-    anchor = actual[0]["price"] if actual else rows[-1]["price"]
-    seasonal = []
-    for doy in range(1, 366):
+    # actual: last ~18 months for context
+    cutoff = (today - _td(days=540)).isoformat()
+    actual = [r for r in rows if r["date"] >= cutoff]
+    last_price = rows[-1]["price"]
+    last_doy = min(today.timetuple().tm_yday, 365)
+    base_path = path[last_doy - 1]
+    # forward seasonal projection REBASED to current price (slope = seasonal tendency from here)
+    seasonal = [{"date": rows[-1]["date"], "price": round(last_price)}]
+    for doy in range(last_doy + 1, 366):
         dt = _date(cur_year, 1, 1) + _td(days=doy - 1)
         if dt.year != cur_year:
             break
-        seasonal.append({"date": dt.isoformat(), "price": round(anchor * path[doy - 1] / 100)})
+        seasonal.append({"date": dt.isoformat(), "price": round(last_price * path[doy - 1] / base_path)})
     # monthly median + win across COMPLETE prior years
     by_ym = _dd(list)
     for r in rows:
@@ -843,7 +848,7 @@ async def get_seasonal_overlay():
                 "dir": "up" if up * 2 > len(v) else "down"}
 
     tm = today.month
-    data = {"asof": rows[-1]["date"], "year": cur_year, "years": ny, "anchor": round(anchor),
+    data = {"asof": rows[-1]["date"], "year": cur_year, "years": ny, "price": round(last_price),
             "actual": actual, "seasonal": seasonal,
             "this_month": mstat(tm), "next_month": mstat(tm % 12 + 1)}
     _OVERLAY_CACHE["day"] = today.isoformat()
