@@ -97,6 +97,13 @@
   #arcChart{width:100%!important;height:420px!important;}
   .chart-legend{display:flex;flex-wrap:wrap;gap:8px 16px;font-family:var(--mono);font-size:11px;color:var(--mut);margin-top:12px;}
   .chart-legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:middle;}
+  .chart-legend span{cursor:pointer;user-select:none;transition:opacity .15s,color .15s;padding:2px 5px;border-radius:6px;}
+  .chart-legend span:hover{color:#fff;background:rgba(255,255,255,0.04);}
+  .chart-legend span.off{opacity:0.3;text-decoration:line-through;}
+  .chart-canvas-box{position:relative;height:430px;}
+  .chart-wrap:fullscreen{display:flex;flex-direction:column;background:#0a0e1a;padding:24px;}
+  .chart-wrap:fullscreen .chart-canvas-box{flex:1;height:auto;min-height:0;}
+  .chart-wrap:fullscreen .chart-legend{margin-top:14px;}
   .chart-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
   .tf-btn{font-family:var(--mono);font-size:11px;color:var(--mut);background:rgba(255,255,255,0.04);border:1px solid var(--bd);border-radius:8px;padding:5px 12px;cursor:pointer;transition:.15s;}
   .tf-btn:hover{color:#fff;border-color:var(--bd2);}
@@ -268,17 +275,18 @@
         <button class="tf-btn" data-r="1y" onclick="setChartRange('1y')">1Y</button>
         <button class="tf-btn on" data-r="all" onclick="setChartRange('all')">10Y</button>
         <button class="tf-btn" onclick="setChartRange('reset')" title="Reset zoom">&#8635;</button>
-        <span class="tf-hint">scroll to zoom · drag to pan</span>
+        <button class="tf-btn" onclick="chartFullscreen()" title="Fullscreen">&#9974;</button>
+        <span class="tf-hint">scroll to zoom · drag to pan · tap legend to toggle</span>
       </div>
-      <canvas id="arcChart"></canvas>
+      <div class="chart-canvas-box"><canvas id="arcChart"></canvas></div>
       <div class="chart-legend">
-        <span><i style="background:var(--teal)"></i>ARC Index</span>
-        <span><i style="background:#eab308"></i>BTC Price</span>
-        <span><i style="background:var(--z-dv)"></i>Deep Value</span>
-        <span><i style="background:var(--z-ac)"></i>Accumulation</span>
-        <span><i style="background:var(--z-ex)"></i>Expansion</span>
-        <span><i style="background:var(--z-rr)"></i>Risk Rising</span>
-        <span><i style="background:var(--z-eu)"></i>Euphoria</span>
+        <span data-leg="arc" onclick="toggleLegend(this)"><i style="background:var(--teal)"></i>ARC Index</span>
+        <span data-leg="btc" onclick="toggleLegend(this)"><i style="background:#eab308"></i>BTC Price</span>
+        <span data-leg="zone:Deep Value" onclick="toggleLegend(this)"><i style="background:var(--z-dv)"></i>Deep Value</span>
+        <span data-leg="zone:Accumulation" onclick="toggleLegend(this)"><i style="background:var(--z-ac)"></i>Accumulation</span>
+        <span data-leg="zone:Expansion" onclick="toggleLegend(this)"><i style="background:var(--z-ex)"></i>Expansion</span>
+        <span data-leg="zone:Risk Rising" onclick="toggleLegend(this)"><i style="background:var(--z-rr)"></i>Risk Rising</span>
+        <span data-leg="zone:Euphoria" onclick="toggleLegend(this)"><i style="background:var(--z-eu)"></i>Euphoria</span>
       </div>
     </div>
   </section>
@@ -427,8 +435,9 @@ async function loadChart(){
     var priceD=bt.map(function(r){return r.price;});
     var ctx=document.getElementById('arcChart');
     if(chart)chart.destroy();
-    _registerZoom();
-    var zonePlugin={id:'zbands',beforeDraw:function(c){var y=c.scales.yArc,a=c.chartArea;if(!y||!a)return;var ctx=c.ctx;var bands=[[0,30,'rgba(0,220,120,0.10)'],[30,40,'rgba(0,180,216,0.10)'],[40,60,'rgba(88,166,255,0.08)'],[60,70,'rgba(255,149,0,0.10)'],[70,100,'rgba(255,59,59,0.11)']];bands.forEach(function(b){var y0=y.getPixelForValue(b[1]),y1=y.getPixelForValue(b[0]);ctx.save();ctx.fillStyle=b[2];ctx.fillRect(a.left,y0,a.right-a.left,y1-y0);ctx.restore();});}};
+    _registerZoom(); window._priceD=priceD;
+    if(!window._zoneVis)window._zoneVis={'Deep Value':true,'Accumulation':true,'Expansion':true,'Risk Rising':true,'Euphoria':true};
+    var zonePlugin={id:'zbands',beforeDraw:function(c){var y=c.scales.yArc,a=c.chartArea;if(!y||!a)return;var ctx=c.ctx;var bands=[[0,30,'rgba(0,220,120,0.10)','Deep Value'],[30,40,'rgba(0,180,216,0.10)','Accumulation'],[40,60,'rgba(88,166,255,0.08)','Expansion'],[60,70,'rgba(255,149,0,0.10)','Risk Rising'],[70,100,'rgba(255,59,59,0.11)','Euphoria']];bands.forEach(function(b){if(window._zoneVis&&window._zoneVis[b[3]]===false)return;var y0=y.getPixelForValue(b[1]),y1=y.getPixelForValue(b[0]);ctx.save();ctx.fillStyle=b[2];ctx.fillRect(a.left,y0,a.right-a.left,y1-y0);ctx.restore();});}};
     var markersPlugin={id:'mk',afterDatasetsDraw:function(c){
       var x=c.ctx;var ar=c.chartArea;var am=c.getDatasetMeta(1);var arcData=(c.data.datasets[1]||{}).data||[];
       if(!am||!am.data||!am.data.length)return;
@@ -473,7 +482,7 @@ async function loadChart(){
       {label:'ARC Index',data:arcD,yAxisID:'yArc',borderColor:'#00D4AA',borderWidth:2,pointRadius:0,tension:0.2}
     ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
       plugins:{legend:{display:false},tooltip:{callbacks:{title:function(i){return i[0].label;}}},
-        zoom:{pan:{enabled:true,mode:'xy'},zoom:{wheel:{enabled:true,speed:0.08},pinch:{enabled:true},mode:'xy'},limits:{x:{minRange:20},yArc:{min:0,max:100,minRange:100}}}},
+        zoom:{pan:{enabled:true,mode:'x',onPanComplete:_autoFitPrice},zoom:{wheel:{enabled:true,speed:0.08},pinch:{enabled:true},mode:'x',onZoomComplete:_autoFitPrice},limits:{x:{minRange:20}}}},
       scales:{
         x:{min:0,max:_arcN-1,ticks:{color:'#69748a',maxTicksLimit:8,font:{family:'JetBrains Mono',size:10}},grid:{display:false}},
         yArc:{position:'left',min:0,max:100,ticks:{color:'#69748a',font:{family:'JetBrains Mono',size:10}},grid:{color:'rgba(255,255,255,0.05)'}},
@@ -482,7 +491,16 @@ async function loadChart(){
     window._arcChart=chart;
   }catch(e){}
 }
-function setChartRange(r){ var c=window._arcChart; if(!c)return; if(r==='reset')r=_arcRange; _arcRange=r; try{ if(c.resetZoom)c.resetZoom('none'); }catch(e){} if(r==='1y'){ c.options.scales.x.min=Math.max(0,_arcN-365); c.options.scales.x.max=_arcN-1; } else { c.options.scales.x.min=0; c.options.scales.x.max=_arcN-1; } c.update('none'); document.querySelectorAll('.tf-btn[data-r]').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-r')===r); }); }
+// Auto-fit the (log) price axis to whatever time window is visible — TradingView-style "auto" price scale.
+function _autoFitPrice(){ try{ var c=window._arcChart; var p=window._priceD; if(!c||!p||!c.scales.x)return; var a=Math.max(0,Math.floor(c.scales.x.min)),b=Math.min(p.length-1,Math.ceil(c.scales.x.max)); var lo=Infinity,hi=-Infinity; for(var i=a;i<=b;i++){var v=p[i]; if(v>0){if(v<lo)lo=v; if(v>hi)hi=v;}} if(lo<hi&&isFinite(lo)){ c.options.scales.yPrice.min=lo*0.9; c.options.scales.yPrice.max=hi*1.12; c.update('none'); } }catch(e){} }
+// Click legend to toggle the two lines and each zone band individually.
+function toggleLegend(el){ var c=window._arcChart; if(!c)return; var k=el.getAttribute('data-leg');
+  if(k==='arc'||k==='btc'){ var idx=(k==='arc')?1:0; var vis=c.isDatasetVisible(idx); c.setDatasetVisibility(idx,!vis); el.classList.toggle('off',vis); c.update(); }
+  else if(k.indexOf('zone:')===0){ var z=k.slice(5); window._zoneVis=window._zoneVis||{}; var on=(window._zoneVis[z]!==false); window._zoneVis[z]=!on; el.classList.toggle('off',on); c.update('none'); } }
+// Fullscreen the chart card.
+function chartFullscreen(){ var w=document.querySelector('.chart-wrap'); if(!w)return; if(document.fullscreenElement){ document.exitFullscreen&&document.exitFullscreen(); } else { var rq=w.requestFullscreen||w.webkitRequestFullscreen||w.msRequestFullscreen; rq&&rq.call(w); } }
+document.addEventListener('fullscreenchange',function(){ var c=window._arcChart; if(c){ setTimeout(function(){ c.resize(); _autoFitPrice(); },150); } });
+function setChartRange(r){ var c=window._arcChart; if(!c)return; if(r==='reset')r=_arcRange; _arcRange=r; try{ if(c.resetZoom)c.resetZoom('none'); }catch(e){} if(r==='1y'){ c.options.scales.x.min=Math.max(0,_arcN-365); c.options.scales.x.max=_arcN-1; } else { c.options.scales.x.min=0; c.options.scales.x.max=_arcN-1; } c.update('none'); _autoFitPrice(); document.querySelectorAll('.tf-btn[data-r]').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-r')===r); }); }
 // ---- Pro/Free gates (soft, free-signup during launch; Noah wires real auth later) ----
 function applyGates(){/* Aufbauphase: alles offen, keine Gates. Spaeter wieder gaten: s.classList.toggle('locked', !planIsPaid) */document.querySelectorAll('.pro-gate').forEach(function(s){s.classList.remove('locked');});}
 function unlockPro(){try{localStorage.setItem('ac_unlocked','1');}catch(e){}applyGates();}
