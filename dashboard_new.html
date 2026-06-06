@@ -91,6 +91,7 @@
   .zrow .zd{font-size:13px;color:var(--mut);flex:1;}
   .zrow .zr{font-family:var(--mono);font-weight:700;font-size:17px;text-align:right;width:120px;flex:none;}
   .zrow .zhere{font-family:var(--mono);font-size:9px;letter-spacing:0.1em;color:var(--teal);background:rgba(0,212,170,0.12);border:1px solid rgba(0,212,170,0.3);padding:2px 7px;border-radius:999px;}
+  .zrow .zstance{font-family:var(--mono);font-size:9px;letter-spacing:0.06em;font-weight:700;padding:3px 9px;border-radius:999px;border:1px solid;flex:none;white-space:nowrap;}
   /* CHART */
   .chart-wrap{padding:20px;}
   #arcChart{width:100%!important;height:420px!important;}
@@ -286,7 +287,7 @@
   <section>
     <div class="sec-eyebrow">ENGINE 8 · REGIME TIMELINE</div>
     <div class="sec-h">Every regime change, dated</div>
-    <div class="sec-tells">When ARC crosses a zone boundary, that's the signal that matters. Here are the most recent shifts and what BTC did during each — <b>this is exactly what Pro will alert you to in real time.</b></div>
+    <div class="sec-tells">When ARC crosses a zone boundary, that's the signal that matters. Each row shows the ARC <b>stance</b> for that regime and what BTC did during it. Colour follows the stance, not the price move: <span style="color:#00DC78">green = accumulate the dip</span>, <span style="color:#FF3B3B">red = take risk off</span> — so a green-zone drop is opportunity and a red-zone pop is your exit. <b>This is exactly what Pro will alert you to in real time.</b></div>
     <div id="regimeFeed"><div class="loading">Loading regime timeline…</div></div>
     <div class="pro-teaser">
       <span class="pill" style="border-color:rgba(0,212,170,0.4);color:var(--teal);">PRO · COMING SOON</span>
@@ -401,14 +402,17 @@ async function loadRegimeFeed(){
     var ph=z.zone_history||[]; var el=document.getElementById('regimeFeed'); if(!el)return;
     if(!ph.length){ el.innerHTML='<div class="note">Regime timeline unavailable.</div>'; return; }
     var colr={'Deep Value':'#00DC78','Accumulation':'#00B4D8','Expansion':'#58A6FF','Risk Rising':'#FF9500','Euphoria':'#FF3B3B'};
+    // Stance = what ARC told you to do in that zone. Colour reflects the STANCE, not the price move:
+    // green = opportunity (accumulate the dip), red = risk-off (the gain is your exit). Resolves the "Euphoria gain looks bullish" contradiction.
+    var stance={'Deep Value':['ACCUMULATE','#00DC78'],'Accumulation':['ACCUMULATE','#00DC78'],'Expansion':['HOLD','#58A6FF'],'Risk Rising':['REDUCE','#FF9500'],'Euphoria':['TAKE PROFIT','#FF3B3B']};
     var html='';
     ph.slice(0,6).forEach(function(p){
       var c=colr[p.zone]||'#9aa6b8';
+      var st=stance[p.zone]||['',c];
       var period=p.from+(p.to?(' → '+p.to):' → now')+'  ·  '+p.weeks+'w';
       var ret=(p.return_pct!=null?((p.return_pct>0?'+':'')+Math.round(p.return_pct)+'%'):'');
-      var retc=(p.return_pct>0)?'#22c55e':'#ef4444';
       var now=p.to?'':'<span class="zhere">NOW</span>';
-      html+='<div class="zrow"><span class="dot" style="background:'+c+'"></span><span class="zn" style="color:'+c+'">'+p.zone+'</span><span class="zd">'+period+'</span>'+now+'<span class="zr" style="color:'+retc+'">'+ret+'</span></div>';
+      html+='<div class="zrow"><span class="dot" style="background:'+c+'"></span><span class="zn" style="color:'+c+'">'+p.zone+'</span><span class="zd">'+period+'</span>'+now+'<span class="zstance" style="color:'+st[1]+';border-color:'+st[1]+'55;background:'+st[1]+'14">'+st[0]+'</span><span class="zr" style="color:'+st[1]+'" title="BTC during this regime">'+ret+'</span></div>';
     });
     el.innerHTML=html;
   }catch(e){ var el=document.getElementById('regimeFeed'); if(el)el.innerHTML='<div class="note">Regime timeline unavailable.</div>'; }
