@@ -139,9 +139,13 @@
   .gate-badge{font-family:var(--mono);font-size:13px;color:var(--teal);border:1px solid rgba(0,212,170,0.4);background:rgba(0,212,170,0.10);padding:12px 22px;border-radius:12px;cursor:pointer;backdrop-filter:blur(4px);transition:.15s;}
   .gate-badge:hover{background:rgba(0,212,170,0.18);transform:translateY(-1px);}
   @media(max-width:820px){.hero-in{grid-template-columns:1fr;gap:26px;}.g4{grid-template-columns:1fr 1fr;}.g3{grid-template-columns:1fr;}}
+  html,body{overflow-x:hidden;max-width:100%;}
   @media(max-width:560px){
-    .g4,.g2{grid-template-columns:1fr;}
-    .chart-canvas-box{height:330px;}
+    .g4,.g2,.g3{grid-template-columns:1fr;}
+    .chart-canvas-box{height:300px;}
+    #dAction{font-size:30px;}
+    #dActionSub{max-width:100%;overflow-wrap:anywhere;}
+    #dBanner{padding:20px 16px;}
     .bigm .v{font-size:30px;}
     .zrow .zn{width:96px;}.zrow .zd{display:none;}
     .nav-right .nav-link{display:none;}
@@ -341,7 +345,7 @@
 
 <script>
 const API='https://alphacycle-production.up.railway.app';
-document.querySelectorAll('.bigm .v, .comp .val, .stat .v').forEach(function(e){e.classList.add('skeleton');});
+document.querySelectorAll('.bigm .v, .comp .val, .stat .v').forEach(function(e){var t=(e.textContent||'').trim(); if(t===''||t==='–') e.classList.add('skeleton');});
 function zoneInfo(s){ if(s<30)return{n:'DEEP VALUE',c:'#00DC78',k:'deep_value'}; if(s<40)return{n:'ACCUMULATION',c:'#00B4D8',k:'accumulation'}; if(s<60)return{n:'EXPANSION',c:'#58A6FF',k:'expansion'}; if(s<70)return{n:'RISK RISING',c:'#FF9500',k:'risk_rising'}; return{n:'EUPHORIA',c:'#FF3B3B',k:'euphoria'}; }
 const ZONE_MEANS={
   deep_value:["Maximum fear, maximum opportunity.","Bitcoin sits in Deep Value — historically the strongest zone to accumulate, when almost no one wants to."],
@@ -515,7 +519,7 @@ async function loadChart(){
       {label:'ARC Index',data:arcD,yAxisID:'yArc',borderColor:'#00D4AA',borderWidth:2,pointRadius:0,tension:0.2}
     ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
       plugins:{legend:{display:false},tooltip:{callbacks:{title:function(i){return i[0].label;}}},
-        zoom:{pan:{enabled:false},zoom:{wheel:{enabled:false},pinch:{enabled:true},mode:'xy'},limits:{x:{minRange:20},yArc:{min:0,max:100,minRange:100}}}},
+        zoom:{pan:{enabled:false},zoom:{wheel:{enabled:false},pinch:{enabled:true},mode:'xy'},limits:{x:{minRange:20},yArc:{min:0,max:100,minRange:5}}}},
       scales:{
         x:{min:0,max:_arcN-1,ticks:{color:'#69748a',maxTicksLimit:8,font:{family:'JetBrains Mono',size:10}},grid:{display:false}},
         yArc:{position:'left',min:0,max:100,ticks:{color:'#69748a',font:{family:'JetBrains Mono',size:10}},grid:{color:'rgba(255,255,255,0.05)'}},
@@ -526,12 +530,14 @@ async function loadChart(){
   }catch(e){}
 }
 // Per-axis wheel zoom (DexScreener/TradingView style): over chart=zoom time, over price axis=zoom price only, ARC axis locked.
-function _arcZoomAxis(c,key,pixel,factor){ var s=c.scales[key]; if(!s)return; var v=s.getValueForPixel(pixel); var mn=s.min,mx=s.max; var nmn=v-(v-mn)*factor, nmx=v+(mx-v)*factor; if(key==='x'){ nmn=Math.max(0,nmn); nmx=Math.min(_arcN-1,nmx); if(nmx-nmn<20)return; } if(key==='yPrice'&&nmn<0)nmn=0; c.options.scales[key].min=nmn; c.options.scales[key].max=nmx; c.update('none'); }
-function _arcWheel(e){ var c=window._arcChart; if(!c||!c.chartArea)return; e.preventDefault(); var r=c.canvas.getBoundingClientRect(); var px=e.clientX-r.left, py=e.clientY-r.top; var ca=c.chartArea; var f=e.deltaY<0?0.85:1.18; if(px<ca.left)return; var key=(px>ca.right)?'yPrice':'x'; _arcZoomAxis(c,key,(key==='x'?px:py),f); }
+function _arcZoomAxis(c,key,pixel,factor){ var s=c.scales[key]; if(!s)return; var v=s.getValueForPixel(pixel); var mn=s.min,mx=s.max; var nmn=v-(v-mn)*factor, nmx=v+(mx-v)*factor; if(key==='x'){ nmn=Math.max(0,nmn); nmx=Math.min(_arcN-1,nmx); if(nmx-nmn<20)return; } if(key==='yArc'){ nmn=Math.max(0,nmn); nmx=Math.min(100,nmx); if(nmx-nmn<5)return; } if(key==='yPrice'&&nmn<0)nmn=0; c.options.scales[key].min=nmn; c.options.scales[key].max=nmx; c.update('none'); }
+function _arcWheel(e){ var c=window._arcChart; if(!c||!c.chartArea)return; e.preventDefault(); var r=c.canvas.getBoundingClientRect(); var px=e.clientX-r.left, py=e.clientY-r.top; var ca=c.chartArea; var f=e.deltaY<0?0.85:1.18; var key=(px<ca.left)?'yArc':((px>ca.right)?'yPrice':'x'); _arcZoomAxis(c,key,(key==='x'?px:py),f); }
 // Custom drag-to-pan (mouse) — works in all directions; touch keeps pinch + page scroll.
 var _arcPan=null;
-function _arcPanDown(e){ if(e.pointerType&&e.pointerType!=='mouse')return; var c=window._arcChart; if(!c||!c.chartArea)return; var r=c.canvas.getBoundingClientRect(); var px=e.clientX-r.left,py=e.clientY-r.top; var ca=c.chartArea; if(px<ca.left-4||px>ca.right+4||py<ca.top-4||py>ca.bottom+4)return; _arcPan={sx:e.clientX,sy:e.clientY,xmin:c.scales.x.min,xmax:c.scales.x.max,pmin:c.scales.yPrice.min,pmax:c.scales.yPrice.max,L:ca.right-ca.left,H:ca.bottom-ca.top}; c.canvas.style.cursor='grabbing'; }
-function _arcPanMove(e){ if(!_arcPan)return; var c=window._arcChart; if(!c)return; var dx=e.clientX-_arcPan.sx,dy=e.clientY-_arcPan.sy; var xr=_arcPan.xmax-_arcPan.xmin,dI=dx*xr/_arcPan.L; var nxmin=_arcPan.xmin-dI,nxmax=_arcPan.xmax-dI; if(nxmin<0){nxmax-=nxmin;nxmin=0;} if(nxmax>_arcN-1){nxmin-=(nxmax-(_arcN-1));nxmax=_arcN-1;} var pr=_arcPan.pmax-_arcPan.pmin,dV=dy*pr/_arcPan.H; var nymin=_arcPan.pmin+dV,nymax=_arcPan.pmax+dV; if(nymin<0){nymax-=nymin;nymin=0;} c.options.scales.x.min=nxmin;c.options.scales.x.max=nxmax;c.options.scales.yPrice.min=nymin;c.options.scales.yPrice.max=nymax;c.update('none'); }
+function _arcPanDown(e){ if(e.pointerType&&e.pointerType!=='mouse')return; var c=window._arcChart; if(!c||!c.chartArea)return; var r=c.canvas.getBoundingClientRect(); var px=e.clientX-r.left,py=e.clientY-r.top; var ca=c.chartArea; if(px<-4||px>ca.right+4||py<ca.top-4||py>ca.bottom+4)return; var mode=(px<ca.left)?'yArc':'body'; _arcPan={sx:e.clientX,sy:e.clientY,mode:mode,xmin:c.scales.x.min,xmax:c.scales.x.max,pmin:c.scales.yPrice.min,pmax:c.scales.yPrice.max,amin:c.scales.yArc.min,amax:c.scales.yArc.max,L:ca.right-ca.left,H:ca.bottom-ca.top}; c.canvas.style.cursor='grabbing'; }
+function _arcPanMove(e){ if(!_arcPan)return; var c=window._arcChart; if(!c)return; var dx=e.clientX-_arcPan.sx,dy=e.clientY-_arcPan.sy;
+  if(_arcPan.mode==='yArc'){ var ar=_arcPan.amax-_arcPan.amin,dVa=dy*ar/_arcPan.H; var namin=_arcPan.amin+dVa,namax=_arcPan.amax+dVa; if(namin<0){namax-=namin;namin=0;} if(namax>100){namin-=(namax-100);namax=100;} c.options.scales.yArc.min=namin;c.options.scales.yArc.max=namax;c.update('none'); return; }
+  var xr=_arcPan.xmax-_arcPan.xmin,dI=dx*xr/_arcPan.L; var nxmin=_arcPan.xmin-dI,nxmax=_arcPan.xmax-dI; if(nxmin<0){nxmax-=nxmin;nxmin=0;} if(nxmax>_arcN-1){nxmin-=(nxmax-(_arcN-1));nxmax=_arcN-1;} var pr=_arcPan.pmax-_arcPan.pmin,dV=dy*pr/_arcPan.H; var nymin=_arcPan.pmin+dV,nymax=_arcPan.pmax+dV; if(nymin<0){nymax-=nymin;nymin=0;} c.options.scales.x.min=nxmin;c.options.scales.x.max=nxmax;c.options.scales.yPrice.min=nymin;c.options.scales.yPrice.max=nymax;c.update('none'); }
 function _arcPanUp(){ if(_arcPan){ _arcPan=null; var c=window._arcChart; if(c&&c.canvas)c.canvas.style.cursor='grab'; } }
 // Auto-fit the (log) price axis to whatever time window is visible — TradingView-style "auto" price scale.
 function _autoFitPrice(){ try{ var c=window._arcChart; var p=window._priceD; if(!c||!p||!c.scales.x)return; var a=Math.max(0,Math.floor(c.scales.x.min)),b=Math.min(p.length-1,Math.ceil(c.scales.x.max)); var lo=Infinity,hi=-Infinity; for(var i=a;i<=b;i++){var v=p[i]; if(v>0){if(v<lo)lo=v; if(v>hi)hi=v;}} if(lo<hi&&isFinite(lo)){ c.options.scales.yPrice.min=lo*0.9; c.options.scales.yPrice.max=hi*1.12; c.update('none'); } }catch(e){} }
@@ -542,7 +548,7 @@ function toggleLegend(el){ var c=window._arcChart; if(!c)return; var k=el.getAtt
 // Fullscreen the chart card.
 function chartFullscreen(){ var w=document.querySelector('.chart-wrap'); if(!w)return; if(document.fullscreenElement){ document.exitFullscreen&&document.exitFullscreen(); } else { var rq=w.requestFullscreen||w.webkitRequestFullscreen||w.msRequestFullscreen; rq&&rq.call(w); } }
 document.addEventListener('fullscreenchange',function(){ var c=window._arcChart; if(c){ setTimeout(function(){ c.resize(); _autoFitPrice(); },150); } });
-function setChartRange(r){ var c=window._arcChart; if(!c)return; if(r==='reset')r=_arcRange; _arcRange=r; try{ if(c.resetZoom)c.resetZoom('none'); }catch(e){} if(r==='1y'){ c.options.scales.x.min=Math.max(0,_arcN-365); c.options.scales.x.max=_arcN-1; } else { c.options.scales.x.min=0; c.options.scales.x.max=_arcN-1; } c.update('none'); _autoFitPrice(); document.querySelectorAll('.tf-btn[data-r]').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-r')===r); }); }
+function setChartRange(r){ var c=window._arcChart; if(!c)return; if(r==='reset')r=_arcRange; _arcRange=r; try{ if(c.resetZoom)c.resetZoom('none'); }catch(e){} if(r==='1y'){ c.options.scales.x.min=Math.max(0,_arcN-365); c.options.scales.x.max=_arcN-1; } else { c.options.scales.x.min=0; c.options.scales.x.max=_arcN-1; } c.options.scales.yArc.min=0; c.options.scales.yArc.max=100; c.update('none'); _autoFitPrice(); document.querySelectorAll('.tf-btn[data-r]').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-r')===r); }); }
 // ---- Pro/Free gates (soft, free-signup during launch; Noah wires real auth later) ----
 function applyGates(){/* Aufbauphase: alles offen, keine Gates. Spaeter wieder gaten: s.classList.toggle('locked', !planIsPaid) */document.querySelectorAll('.pro-gate').forEach(function(s){s.classList.remove('locked');});}
 function unlockPro(){try{localStorage.setItem('ac_unlocked','1');}catch(e){}applyGates();}
