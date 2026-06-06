@@ -605,5 +605,12 @@
   });
 })();
 </script>
+<script>
+(function(){var A='https://alphacycle-production.up.railway.app';
+function t(e){try{fetch(A+'/api/track?e='+encodeURIComponent(e),{cache:'no-store'}).catch(function(){});}catch(_){}}
+window._actrack=t; t('view_landing');
+document.addEventListener('click',function(ev){var a=ev.target.closest('a'); if(a&&/\/app(\.html)?/.test(a.getAttribute('href')||'')){ t(/pro/i.test(a.textContent||'')?'cta_pro':'cta_start'); }});
+})();
+</script>
 </body>
 </html>

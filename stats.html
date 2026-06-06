@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AlphaCycle — Funnel Stats</title>
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/png" href="assets/icon.png">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{--navy:#0a0e1a;--teal:#00D4AA;--ink:#e5e7eb;--mut:#9aa6b8;--bd:rgba(255,255,255,0.08);--mono:'JetBrains Mono',monospace;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Instrument Sans',sans-serif;background:var(--navy);color:var(--ink);min-height:100vh;padding:40px 20px;
+    background:radial-gradient(900px 600px at 15% -10%,rgba(0,212,170,0.08),transparent 60%),linear-gradient(180deg,#0a0e1a,#0c1322);}
+  .wrap{max-width:760px;margin:0 auto;}
+  h1{font-size:26px;font-weight:700;}
+  .sub{color:var(--mut);font-family:var(--mono);font-size:12px;margin:6px 0 28px;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .card{background:rgba(255,255,255,0.025);border:1px solid var(--bd);border-radius:14px;padding:20px;}
+  .k{font-family:var(--mono);font-size:11px;letter-spacing:0.12em;color:var(--mut);text-transform:uppercase;}
+  .v{font-size:38px;font-weight:700;margin-top:6px;}
+  .teal{color:var(--teal);}
+  .funnel{margin-top:24px;}
+  .frow{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border:1px solid var(--bd);border-radius:12px;margin-bottom:10px;background:rgba(255,255,255,0.02);}
+  .frow .lbl{font-size:15px;} .frow .num{font-family:var(--mono);font-weight:700;font-size:20px;}
+  .frow .rate{font-family:var(--mono);font-size:12px;color:var(--teal);margin-left:10px;}
+  .note{color:var(--mut);font-size:12px;margin-top:24px;line-height:1.6;}
+  button{font-family:var(--mono);font-size:12px;background:rgba(0,212,170,0.1);color:var(--teal);border:1px solid rgba(0,212,170,0.4);border-radius:8px;padding:8px 16px;cursor:pointer;margin-top:18px;}
+  @media(max-width:560px){.grid{grid-template-columns:1fr;}.v{font-size:32px;}}
+</style></head>
+<body><div class="wrap">
+  <h1>AlphaCycle · Funnel Stats</h1>
+  <div class="sub" id="status">loading…</div>
+  <div class="grid">
+    <div class="card"><div class="k">Landing views</div><div class="v" id="vl">–</div></div>
+    <div class="card"><div class="k">Dashboard opens</div><div class="v teal" id="va">–</div></div>
+    <div class="card"><div class="k">"Start Free" clicks</div><div class="v" id="cs">–</div></div>
+    <div class="card"><div class="k">"Go Pro" clicks (intent)</div><div class="v teal" id="cp">–</div></div>
+  </div>
+  <div class="funnel">
+    <div class="frow"><span class="lbl">Landing → opened dashboard</span><span><span class="num" id="r1">–</span><span class="rate" id="p1"></span></span></div>
+    <div class="frow"><span class="lbl">Landing → any CTA click</span><span><span class="num" id="r2">–</span><span class="rate" id="p2"></span></span></div>
+    <div class="frow"><span class="lbl">Landing → Pro intent</span><span><span class="num" id="r3">–</span><span class="rate" id="p3"></span></span></div>
+  </div>
+  <button onclick="load()">↻ Refresh</button>
+  <div class="note">Live funnel from on-site events. Pageviews/visitors/referrers (durable) live in Cloudflare Web Analytics — enable it in your Cloudflare dashboard. These counters reset if the backend redeploys; for durable history rely on Cloudflare + your signup table.</div>
+</div>
+<script>
+var A='https://alphacycle-production.up.railway.app';
+function load(){
+  document.getElementById('status').textContent='loading…';
+  fetch(A+'/api/stats',{cache:'no-store'}).then(function(r){return r.json();}).then(function(d){
+    document.getElementById('vl').textContent=d.landing_views;
+    document.getElementById('va').textContent=d.app_views;
+    document.getElementById('cs').textContent=d.start_free_clicks;
+    document.getElementById('cp').textContent=d.go_pro_clicks;
+    document.getElementById('r1').textContent=d.app_views;   document.getElementById('p1').textContent=d.landing_to_app_pct+'%';
+    document.getElementById('r2').textContent=(d.start_free_clicks+d.go_pro_clicks); document.getElementById('p2').textContent=d.landing_to_anyCTA_pct+'%';
+    document.getElementById('r3').textContent=d.go_pro_clicks; document.getElementById('p3').textContent=d.pro_intent_pct+'%';
+    document.getElementById('status').textContent='updated '+new Date().toLocaleTimeString();
+  }).catch(function(){document.getElementById('status').textContent='stats unavailable (backend updating?)';});
+}
+load();
+</script>
+</body></html>

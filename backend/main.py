@@ -380,9 +380,37 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=False,
-    allow_methods=["GET"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# --- lightweight funnel analytics (GET-based so it works under any CORS) ---
+import json as _ajson, os as _aos
+_METRICS_FILE = "/tmp/ac_metrics.json"
+_METRICS = {}
+try:
+    if _aos.path.exists(_METRICS_FILE):
+        _METRICS = _ajson.load(open(_METRICS_FILE))
+except Exception:
+    _METRICS = {}
+
+@app.get("/api/track")
+async def track_event(e: str = ""):
+    e = (e or "").strip()[:40]
+    if e:
+        _METRICS[e] = _METRICS.get(e, 0) + 1
+        try: _ajson.dump(_METRICS, open(_METRICS_FILE, "w"))
+        except Exception: pass
+    return {"ok": True}
+
+@app.get("/api/stats")
+async def get_stats():
+    m = dict(_METRICS)
+    def g(k): return m.get(k, 0)
+    def pct(a, b): return round(a / b * 100, 1) if b else 0.0
+    vl, va, cs, cp = g("view_landing"), g("view_app"), g("cta_start"), g("cta_pro")
+    return {"raw": m, "landing_views": vl, "app_views": va, "start_free_clicks": cs, "go_pro_clicks": cp,
+            "landing_to_app_pct": pct(va, vl), "landing_to_anyCTA_pct": pct(cs + cp, vl), "pro_intent_pct": pct(cp, vl)}
 
 
 # -- HELPERS --------------------------------------------------------------------

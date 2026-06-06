@@ -345,6 +345,8 @@
 
 <script>
 const API='https://alphacycle-production.up.railway.app';
+function _t(e){try{fetch(API+'/api/track?e='+encodeURIComponent(e),{cache:'no-store'}).catch(function(){});}catch(_){}}
+_t('view_app');
 document.querySelectorAll('.bigm .v, .comp .val, .stat .v').forEach(function(e){var t=(e.textContent||'').trim(); if(t===''||t==='–') e.classList.add('skeleton');});
 function zoneInfo(s){ if(s<30)return{n:'DEEP VALUE',c:'#00DC78',k:'deep_value'}; if(s<40)return{n:'ACCUMULATION',c:'#00B4D8',k:'accumulation'}; if(s<60)return{n:'EXPANSION',c:'#58A6FF',k:'expansion'}; if(s<70)return{n:'RISK RISING',c:'#FF9500',k:'risk_rising'}; return{n:'EUPHORIA',c:'#FF3B3B',k:'euphoria'}; }
 const ZONE_MEANS={
@@ -551,7 +553,7 @@ document.addEventListener('fullscreenchange',function(){ var c=window._arcChart;
 function setChartRange(r){ var c=window._arcChart; if(!c)return; if(r==='reset')r=_arcRange; _arcRange=r; try{ if(c.resetZoom)c.resetZoom('none'); }catch(e){} if(r==='1y'){ c.options.scales.x.min=Math.max(0,_arcN-365); c.options.scales.x.max=_arcN-1; } else { c.options.scales.x.min=0; c.options.scales.x.max=_arcN-1; } c.options.scales.yArc.min=0; c.options.scales.yArc.max=100; c.update('none'); _autoFitPrice(); document.querySelectorAll('.tf-btn[data-r]').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-r')===r); }); }
 // ---- Pro/Free gates (soft, free-signup during launch; Noah wires real auth later) ----
 function applyGates(){/* Aufbauphase: alles offen, keine Gates. Spaeter wieder gaten: s.classList.toggle('locked', !planIsPaid) */document.querySelectorAll('.pro-gate').forEach(function(s){s.classList.remove('locked');});}
-function unlockPro(){try{localStorage.setItem('ac_unlocked','1');}catch(e){}applyGates();}
+function unlockPro(){_t('cta_pro');try{localStorage.setItem('ac_unlocked','1');}catch(e){}applyGates();}
 // Make every engine section collapsible (Proof is already collapsed in markup). Chart resizes on expand.
 function initCollapse(){
   try{
