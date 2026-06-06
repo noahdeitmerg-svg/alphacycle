@@ -455,8 +455,9 @@ async def get_seasonality():
         le = sum(_comb(n, i) for i in range(0, k + 1)) / (2 ** n)
         ge = sum(_comb(n, i) for i in range(k, n + 1)) / (2 ** n)
         return min(1.0, 2 * min(le, ge))
-    P_GATE = 0.10   # only surface signals unlikely to be chance
+    P_GATE = 0.10   # secondary info: probability the bias is chance
     N_MIN = 10
+    WIN_GATE = 70   # show a month only if its directional consistency >= 70%
     months = []
     for m in range(1, 13):
         v = bym.get(m, [])
@@ -464,7 +465,7 @@ async def get_seasonality():
         up = sum(1 for x in v if x > 0)
         win = round(up / n * 100) if n else None
         p = round(_binom_p(up, n), 3) if n else None
-        high = bool(n >= N_MIN and p is not None and p < P_GATE)
+        high = bool(n >= N_MIN and win is not None and max(win, 100 - win) >= WIN_GATE)
         months.append({"month": m,
                        "avg": round(_st.mean(v) * 100, 1) if v else None,
                        "median": round(_st.median(v) * 100, 1) if v else None,
@@ -474,6 +475,27 @@ async def get_seasonality():
     month_signals = [{"month": m["month"], "dir": m["dir"], "median": m["median"],
                       "win": m["win"], "n": m["n"], "p": m["p"]}
                      for m in months if m["high_conf"]]
+    # weekly scan (same >=70% gate) — usually noise, but check
+    by_week_yr = _dd(list)
+    for r in rows:
+        iy, iw, _ = r["_dt"].isocalendar()
+        by_week_yr[(iy, iw)].append(r)
+    wk_ret = _dd(list)
+    for (iy, iw), seg in by_week_yr.items():
+        seg.sort(key=lambda r: r["_dt"])
+        if len(seg) >= 2:
+            wk_ret[iw].append(seg[-1]["price"] / seg[0]["price"] - 1)
+    week_signals = []
+    for iw in range(1, 54):
+        v = wk_ret.get(iw, [])
+        n = len(v)
+        if n < 8:
+            continue
+        up = sum(1 for x in v if x > 0)
+        win = round(up / n * 100)
+        if max(win, 100 - win) >= WIN_GATE:
+            week_signals.append({"week": iw, "dir": ("up" if up * 2 > n else "down"),
+                                 "win": win, "median": round(_st.median(v) * 100, 1), "n": n})
     years = sorted({y for (y, m) in mret})
     grid = [{"year": y, "vals": [(round(mret[(y, m)] * 100, 1) if (y, m) in mret else None) for m in range(1, 13)]}
             for y in years]
@@ -551,13 +573,109 @@ async def get_seasonality():
                             "dir": None, "high_conf": False})
 
     data = {"range": {"from": rows[0]["date"][:10], "to": rows[-1]["date"][:10], "days": len(rows)},
-            "months": months, "month_signals": month_signals, "grid": grid, "quarters": quarters,
+            "months": months, "month_signals": month_signals, "week_signals": week_signals,
+            "grid": grid, "quarters": quarters,
             "cycle": cycle, "cycles_by_year": cycles_by_year,
             "months_since_halving": months_since_halving,
             "last_halving": cur_halv.isoformat() if cur_halv else None,
             "forward": forward}
     _SEASON_CACHE["day"] = today.isoformat()
     _SEASON_CACHE["data"] = data
+    return data
+
+
+# --- cycle moving-average top/bottom signals (Pi Cycle, Mayer, 200WMA) ---
+_CYCLE_CACHE = {"day": None, "data": None}
+
+@app.get("/api/cycle-signals")
+async def get_cycle_signals(debug: int = 0):
+    from datetime import datetime as _dtm
+    today = _dtm.utcnow().date().isoformat()
+    if not debug and _CYCLE_CACHE["day"] == today and _CYCLE_CACHE["data"]:
+        return _CYCLE_CACHE["data"]
+    try:
+        from services.backtest_engine import _load_or_build_daily_cache
+        daily = await _load_or_build_daily_cache()
+    except Exception as ex:
+        raise HTTPException(503, f"price history unavailable: {ex}")
+    rows = [r for r in (daily or []) if r.get("price")]
+    rows.sort(key=lambda r: r["date"])
+    n = len(rows)
+    if n < 800:
+        raise HTTPException(503, "insufficient history")
+    price = [r["price"] for r in rows]
+    dates = [r["date"][:10] for r in rows]
+    pref = [0.0] * (n + 1)
+    for i in range(n):
+        pref[i + 1] = pref[i] + price[i]
+
+    def sma(w, i):
+        if i + 1 < w:
+            return None
+        return (pref[i + 1] - pref[i + 1 - w]) / w
+
+    # Pi Cycle Top: 111DMA crossing above 2 x 350DMA marks cycle tops
+    crosses, prev_below = [], None
+    for i in range(n):
+        m111, m350 = sma(111, i), sma(350, i)
+        if m111 is None or m350 is None:
+            continue
+        below = m111 < 2 * m350
+        if prev_below is True and below is False:
+            crosses.append({"date": dates[i], "price": round(price[i])})
+        prev_below = below
+    i = n - 1
+    m111, m350, m200, m1400 = sma(111, i), sma(350, i), sma(200, i), sma(1400, i)
+    ma350x2 = 2 * m350 if m350 else None
+    # gap_pct: how far the top trigger sits above the 111DMA (smaller = closer to a top; <=0 = triggered)
+    pi_gap = round((ma350x2 / m111 - 1) * 100, 1) if (m111 and ma350x2) else None
+    pi_now = bool(m111 and ma350x2 and m111 >= ma350x2)
+    mayer = round(price[i] / m200, 2) if m200 else None
+
+    data = {"asof": dates[-1], "price": round(price[-1]),
+            "pi": {"ma111": round(m111) if m111 else None,
+                   "ma350x2": round(ma350x2) if ma350x2 else None,
+                   "gap_pct": pi_gap, "triggered": pi_now, "crosses": crosses},
+            "mayer": {"value": mayer, "ma200": round(m200) if m200 else None},
+            "ma200w": {"value": round(m1400) if m1400 else None,
+                       "pct_above": round((price[i] / m1400 - 1) * 100, 1) if m1400 else None}}
+
+    if debug:
+        # one-off empirical sweep: which short/long MA pair's cross-ups land nearest real tops?
+        # known top dates across cycles
+        tops = ["2013-12-04", "2017-12-17", "2021-04-14", "2021-11-10", "2025-10-06"]
+        from datetime import date as _d
+        def _parse(s):
+            return _d(*[int(x) for x in s.split("-")])
+        top_d = [_parse(t) for t in tops]
+        sweep = []
+        for short in (100, 111, 125, 150):
+            for long, mult in ((350, 2), (365, 2), (300, 2)):
+                cr = []
+                pb = None
+                for i2 in range(n):
+                    a, b = sma(short, i2), sma(long, i2)
+                    if a is None or b is None:
+                        continue
+                    bl = a < mult * b
+                    if pb is True and bl is False:
+                        cr.append(_parse(dates[i2]))
+                    pb = bl
+                # nearest distance of each real top to any cross
+                if cr:
+                    dist = []
+                    for td in top_d:
+                        dd = min(abs((td - c).days) for c in cr)
+                        dist.append(dd)
+                    sweep.append({"pair": f"{short}/{long}x{mult}", "ncross": len(cr),
+                                  "avg_days_to_top": round(sum(dist) / len(dist), 1),
+                                  "max_days": max(dist)})
+        sweep.sort(key=lambda x: x["avg_days_to_top"])
+        data["sweep"] = sweep
+
+    if not debug:
+        _CYCLE_CACHE["day"] = today
+        _CYCLE_CACHE["data"] = data
     return data
 
 
