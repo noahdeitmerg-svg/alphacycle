@@ -530,7 +530,7 @@ async function loadCycleWave(asset){
       _seasChart=new Chart(document.getElementById('seasChart'),{type:'line',
         data:{labels:labels,datasets:[
           {label:'Price',data:price,borderColor:'#00D4AA',borderWidth:2,pointRadius:0,tension:0.15,spanGaps:false},
-          {label:'Forecast',data:o.forecast||[],borderColor:'#ef4444',borderWidth:2.4,borderDash:[6,4],pointRadius:0,tension:0.25,spanGaps:true},
+          {label:'Forecast',data:o.forecast||[],borderColor:'#ef4444',borderWidth:1.8,pointRadius:0,tension:0,spanGaps:true},
           {label:'Cycle',data:wHist,borderColor:'#d946ef',borderWidth:1.6,pointRadius:0,tension:0.3,spanGaps:true},
           {label:'Cycle (projected)',data:wProj,borderColor:'#d946ef',borderDash:[5,4],borderWidth:1.6,pointRadius:0,tension:0.3,spanGaps:true}
         ]},

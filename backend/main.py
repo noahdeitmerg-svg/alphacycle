@@ -876,6 +876,19 @@ async def get_cycle_wave(asset: str = "btc", lookback: int = 2190, projection: i
         raise HTTPException(503, f"price history unavailable: {ex}")
     rows = [{"date": r["date"][:10], "price": float(r["price"])} for r in (daily or []) if r.get("price")]
     rows.sort(key=lambda r: r["date"])
+    # day-of-week & month "tilts" from the FULL history (10y) for a realistic daily forecast path
+    _dow_sum, _dow_n, _mon_sum, _mon_n, _all = {}, {}, {}, {}, []
+    for _i in range(1, len(rows)):
+        _p0, _p1 = rows[_i - 1]["price"], rows[_i]["price"]
+        if _p0 > 0 and _p1 > 0:
+            _lr = math.log(_p1 / _p0); _all.append(_lr)
+            _d = _date.fromisoformat(rows[_i]["date"])
+            _wd, _mo = _d.weekday(), _d.month
+            _dow_sum[_wd] = _dow_sum.get(_wd, 0) + _lr; _dow_n[_wd] = _dow_n.get(_wd, 0) + 1
+            _mon_sum[_mo] = _mon_sum.get(_mo, 0) + _lr; _mon_n[_mo] = _mon_n.get(_mo, 0) + 1
+    _gmean = (sum(_all) / len(_all)) if _all else 0.0
+    dow_tilt = {k: _dow_sum[k] / _dow_n[k] - _gmean for k in _dow_sum}
+    mon_tilt = {k: _mon_sum[k] / _mon_n[k] - _gmean for k in _mon_sum}
     rows = rows[-lookback:]
     n = len(rows)
     if n < 300:
@@ -981,16 +994,23 @@ async def get_cycle_wave(asset: str = "btc", lookback: int = 2190, projection: i
     else:
         next_turn = {"type": "trough", "in_days": days_to_low,
                      "date": (last + _td(days=days_to_low)).isoformat()}
-    # red price forecast: the model's own output = trend + cycle, projected forward and anchored
-    # to today's price. No caps, no smoothing — purely what the data/model says (can go lower).
+    # red price forecast: a realistic DAILY path (one point per day), built purely from data —
+    # the cycle/trend drift (coupled to the magenta line) PLUS the real day-of-week and month
+    # tendencies from 10 years. No smoothing, no invented volatility: the zig-zag is the actual
+    # historical weekday/month behaviour, so it looks like price action, not a clean curve.
     def _cyc_log(i):
         return c1 * math.cos(w * i) + c2 * math.sin(w * i)
-    raw0 = math.exp(trend_at(i_now) + _cyc_log(i_now))
-    factor = (dprices[-1] / raw0) if raw0 else 1.0
     forecast = [None] * (n_disp + projection)
-    for k in range(0, projection + 1):
+    forecast[n_disp - 1] = round(dprices[-1], 2)
+    logp = math.log(dprices[-1])
+    prev_m = trend_at(i_now) + _cyc_log(i_now)
+    for k in range(1, projection + 1):
         gi = i_now + k
-        forecast[(n_disp - 1) + k] = round(math.exp(trend_at(gi) + _cyc_log(gi)) * factor, 2)
+        m = trend_at(gi) + _cyc_log(gi)
+        r_cyc = m - prev_m; prev_m = m
+        D = last + _td(days=k)
+        logp += r_cyc + dow_tilt.get(D.weekday(), 0.0) + mon_tilt.get(D.month, 0.0)
+        forecast[(n_disp - 1) + k] = round(math.exp(logp), 2)
 
     data = {"asset": asset.upper(), "cycle_len": int(L), "fit": round(r2, 2),
             "stability": round(stab, 2), "direction": direction, "next_turn": next_turn,
