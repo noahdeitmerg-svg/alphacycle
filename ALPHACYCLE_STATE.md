@@ -22,6 +22,7 @@ This proof now leads both the **landing page** and the **dashboard**.
 6. **Engine 4 · Cycle Clock** — phase, days since top, drawdown, percentile.
 7. **Engine 5 · Near-Term** — short-term oscillators (contextual).
 8. **Engine 6 · Market Context** — ETH/BTC rotation, seasonality, Fed liquidity.
+8b. **Engine 6B · Seasonality** — computed live from full daily history (back to 2013): **Halving Clock** (months-since-halving + avg-cycle path vs this cycle), **Monthly Edge** (avg return + win rate per calendar month — Oct +18.9% strongest, Jun/Aug/Sep weakest), **Next-90-days weekly seasonal path** (compounded week-of-year averages), and a **Year×Month heatmap**. Source: `/api/seasonality` (day-cached). Framed as context, not a trade signal.
 9. **Engine 7 · 10-Year Chart** — ARC + BTC since 2017, zone bands, TOP/BOTTOM/NOW markers on the ARC line. **Interactions:** scroll chart = zoom time, scroll price axis = zoom price only (DexScreener/TV style, custom handler), drag = pan all directions, click legend to toggle lines + each zone, fullscreen button, 1Y/10Y/reset.
 10. **Engine 8 · Regime Timeline** — dated log of every zone change with the stance it implied (ACCUMULATE/HOLD/REDUCE/TAKE PROFIT). No misleading return number — it's the live signal log.
 
@@ -29,7 +30,7 @@ This proof now leads both the **landing page** and the **dashboard**.
 Hero → **proof stat bar (71× / 5.0× / −36%)** → **The Proof section** with equity chart → Problem/Solution → Features → How → Pricing (Free + Pro $29) → FAQ (incl. "beats HODL?") → CTA. Legal: /privacy /terms /disclaimer (Brazil/LGPD).
 
 ## Backend
-FastAPI on Railway. Endpoints: `/api/arc-summary`, `/api/backtest`, `/api/historical-returns`, `/api/zone-history`, `/api/checkout`, `/api/create-portal-session`, `/api/stripe-webhook`. Regime-change **alert engine** built (`backend/alerts.py`) — posts to Telegram on zone flips; hooked into the refresh loop; email hook stubbed.
+FastAPI on Railway. Endpoints: `/api/arc-summary`, `/api/backtest`, `/api/historical-returns`, `/api/zone-history`, `/api/seasonality`, `/api/track` + `/api/stats` (funnel analytics → see **/stats.html**), `/api/checkout`, `/api/create-portal-session`, `/api/stripe-webhook`. Regime-change **alert engine** built (`backend/alerts.py`) — posts to Telegram on zone flips; hooked into the refresh loop; email hook stubbed.
 
 ## Noah to do (to take money + fire alerts) — see GO_LIVE_NOAH.md
 1. **Supabase** tables (SQL in GO_LIVE_NOAH.md) — fixes signup capture.
