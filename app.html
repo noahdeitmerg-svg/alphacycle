@@ -298,6 +298,41 @@
     </div>
   </section>
 
+  <!-- SEASONALITY LAB -->
+  <section id="seaSec">
+    <div class="sec-eyebrow">ENGINE 6B · SEASONALITY</div>
+    <div class="sec-h">What 9 years of daily data say about timing</div>
+    <div class="sec-tells">Calendar and halving-cycle patterns from every BTC day since 2017. Context, not a trade signal — but the edges are real.</div>
+
+    <div class="card" style="margin-bottom:14px;">
+      <div class="k">HALVING CLOCK</div>
+      <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:baseline;margin:6px 0 10px;">
+        <div><span id="seaHmo" style="font-size:32px;font-weight:700;color:var(--teal)">–</span><span style="color:var(--mut);font-size:13px"> months since halving</span></div>
+        <div id="seaHphase" style="color:var(--mut);font-size:13px"></div>
+      </div>
+      <div class="chart-canvas-box" style="height:240px"><canvas id="seaCycleChart"></canvas></div>
+      <div class="note" id="seaHnote" style="margin-top:8px"></div>
+    </div>
+
+    <div class="grid g2">
+      <div class="card">
+        <div class="k">MONTHLY EDGE · avg return by month</div>
+        <div id="seaMonths" style="margin-top:10px"></div>
+        <div class="note" id="seaQnote" style="margin-top:8px"></div>
+      </div>
+      <div class="card">
+        <div class="k">NEXT 90 DAYS · seasonal path (weekly)</div>
+        <div id="seaFwd" style="margin-top:10px"></div>
+        <div class="note" id="seaFnote" style="margin-top:8px"></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px;">
+      <div class="k">YEAR × MONTH HEATMAP · monthly return %</div>
+      <div id="seaGrid" style="margin-top:10px;overflow-x:auto"></div>
+    </div>
+  </section>
+
   <!-- HISTORY CHART -->
   <section>
     <div class="sec-eyebrow">ENGINE 7 · 10-YEAR HISTORY</div>
@@ -423,6 +458,83 @@ async function loadAll(){
   loadZones(z.k);
   loadChart();
   loadRegimeFeed();
+  loadSeasonality();
+}
+
+var _seaCycleChart=null;
+async function loadSeasonality(){
+  try{
+    var s=await (await fetch(API+'/api/seasonality',{cache:'no-store'})).json();
+    var names=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    // halving clock
+    setText('seaHmo', s.months_since_halving!=null? s.months_since_halving : '–');
+    var mo=s.months_since_halving||0;
+    var phase = mo<6?'Early cycle — historically the accumulation window':
+                mo<14?'Mid cycle — the historical parabola window (months 8–13)':
+                mo<20?'Late cycle — historically the distribution window':'Deep late cycle — past the typical cycle top';
+    setText('seaHphase', phase);
+    var cyc=s.cycle||[]; var labs=cyc.map(function(c){return 'M'+c.mo;});
+    var avg=cyc.map(function(c){return c.avg;}); var cur=cyc.map(function(c){return c.current;});
+    if(window.Chart){
+      if(_seaCycleChart){ _seaCycleChart.destroy(); }
+      _seaCycleChart=new Chart(document.getElementById('seaCycleChart'),{type:'line',
+        data:{labels:labs,datasets:[
+          {label:'Avg of past cycles',data:avg,borderColor:'rgba(255,255,255,0.40)',borderDash:[5,4],pointRadius:0,borderWidth:2,tension:0.3,spanGaps:true},
+          {label:'This cycle',data:cur,borderColor:'#00D4AA',backgroundColor:'rgba(0,212,170,0.08)',pointRadius:0,borderWidth:2.5,fill:true,tension:0.3,spanGaps:true}
+        ]},
+        options:{animation:false,maintainAspectRatio:false,responsive:true,interaction:{mode:'index',intersect:false},
+          plugins:{legend:{display:true,labels:{color:'#9aa6b8',boxWidth:12,font:{size:11}}},zoom:{zoom:{wheel:{enabled:false},pinch:{enabled:false}},pan:{enabled:false}},
+            tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+(c.parsed.y!=null?c.parsed.y.toFixed(2)+'x':'n/a');}}}},
+          scales:{x:{ticks:{color:'#6b7280',maxRotation:0,autoSkip:true,font:{size:10}},grid:{display:false}},
+            y:{ticks:{color:'#6b7280',font:{size:10},callback:function(v){return v+'x';}},grid:{color:'rgba(255,255,255,0.05)'}}}}});
+    }
+    setText('seaHnote','Indexed to halving day = 1.0x. Dashed line averages the 2016/2020/2024 cycles; teal is the current cycle. Past performance is not future results.');
+    // monthly bars
+    var maxabs=1; (s.months||[]).forEach(function(m){ if(m.avg!=null) maxabs=Math.max(maxabs,Math.abs(m.avg)); });
+    var mhtml=''; (s.months||[]).forEach(function(m){
+      var a=(m.avg!=null?m.avg:0); var pos=a>=0; var w=Math.min(50,Math.abs(a)/maxabs*50); var col=pos?'#22c55e':'#ef4444';
+      mhtml+='<div style="display:flex;align-items:center;gap:8px;margin:3px 0;font-size:12px;">'+
+        '<span style="width:30px;color:var(--mut)">'+names[m.month-1]+'</span>'+
+        '<div style="flex:1;height:16px;background:rgba(255,255,255,0.04);border-radius:4px;position:relative;">'+
+        '<i style="position:absolute;'+(pos?'left:50%':('right:50%'))+';top:0;height:100%;width:'+w+'%;background:'+col+';border-radius:4px;"></i>'+
+        '<span style="position:absolute;left:50%;top:0;width:1px;height:100%;background:rgba(255,255,255,0.18)"></span></div>'+
+        '<span style="width:50px;text-align:right;color:'+col+';font-family:var(--mono)">'+(pos?'+':'')+a+'%</span>'+
+        '<span style="width:34px;text-align:right;color:var(--mut);font-size:10px">'+(m.win!=null?m.win+'%':'')+'</span></div>';
+    });
+    document.getElementById('seaMonths').innerHTML=mhtml;
+    var qs=(s.quarters||[]).map(function(q){return 'Q'+q.q+' '+(q.avg>0?'+':'')+q.avg+'%';}).join(' · ');
+    setText('seaQnote','Left number = avg monthly return, right = win rate ('+(s.range?s.range.from.slice(0,4):'')+'–'+(s.range?s.range.to.slice(0,4):'')+'). Quarters: '+qs+'.');
+    // forward outlook
+    var fw=s.forward||[]; var fmax=1; fw.forEach(function(f){fmax=Math.max(fmax,Math.abs(f.cum));});
+    var fhtml='<div style="display:flex;flex-direction:column;gap:2px;">';
+    fw.forEach(function(f,i){
+      var pos=f.cum>=0; var col=pos?'#22c55e':'#ef4444'; var w=Math.min(50,Math.abs(f.cum)/fmax*50);
+      var d=new Date(f.week_of); var lbl=(d.getMonth()+1)+'/'+d.getDate(); var mark=(i===3?' ·30d':(i===12?' ·90d':''));
+      fhtml+='<div style="display:flex;align-items:center;gap:8px;font-size:11px;">'+
+        '<span style="width:64px;color:var(--mut)">'+lbl+mark+'</span>'+
+        '<div style="flex:1;height:14px;background:rgba(255,255,255,0.04);border-radius:3px;position:relative;">'+
+        '<i style="position:absolute;'+(pos?'left:50%':('right:50%'))+';top:0;height:100%;width:'+w+'%;background:'+col+';border-radius:3px;opacity:0.9"></i>'+
+        '<span style="position:absolute;left:50%;top:0;width:1px;height:100%;background:rgba(255,255,255,0.18)"></span></div>'+
+        '<span style="width:48px;text-align:right;color:'+col+';font-family:var(--mono)">'+(pos?'+':'')+f.cum+'%</span></div>';
+    });
+    fhtml+='</div>'; document.getElementById('seaFwd').innerHTML=fhtml;
+    var d30=(fw[3]?fw[3].cum:null), d90=(fw[12]?fw[12].cum:null);
+    setText('seaFnote','Compounded weekly seasonal average across all years. ~30d '+(d30>0?'+':'')+d30+'% · ~90d '+(d90>0?'+':'')+d90+'%. Seasonal tendency only, not a forecast.');
+    // year x month heatmap
+    var gh='<table style="border-collapse:collapse;font-size:10px;width:100%;min-width:380px;"><tr><td style="color:var(--mut);padding:2px 4px"></td>';
+    for(var mi=0;mi<12;mi++) gh+='<td style="color:var(--mut);text-align:center;padding:2px 0">'+names[mi].slice(0,1)+'</td>';
+    gh+='</tr>';
+    (s.grid||[]).forEach(function(row){
+      gh+='<tr><td style="color:var(--mut);padding:2px 4px">'+row.year+'</td>';
+      row.vals.forEach(function(v){
+        var bg='rgba(255,255,255,0.03)'; var tc='#6b7280';
+        if(v!=null){ var cap=Math.max(-40,Math.min(60,v)); var al=Math.min(0.85,Math.abs(cap)/50+0.12); bg=(v>=0?'rgba(34,197,94,':'rgba(239,68,68,')+al+')'; tc='#e5e7eb'; }
+        gh+='<td style="text-align:center;padding:3px 1px;background:'+bg+';color:'+tc+';border:1px solid rgba(10,14,26,0.6)">'+(v!=null?Math.round(v):'')+'</td>';
+      });
+      gh+='</tr>';
+    });
+    gh+='</table>'; document.getElementById('seaGrid').innerHTML=gh;
+  }catch(e){ var el=document.getElementById('seaSec'); if(el) el.style.opacity='0.55'; }
 }
 
 async function loadZones(currentKey){
