@@ -920,35 +920,55 @@ async def get_cycle_wave(asset: str = "btc", lookback: int = 2190, projection: i
         amp2 = math.hypot(sum(resid[i] * C[i] for i in range(half, n)) / ((n - half) / 2 or 1),
                           sum(resid[i] * S[i] for i in range(half, n)) / ((n - half) / 2 or 1))
         stab = min(amp1, amp2) / (max(amp1, amp2) or 1e-9)
-        score = r2 * (0.5 + 0.5 * stab)  # reward fit AND consistency across halves
+        score = stab * (0.4 + 0.6 * max(r2, 0))  # Seasonax-style: favour STABILITY (Bartels-like)
         if best is None or score > best[0]:
-            best = (score, L, c1, c2, r2)
-    _score, L, c1, c2, r2 = best
+            best = (score, L, c1, c2, r2, stab)
+    _score, L, c1, c2, r2, stab = best
     w = 2 * math.pi / L
-    wave = [round(math.exp(trend_at(i) + c1 * math.cos(w * i) + c2 * math.sin(w * i)), 2)
-            for i in range(n + projection)]
-    hist_dates = [r["date"] for r in rows]
+    phi = math.atan2(c2, c1)  # resid ~ R*cos(w*i - phi); peak at w*i = phi
+
+    # --- Seasonax-style display: a REGULAR constant-amplitude sine, price laid over it ---
+    n_disp = min(1095, n)               # ~3y visible window (clean on a linear axis)
+    off = n - n_disp                    # display start index in the detection frame
+    disp = rows[-n_disp:]
+    dprices = [r["price"] for r in disp]
+    pmin, pmax = min(dprices), max(dprices)
+    center = (pmax + pmin) / 2.0
+    amp = (pmax - pmin) / 2.0
+
+    def cyc(i_global):                  # constant-amplitude regular cycle (aligned to price highs/lows)
+        return round(center + amp * math.cos(w * i_global - phi), 2)
+
+    hist_dates = [r["date"] for r in disp]
     last = _date.fromisoformat(hist_dates[-1])
     proj_dates = [(last + _td(days=k)).isoformat() for k in range(1, projection + 1)]
     all_dates = hist_dates + proj_dates
+    wave = [cyc(off + j) for j in range(n_disp + projection)]
+    price = [round(p, 2) for p in dprices] + [None] * projection
 
-    def deriv(i):
-        return -c1 * w * math.sin(w * i) + c2 * w * math.cos(w * i)
+    # phase read at the latest bar
     i_now = n - 1
-    direction = "rising" if deriv(i_now) > 0 else "falling"
-    next_turn, prev = None, deriv(i_now)
+    cos_now = math.cos(w * i_now - phi)
+    deriv_now = math.sin(w * i_now - phi)   # d/di cos(wi-phi) = -w*sin(wi-phi); rising if sin<0
+    if cos_now > 0.85:
+        direction = "topping"
+    elif cos_now < -0.85:
+        direction = "bottoming"
+    else:
+        direction = "rising" if deriv_now < 0 else "falling"
+    next_turn, prev = None, deriv_now
     for i in range(n, n + projection):
-        dv = deriv(i)
-        if (dv > 0) != (prev > 0):
-            next_turn = {"date": all_dates[i], "type": ("peak" if prev > 0 else "trough"),
-                         "in_days": int(i - i_now)}
+        dv = math.sin(w * i - phi)
+        if (dv >= 0) != (prev >= 0):
+            # sign flip of sin(wi-phi): -> crossing a peak (cos goes +) or trough
+            ttype = "peak" if math.cos(w * i - phi) > 0 else "trough"
+            next_turn = {"date": (last + _td(days=int(i - i_now))).isoformat(),
+                         "type": ttype, "in_days": int(i - i_now)}
             break
         prev = dv
     data = {"asset": asset.upper(), "cycle_len": int(L), "fit": round(r2, 2),
-            "direction": direction, "next_turn": next_turn, "split": n,
-            "dates": all_dates,
-            "price": [round(r["price"], 2) for r in rows] + [None] * projection,
-            "wave": wave}
+            "stability": round(stab, 2), "direction": direction, "next_turn": next_turn,
+            "split": n_disp, "dates": all_dates, "price": price, "wave": wave}
     _WAVE_CACHE["key"] = ck
     _WAVE_CACHE["data"] = data
     return data
