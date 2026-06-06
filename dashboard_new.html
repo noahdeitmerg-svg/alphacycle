@@ -515,14 +515,15 @@ async function loadCycleWave(asset){
     var bb=document.getElementById('cwBtc'), eb=document.getElementById('cwEth');
     if(bb) bb.classList.toggle('on',asset==='btc'); if(eb) eb.classList.toggle('on',asset==='eth');
     var o=await (await fetch(API+'/api/cycle-wave?asset='+asset,{cache:'no-store'})).json();
-    var up=(o.direction==='rising');
-    setText('cwDir', up?'Rising':'Falling'); document.getElementById('cwDir').style.color=up?'#22c55e':'#ef4444';
-    setText('cwDirS','in the '+(up?'up-swing':'down-swing')+' of the cycle');
+    var d=o.direction; var grn=(d==='rising'||d==='bottoming'); var lab={rising:'Rising',falling:'Falling',topping:'Topping',bottoming:'Bottoming'}[d]||d;
+    var sub={rising:'in the up-swing of the cycle',falling:'in the down-swing of the cycle',topping:'near a cycle peak',bottoming:'near a cycle trough'}[d]||'';
+    setText('cwDir', lab); document.getElementById('cwDir').style.color=grn?'#22c55e':'#ef4444';
+    setText('cwDirS', sub);
     if(o.next_turn){ var dt=new Date(o.next_turn.date); var ds=dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
       setText('cwTurn',(o.next_turn.type==='peak'?'Peak ~':'Trough ~')+ds); document.getElementById('cwTurn').style.color=(o.next_turn.type==='peak'?'#ef4444':'#22c55e');
       setText('cwTurnS','in ~'+o.next_turn.in_days+' days'); }
     else { setText('cwTurn','—'); document.getElementById('cwTurn').style.color='#fff'; setText('cwTurnS','no turn within the projection window'); }
-    setText('cwLen','~'+o.cycle_len+'d'); var fl=o.fit>=0.4?'strong':(o.fit>=0.2?'moderate':'weak'); setText('cwLenS','fit strength '+o.fit+' ('+fl+')');
+    setText('cwLen','~'+o.cycle_len+'d'); var sv=(o.stability!=null?o.stability:o.fit); var sl=sv>=0.7?'high':(sv>=0.45?'moderate':'low'); setText('cwLenS','stability '+sv+' ('+sl+')');
     var labels=o.dates, price=o.price, wave=o.wave, split=o.split;
     var wHist=wave.map(function(v,i){return i<split?v:null;});
     var wProj=wave.map(function(v,i){return i>=split-1?v:null;});
@@ -538,10 +539,10 @@ async function loadCycleWave(asset){
           plugins:{legend:{display:false},zoom:{zoom:{wheel:{enabled:false},pinch:{enabled:false}},pan:{enabled:false}},
             tooltip:{filter:function(it){return it.datasetIndex===0;},callbacks:{title:function(it){return labels[it[0].dataIndex];},label:function(c){return (c.parsed.y!=null?'$'+Number(c.parsed.y).toLocaleString('en-US'):'');}}}},
           scales:{x:{ticks:{color:'#6b7280',maxTicksLimit:9,maxRotation:0,font:{size:10},callback:function(v,i){var d=labels[i]; return d?d.slice(0,7):'';}},grid:{display:false}},
-            y:{type:'logarithmic',ticks:{color:'#6b7280',font:{size:10},callback:function(v){return '$'+(v>=1000?Math.round(v/1000)+'k':v);}},grid:{color:'rgba(255,255,255,0.05)'}}}}});
+            y:{ticks:{color:'#6b7280',font:{size:10},callback:function(v){return '$'+(v>=1000?Math.round(v/1000)+'k':v);}},grid:{color:'rgba(255,255,255,0.05)'}}}}});
     }
-    var proj=labels.length-split; var yrs=Math.max(1,Math.round(split/365));
-    setText('seasNote','Best-fit '+o.cycle_len+'-day cycle (≈'+(o.cycle_len/30.4).toFixed(1)+' months) detected over '+yrs+' years of '+o.asset+', projected '+proj+' days forward (dashed). The price is band-pass detrended so the wave tracks the up/down swings — peaks near highs, troughs near lows. A detected rhythm for timing, not a price target.');
+    var proj=labels.length-split;
+    setText('seasNote','The dominant '+o.cycle_len+'-day cycle (≈'+(o.cycle_len/30.4).toFixed(1)+' months, stability '+(o.stability!=null?o.stability:o.fit)+'/1) drawn as a regular wave — same shape repeating — with the real '+o.asset+' price laid over it, projected '+proj+' days forward (dashed). It shows the cycle’s timing (when it tends to peak/bottom), not a price level. A detected rhythm, not a forecast.');
   }catch(e){ var el=document.getElementById('seasSec'); if(el) el.style.opacity='0.55'; }
 }
 
