@@ -276,7 +276,7 @@
         <button class="tf-btn on" data-r="all" onclick="setChartRange('all')">10Y</button>
         <button class="tf-btn" onclick="setChartRange('reset')" title="Reset zoom">&#8635;</button>
         <button class="tf-btn" onclick="chartFullscreen()" title="Fullscreen">&#9974;</button>
-        <span class="tf-hint">scroll to zoom · drag to pan · tap legend to toggle</span>
+        <span class="tf-hint">scroll chart = zoom time · scroll price axis = zoom price · drag to pan · tap legend</span>
       </div>
       <div class="chart-canvas-box"><canvas id="arcChart"></canvas></div>
       <div class="chart-legend">
@@ -482,7 +482,7 @@ async function loadChart(){
       {label:'ARC Index',data:arcD,yAxisID:'yArc',borderColor:'#00D4AA',borderWidth:2,pointRadius:0,tension:0.2}
     ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
       plugins:{legend:{display:false},tooltip:{callbacks:{title:function(i){return i[0].label;}}},
-        zoom:{pan:{enabled:true,mode:'xy'},zoom:{wheel:{enabled:true,speed:0.08},pinch:{enabled:true},mode:'xy'},limits:{x:{minRange:20},yArc:{min:0,max:100,minRange:100}}}},
+        zoom:{pan:{enabled:true,mode:'xy',overScaleMode:'xy'},zoom:{wheel:{enabled:true,speed:0.08},pinch:{enabled:true},mode:'x',overScaleMode:'xy'},limits:{x:{minRange:20},yArc:{min:0,max:100,minRange:100}}}},
       scales:{
         x:{min:0,max:_arcN-1,ticks:{color:'#69748a',maxTicksLimit:8,font:{family:'JetBrains Mono',size:10}},grid:{display:false}},
         yArc:{position:'left',min:0,max:100,ticks:{color:'#69748a',font:{family:'JetBrains Mono',size:10}},grid:{color:'rgba(255,255,255,0.05)'}},
