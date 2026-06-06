@@ -206,18 +206,38 @@
   <!-- POSITIONING -->
   <section class="pro-gate">
     <div class="sec-eyebrow">ENGINE 2 · DECISION</div>
-    <div class="sec-h">What this regime means for positioning</div>
-    <div class="sec-tells">Not advice — a <b>historically-framed</b> framework. This is how similar regimes behaved in the past, translated into a posture.</div>
+    <div class="sec-h">Your move, by the rule</div>
+    <div class="sec-tells">The backtested rule in one line: <b>buy extreme fear, sell extreme greed, hold the middle.</b> Here's exactly what it says today. Educational, not financial advice.</div>
     <div class="gate-cta"><div class="gate-badge" onclick="unlockPro()">&#128274; Sign up free to unlock</div></div>
     <div class="gate-content">
-    <div class="grid g4">
-      <div class="card bigm"><div class="k">SUGGESTED POSTURE</div><div class="v" id="pPos" style="font-size:26px;">–</div><div class="s" id="pPosNote">based on the current zone</div></div>
-      <div class="card bigm"><div class="k">SPOT ALLOCATION</div><div class="v" id="pAlloc">–</div><div class="s">typical range for this regime</div></div>
-      <div class="card bigm"><div class="k">HISTORICAL WIN RATE</div><div class="v" id="pRet">–</div><div class="s" id="pRetSub">12M positive, this zone since 2017</div></div>
-      <div class="card bigm"><div class="k">CONFIDENCE</div><div class="v" id="pConf" style="font-size:26px;">–</div><div class="s">data completeness &amp; alignment</div></div>
+    <div id="dBanner" class="card" style="text-align:center;padding:26px;border-width:2px;">
+      <div class="k" style="font-size:11px;">YOUR MOVE RIGHT NOW · ARC <span id="dArc">–</span></div>
+      <div class="v" id="dAction" style="font-size:38px;margin-top:8px;">–</div>
+      <div class="s" id="dActionSub" style="font-size:15px;margin-top:8px;max-width:580px;margin-left:auto;margin-right:auto;line-height:1.5;">–</div>
     </div>
-    <div id="pBottom" class="card" style="display:none;margin-top:14px;padding:16px 20px;border-color:rgba(0,180,216,0.3);background:rgba(0,180,216,0.06);"><span class="pill" style="border-color:rgba(0,180,216,0.4);color:#00B4D8;">BOTTOM FORMATION SIGNAL</span> <span id="pBottomNote" class="note" style="margin-left:8px;"></span></div>
+    <div class="grid g3" style="margin-top:14px;">
+      <div class="card bigm" id="dr-buy"><div class="k">ARC ≤ 25 · DEEP VALUE</div><div class="v" style="font-size:21px;color:#00DC78;">BUY · ALL-IN</div><div class="s">deploy 100% — the cycle's best entry</div></div>
+      <div class="card bigm" id="dr-hold"><div class="k">ARC 25–75 · MID-CYCLE</div><div class="v" style="font-size:21px;color:#58A6FF;">HOLD</div><div class="s">stay invested, don't churn the middle</div></div>
+      <div class="card bigm" id="dr-sell"><div class="k">ARC ≥ 75 · EUPHORIA</div><div class="v" style="font-size:21px;color:#FF3B3B;">SELL · TAKE PROFIT</div><div class="s">exit to cash, wait for the next bottom</div></div>
     </div>
+    <div class="card" style="margin-top:14px;text-align:center;padding:16px 20px;border-color:rgba(0,212,170,0.3);background:rgba(0,212,170,0.05);">
+      <span style="font-size:14px;color:var(--ink);">Backtested since 2017: this exact rule turned <b style="color:var(--teal)">$10,000 → $584,000</b> (58×) vs <b>$142,000</b> HODL — at <b style="color:var(--teal)">−36% max drawdown</b> instead of −84%. <span class="note">Past performance ≠ future results.</span></span>
+    </div>
+    </div>
+  </section>
+
+  <!-- BACKTEST PROOF -->
+  <section>
+    <div class="sec-eyebrow">THE PROOF · ARC vs HODL</div>
+    <div class="sec-h">$10,000 since 2017 — the rule vs just holding</div>
+    <div class="sec-tells">If you'd followed one rule — <b>all-in at ARC 25, all-out at ARC 75, hold the middle</b> — versus buying and holding Bitcoin the whole way. Same asset, same start. Independently backtested on daily data since August 2017.</div>
+    <div class="grid g3" style="margin-bottom:16px;">
+      <div class="card bigm"><div class="k">ARC RULE</div><div class="v" style="color:var(--teal);">$584k</div><div class="s">58× · max drawdown −36%</div></div>
+      <div class="card bigm"><div class="k">HODL</div><div class="v" style="color:#eab308;">$142k</div><div class="s">14× · max drawdown −84%</div></div>
+      <div class="card bigm"><div class="k">EDGE</div><div class="v" style="color:var(--teal);">4.1×</div><div class="s">more, at less than half the risk</div></div>
+    </div>
+    <div class="card" style="padding:14px;"><img src="assets/backtest.png" alt="ARC strategy vs HODL equity curve" style="width:100%;border-radius:8px;display:block;"></div>
+    <div class="note" style="margin-top:8px;">6 trades in 9 years. The strategy sits in cash through every bear market (the flat steps) and re-enters at the next bottom. Past performance does not guarantee future results — this is educational, not financial advice.</div>
   </section>
 
   <!-- HISTORICAL RETURNS -->
@@ -352,13 +372,17 @@ async function loadAll(){
   countUp(document.getElementById('cFgV'),Math.round(co.fear_greed)); setBar('cFgB',co.fear_greed,zoneInfo(co.fear_greed).c); document.getElementById('cFgV').style.color=zoneInfo(co.fear_greed).c;
   countUp(document.getElementById('cLqV'),Math.round(co.liquidity)); setBar('cLqB',co.liquidity,zoneInfo(co.liquidity).c); document.getElementById('cLqV').style.color=zoneInfo(co.liquidity).c;
 
-  // positioning
-  setText('pPos', a.position||a.decision||'–'); document.getElementById('pPos').style.color=z.c;
-  setText('pAlloc', a.allocation||'–');
-  var er=a.expected_range||{}; var wr=(er.sublabel||'').match(/(\d+)%\s*win/i); setText('pRet', wr?wr[1]+'%':'–');
-  document.getElementById('pRet').style.color = wr?'#22c55e':'#fff';
-  setText('pConf', a.confidence_label||'–');
-  if(a.bottom_formation){ var pb=document.getElementById('pBottom'); pb.style.display='block'; setText('pBottomNote', a.bottom_formation_note||''); }
+  // decision — clear backtested rule (buy<=25 / hold / sell>=75)
+  var dArc=(a.arc_score!=null?a.arc_score:(a.arc_display!=null?a.arc_display:50));
+  setText('dArc', Math.round(dArc));
+  var act,sub,col,hi;
+  if(dArc<=25){ act='BUY · ALL-IN'; col='#00DC78'; hi='dr-buy'; sub='Deep value — extreme fear. Historically the strongest entry of the cycle. Deploy fully.'; }
+  else if(dArc>=75){ act='SELL · TAKE PROFIT'; col='#FF3B3B'; hi='dr-sell'; sub='Euphoria — risk is at a cycle high. Exit to cash and wait for the next deep-value bottom.'; }
+  else { act='HOLD'; col='#58A6FF'; hi='dr-hold'; var toBuy=Math.max(0,Math.round(dArc-25)), toSell=Math.max(0,Math.round(75-dArc)); sub='Mid-cycle — stay invested, don’t churn. All-in trigger at ARC 25 ('+toBuy+' to go), take-profit at ARC 75 ('+toSell+' to go).'; }
+  var ae=document.getElementById('dAction'); if(ae){ae.textContent=act; ae.style.color=col;}
+  setText('dActionSub', sub);
+  var bn=document.getElementById('dBanner'); if(bn) bn.style.borderColor=col;
+  ['dr-buy','dr-hold','dr-sell'].forEach(function(id){ var e=document.getElementById(id); if(e){ e.style.outline=(id===hi)?('2px solid '+col):'none'; e.style.opacity=(id===hi)?'1':'0.5'; } });
 
   // cycle
   setText('ccPhase', a.phase_context||'–');
