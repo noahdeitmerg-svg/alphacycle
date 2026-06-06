@@ -901,7 +901,8 @@ async def get_cycle_wave(asset: str = "btc", lookback: int = 2190, projection: i
     # Search repeating cycles only (>=4 full cycles in the window) so we get a stable
     # oscillator whose peaks/troughs track real highs/lows — not one giant arc.
     Lmax = max(180, min(n // 4, 520))
-    best = None  # (score, L, c1, c2, r2)
+    half = n // 2
+    cands = []  # (score, L, c1, c2, r2, stab)
     for L in range(120, Lmax, 2):
         w = 2 * math.pi / L
         C = [math.cos(w * i) for i in t]
@@ -913,19 +914,35 @@ async def get_cycle_wave(asset: str = "btc", lookback: int = 2190, projection: i
         c2 = (Scc * Rs - Scs * Rc) / det
         ss = sum((resid[i] - (c1 * C[i] + c2 * S[i])) ** 2 for i in range(n))
         r2 = 1 - ss / tot
-        # stability: amplitude in first half vs second half should be similar (Seasonax-style)
-        half = n // 2
+        # stability: amplitude consistency first vs second half (Bartels-like)
         amp1 = math.hypot(sum(resid[i] * C[i] for i in range(half)) / (half / 2 or 1),
                           sum(resid[i] * S[i] for i in range(half)) / (half / 2 or 1))
         amp2 = math.hypot(sum(resid[i] * C[i] for i in range(half, n)) / ((n - half) / 2 or 1),
                           sum(resid[i] * S[i] for i in range(half, n)) / ((n - half) / 2 or 1))
         stab = min(amp1, amp2) / (max(amp1, amp2) or 1e-9)
-        score = stab * (0.4 + 0.6 * max(r2, 0))  # Seasonax-style: favour STABILITY (Bartels-like)
-        if best is None or score > best[0]:
-            best = (score, L, c1, c2, r2, stab)
-    _score, L, c1, c2, r2, stab = best
+        score = stab * (0.4 + 0.6 * max(r2, 0))  # favour STABILITY (Seasonax/Bartels-like)
+        cands.append((score, L, c1, c2, r2, stab))
+    # pick top-3 distinct cycles (periods must differ >25% so we don't show near-duplicates)
+    cands.sort(key=lambda x: -x[0])
+    picked = []
+    for cand in cands:
+        if all(abs(cand[1] - p[1]) / p[1] > 0.25 for p in picked):
+            picked.append(cand)
+        if len(picked) >= 3:
+            break
+    _score, L, c1, c2, r2, stab = picked[0]
     w = 2 * math.pi / L
     phi = math.atan2(c2, c1)  # resid ~ R*cos(w*i - phi); peak at w*i = phi
+    i_now = n - 1
+
+    def _phase_label(L_, c1_, c2_):
+        w_ = 2 * math.pi / L_; phi_ = math.atan2(c2_, c1_)
+        cv = math.cos(w_ * i_now - phi_); dv = math.sin(w_ * i_now - phi_)
+        if cv > 0.85: return "topping"
+        if cv < -0.85: return "bottoming"
+        return "rising" if dv < 0 else "falling"
+    secondary = [{"period": int(p[1]), "phase_label": _phase_label(p[1], p[2], p[3]),
+                  "stability": round(p[5], 2)} for p in picked[1:3]]
 
     # --- Seasonax-style display: a REGULAR constant-amplitude sine, price laid over it ---
     n_disp = min(1095, n)               # ~3y visible window (clean on a linear axis)
@@ -946,28 +963,30 @@ async def get_cycle_wave(asset: str = "btc", lookback: int = 2190, projection: i
     wave = [cyc(off + j) for j in range(n_disp + projection)]
     price = [round(p, 2) for p in dprices] + [None] * projection
 
-    # phase read at the latest bar
-    i_now = n - 1
-    cos_now = math.cos(w * i_now - phi)
-    deriv_now = math.sin(w * i_now - phi)   # d/di cos(wi-phi) = -w*sin(wi-phi); rising if sin<0
+    # phase read at the latest bar (theta=0 -> peak, theta=pi -> trough)
+    theta = (w * i_now - phi) % (2 * math.pi)
+    cos_now = math.cos(theta)
     if cos_now > 0.85:
         direction = "topping"
     elif cos_now < -0.85:
         direction = "bottoming"
     else:
-        direction = "rising" if deriv_now < 0 else "falling"
-    next_turn, prev = None, deriv_now
-    for i in range(n, n + projection):
-        dv = math.sin(w * i - phi)
-        if (dv >= 0) != (prev >= 0):
-            # sign flip of sin(wi-phi): -> crossing a peak (cos goes +) or trough
-            ttype = "peak" if math.cos(w * i - phi) > 0 else "trough"
-            next_turn = {"date": (last + _td(days=int(i - i_now))).isoformat(),
-                         "type": ttype, "in_days": int(i - i_now)}
-            break
-        prev = dv
+        direction = "rising" if math.sin(theta) < 0 else "falling"
+    days_to_high = round(((-theta) % (2 * math.pi)) / w)
+    days_to_low = round(((math.pi - theta) % (2 * math.pi)) / w)
+    pct_into_cycle = round(((theta - math.pi) % (2 * math.pi)) / (2 * math.pi) * 100)  # since last trough
+    if days_to_high <= days_to_low:
+        next_turn = {"type": "peak", "in_days": days_to_high,
+                     "date": (last + _td(days=days_to_high)).isoformat()}
+    else:
+        next_turn = {"type": "trough", "in_days": days_to_low,
+                     "date": (last + _td(days=days_to_low)).isoformat()}
     data = {"asset": asset.upper(), "cycle_len": int(L), "fit": round(r2, 2),
             "stability": round(stab, 2), "direction": direction, "next_turn": next_turn,
+            "days_to_high": days_to_high, "days_to_low": days_to_low,
+            "high_date": (last + _td(days=days_to_high)).isoformat(),
+            "low_date": (last + _td(days=days_to_low)).isoformat(),
+            "pct_into_cycle": pct_into_cycle, "secondary": secondary,
             "split": n_disp, "dates": all_dates, "price": price, "wave": wave}
     _WAVE_CACHE["key"] = ck
     _WAVE_CACHE["data"] = data
