@@ -286,16 +286,23 @@
     </div>
   </section>
 
-  <!-- CONTEXT: ETH/BTC, SEASONALITY, LIQUIDITY -->
-  <section>
-    <div class="sec-eyebrow">ENGINE 6 · MARKET CONTEXT</div>
-    <div class="sec-h">Rotation, seasonality &amp; liquidity</div>
-    <div class="sec-tells">Three independent context engines that frame the environment around the score.</div>
-    <div class="grid g3">
-      <div class="card bigm"><div class="k">ETH / BTC SIGNAL</div><div class="v" id="ethbV" style="font-size:22px;">–</div><div class="s" id="ethbS">rotation read</div></div>
-      <div class="card bigm"><div class="k">SEASONALITY · <span id="seaMonth">–</span></div><div class="v" id="seaV" style="font-size:22px;">–</div><div class="s" id="seaS">historical month bias</div></div>
-      <div class="card bigm"><div class="k">FED NET LIQUIDITY</div><div class="v" id="liqV" style="font-size:22px;">–</div><div class="s" id="liqS">WALCL − TGA − RRP</div></div>
+  <!-- SEASONAL PATTERN (Seasonax-style) -->
+  <section id="seasSec">
+    <div class="sec-eyebrow">ENGINE 6 · SEASONAL PATTERN</div>
+    <div class="sec-h">The average year for BTC &amp; ETH</div>
+    <div class="sec-tells">Each line is the typical journey through a calendar year, averaged over all available history (geometric mean — so one blow-off year can't distort it). It shows <b>when in the year</b> crypto has tended to climb or stall. Read the shape, not the level. Context, not a trade signal.</div>
+    <div class="card chart-wrap">
+      <div class="chart-canvas-box" style="height:340px"><canvas id="seasChart"></canvas></div>
+      <div class="chart-legend">
+        <span><i style="background:var(--teal)"></i><span id="seasBtcLeg">BTC</span></span>
+        <span><i style="background:#8b5cf6"></i><span id="seasEthLeg">ETH</span></span>
+      </div>
     </div>
+    <div class="grid g2" style="margin-top:14px">
+      <div class="card bigm"><div class="k">BTC · SEASONAL READ</div><div class="v" id="seasBtcV" style="font-size:20px;color:var(--teal)">–</div><div class="s" id="seasBtcS">–</div></div>
+      <div class="card bigm"><div class="k">ETH · SEASONAL READ</div><div class="v" id="seasEthV" style="font-size:20px;color:#8b5cf6">–</div><div class="s" id="seasEthS">–</div></div>
+    </div>
+    <div class="note" id="seasNote" style="margin-top:6px"></div>
   </section>
 
   <!-- SEASONALITY -->
@@ -441,9 +448,6 @@ async function loadAll(){
   ['rsi','mvrv','funding','puell','power_law','pi_cycle'].forEach(function(k){ if(st[k]==null)return; var v=Math.round(st[k]); var c=zoneInfo(st[k]).c; var d=document.createElement('div'); d.className='card comp'; d.innerHTML='<div class="top"><span class="nm">'+labels[k]+'</span></div><div class="val" style="color:'+c+'">'+v+'</div>'+nctx(k,v)+'<div class="bar"><i style="width:'+Math.max(2,Math.min(100,st[k]))+'%;background:'+c+'"></i></div>'; ng.appendChild(d); });
 
   // context
-  var eb=a.eth_btc_signal||{}; setText('ethbV', eb.label||'–'); document.getElementById('ethbV').style.color=eb.color||'#fff'; setText('ethbS', (eb.ratio!=null?('ratio '+eb.ratio.toFixed(4)+' · '):'')+(eb.note||''));
-  var se=a.seasonality||{}; setText('seaMonth',(se.month_name||'').toUpperCase()); setText('seaV',(se.avg_return!=null?(se.avg_return>0?'+':'')+se.avg_return+'% avg':'–')); document.getElementById('seaV').style.color=se.color||'#fff'; setText('seaS',(se.label||'')+(se.next_month_return!=null?(' · next month '+(se.next_month_return>0?'+':'')+se.next_month_return+'%'):''));
-  var nl=a.net_liquidity_data||{}; if(nl.net_liquidity){ setText('liqV','$'+(nl.net_liquidity/1e6).toFixed(2)+'T'); setText('liqS','WALCL $'+(nl.walcl/1e6).toFixed(2)+'T · TGA $'+(nl.tga/1e6).toFixed(2)+'T'); }
 
   setText('updated', new Date().toLocaleString());
 
@@ -452,6 +456,37 @@ async function loadAll(){
   loadRegimeFeed();
   loadSeasonality();
   loadCycleSignals();
+  loadSeasonalPattern();
+}
+
+var _seasChart=null;
+function _monthAt(i){ var mn=['January','February','March','April','May','June','July','August','September','October','November','December']; var st=[0,31,59,90,120,151,181,212,243,273,304,334]; var m=0; for(var k=0;k<12;k++){ if(i>=st[k]) m=k; } return mn[m]; }
+async function loadSeasonalPattern(){
+  try{
+    var p=await (await fetch(API+'/api/seasonal-pattern',{cache:'no-store'})).json();
+    var mn=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var st=[0,31,59,90,120,151,181,212,243,273,304,334];
+    var labels=[]; for(var i=0;i<365;i++){ var k=st.indexOf(i); labels.push(k>=0?mn[k]:''); }
+    function _sm(a,w){ if(!a) return a; var h=(w-1)/2,o=[]; for(var i=0;i<a.length;i++){ var s=0,cn=0; for(var j=Math.max(0,i-h);j<=Math.min(a.length-1,i+h);j++){ s+=a[j]; cn++; } o.push(Math.round(s/cn*10)/10); } return o; }
+    var btc=(p.btc&&p.btc.path)?_sm(p.btc.path,11):null, eth=(p.eth&&p.eth.path)?_sm(p.eth.path,11):null;
+    if(window.Chart&&btc){
+      if(_seasChart) _seasChart.destroy();
+      var ds=[{label:'BTC',data:btc,borderColor:'#00D4AA',borderWidth:2.6,pointRadius:0,tension:0.4}];
+      if(eth) ds.push({label:'ETH',data:eth,borderColor:'#8b5cf6',borderWidth:2.6,pointRadius:0,tension:0.4});
+      _seasChart=new Chart(document.getElementById('seasChart'),{type:'line',
+        data:{labels:labels,datasets:ds},
+        options:{animation:false,maintainAspectRatio:false,responsive:true,interaction:{mode:'index',intersect:false},
+          plugins:{legend:{display:false},zoom:{zoom:{wheel:{enabled:false},pinch:{enabled:false}},pan:{enabled:false}},
+            tooltip:{callbacks:{title:function(it){return _monthAt(it[0].dataIndex);},label:function(c){return c.dataset.label+': '+((c.parsed.y-100>=0?'+':'')+(c.parsed.y-100).toFixed(1))+'% from Jan 1';}}}},
+          scales:{x:{ticks:{color:'#6b7280',maxRotation:0,autoSkip:false,callback:function(v,i){return labels[i]||'';},font:{size:10}},grid:{display:false}},
+            y:{type:'logarithmic',min:90,ticks:{color:'#6b7280',font:{size:10},callback:function(v){return (v-100>=0?'+':'')+Math.round(v-100)+'%';}},grid:{color:'rgba(255,255,255,0.05)'}}}}});
+    }
+    if(p.btc&&p.btc.path){ setText('seasBtcV','Strong '+p.btc.strong+' · weak '+p.btc.weak); setText('seasBtcS', p.btc.years+' yrs ('+p.btc.from+'–'+p.btc.to+') · avg year '+(p.btc.path[364]-100>=0?'+':'')+Math.round(p.btc.path[364]-100)+'%'); }
+    if(p.eth&&p.eth.path){ setText('seasEthV','Strong '+p.eth.strong+' · weak '+p.eth.weak); setText('seasEthS', p.eth.years+' yrs ('+p.eth.from+'–'+p.eth.to+') · avg year '+(p.eth.path[364]-100>=0?'+':'')+Math.round(p.eth.path[364]-100)+'%'); }
+    else { setText('seasEthV','—'); setText('seasEthS','ETH history unavailable right now'); }
+    setText('seasBtcLeg','BTC ('+(p.btc&&p.btc.path?p.btc.years+'y':'–')+')'); setText('seasEthLeg', (p.eth&&p.eth.path)?('ETH ('+p.eth.years+'y)'):'ETH n/a');
+    setText('seasNote','Indexed to the first trading day of each year = 100 (log scale, so % moves compare fairly). Both drift up because crypto trended up over the sample — what matters is the slope: flat or falling stretches are the seasonally weak windows. '+((p.eth&&p.eth.path)?'':'ETH data could not be loaded right now. '));
+  }catch(e){ var el=document.getElementById('seasSec'); if(el) el.style.opacity='0.55'; }
 }
 
 var _seaCycleChart=null;
@@ -643,7 +678,7 @@ function initCollapse(){
       sec.appendChild(body);
       eye.classList.add('clps');
       var chev=document.createElement('span'); chev.className='chev'; chev.textContent='▾'; eye.appendChild(chev);
-      eye.addEventListener('click',function(){ sec.classList.toggle('collapsed'); if(!sec.classList.contains('collapsed')){ setTimeout(function(){ try{ if(sec.querySelector('#arcChart')&&window._arcChart){window._arcChart.resize();_autoFitPrice&&_autoFitPrice();} if(sec.querySelector('#seaCycleChart')&&_seaCycleChart){_seaCycleChart.resize();} }catch(e){} },80); } });
+      eye.addEventListener('click',function(){ sec.classList.toggle('collapsed'); if(!sec.classList.contains('collapsed')){ setTimeout(function(){ try{ if(sec.querySelector('#arcChart')&&window._arcChart){window._arcChart.resize();_autoFitPrice&&_autoFitPrice();} if(sec.querySelector('#seaCycleChart')&&_seaCycleChart){_seaCycleChart.resize();} if(sec.querySelector('#seasChart')&&_seasChart){_seasChart.resize();} }catch(e){} },80); } });
     });
   }catch(e){}
 }
