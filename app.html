@@ -515,19 +515,24 @@ async function loadChart(){
       {label:'ARC Index',data:arcD,yAxisID:'yArc',borderColor:'#00D4AA',borderWidth:2,pointRadius:0,tension:0.2}
     ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
       plugins:{legend:{display:false},tooltip:{callbacks:{title:function(i){return i[0].label;}}},
-        zoom:{pan:{enabled:true,mode:'xy'},zoom:{wheel:{enabled:false},pinch:{enabled:true},mode:'xy'},limits:{x:{minRange:20},yArc:{min:0,max:100,minRange:100}}}},
+        zoom:{pan:{enabled:false},zoom:{wheel:{enabled:false},pinch:{enabled:true},mode:'xy'},limits:{x:{minRange:20},yArc:{min:0,max:100,minRange:100}}}},
       scales:{
         x:{min:0,max:_arcN-1,ticks:{color:'#69748a',maxTicksLimit:8,font:{family:'JetBrains Mono',size:10}},grid:{display:false}},
         yArc:{position:'left',min:0,max:100,ticks:{color:'#69748a',font:{family:'JetBrains Mono',size:10}},grid:{color:'rgba(255,255,255,0.05)'}},
         yPrice:{position:'right',ticks:{color:'#69748a',maxTicksLimit:9,font:{family:'JetBrains Mono',size:10},callback:function(v){return v>=1000?'$'+Math.round(v/1000)+'k':'$'+Math.round(v);}},grid:{display:false}}
       }},plugins:[zonePlugin,markersPlugin]});
     window._arcChart=chart;
-    if(!window._arcWheelAttached){ ctx.addEventListener('wheel',_arcWheel,{passive:false}); window._arcWheelAttached=true; }
+    if(!window._arcWheelAttached){ ctx.addEventListener('wheel',_arcWheel,{passive:false}); ctx.addEventListener('pointerdown',_arcPanDown); window.addEventListener('pointermove',_arcPanMove); window.addEventListener('pointerup',_arcPanUp); ctx.style.cursor='grab'; window._arcWheelAttached=true; }
   }catch(e){}
 }
 // Per-axis wheel zoom (DexScreener/TradingView style): over chart=zoom time, over price axis=zoom price only, ARC axis locked.
 function _arcZoomAxis(c,key,pixel,factor){ var s=c.scales[key]; if(!s)return; var v=s.getValueForPixel(pixel); var mn=s.min,mx=s.max; var nmn=v-(v-mn)*factor, nmx=v+(mx-v)*factor; if(key==='x'){ nmn=Math.max(0,nmn); nmx=Math.min(_arcN-1,nmx); if(nmx-nmn<20)return; } if(key==='yPrice'&&nmn<0)nmn=0; c.options.scales[key].min=nmn; c.options.scales[key].max=nmx; c.update('none'); }
 function _arcWheel(e){ var c=window._arcChart; if(!c||!c.chartArea)return; e.preventDefault(); var r=c.canvas.getBoundingClientRect(); var px=e.clientX-r.left, py=e.clientY-r.top; var ca=c.chartArea; var f=e.deltaY<0?0.85:1.18; if(px<ca.left)return; var key=(px>ca.right)?'yPrice':'x'; _arcZoomAxis(c,key,(key==='x'?px:py),f); }
+// Custom drag-to-pan (mouse) — works in all directions; touch keeps pinch + page scroll.
+var _arcPan=null;
+function _arcPanDown(e){ if(e.pointerType&&e.pointerType!=='mouse')return; var c=window._arcChart; if(!c||!c.chartArea)return; var r=c.canvas.getBoundingClientRect(); var px=e.clientX-r.left,py=e.clientY-r.top; var ca=c.chartArea; if(px<ca.left-4||px>ca.right+4||py<ca.top-4||py>ca.bottom+4)return; _arcPan={sx:e.clientX,sy:e.clientY,xmin:c.scales.x.min,xmax:c.scales.x.max,pmin:c.scales.yPrice.min,pmax:c.scales.yPrice.max,L:ca.right-ca.left,H:ca.bottom-ca.top}; c.canvas.style.cursor='grabbing'; }
+function _arcPanMove(e){ if(!_arcPan)return; var c=window._arcChart; if(!c)return; var dx=e.clientX-_arcPan.sx,dy=e.clientY-_arcPan.sy; var xr=_arcPan.xmax-_arcPan.xmin,dI=dx*xr/_arcPan.L; var nxmin=_arcPan.xmin-dI,nxmax=_arcPan.xmax-dI; if(nxmin<0){nxmax-=nxmin;nxmin=0;} if(nxmax>_arcN-1){nxmin-=(nxmax-(_arcN-1));nxmax=_arcN-1;} var pr=_arcPan.pmax-_arcPan.pmin,dV=dy*pr/_arcPan.H; var nymin=_arcPan.pmin+dV,nymax=_arcPan.pmax+dV; if(nymin<0){nymax-=nymin;nymin=0;} c.options.scales.x.min=nxmin;c.options.scales.x.max=nxmax;c.options.scales.yPrice.min=nymin;c.options.scales.yPrice.max=nymax;c.update('none'); }
+function _arcPanUp(){ if(_arcPan){ _arcPan=null; var c=window._arcChart; if(c&&c.canvas)c.canvas.style.cursor='grab'; } }
 // Auto-fit the (log) price axis to whatever time window is visible — TradingView-style "auto" price scale.
 function _autoFitPrice(){ try{ var c=window._arcChart; var p=window._priceD; if(!c||!p||!c.scales.x)return; var a=Math.max(0,Math.floor(c.scales.x.min)),b=Math.min(p.length-1,Math.ceil(c.scales.x.max)); var lo=Infinity,hi=-Infinity; for(var i=a;i<=b;i++){var v=p[i]; if(v>0){if(v<lo)lo=v; if(v>hi)hi=v;}} if(lo<hi&&isFinite(lo)){ c.options.scales.yPrice.min=lo*0.9; c.options.scales.yPrice.max=hi*1.12; c.update('none'); } }catch(e){} }
 // Click legend to toggle the two lines and each zone band individually.
@@ -541,6 +546,26 @@ function setChartRange(r){ var c=window._arcChart; if(!c)return; if(r==='reset')
 // ---- Pro/Free gates (soft, free-signup during launch; Noah wires real auth later) ----
 function applyGates(){/* Aufbauphase: alles offen, keine Gates. Spaeter wieder gaten: s.classList.toggle('locked', !planIsPaid) */document.querySelectorAll('.pro-gate').forEach(function(s){s.classList.remove('locked');});}
 function unlockPro(){try{localStorage.setItem('ac_unlocked','1');}catch(e){}applyGates();}
+// Make every engine section collapsible (Proof is already collapsed in markup). Chart resizes on expand.
+function initCollapse(){
+  try{
+    document.querySelectorAll('.wrap > section').forEach(function(sec){
+      var eye=sec.querySelector(':scope > .sec-eyebrow');
+      if(!eye || eye.classList.contains('clps') || sec.classList.contains('hero')) return;
+      var kids=Array.prototype.slice.call(sec.children);
+      var tells=sec.querySelector(':scope > .sec-tells'), sh=sec.querySelector(':scope > .sec-h');
+      var anchor=tells||sh||eye; var start=kids.indexOf(anchor)+1;
+      if(start>=kids.length) return;
+      var body=document.createElement('div'); body.className='eng-body';
+      for(var i=start;i<kids.length;i++) body.appendChild(kids[i]);
+      sec.appendChild(body);
+      eye.classList.add('clps');
+      var chev=document.createElement('span'); chev.className='chev'; chev.textContent='▾'; eye.appendChild(chev);
+      eye.addEventListener('click',function(){ sec.classList.toggle('collapsed'); if(!sec.classList.contains('collapsed')&&sec.querySelector('#arcChart')){ var c=window._arcChart; if(c) setTimeout(function(){try{c.resize();_autoFitPrice&&_autoFitPrice();}catch(e){}},80); } });
+    });
+  }catch(e){}
+}
+initCollapse();
 applyGates();
 loadAll();
 setInterval(loadAll, 90000);
