@@ -465,29 +465,37 @@ async def get_seasonality():
         byq[(m - 1) // 3 + 1].append(v)
     quarters = [{"q": q, "avg": round(_st.mean(byq[q]) * 100, 1), "n": len(byq[q])} for q in range(1, 5) if byq[q]]
 
-    # halving cycle path (index, halving day = 1.0)
+    # halving cycle path (index, halving day = 1.0) — each cycle shown separately
+    # (no self-referential average; the diminishing multiple per cycle is the real story)
     HALV = [_date(2016, 7, 9), _date(2020, 5, 11), _date(2024, 4, 20)]
     cur_halv = max([h for h in [_date(2012, 11, 28)] + HALV if h <= today], default=None)
-    cyc = _dd(list)
-    cur_path = {}
+    NMO = 25
+    cycles_by_year = {}
     for hi, h in enumerate(HALV):
         base = next((r["price"] for r in rows if r["_dt"] >= h), None)
         if base is None:
             continue
         end = HALV[hi + 1] if hi + 1 < len(HALV) else rows[-1]["_dt"]
+        arr = [None] * NMO
         seen = set()
         for r in rows:
             if h <= r["_dt"] < end:
                 mo = (r["_dt"].year - h.year) * 12 + (r["_dt"].month - h.month)
-                if mo not in seen:
+                if 0 <= mo < NMO and mo not in seen:
                     seen.add(mo)
-                    cyc[mo].append(r["price"] / base)
-                    if h == cur_halv:
-                        cur_path[mo] = round(r["price"] / base, 3)
-    cycle = [{"mo": mo,
-              "avg": round(_st.mean(cyc[mo]), 3) if cyc.get(mo) else None,
-              "n": len(cyc.get(mo, [])),
-              "current": cur_path.get(mo)} for mo in range(0, 25)]
+                    arr[mo] = round(r["price"] / base, 3)
+        cycles_by_year[str(h.year)] = arr
+    cur_key = str(cur_halv.year) if cur_halv else None
+    # backward-compatible "cycle" array: avg of COMPLETED cycles + current path
+    completed = [v for k, v in cycles_by_year.items() if k != cur_key]
+    cycle = []
+    for mo in range(0, NMO):
+        vals = [c[mo] for c in completed if c[mo] is not None]
+        cur_v = cycles_by_year.get(cur_key, [None] * NMO)[mo] if cur_key else None
+        cycle.append({"mo": mo,
+                      "avg": round(_st.mean(vals), 3) if vals else None,
+                      "n": len(vals),
+                      "current": cur_v})
     months_since_halving = ((today.year - cur_halv.year) * 12 + (today.month - cur_halv.month)) if cur_halv else None
 
     # 30-90 day forward weekly outlook (all data, weekly resolution)
@@ -506,17 +514,19 @@ async def get_seasonality():
         wk = today + _td(weeks=k)
         wn = wk.isocalendar()[1]
         v = wret.get(wn, [])
-        avg = _st.mean(v) if v else 0.0
-        cum *= (1 + avg)
+        med = _st.median(v) if v else 0.0  # median = robust to single-cycle moonshots
+        cum *= (1 + med)
         forward.append({"week_of": wk.isoformat(), "weekno": wn,
-                        "avg": round(avg * 100, 2),
+                        "avg": round(med * 100, 2),
+                        "mean": round(_st.mean(v) * 100, 2) if v else 0.0,
                         "win": round(sum(1 for x in v if x > 0) / len(v) * 100) if v else None,
                         "cum": round((cum - 1) * 100, 1),
                         "n": len(v)})
 
     data = {"range": {"from": rows[0]["date"][:10], "to": rows[-1]["date"][:10], "days": len(rows)},
             "months": months, "grid": grid, "quarters": quarters,
-            "cycle": cycle, "months_since_halving": months_since_halving,
+            "cycle": cycle, "cycles_by_year": cycles_by_year,
+            "months_since_halving": months_since_halving,
             "last_halving": cur_halv.isoformat() if cur_halv else None,
             "forward": forward}
     _SEASON_CACHE["day"] = today.isoformat()
