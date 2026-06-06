@@ -862,13 +862,10 @@ _WAVE_CACHE = {}
 @app.get("/api/cycle-wave")
 async def get_cycle_wave(asset: str = "btc", lookback: int = 1095, projection: int = 180):
     from datetime import datetime as _dtm, date as _date, timedelta as _td
+    import math
     ck = f"{_dtm.utcnow().date().isoformat()}|{asset}|{lookback}|{projection}"
     if _WAVE_CACHE.get("key") == ck:
         return _WAVE_CACHE["data"]
-    try:
-        import numpy as np
-    except Exception:
-        raise HTTPException(503, "numpy unavailable")
     try:
         if asset == "eth":
             daily = await _load_eth_daily()
@@ -883,34 +880,40 @@ async def get_cycle_wave(asset: str = "btc", lookback: int = 1095, projection: i
     n = len(rows)
     if n < 300:
         raise HTTPException(503, "insufficient history")
-    prices = np.array([r["price"] for r in rows], dtype=float)
-    y = np.log(prices)
-    t = np.arange(n)
-    # linear detrend (log space)
-    A = np.vstack([t, np.ones(n)]).T
-    coef, *_ = np.linalg.lstsq(A, y, rcond=None)
-    resid = y - A @ coef
-    tot = float(np.sum(resid ** 2)) or 1e-9
-    best = None
+    y = [math.log(r["price"]) for r in rows]
+    t = list(range(n))
+    # linear detrend (log space), closed form
+    st = sum(t); sy = sum(y); stt = sum(i * i for i in t); sty = sum(t[i] * y[i] for i in range(n))
+    den = (n * stt - st * st) or 1e-9
+    a_tr = (n * sty - st * sy) / den
+    b_tr = (sy - a_tr * st) / n
+    resid = [y[i] - (a_tr * t[i] + b_tr) for i in range(n)]
+    tot = sum(r * r for r in resid) or 1e-9
+    best = None  # (r2, L, c1, c2)
     for L in range(60, min(n // 2, 600), 2):
-        w = 2 * np.pi / L
-        B = np.vstack([np.cos(w * t), np.sin(w * t)]).T
-        c, *_ = np.linalg.lstsq(B, resid, rcond=None)
-        r2 = 1 - float(np.sum((resid - B @ c) ** 2)) / tot
+        w = 2 * math.pi / L
+        C = [math.cos(w * i) for i in t]
+        S = [math.sin(w * i) for i in t]
+        Scc = sum(v * v for v in C); Sss = sum(v * v for v in S); Scs = sum(C[i] * S[i] for i in range(n))
+        Rc = sum(resid[i] * C[i] for i in range(n)); Rs = sum(resid[i] * S[i] for i in range(n))
+        det = (Scc * Sss - Scs * Scs) or 1e-9
+        c1 = (Rc * Sss - Rs * Scs) / det
+        c2 = (Scc * Rs - Scs * Rc) / det
+        ss = sum((resid[i] - (c1 * C[i] + c2 * S[i])) ** 2 for i in range(n))
+        r2 = 1 - ss / tot
         if best is None or r2 > best[0]:
-            best = (r2, L, c)
-    r2, L, c = best
-    w = 2 * np.pi / L
-    tt = np.arange(n + projection)
-    wave = np.exp(coef[0] * tt + coef[1] + c[0] * np.cos(w * tt) + c[1] * np.sin(w * tt))
-    # dates: actual for history, calendar-extended for projection
+            best = (r2, L, c1, c2)
+    r2, L, c1, c2 = best
+    w = 2 * math.pi / L
+    wave = [round(math.exp(a_tr * i + b_tr + c1 * math.cos(w * i) + c2 * math.sin(w * i)), 2)
+            for i in range(n + projection)]
     hist_dates = [r["date"] for r in rows]
     last = _date.fromisoformat(hist_dates[-1])
     proj_dates = [(last + _td(days=k)).isoformat() for k in range(1, projection + 1)]
     all_dates = hist_dates + proj_dates
-    # direction now + next turn
+
     def deriv(i):
-        return -c[0] * w * np.sin(w * i) + c[1] * w * np.cos(w * i)
+        return -c1 * w * math.sin(w * i) + c2 * w * math.cos(w * i)
     i_now = n - 1
     direction = "rising" if deriv(i_now) > 0 else "falling"
     next_turn, prev = None, deriv(i_now)
@@ -924,8 +927,8 @@ async def get_cycle_wave(asset: str = "btc", lookback: int = 1095, projection: i
     data = {"asset": asset.upper(), "cycle_len": int(L), "fit": round(r2, 2),
             "direction": direction, "next_turn": next_turn, "split": n,
             "dates": all_dates,
-            "price": [round(p, 2) for p in prices.tolist()] + [None] * projection,
-            "wave": [round(x, 2) for x in wave.tolist()]}
+            "price": [round(r["price"], 2) for r in rows] + [None] * projection,
+            "wave": wave}
     _WAVE_CACHE["key"] = ck
     _WAVE_CACHE["data"] = data
     return data
