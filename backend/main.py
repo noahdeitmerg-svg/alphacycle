@@ -856,6 +856,81 @@ async def get_seasonal_overlay():
     return data
 
 
+# --- Dominant cycle wave (Seasonax-style): detect & project the rhythm ---
+_WAVE_CACHE = {}
+
+@app.get("/api/cycle-wave")
+async def get_cycle_wave(asset: str = "btc", lookback: int = 1095, projection: int = 180):
+    from datetime import datetime as _dtm, date as _date, timedelta as _td
+    ck = f"{_dtm.utcnow().date().isoformat()}|{asset}|{lookback}|{projection}"
+    if _WAVE_CACHE.get("key") == ck:
+        return _WAVE_CACHE["data"]
+    try:
+        import numpy as np
+    except Exception:
+        raise HTTPException(503, "numpy unavailable")
+    try:
+        if asset == "eth":
+            daily = await _load_eth_daily()
+        else:
+            from services.backtest_engine import _load_or_build_daily_cache
+            daily = await _load_or_build_daily_cache()
+    except Exception as ex:
+        raise HTTPException(503, f"price history unavailable: {ex}")
+    rows = [{"date": r["date"][:10], "price": float(r["price"])} for r in (daily or []) if r.get("price")]
+    rows.sort(key=lambda r: r["date"])
+    rows = rows[-lookback:]
+    n = len(rows)
+    if n < 300:
+        raise HTTPException(503, "insufficient history")
+    prices = np.array([r["price"] for r in rows], dtype=float)
+    y = np.log(prices)
+    t = np.arange(n)
+    # linear detrend (log space)
+    A = np.vstack([t, np.ones(n)]).T
+    coef, *_ = np.linalg.lstsq(A, y, rcond=None)
+    resid = y - A @ coef
+    tot = float(np.sum(resid ** 2)) or 1e-9
+    best = None
+    for L in range(60, min(n // 2, 600), 2):
+        w = 2 * np.pi / L
+        B = np.vstack([np.cos(w * t), np.sin(w * t)]).T
+        c, *_ = np.linalg.lstsq(B, resid, rcond=None)
+        r2 = 1 - float(np.sum((resid - B @ c) ** 2)) / tot
+        if best is None or r2 > best[0]:
+            best = (r2, L, c)
+    r2, L, c = best
+    w = 2 * np.pi / L
+    tt = np.arange(n + projection)
+    wave = np.exp(coef[0] * tt + coef[1] + c[0] * np.cos(w * tt) + c[1] * np.sin(w * tt))
+    # dates: actual for history, calendar-extended for projection
+    hist_dates = [r["date"] for r in rows]
+    last = _date.fromisoformat(hist_dates[-1])
+    proj_dates = [(last + _td(days=k)).isoformat() for k in range(1, projection + 1)]
+    all_dates = hist_dates + proj_dates
+    # direction now + next turn
+    def deriv(i):
+        return -c[0] * w * np.sin(w * i) + c[1] * w * np.cos(w * i)
+    i_now = n - 1
+    direction = "rising" if deriv(i_now) > 0 else "falling"
+    next_turn, prev = None, deriv(i_now)
+    for i in range(n, n + projection):
+        dv = deriv(i)
+        if (dv > 0) != (prev > 0):
+            next_turn = {"date": all_dates[i], "type": ("peak" if prev > 0 else "trough"),
+                         "in_days": int(i - i_now)}
+            break
+        prev = dv
+    data = {"asset": asset.upper(), "cycle_len": int(L), "fit": round(r2, 2),
+            "direction": direction, "next_turn": next_turn, "split": n,
+            "dates": all_dates,
+            "price": [round(p, 2) for p in prices.tolist()] + [None] * projection,
+            "wave": [round(x, 2) for x in wave.tolist()]}
+    _WAVE_CACHE["key"] = ck
+    _WAVE_CACHE["data"] = data
+    return data
+
+
 # --- Daily RSI(14) with historical forward-return edge ---
 _RSI_CACHE = {"key": None, "data": None}
 
