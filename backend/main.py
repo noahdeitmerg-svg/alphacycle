@@ -860,7 +860,7 @@ async def get_seasonal_overlay():
 _WAVE_CACHE = {}
 
 @app.get("/api/cycle-wave")
-async def get_cycle_wave(asset: str = "btc", lookback: int = 1095, projection: int = 180):
+async def get_cycle_wave(asset: str = "btc", lookback: int = 2190, projection: int = 180):
     from datetime import datetime as _dtm, date as _date, timedelta as _td
     import math
     ck = f"{_dtm.utcnow().date().isoformat()}|{asset}|{lookback}|{projection}"
@@ -889,8 +889,11 @@ async def get_cycle_wave(asset: str = "btc", lookback: int = 1095, projection: i
     b_tr = (sy - a_tr * st) / n
     resid = [y[i] - (a_tr * t[i] + b_tr) for i in range(n)]
     tot = sum(r * r for r in resid) or 1e-9
-    best = None  # (r2, L, c1, c2)
-    for L in range(60, min(n // 2, 600), 2):
+    # Search repeating cycles only (>=4 full cycles in the window) so we get a stable
+    # oscillator whose peaks/troughs track real highs/lows — not one giant arc.
+    Lmax = max(180, min(n // 4, 520))
+    best = None  # (score, L, c1, c2, r2)
+    for L in range(120, Lmax, 2):
         w = 2 * math.pi / L
         C = [math.cos(w * i) for i in t]
         S = [math.sin(w * i) for i in t]
@@ -901,9 +904,17 @@ async def get_cycle_wave(asset: str = "btc", lookback: int = 1095, projection: i
         c2 = (Scc * Rs - Scs * Rc) / det
         ss = sum((resid[i] - (c1 * C[i] + c2 * S[i])) ** 2 for i in range(n))
         r2 = 1 - ss / tot
-        if best is None or r2 > best[0]:
-            best = (r2, L, c1, c2)
-    r2, L, c1, c2 = best
+        # stability: amplitude in first half vs second half should be similar (Seasonax-style)
+        half = n // 2
+        amp1 = math.hypot(sum(resid[i] * C[i] for i in range(half)) / (half / 2 or 1),
+                          sum(resid[i] * S[i] for i in range(half)) / (half / 2 or 1))
+        amp2 = math.hypot(sum(resid[i] * C[i] for i in range(half, n)) / ((n - half) / 2 or 1),
+                          sum(resid[i] * S[i] for i in range(half, n)) / ((n - half) / 2 or 1))
+        stab = min(amp1, amp2) / (max(amp1, amp2) or 1e-9)
+        score = r2 * (0.5 + 0.5 * stab)  # reward fit AND consistency across halves
+        if best is None or score > best[0]:
+            best = (score, L, c1, c2, r2)
+    _score, L, c1, c2, r2 = best
     w = 2 * math.pi / L
     wave = [round(math.exp(a_tr * i + b_tr + c1 * math.cos(w * i) + c2 * math.sin(w * i)), 2)
             for i in range(n + projection)]
