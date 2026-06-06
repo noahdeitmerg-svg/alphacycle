@@ -981,8 +981,17 @@ async def get_cycle_wave(asset: str = "btc", lookback: int = 2190, projection: i
     else:
         next_turn = {"type": "trough", "in_days": days_to_low,
                      "date": (last + _td(days=days_to_low)).isoformat()}
+    # red price forecast: trend + cycle component, anchored to the last actual price
+    raw0 = math.exp(trend_at(i_now) + c1 * math.cos(w * i_now) + c2 * math.sin(w * i_now))
+    factor = (dprices[-1] / raw0) if raw0 else 1.0
+    forecast = [None] * (n_disp + projection)
+    for k in range(0, projection + 1):
+        gi = i_now + k
+        forecast[(n_disp - 1) + k] = round(math.exp(trend_at(gi) + c1 * math.cos(w * gi) + c2 * math.sin(w * gi)) * factor, 2)
+
     data = {"asset": asset.upper(), "cycle_len": int(L), "fit": round(r2, 2),
             "stability": round(stab, 2), "direction": direction, "next_turn": next_turn,
+            "forecast": forecast,
             "days_to_high": days_to_high, "days_to_low": days_to_low,
             "high_date": (last + _td(days=days_to_high)).isoformat(),
             "low_date": (last + _td(days=days_to_low)).isoformat(),
