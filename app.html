@@ -482,11 +482,11 @@ async function loadChart(){
       {label:'ARC Index',data:arcD,yAxisID:'yArc',borderColor:'#00D4AA',borderWidth:2,pointRadius:0,tension:0.2}
     ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
       plugins:{legend:{display:false},tooltip:{callbacks:{title:function(i){return i[0].label;}}},
-        zoom:{pan:{enabled:true,mode:'x',onPanComplete:_autoFitPrice},zoom:{wheel:{enabled:true,speed:0.08},pinch:{enabled:true},mode:'x',onZoomComplete:_autoFitPrice},limits:{x:{minRange:20}}}},
+        zoom:{pan:{enabled:true,mode:'xy'},zoom:{wheel:{enabled:true,speed:0.08},pinch:{enabled:true},mode:'xy'},limits:{x:{minRange:20},yArc:{min:0,max:100,minRange:100}}}},
       scales:{
         x:{min:0,max:_arcN-1,ticks:{color:'#69748a',maxTicksLimit:8,font:{family:'JetBrains Mono',size:10}},grid:{display:false}},
         yArc:{position:'left',min:0,max:100,ticks:{color:'#69748a',font:{family:'JetBrains Mono',size:10}},grid:{color:'rgba(255,255,255,0.05)'}},
-        yPrice:{position:'right',type:'logarithmic',ticks:{color:'#69748a',font:{family:'JetBrains Mono',size:10},callback:function(v){return '$'+(v>=1000?(v/1000)+'k':v);}},grid:{display:false}}
+        yPrice:{position:'right',ticks:{color:'#69748a',maxTicksLimit:9,font:{family:'JetBrains Mono',size:10},callback:function(v){return v>=1000?'$'+Math.round(v/1000)+'k':'$'+Math.round(v);}},grid:{display:false}}
       }},plugins:[zonePlugin,markersPlugin]});
     window._arcChart=chart;
   }catch(e){}
