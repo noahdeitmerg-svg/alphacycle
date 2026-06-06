@@ -882,13 +882,22 @@ async def get_cycle_wave(asset: str = "btc", lookback: int = 2190, projection: i
         raise HTTPException(503, "insufficient history")
     y = [math.log(r["price"]) for r in rows]
     t = list(range(n))
-    # linear detrend (log space), closed form
-    st = sum(t); sy = sum(y); stt = sum(i * i for i in t); sty = sum(t[i] * y[i] for i in range(n))
-    den = (n * stt - st * st) or 1e-9
-    a_tr = (n * sty - st * sy) / den
-    b_tr = (sy - a_tr * st) / n
-    resid = [y[i] - (a_tr * t[i] + b_tr) for i in range(n)]
+    # Band-pass detrend: remove the multi-year arc with a centred 1-year moving average,
+    # leaving the shorter oscillation a single sine can actually fit (Seasonax-style).
+    W = 365
+    half = W // 2
+    csum = [0.0]
+    for v in y:
+        csum.append(csum[-1] + v)
+    trend = [(csum[min(n, i + half + 1)] - csum[max(0, i - half)]) / (min(n, i + half + 1) - max(0, i - half))
+             for i in range(n)]
+    resid = [y[i] - trend[i] for i in range(n)]
     tot = sum(r * r for r in resid) or 1e-9
+    k_end = min(90, n - 1)
+    slope_end = (trend[n - 1] - trend[n - 1 - k_end]) / k_end
+
+    def trend_at(i):
+        return trend[i] if i < n else trend[n - 1] + slope_end * (i - (n - 1))
     # Search repeating cycles only (>=4 full cycles in the window) so we get a stable
     # oscillator whose peaks/troughs track real highs/lows — not one giant arc.
     Lmax = max(180, min(n // 4, 520))
@@ -916,7 +925,7 @@ async def get_cycle_wave(asset: str = "btc", lookback: int = 2190, projection: i
             best = (score, L, c1, c2, r2)
     _score, L, c1, c2, r2 = best
     w = 2 * math.pi / L
-    wave = [round(math.exp(a_tr * i + b_tr + c1 * math.cos(w * i) + c2 * math.sin(w * i)), 2)
+    wave = [round(math.exp(trend_at(i) + c1 * math.cos(w * i) + c2 * math.sin(w * i)), 2)
             for i in range(n + projection)]
     hist_dates = [r["date"] for r in rows]
     last = _date.fromisoformat(hist_dates[-1])
