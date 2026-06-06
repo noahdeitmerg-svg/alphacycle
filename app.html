@@ -503,7 +503,7 @@ async function loadChart(){
         x.lineWidth=2;x.strokeStyle='rgba(255,255,255,0.55)';x.beginPath();x.arc(px,py,5.5,0,6.283);x.stroke();
         x.restore();
       }
-      [['2017-12','top'],['2018-12','bot'],['2021-11','top'],['2022-11','bot'],['2025-10','top']].forEach(function(mk){
+      [['2017-12-17','top'],['2018-12-15','bot'],['2021-11-10','top'],['2022-11-21','bot'],['2025-10-06','top']].forEach(function(mk){
         var idx=c.data.labels.findIndex(function(l){return l.indexOf(mk[0])===0;});
         if(idx<0||!am.data[idx])return;var p=am.data[idx];if(p.x<ar.left-2||p.x>ar.right+2)return;
         var isTop=mk[1]==='top';var col=isTop?'#FF3B3B':'#00DC78';var arcVal=Math.round(arcData[idx]||0);
