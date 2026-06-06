@@ -413,6 +413,117 @@ async def get_stats():
             "landing_to_app_pct": pct(va, vl), "landing_to_anyCTA_pct": pct(cs + cp, vl), "pro_intent_pct": pct(cp, vl)}
 
 
+# --- seasonality (computed from full daily BTC history) ---
+_SEASON_CACHE = {"day": None, "data": None}
+
+@app.get("/api/seasonality")
+async def get_seasonality():
+    from datetime import datetime as _dtm, timedelta as _td, date as _date
+    import statistics as _st
+    from collections import defaultdict as _dd
+    today = _dtm.utcnow().date()
+    if _SEASON_CACHE["day"] == today.isoformat() and _SEASON_CACHE["data"]:
+        return _SEASON_CACHE["data"]
+    try:
+        from services.backtest_engine import _load_or_build_daily_cache
+        daily = await _load_or_build_daily_cache()
+    except Exception as ex:
+        raise HTTPException(503, f"price history unavailable: {ex}")
+    rows = [dict(r) for r in (daily or []) if r.get("price")]
+    for r in rows:
+        r["_dt"] = _dtm.fromisoformat(r["date"][:10]).date()
+    rows.sort(key=lambda r: r["_dt"])
+    if len(rows) < 400:
+        raise HTTPException(503, "insufficient history")
+
+    # monthly returns (last/first within calendar month)
+    by_ym = _dd(list)
+    for r in rows:
+        by_ym[(r["_dt"].year, r["_dt"].month)].append(r)
+    mret = {}
+    for ym, seg in by_ym.items():
+        seg.sort(key=lambda r: r["_dt"])
+        mret[ym] = seg[-1]["price"] / seg[0]["price"] - 1
+    bym = _dd(list)
+    for (y, m), v in mret.items():
+        bym[m].append(v)
+    months = []
+    for m in range(1, 13):
+        v = bym.get(m, [])
+        months.append({"month": m,
+                       "avg": round(_st.mean(v) * 100, 1) if v else None,
+                       "median": round(_st.median(v) * 100, 1) if v else None,
+                       "win": round(sum(1 for x in v if x > 0) / len(v) * 100) if v else None,
+                       "n": len(v)})
+    years = sorted({y for (y, m) in mret})
+    grid = [{"year": y, "vals": [(round(mret[(y, m)] * 100, 1) if (y, m) in mret else None) for m in range(1, 13)]}
+            for y in years]
+
+    # quarterly
+    byq = _dd(list)
+    for (y, m), v in mret.items():
+        byq[(m - 1) // 3 + 1].append(v)
+    quarters = [{"q": q, "avg": round(_st.mean(byq[q]) * 100, 1), "n": len(byq[q])} for q in range(1, 5) if byq[q]]
+
+    # halving cycle path (index, halving day = 1.0)
+    HALV = [_date(2016, 7, 9), _date(2020, 5, 11), _date(2024, 4, 20)]
+    cur_halv = max([h for h in [_date(2012, 11, 28)] + HALV if h <= today], default=None)
+    cyc = _dd(list)
+    cur_path = {}
+    for hi, h in enumerate(HALV):
+        base = next((r["price"] for r in rows if r["_dt"] >= h), None)
+        if base is None:
+            continue
+        end = HALV[hi + 1] if hi + 1 < len(HALV) else rows[-1]["_dt"]
+        seen = set()
+        for r in rows:
+            if h <= r["_dt"] < end:
+                mo = (r["_dt"].year - h.year) * 12 + (r["_dt"].month - h.month)
+                if mo not in seen:
+                    seen.add(mo)
+                    cyc[mo].append(r["price"] / base)
+                    if h == cur_halv:
+                        cur_path[mo] = round(r["price"] / base, 3)
+    cycle = [{"mo": mo,
+              "avg": round(_st.mean(cyc[mo]), 3) if cyc.get(mo) else None,
+              "n": len(cyc.get(mo, [])),
+              "current": cur_path.get(mo)} for mo in range(0, 25)]
+    months_since_halving = ((today.year - cur_halv.year) * 12 + (today.month - cur_halv.month)) if cur_halv else None
+
+    # 30-90 day forward weekly outlook (all data, weekly resolution)
+    by_week = _dd(list)
+    for r in rows:
+        iy, iw, _ = r["_dt"].isocalendar()
+        by_week[(iy, iw)].append(r)
+    wret = _dd(list)
+    for (iy, iw), seg in by_week.items():
+        seg.sort(key=lambda r: r["_dt"])
+        if len(seg) >= 2:
+            wret[iw].append(seg[-1]["price"] / seg[0]["price"] - 1)
+    forward = []
+    cum = 1.0
+    for k in range(1, 14):  # next 13 weeks ~= 90 days
+        wk = today + _td(weeks=k)
+        wn = wk.isocalendar()[1]
+        v = wret.get(wn, [])
+        avg = _st.mean(v) if v else 0.0
+        cum *= (1 + avg)
+        forward.append({"week_of": wk.isoformat(), "weekno": wn,
+                        "avg": round(avg * 100, 2),
+                        "win": round(sum(1 for x in v if x > 0) / len(v) * 100) if v else None,
+                        "cum": round((cum - 1) * 100, 1),
+                        "n": len(v)})
+
+    data = {"range": {"from": rows[0]["date"][:10], "to": rows[-1]["date"][:10], "days": len(rows)},
+            "months": months, "grid": grid, "quarters": quarters,
+            "cycle": cycle, "months_since_halving": months_since_halving,
+            "last_halving": cur_halv.isoformat() if cur_halv else None,
+            "forward": forward}
+    _SEASON_CACHE["day"] = today.isoformat()
+    _SEASON_CACHE["data"] = data
+    return data
+
+
 # -- HELPERS --------------------------------------------------------------------
 
 def _require_cache() -> dict:
