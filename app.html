@@ -46,7 +46,8 @@
   .sec-h{font-size:clamp(22px,3vw,30px);font-weight:700;color:#fff;letter-spacing:-0.01em;margin:8px 0 6px;}
   .sec-tells{font-size:14px;color:var(--mut);max-width:680px;margin-bottom:26px;}
   .sec-tells b{color:var(--ink);font-weight:600;}
-  .card{background:var(--card);border:1px solid var(--bd);border-radius:18px;backdrop-filter:blur(8px);}
+  .card{background:linear-gradient(160deg,rgba(255,255,255,0.07),rgba(255,255,255,0.02));border:1px solid var(--bd2);border-radius:18px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 10px 30px rgba(0,0,0,0.45),0 2px 6px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.10);}
+  .card:hover{box-shadow:0 16px 44px rgba(0,0,0,0.55),0 3px 8px rgba(0,0,0,0.35),inset 0 1px 0 rgba(255,255,255,0.14);border-color:rgba(255,255,255,0.20);transform:translateY(-2px);}
   .grid{display:grid;gap:16px;}
   .g2{grid-template-columns:repeat(2,1fr);}.g3{grid-template-columns:repeat(3,1fr);}.g4{grid-template-columns:repeat(4,1fr);}
   /* HERO */
@@ -102,8 +103,10 @@
   .chart-legend span.off{opacity:0.3;text-decoration:line-through;}
   .chart-canvas-box{position:relative;height:430px;}
   .sec-eyebrow.clps{cursor:pointer;display:flex;align-items:center;gap:8px;}
-  .sec-eyebrow.clps .chev{margin-left:auto;color:var(--mut);transition:transform .2s;font-size:13px;}
-  section.collapsed .sec-eyebrow.clps .chev{transform:rotate(-90deg);}
+  .sec-eyebrow.clps .chev{margin-left:auto;display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;border:1px solid var(--bd2);background:rgba(255,255,255,0.05);color:var(--teal);transition:background .2s,transform .15s;font-size:10px;letter-spacing:0.08em;}
+  .sec-eyebrow.clps:hover .chev{background:rgba(0,212,170,0.18);transform:translateY(-1px);}
+  section.collapsed{opacity:0.96;}
+  section.collapsed .sec-eyebrow.clps .chev{background:rgba(0,212,170,0.12);}
   section.collapsed .eng-body{display:none;}
   section.collapsed .sec-tells{display:none;}
   .chart-wrap:fullscreen{display:flex;flex-direction:column;background:#0a0e1a;padding:24px;}
@@ -243,7 +246,7 @@
 
   <!-- BACKTEST PROOF (collapsible, collapsed by default) -->
   <section class="collapsed">
-    <div class="sec-eyebrow clps" onclick="this.closest('section').classList.toggle('collapsed')">THE PROOF · ARC vs HODL<span class="chev">▾</span></div>
+    <div class="sec-eyebrow clps" onclick="var c=this.closest('section').classList.toggle('collapsed');this.querySelector('.chev').textContent=c?'SHOW ▸':'HIDE ▾';">THE PROOF · ARC vs HODL<span class="chev">SHOW ▸</span></div>
     <div class="sec-h">$10,000 since 2017 — <span style="color:var(--teal)">ARC rule $711k</span> vs <span style="color:#eab308">HODL $142k</span></div>
     <div class="sec-tells">If you'd followed one rule — <b>all-in at ARC 25, all-out at ARC 75, hold the middle</b> — versus buying and holding Bitcoin the whole way. Same asset, same start. Independently backtested on daily data since August 2017. <span class="note">(tap to expand)</span></div>
     <div class="eng-body">
@@ -286,9 +289,17 @@
     <div class="sec-tells"><b>Contextual only</b> — short-term oscillators. The ARC Index is the primary signal; these add texture on timing.</div>
     <div class="gate-cta"><div class="gate-badge" onclick="unlockPro()">&#128274; Sign up free to unlock</div></div>
     <div class="gate-content">
-    <div class="card" style="margin-bottom:14px;display:flex;gap:20px;align-items:center;flex-wrap:wrap;">
-      <div style="min-width:120px"><div class="k">DAILY RSI (14)</div><div class="v" id="rsiBigV" style="font-size:42px;line-height:1.05;">–</div><div class="s" id="rsiZoneS">–</div></div>
-      <div style="flex:1;min-width:220px;height:96px;"><canvas id="rsiSpark"></canvas></div>
+    <div class="card" style="margin-bottom:14px;display:flex;gap:26px;align-items:center;flex-wrap:wrap;">
+      <div style="min-width:120px"><div class="k">DAILY RSI (14)</div><div class="v" id="rsiBigV" style="font-size:46px;line-height:1;">–</div><div class="s" id="rsiZoneS">–</div></div>
+      <div style="flex:1;min-width:250px;">
+        <div style="position:relative;margin-top:6px;">
+          <div style="height:18px;border-radius:9px;background:linear-gradient(90deg,#16a34a 0%,#22c55e 30%,#3a4456 30%,#3a4456 70%,#ef4444 70%,#b91c1c 100%);"></div>
+          <div id="rsiMarker" style="position:absolute;top:-7px;left:0%;transform:translateX(-50%);width:4px;height:32px;background:#fff;border-radius:2px;box-shadow:0 0 8px rgba(0,0,0,0.7);transition:left .4s;"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--mut);margin-top:9px;">
+          <span>0</span><span style="color:#22c55e">30 · oversold</span><span style="color:#ef4444">overbought · 70</span><span>100</span>
+        </div>
+      </div>
     </div>
     <div class="grid g2" style="margin-bottom:14px;">
       <div class="card bigm"><div class="k">AFTER OVERSOLD &lt;30 · NEXT 30D</div><div class="v" id="rsiOsV" style="font-size:20px;">–</div><div class="s" id="rsiOsS">–</div></div>
@@ -317,7 +328,8 @@
       <div class="chart-canvas-box" style="height:340px"><canvas id="seasChart"></canvas></div>
       <div class="chart-legend">
         <span><i style="background:var(--teal)"></i>Price</span>
-        <span><i style="background:#d946ef"></i>Dominant cycle (fit + projection)</span>
+        <span><i style="background:#ef4444"></i>Cycle forecast (projection)</span>
+        <span><i style="background:#d946ef"></i>Dominant cycle</span>
       </div>
     </div>
     <div class="note" id="seasNote" style="margin-top:6px"></div>
@@ -478,33 +490,19 @@ async function loadAll(){
   loadRSI();
 }
 
-var _rsiSpark=null;
 async function loadRSI(){
   try{
     var r=await (await fetch(API+'/api/rsi',{cache:'no-store'})).json();
     var cur=r.rsi; var col=cur<30?'#22c55e':(cur>70?'#ef4444':'#58A6FF');
     setText('rsiBigV', cur); document.getElementById('rsiBigV').style.color=col;
-    setText('rsiZoneS', r.zone+(cur<30?' — washed out':(cur>70?' — running hot':' — mid-range')));
+    setText('rsiZoneS', (cur<30?'Oversold — washed out':(cur>70?'Overbought — running hot':'Neutral — mid-range')));
+    var mk=document.getElementById('rsiMarker'); if(mk) mk.style.left=Math.max(0,Math.min(100,cur))+'%';
     setText('rsiOsV', r.oversold?((r.oversold.median>0?'+':'')+r.oversold.median+'%'):'–'); document.getElementById('rsiOsV').style.color='#22c55e';
-    setText('rsiOsS', r.oversold?(r.oversold.win+'% positive · '+r.oversold.n+' times since 2017'):'—');
+    setText('rsiOsS', r.oversold?(r.oversold.win+'% of the time BTC was higher 30 days later ('+r.oversold.n+' cases)'):'—');
     setText('rsiObV', r.overbought?((r.overbought.median>0?'+':'')+r.overbought.median+'%'):'–'); document.getElementById('rsiObV').style.color=(r.overbought&&r.overbought.median<0?'#ef4444':'#58A6FF');
-    setText('rsiObS', r.overbought?(r.overbought.win+'% positive · '+r.overbought.n+' times since 2017'):'—');
+    setText('rsiObS', r.overbought?(r.overbought.win+'% of the time BTC was higher 30 days later ('+r.overbought.n+' cases)'):'—');
     var bl=r.baseline?(' Baseline (any day): '+(r.baseline.median>0?'+':'')+r.baseline.median+'% / '+r.baseline.win+'% up.'):'';
-    setText('rsiNote','Wilder 14-day RSI on daily closes. The honest BTC quirk: overbought (>70) has NOT been a reliable sell — momentum often carried higher; oversold (<30, like now) has given a mild edge above baseline.'+bl+' Median forward return over the next 30 days. Context, not a trade signal.');
-    if(window.Chart&&r.recent){
-      if(_rsiSpark) _rsiSpark.destroy();
-      var labs=r.recent.map(function(x){return x.date;}); var vals=r.recent.map(function(x){return x.rsi;});
-      _rsiSpark=new Chart(document.getElementById('rsiSpark'),{type:'line',
-        data:{labels:labs,datasets:[
-          {data:vals,borderColor:col,borderWidth:2,pointRadius:0,tension:0.3},
-          {data:vals.map(function(){return 70;}),borderColor:'rgba(239,68,68,0.35)',borderWidth:1,borderDash:[4,3],pointRadius:0},
-          {data:vals.map(function(){return 30;}),borderColor:'rgba(34,197,94,0.35)',borderWidth:1,borderDash:[4,3],pointRadius:0}
-        ]},
-        options:{animation:false,maintainAspectRatio:false,responsive:true,
-          plugins:{legend:{display:false},zoom:{zoom:{wheel:{enabled:false},pinch:{enabled:false}},pan:{enabled:false}},
-            tooltip:{filter:function(it){return it.datasetIndex===0;},callbacks:{title:function(it){return labs[it[0].dataIndex];},label:function(c){return 'RSI '+c.parsed.y;}}}},
-          scales:{x:{display:false},y:{min:0,max:100,ticks:{color:'#6b7280',font:{size:9},stepSize:50},grid:{color:'rgba(255,255,255,0.05)'}}}}});
-    }
+    setText('rsiNote','RSI(14) measures short-term momentum 0–100. The white marker shows today. Below 30 = oversold (washed out), above 70 = overbought. Honest BTC quirk: overbought has NOT been a reliable sell — momentum often carried higher; oversold (like now) has given a mild edge.'+bl+' Numbers = median move over the next 30 days. Context, not a trade signal.');
   }catch(e){}
 }
 
@@ -532,17 +530,18 @@ async function loadCycleWave(asset){
       _seasChart=new Chart(document.getElementById('seasChart'),{type:'line',
         data:{labels:labels,datasets:[
           {label:'Price',data:price,borderColor:'#00D4AA',borderWidth:2,pointRadius:0,tension:0.15,spanGaps:false},
-          {label:'Cycle',data:wHist,borderColor:'#d946ef',borderWidth:2,pointRadius:0,tension:0.3,spanGaps:true},
-          {label:'Cycle (projected)',data:wProj,borderColor:'#d946ef',borderDash:[5,4],borderWidth:2,pointRadius:0,tension:0.3,spanGaps:true}
+          {label:'Forecast',data:o.forecast||[],borderColor:'#ef4444',borderWidth:2.4,borderDash:[6,4],pointRadius:0,tension:0.25,spanGaps:true},
+          {label:'Cycle',data:wHist,borderColor:'#d946ef',borderWidth:1.6,pointRadius:0,tension:0.3,spanGaps:true},
+          {label:'Cycle (projected)',data:wProj,borderColor:'#d946ef',borderDash:[5,4],borderWidth:1.6,pointRadius:0,tension:0.3,spanGaps:true}
         ]},
         options:{animation:false,maintainAspectRatio:false,responsive:true,interaction:{mode:'index',intersect:false},
           plugins:{legend:{display:false},zoom:{zoom:{wheel:{enabled:false},pinch:{enabled:false}},pan:{enabled:false}},
-            tooltip:{filter:function(it){return it.datasetIndex===0;},callbacks:{title:function(it){return labels[it[0].dataIndex];},label:function(c){return (c.parsed.y!=null?'$'+Number(c.parsed.y).toLocaleString('en-US'):'');}}}},
+            tooltip:{filter:function(it){return it.datasetIndex===0||it.datasetIndex===1;},callbacks:{title:function(it){return labels[it[0].dataIndex];},label:function(c){return (c.parsed.y!=null?c.dataset.label+': $'+Number(c.parsed.y).toLocaleString('en-US'):'');}}}},
           scales:{x:{ticks:{color:'#6b7280',maxTicksLimit:9,maxRotation:0,font:{size:10},callback:function(v,i){var d=labels[i]; return d?d.slice(0,7):'';}},grid:{display:false}},
             y:{ticks:{color:'#6b7280',font:{size:10},callback:function(v){return '$'+(v>=1000?Math.round(v/1000)+'k':v);}},grid:{color:'rgba(255,255,255,0.05)'}}}}});
     }
     var proj=labels.length-split;
-    setText('seasNote','The dominant '+o.cycle_len+'-day cycle (≈'+(o.cycle_len/30.4).toFixed(1)+' months, stability '+(o.stability!=null?o.stability:o.fit)+'/1) drawn as a regular wave — same shape repeating — with the real '+o.asset+' price laid over it, projected '+proj+' days forward (dashed). It shows the cycle’s timing (when it tends to peak/bottom), not a price level. A detected rhythm, not a forecast.');
+    setText('seasNote','Magenta = the dominant '+o.cycle_len+'-day cycle (≈'+(o.cycle_len/30.4).toFixed(1)+' months, stability '+(o.stability!=null?o.stability:o.fit)+'/1) as a regular wave, showing the timing of highs/lows. Red dashed = the cycle-based price forecast for the next '+proj+' days, continuing from today’s price. A detected rhythm extrapolated — not a guarantee; cycles can shift or break.');
   }catch(e){ var el=document.getElementById('seasSec'); if(el) el.style.opacity='0.55'; }
 }
 
@@ -734,8 +733,8 @@ function initCollapse(){
       for(var i=start;i<kids.length;i++) body.appendChild(kids[i]);
       sec.appendChild(body);
       eye.classList.add('clps');
-      var chev=document.createElement('span'); chev.className='chev'; chev.textContent='▾'; eye.appendChild(chev);
-      eye.addEventListener('click',function(){ sec.classList.toggle('collapsed'); if(!sec.classList.contains('collapsed')){ setTimeout(function(){ try{ if(sec.querySelector('#arcChart')&&window._arcChart){window._arcChart.resize();_autoFitPrice&&_autoFitPrice();} if(sec.querySelector('#seaCycleChart')&&_seaCycleChart){_seaCycleChart.resize();} if(sec.querySelector('#seasChart')&&_seasChart){_seasChart.resize();} }catch(e){} },80); } });
+      var chev=document.createElement('span'); chev.className='chev'; chev.textContent='HIDE ▾'; eye.appendChild(chev);
+      eye.addEventListener('click',function(){ var col=sec.classList.toggle('collapsed'); chev.textContent=col?'SHOW ▸':'HIDE ▾'; if(!col){ setTimeout(function(){ try{ if(sec.querySelector('#arcChart')&&window._arcChart){window._arcChart.resize();_autoFitPrice&&_autoFitPrice();} if(sec.querySelector('#seaCycleChart')&&_seaCycleChart){_seaCycleChart.resize();} if(sec.querySelector('#seasChart')&&_seasChart){_seasChart.resize();} }catch(e){} },80); } });
     });
   }catch(e){}
 }
