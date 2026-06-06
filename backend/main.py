@@ -981,18 +981,15 @@ async def get_cycle_wave(asset: str = "btc", lookback: int = 2190, projection: i
     else:
         next_turn = {"type": "trough", "in_days": days_to_low,
                      "date": (last + _td(days=days_to_low)).isoformat()}
-    # red price forecast: the CYCLE'S relative move applied to today's price, DAMPENED with
-    # horizon (near-term follows the cycle, far-term flattens) + scaled by fit confidence so it
-    # stays realistic instead of swinging the full theoretical amplitude.
-    def _cyc_log(i):
-        return c1 * math.cos(w * i) + c2 * math.sin(w * i)
-    base_log = _cyc_log(i_now)
-    conf = max(0.35, min(1.0, max(r2, 0) ** 0.5 + 0.25))  # how much of the swing we actually trust
+    # red price forecast: follow the cycle's SHAPE forward from today's price with a realistic,
+    # visible amplitude (~18%), gently damped with horizon so it stays natural (not a runaway swing).
+    shape0 = math.cos(w * i_now - phi)
+    amp_fc = 0.12 + 0.10 * stab          # ~12-22% peak-to-now swing, scaled by cycle stability
     forecast = [None] * (n_disp + projection)
     for k in range(0, projection + 1):
-        damp = math.exp(-k / float(projection))           # 1.0 now -> ~0.37 at the far end
-        dev = (_cyc_log(i_now + k) - base_log) * damp * conf
-        forecast[(n_disp - 1) + k] = round(dprices[-1] * math.exp(dev), 2)
+        damp = math.exp(-k / (float(projection) * 2.5))   # 1.0 now -> ~0.93 ... ~0.72 at far end
+        dev = amp_fc * (math.cos(w * (i_now + k) - phi) - shape0) * damp
+        forecast[(n_disp - 1) + k] = round(dprices[-1] * (1 + dev), 2)
 
     data = {"asset": asset.upper(), "cycle_len": int(L), "fit": round(r2, 2),
             "stability": round(stab, 2), "direction": direction, "next_turn": next_turn,
