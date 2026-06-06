@@ -787,6 +787,70 @@ async def get_seasonal_pattern():
     return data
 
 
+# --- Engine 6 overlay: actual current-year BTC price vs its seasonal pattern ---
+_OVERLAY_CACHE = {"day": None, "data": None}
+
+@app.get("/api/seasonal-overlay")
+async def get_seasonal_overlay():
+    from datetime import datetime as _dtm, date as _date, timedelta as _td
+    import statistics as _st
+    from collections import defaultdict as _dd
+    today = _dtm.utcnow().date()
+    if _OVERLAY_CACHE["day"] == today.isoformat() and _OVERLAY_CACHE["data"]:
+        return _OVERLAY_CACHE["data"]
+    try:
+        from services.backtest_engine import _load_or_build_daily_cache
+        daily = await _load_or_build_daily_cache()
+    except Exception as ex:
+        raise HTTPException(503, f"price history unavailable: {ex}")
+    rows = [{"date": r["date"][:10], "price": r["price"]} for r in (daily or []) if r.get("price")]
+    rows.sort(key=lambda r: r["date"])
+    if len(rows) < 400:
+        raise HTTPException(503, "insufficient history")
+    cur_year = today.year
+    names = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+    path, ny, _monthly = _seasonal_curve(rows, cur_year)
+    if not path:
+        raise HTTPException(503, "no seasonal curve")
+    actual = [r for r in rows if r["date"][:4] == str(cur_year)]
+    anchor = actual[0]["price"] if actual else rows[-1]["price"]
+    seasonal = []
+    for doy in range(1, 366):
+        dt = _date(cur_year, 1, 1) + _td(days=doy - 1)
+        if dt.year != cur_year:
+            break
+        seasonal.append({"date": dt.isoformat(), "price": round(anchor * path[doy - 1] / 100)})
+    # monthly median + win across COMPLETE prior years
+    by_ym = _dd(list)
+    for r in rows:
+        by_ym[(int(r["date"][:4]), int(r["date"][5:7]))].append(r)
+    mret = {}
+    for ym, seg in by_ym.items():
+        seg.sort(key=lambda r: r["date"])
+        mret[ym] = seg[-1]["price"] / seg[0]["price"] - 1
+    bym = _dd(list)
+    for (y, m), v in mret.items():
+        if y < cur_year:
+            bym[m].append(v)
+
+    def mstat(m):
+        v = bym.get(m, [])
+        if not v:
+            return None
+        up = sum(1 for x in v if x > 0)
+        return {"month": m, "name": names[m - 1], "median": round(_st.median(v) * 100, 1),
+                "win": round(up / len(v) * 100), "n": len(v),
+                "dir": "up" if up * 2 > len(v) else "down"}
+
+    tm = today.month
+    data = {"asof": rows[-1]["date"], "year": cur_year, "years": ny, "anchor": round(anchor),
+            "actual": actual, "seasonal": seasonal,
+            "this_month": mstat(tm), "next_month": mstat(tm % 12 + 1)}
+    _OVERLAY_CACHE["day"] = today.isoformat()
+    _OVERLAY_CACHE["data"] = data
+    return data
+
+
 # --- Daily RSI(14) with historical forward-return edge ---
 _RSI_CACHE = {"key": None, "data": None}
 
