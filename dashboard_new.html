@@ -141,6 +141,10 @@
   @media(max-width:820px){.hero-in{grid-template-columns:1fr;gap:26px;}.g4{grid-template-columns:1fr 1fr;}.g3{grid-template-columns:1fr;}}
   html,body{overflow-x:hidden;max-width:100%;}
   @media(max-width:560px){
+    .wrap{overflow-x:hidden;}
+    section,.card,.chart-wrap,.chart-canvas-box,.sec-tells,.sec-h{max-width:100%;box-sizing:border-box;}
+    canvas{max-width:100% !important;}
+    .sec-tells,.sec-h{overflow-wrap:anywhere;word-break:break-word;}
     .g4,.g2,.g3{grid-template-columns:1fr;}
     .chart-canvas-box{height:300px;}
     #dAction{font-size:30px !important;}
