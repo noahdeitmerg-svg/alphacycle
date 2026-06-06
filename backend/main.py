@@ -447,14 +447,33 @@ async def get_seasonality():
     bym = _dd(list)
     for (y, m), v in mret.items():
         bym[m].append(v)
+    from math import comb as _comb
+    def _binom_p(k, n):
+        # two-sided p-value vs a fair coin (probability a directional bias this strong is chance)
+        if n == 0:
+            return 1.0
+        le = sum(_comb(n, i) for i in range(0, k + 1)) / (2 ** n)
+        ge = sum(_comb(n, i) for i in range(k, n + 1)) / (2 ** n)
+        return min(1.0, 2 * min(le, ge))
+    P_GATE = 0.10   # only surface signals unlikely to be chance
+    N_MIN = 10
     months = []
     for m in range(1, 13):
         v = bym.get(m, [])
+        n = len(v)
+        up = sum(1 for x in v if x > 0)
+        win = round(up / n * 100) if n else None
+        p = round(_binom_p(up, n), 3) if n else None
+        high = bool(n >= N_MIN and p is not None and p < P_GATE)
         months.append({"month": m,
                        "avg": round(_st.mean(v) * 100, 1) if v else None,
                        "median": round(_st.median(v) * 100, 1) if v else None,
-                       "win": round(sum(1 for x in v if x > 0) / len(v) * 100) if v else None,
-                       "n": len(v)})
+                       "win": win, "n": n, "p": p,
+                       "dir": (None if not n else ("up" if up * 2 > n else "down")),
+                       "high_conf": high})
+    month_signals = [{"month": m["month"], "dir": m["dir"], "median": m["median"],
+                      "win": m["win"], "n": m["n"], "p": m["p"]}
+                     for m in months if m["high_conf"]]
     years = sorted({y for (y, m) in mret})
     grid = [{"year": y, "vals": [(round(mret[(y, m)] * 100, 1) if (y, m) in mret else None) for m in range(1, 13)]}
             for y in years]
@@ -498,33 +517,41 @@ async def get_seasonality():
                       "current": cur_v})
     months_since_halving = ((today.year - cur_halv.year) * 12 + (today.month - cur_halv.month)) if cur_halv else None
 
-    # 30-90 day forward weekly outlook (all data, weekly resolution)
-    by_week = _dd(list)
-    for r in rows:
-        iy, iw, _ = r["_dt"].isocalendar()
-        by_week[(iy, iw)].append(r)
-    wret = _dd(list)
-    for (iy, iw), seg in by_week.items():
-        seg.sort(key=lambda r: r["_dt"])
-        if len(seg) >= 2:
-            wret[iw].append(seg[-1]["price"] / seg[0]["price"] - 1)
+    # forward outlook: calendar-anchored from TODAY, real N-day returns across all past years.
+    # Only flagged high_conf when the directional bias is statistically unlikely to be chance.
+    def _p_on_after(d):
+        return next((r["price"] for r in rows if r["_dt"] >= d), None)
+    last_dt = rows[-1]["_dt"]
+    safe_day = min(today.day, 28)
     forward = []
-    cum = 1.0
-    for k in range(1, 14):  # next 13 weeks ~= 90 days
-        wk = today + _td(weeks=k)
-        wn = wk.isocalendar()[1]
-        v = wret.get(wn, [])
-        med = _st.median(v) if v else 0.0  # median = robust to single-cycle moonshots
-        cum *= (1 + med)
-        forward.append({"week_of": wk.isoformat(), "weekno": wn,
-                        "avg": round(med * 100, 2),
-                        "mean": round(_st.mean(v) * 100, 2) if v else 0.0,
-                        "win": round(sum(1 for x in v if x > 0) / len(v) * 100) if v else None,
-                        "cum": round((cum - 1) * 100, 1),
-                        "n": len(v)})
+    for hor in (30, 60, 90):
+        rets = []
+        for y in range(rows[0]["_dt"].year, today.year):  # completed years only
+            try:
+                start = _date(y, today.month, safe_day)
+            except ValueError:
+                continue
+            tgt = start + _td(days=hor)
+            if tgt > last_dt:
+                continue
+            p0 = _p_on_after(start)
+            p1 = _p_on_after(tgt)
+            if p0 and p1:
+                rets.append(p1 / p0 - 1)
+        if rets:
+            up = sum(1 for x in rets if x > 0)
+            win = round(up / len(rets) * 100)
+            p = round(_binom_p(up, len(rets)), 3)
+            forward.append({"hor": hor, "median": round(_st.median(rets) * 100, 1),
+                            "win": win, "n": len(rets), "p": p,
+                            "dir": ("up" if up * 2 > len(rets) else "down"),
+                            "high_conf": bool(len(rets) >= 8 and p < P_GATE)})
+        else:
+            forward.append({"hor": hor, "median": None, "win": None, "n": 0, "p": None,
+                            "dir": None, "high_conf": False})
 
     data = {"range": {"from": rows[0]["date"][:10], "to": rows[-1]["date"][:10], "days": len(rows)},
-            "months": months, "grid": grid, "quarters": quarters,
+            "months": months, "month_signals": month_signals, "grid": grid, "quarters": quarters,
             "cycle": cycle, "cycles_by_year": cycles_by_year,
             "months_since_halving": months_since_halving,
             "last_halving": cur_halv.isoformat() if cur_halv else None,
