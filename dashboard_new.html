@@ -522,7 +522,7 @@ async function loadCycleWave(asset){
       setText('cwTurn',(o.next_turn.type==='peak'?'Peak ~':'Trough ~')+ds); document.getElementById('cwTurn').style.color=(o.next_turn.type==='peak'?'#ef4444':'#22c55e');
       setText('cwTurnS','in ~'+o.next_turn.in_days+' days'); }
     else { setText('cwTurn','—'); document.getElementById('cwTurn').style.color='#fff'; setText('cwTurnS','no turn within the projection window'); }
-    setText('cwLen','~'+o.cycle_len+'d'); var fl=o.fit>=0.5?'strong':(o.fit>=0.3?'moderate':'weak'); setText('cwLenS','fit strength '+o.fit+' ('+fl+')');
+    setText('cwLen','~'+o.cycle_len+'d'); var fl=o.fit>=0.4?'strong':(o.fit>=0.2?'moderate':'weak'); setText('cwLenS','fit strength '+o.fit+' ('+fl+')');
     var labels=o.dates, price=o.price, wave=o.wave, split=o.split;
     var wHist=wave.map(function(v,i){return i<split?v:null;});
     var wProj=wave.map(function(v,i){return i>=split-1?v:null;});
@@ -540,8 +540,8 @@ async function loadCycleWave(asset){
           scales:{x:{ticks:{color:'#6b7280',maxTicksLimit:9,maxRotation:0,font:{size:10},callback:function(v,i){var d=labels[i]; return d?d.slice(0,7):'';}},grid:{display:false}},
             y:{type:'logarithmic',ticks:{color:'#6b7280',font:{size:10},callback:function(v){return '$'+(v>=1000?Math.round(v/1000)+'k':v);}},grid:{color:'rgba(255,255,255,0.05)'}}}}});
     }
-    var proj=labels.length-split;
-    setText('seasNote','Best-fit '+o.cycle_len+'-day cycle (fit strength '+o.fit+' on 0–1) over the last 3 years of '+o.asset+', projected '+proj+' days forward (dashed). A detected rhythm for timing the swing — not a price target. Lower fit = treat with more caution.');
+    var proj=labels.length-split; var yrs=Math.max(1,Math.round(split/365));
+    setText('seasNote','Best-fit '+o.cycle_len+'-day cycle (≈'+(o.cycle_len/30.4).toFixed(1)+' months) detected over '+yrs+' years of '+o.asset+', projected '+proj+' days forward (dashed). The price is band-pass detrended so the wave tracks the up/down swings — peaks near highs, troughs near lows. A detected rhythm for timing, not a price target.');
   }catch(e){ var el=document.getElementById('seasSec'); if(el) el.style.opacity='0.55'; }
 }
 
