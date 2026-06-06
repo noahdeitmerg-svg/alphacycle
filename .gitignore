@@ -17,3 +17,18 @@ alphacycle-x-bot/artifacts/
 _verify_*.png
 _chart_crop*.png
 
+
+# ad build artifacts (local only, not for repo)
+_adbuild/
+AlphaCycle_Ad_*.mp4
+AlphaCycle_proof_*.mp4
+
+
+# local marketing deliverables (not website code)
+social/
+AlphaCycle_ARC_vs_HODL.png
+AlphaCycle_Reel_*.mp4
+social_assets_gauge.png
+*_KIT*.md
+FLOW_*.md
+
