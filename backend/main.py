@@ -679,6 +679,114 @@ async def get_cycle_signals(debug: int = 0):
     return data
 
 
+# --- Seasonax-style seasonal pattern (avg intra-year path) for BTC & ETH ---
+_SEASONAL_CACHE = {"day": None, "data": None}
+
+async def _load_eth_daily():
+    """Daily ETH/USD closes from CryptoCompare (full history ~2016+), cached in /tmp."""
+    import json as _j, os as _o, httpx
+    from datetime import datetime as _dt
+    f = "/tmp/eth_daily_cache.json"
+    try:
+        if _o.path.exists(f):
+            c = _j.load(open(f))
+            if c and c[-1]["date"][:7] >= _dt.utcnow().date().isoformat()[:7]:
+                return c
+    except Exception:
+        pass
+    out = []
+    try:
+        async with httpx.AsyncClient(timeout=30, follow_redirects=True) as client:
+            r = await client.get("https://min-api.cryptocompare.com/data/v2/histoday",
+                                  params={"fsym": "ETH", "tsym": "USD", "allData": "true"})
+            for row in (r.json().get("Data", {}) or {}).get("Data", []):
+                close = float(row.get("close") or 0)
+                if close > 0:
+                    out.append({"date": _dt.utcfromtimestamp(row["time"]).date().isoformat(), "price": close})
+        out.sort(key=lambda x: x["date"])
+        if out:
+            _j.dump(out, open(f, "w"))
+    except Exception:
+        return []
+    return out
+
+
+def _seasonal_curve(rows, cur_year):
+    """Geometric-average intra-year path (Jan 1 = 100), robust to outlier years.
+       Returns (path[365], n_years, monthly_pct[12])."""
+    import math
+    from collections import defaultdict
+    from datetime import date as _date
+    by_year = defaultdict(list)
+    for r in rows:
+        by_year[int(r["date"][:4])].append(r)
+    by_doy = defaultdict(list)
+    n_years = 0
+    for y, seg in by_year.items():
+        if y >= cur_year:
+            continue
+        seg.sort(key=lambda r: r["date"])
+        if len(seg) < 350:
+            continue
+        n_years += 1
+        for i in range(1, len(seg)):
+            p0, p1 = seg[i - 1]["price"], seg[i]["price"]
+            if p0 > 0 and p1 > 0:
+                doy = _date(*[int(x) for x in seg[i]["date"].split("-")]).timetuple().tm_yday
+                if doy <= 365:
+                    by_doy[doy].append(math.log(p1 / p0))
+    if n_years == 0:
+        return None, 0, None
+    path, cum = [], 0.0
+    for doy in range(1, 366):
+        rs = by_doy.get(doy, [])
+        if rs:
+            cum += sum(rs) / len(rs)
+        path.append(round(100 * math.exp(cum), 1))
+    # monthly % change from the curve (month boundaries by day-of-year)
+    mb = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365]
+    monthly = []
+    for m in range(12):
+        a, b = path[mb[m]], path[mb[m + 1] - 1]
+        monthly.append(round((b / a - 1) * 100, 1))
+    return path, n_years, monthly
+
+
+@app.get("/api/seasonal-pattern")
+async def get_seasonal_pattern():
+    from datetime import datetime as _dtm
+    today = _dtm.utcnow().date().isoformat()
+    if _SEASONAL_CACHE["day"] == today and _SEASONAL_CACHE["data"]:
+        return _SEASONAL_CACHE["data"]
+    try:
+        from services.backtest_engine import _load_or_build_daily_cache
+        btc = await _load_or_build_daily_cache()
+    except Exception as ex:
+        raise HTTPException(503, f"price history unavailable: {ex}")
+    btc = [{"date": r["date"][:10], "price": r["price"]} for r in (btc or []) if r.get("price")]
+    eth = await _load_eth_daily()
+    cur_year = int(today[:4])
+    names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+    def pack(rows, label):
+        path, ny, monthly = _seasonal_curve(rows, cur_year) if rows else (None, 0, None)
+        if not path:
+            return {"path": None, "years": 0, "monthly": None, "from": None, "to": None,
+                    "strong": None, "weak": None}
+        strong = names[max(range(12), key=lambda i: monthly[i])]
+        weak = names[min(range(12), key=lambda i: monthly[i])]
+        return {"path": path, "years": ny, "monthly": monthly,
+                "from": rows[0]["date"][:4], "to": rows[-1]["date"][:4],
+                "strong": strong, "weak": weak}
+
+    data = {"asof": today,
+            "btc": pack(btc, "BTC"),
+            "eth": pack(eth, "ETH")}
+    _SEASONAL_CACHE["day"] = today
+    _SEASONAL_CACHE["data"] = data
+    return data
+
+
 # -- HELPERS --------------------------------------------------------------------
 
 def _require_cache() -> dict:
