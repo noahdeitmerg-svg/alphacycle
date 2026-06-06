@@ -101,6 +101,11 @@
   .chart-legend span:hover{color:#fff;background:rgba(255,255,255,0.04);}
   .chart-legend span.off{opacity:0.3;text-decoration:line-through;}
   .chart-canvas-box{position:relative;height:430px;}
+  .sec-eyebrow.clps{cursor:pointer;display:flex;align-items:center;gap:8px;}
+  .sec-eyebrow.clps .chev{margin-left:auto;color:var(--mut);transition:transform .2s;font-size:13px;}
+  section.collapsed .sec-eyebrow.clps .chev{transform:rotate(-90deg);}
+  section.collapsed .eng-body{display:none;}
+  section.collapsed .sec-tells{display:none;}
   .chart-wrap:fullscreen{display:flex;flex-direction:column;background:#0a0e1a;padding:24px;}
   .chart-wrap:fullscreen .chart-canvas-box{flex:1;height:auto;min-height:0;}
   .chart-wrap:fullscreen .chart-legend{margin-top:14px;}
@@ -136,6 +141,8 @@
   @media(max-width:820px){.hero-in{grid-template-columns:1fr;gap:26px;}.g4{grid-template-columns:1fr 1fr;}.g3{grid-template-columns:1fr;}}
   @media(max-width:560px){
     .g4,.g2{grid-template-columns:1fr;}
+    .chart-canvas-box{height:330px;}
+    .bigm .v{font-size:30px;}
     .zrow .zn{width:96px;}.zrow .zd{display:none;}
     .nav-right .nav-link{display:none;}
     section{padding:48px 0 0;}
@@ -226,18 +233,20 @@
     </div>
   </section>
 
-  <!-- BACKTEST PROOF -->
-  <section>
-    <div class="sec-eyebrow">THE PROOF · ARC vs HODL</div>
-    <div class="sec-h">$10,000 since 2017 — the rule vs just holding</div>
-    <div class="sec-tells">If you'd followed one rule — <b>all-in at ARC 25, all-out at ARC 75, hold the middle</b> — versus buying and holding Bitcoin the whole way. Same asset, same start. Independently backtested on daily data since August 2017.</div>
+  <!-- BACKTEST PROOF (collapsible, collapsed by default) -->
+  <section class="collapsed">
+    <div class="sec-eyebrow clps" onclick="this.closest('section').classList.toggle('collapsed')">THE PROOF · ARC vs HODL<span class="chev">▾</span></div>
+    <div class="sec-h">$10,000 since 2017 — <span style="color:var(--teal)">ARC rule $711k</span> vs <span style="color:#eab308">HODL $142k</span></div>
+    <div class="sec-tells">If you'd followed one rule — <b>all-in at ARC 25, all-out at ARC 75, hold the middle</b> — versus buying and holding Bitcoin the whole way. Same asset, same start. Independently backtested on daily data since August 2017. <span class="note">(tap to expand)</span></div>
+    <div class="eng-body">
     <div class="grid g3" style="margin-bottom:16px;">
       <div class="card bigm"><div class="k">ARC RULE</div><div class="v" style="color:var(--teal);">$711k</div><div class="s">71× · max drawdown −36%</div></div>
       <div class="card bigm"><div class="k">HODL</div><div class="v" style="color:#eab308;">$142k</div><div class="s">14× · max drawdown −84%</div></div>
-      <div class="card bigm"><div class="k">EDGE</div><div class="v" style="color:var(--teal);">4.1×</div><div class="s">more, at less than half the risk</div></div>
+      <div class="card bigm"><div class="k">EDGE</div><div class="v" style="color:var(--teal);">5.0×</div><div class="s">more, at less than half the risk</div></div>
     </div>
     <div class="card" style="padding:14px;"><img src="assets/backtest.png" alt="ARC strategy vs HODL equity curve" style="width:100%;border-radius:8px;display:block;"></div>
-    <div class="note" style="margin-top:8px;">6 trades in 9 years. The strategy sits in cash through every bear market (the flat steps) and re-enters at the next bottom. Past performance does not guarantee future results — this is educational, not financial advice.</div>
+    <div class="note" style="margin-top:8px;">6 trades in 9 years. The strategy sits in cash through every bear market (the gently rising steps — cash parked at ~4%) and re-enters at the next bottom. Past performance does not guarantee future results — educational, not financial advice.</div>
+    </div>
   </section>
 
   <!-- HISTORICAL RETURNS -->
