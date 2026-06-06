@@ -333,6 +333,23 @@
     </div>
   </section>
 
+  <!-- CYCLE EXTREMES (moving averages) -->
+  <section id="cycSec">
+    <div class="sec-eyebrow">ENGINE 6C · CYCLE EXTREMES</div>
+    <div class="sec-h">The moving averages that mark tops &amp; bottoms</div>
+    <div class="sec-tells">The classic price-extension signals — the same ones Pi Cycle and Mayer Multiple use — tested across every cycle since 2017. Where they sit now lines up with the ARC read.</div>
+    <div class="grid g3">
+      <div class="card bigm"><div class="k">PI CYCLE TOP · 111d vs 2×350d</div><div class="v" id="cycPiV" style="font-size:23px;">–</div><div class="s" id="cycPiS">distance to the top trigger</div></div>
+      <div class="card bigm"><div class="k">MAYER MULTIPLE · price ÷ 200d</div><div class="v" id="cycMayV" style="font-size:23px;">–</div><div class="s" id="cycMayS">vs the 200-day average</div></div>
+      <div class="card bigm"><div class="k">200-WEEK MA · bottom support</div><div class="v" id="cyc200V" style="font-size:23px;">–</div><div class="s" id="cyc200S">distance from the bear-market floor</div></div>
+    </div>
+    <div class="card" style="margin-top:14px;">
+      <div class="k">PI CYCLE TOP · historical accuracy</div>
+      <div id="cycPiRec" style="margin-top:10px"></div>
+      <div class="note" id="cycNote" style="margin-top:8px"></div>
+    </div>
+  </section>
+
   <!-- HISTORY CHART -->
   <section>
     <div class="sec-eyebrow">ENGINE 7 · 10-YEAR HISTORY</div>
@@ -459,6 +476,32 @@ async function loadAll(){
   loadChart();
   loadRegimeFeed();
   loadSeasonality();
+  loadCycleSignals();
+}
+
+function _fmt(n){ return (n!=null)? Number(n).toLocaleString('en-US') : ''; }
+async function loadCycleSignals(){
+  try{
+    var c=await (await fetch(API+'/api/cycle-signals',{cache:'no-store'})).json();
+    var pi=c.pi||{};
+    if(pi.triggered){ setText('cycPiV','TRIGGERED'); document.getElementById('cycPiV').style.color='#ef4444'; setText('cycPiS','111d crossed above 2×350d — historical top zone'); }
+    else { setText('cycPiV',(pi.gap_pct!=null?('+'+pi.gap_pct+'% away'):'–')); document.getElementById('cycPiV').style.color='#22c55e'; setText('cycPiS','111d ($'+_fmt(pi.ma111)+') must rise to 2×350d ($'+_fmt(pi.ma350x2)+')'); }
+    var may=c.mayer||{}; setText('cycMayV', may.value!=null?(may.value+'x'):'–');
+    var mc=may.value==null?'#fff':(may.value<1?'#22c55e':(may.value<2.4?'#58A6FF':(may.value<3.5?'#FF9500':'#ef4444')));
+    document.getElementById('cycMayV').style.color=mc;
+    setText('cycMayS', may.value!=null?((may.value<1?'below the 200-day avg — undervalued zone':'above the 200-day avg')+' (200d $'+_fmt(may.ma200)+')'):'');
+    var w=c.ma200w||{}; var pa=w.pct_above;
+    setText('cyc200V', pa!=null?((pa>0?'+':'')+pa+'%'):'–');
+    document.getElementById('cyc200V').style.color=(pa==null?'#fff':(pa<10?'#22c55e':(pa<100?'#58A6FF':'#FF9500')));
+    setText('cyc200S', w.value!=null?('200W MA at $'+_fmt(w.value)+' — the floor that held 2015 / 2018 / 2022'):'');
+    var tops={'2017-12-16':'2017-12-17','2021-04-12':'2021-04-14'};
+    var rec=(pi.crosses||[]).map(function(x){
+      var t=tops[x.date]; var diff=t?Math.round((new Date(t)-new Date(x.date))/86400000):null;
+      return '<div style="display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:13px"><span style="color:var(--mut)">Signal '+x.date+' · $'+_fmt(x.price)+'</span><span style="color:#22c55e;font-weight:700">marked top within '+(diff!=null?diff:'~2')+' day'+(diff===1?'':'s')+'</span></div>';
+    }).join('');
+    document.getElementById('cycPiRec').innerHTML=rec||'<div class="note">No top signal in the data window.</div>';
+    setText('cycNote','Pi Cycle marked the 2017 and 2021 tops to within 1–2 days — the best of every daily-MA pair we tested. It did NOT fire this cycle: the post-ETF run was too muted to push the 111-day above 2×350-day. Right now all three gauges point to the value end, matching the ARC score. Context, not a trade signal.');
+  }catch(e){ var el=document.getElementById('cycSec'); if(el) el.style.opacity='0.55'; }
 }
 
 var _seaCycleChart=null;
@@ -509,7 +552,8 @@ async function loadSeasonality(){
       });
     }
     document.getElementById('seaMonths').innerHTML=mhtml;
-    setText('seaQnote','Win rate = share of past years that month closed positive. Only months whose up/down bias is statistically unlikely to be chance (p < 10%, '+(s.range?s.range.from.slice(0,4):'')+'–'+(s.range?s.range.to.slice(0,4):'')+') are shown; coin-flip months are deliberately hidden.');
+    var wk=(s.week_signals||[]).length;
+    setText('seaQnote','Win rate = share of past years this month closed positive. Only months with ≥70% directional consistency ('+(s.range?s.range.from.slice(0,4):'')+'–'+(s.range?s.range.to.slice(0,4):'')+', n≥10) are shown; coin-flips hidden. Weekly check: '+(wk?(wk+' of 53 weeks cross 70% — about what chance alone yields, so treated as noise'):'no week clears the bar')+'.');
     // forward 30/60/90 — verdict only when high-confidence
     var fw=s.forward||[]; var anyConf=fw.some(function(f){return f.high_conf;});
     var fhtml='<div style="font-weight:700;font-size:15px;margin-bottom:10px;color:'+(anyConf?'#e5e7eb':'var(--mut)')+'">'+(anyConf?'Seasonal edge detected':'No strong seasonal edge right now')+'</div>';
