@@ -287,7 +287,7 @@
   <section>
     <div class="sec-eyebrow">ENGINE 8 · REGIME TIMELINE</div>
     <div class="sec-h">Every regime change, dated</div>
-    <div class="sec-tells">When ARC crosses a zone boundary, that's the signal that matters. Each row shows the ARC <b>stance</b> for that regime and what BTC did during it. Colour follows the stance, not the price move: <span style="color:#00DC78">green = accumulate the dip</span>, <span style="color:#FF3B3B">red = take risk off</span> — so a green-zone drop is opportunity and a red-zone pop is your exit. <b>This is exactly what Pro will alert you to in real time.</b></div>
+    <div class="sec-tells">When ARC crosses a zone boundary, that's the signal that matters. Here's every recent shift, dated, with the <b>stance</b> it implied — <span style="color:#00DC78">ACCUMULATE</span> and <span style="color:#58A6FF">HOLD</span> in the lower zones, <span style="color:#FF9500">REDUCE</span> and <span style="color:#FF3B3B">TAKE PROFIT</span> up top. The historical returns behind each zone are in the Track Record above; this is the live signal log — <b>exactly what Pro alerts you to the moment it happens.</b></div>
     <div id="regimeFeed"><div class="loading">Loading regime timeline…</div></div>
     <div class="pro-teaser">
       <span class="pill" style="border-color:rgba(0,212,170,0.4);color:var(--teal);">PRO · COMING SOON</span>
@@ -406,13 +406,12 @@ async function loadRegimeFeed(){
     // green = opportunity (accumulate the dip), red = risk-off (the gain is your exit). Resolves the "Euphoria gain looks bullish" contradiction.
     var stance={'Deep Value':['ACCUMULATE','#00DC78'],'Accumulation':['ACCUMULATE','#00DC78'],'Expansion':['HOLD','#58A6FF'],'Risk Rising':['REDUCE','#FF9500'],'Euphoria':['TAKE PROFIT','#FF3B3B']};
     var html='';
-    ph.slice(0,6).forEach(function(p){
+    ph.slice(0,7).forEach(function(p){
       var c=colr[p.zone]||'#9aa6b8';
       var st=stance[p.zone]||['',c];
       var period=p.from+(p.to?(' → '+p.to):' → now')+'  ·  '+p.weeks+'w';
-      var ret=(p.return_pct!=null?((p.return_pct>0?'+':'')+Math.round(p.return_pct)+'%'):'');
       var now=p.to?'':'<span class="zhere">NOW</span>';
-      html+='<div class="zrow"><span class="dot" style="background:'+c+'"></span><span class="zn" style="color:'+c+'">'+p.zone+'</span><span class="zd">'+period+'</span>'+now+'<span class="zstance" style="color:'+st[1]+';border-color:'+st[1]+'55;background:'+st[1]+'14">'+st[0]+'</span><span class="zr" style="color:'+st[1]+'" title="BTC during this regime">'+ret+'</span></div>';
+      html+='<div class="zrow"><span class="dot" style="background:'+c+'"></span><span class="zn" style="color:'+c+'">'+p.zone+'</span><span class="zd">'+period+'</span>'+now+'<span class="zstance" style="color:'+st[1]+';border-color:'+st[1]+'55;background:'+st[1]+'14">'+st[0]+'</span></div>';
     });
     el.innerHTML=html;
   }catch(e){ var el=document.getElementById('regimeFeed'); if(el)el.innerHTML='<div class="note">Regime timeline unavailable.</div>'; }
