@@ -541,7 +541,7 @@ async function loadCycleWave(asset){
             y:{ticks:{color:'#6b7280',font:{size:10},callback:function(v){return '$'+(v>=1000?Math.round(v/1000)+'k':v);}},grid:{color:'rgba(255,255,255,0.05)'}}}}});
     }
     var proj=labels.length-split;
-    setText('seasNote','Magenta = the dominant '+o.cycle_len+'-day cycle (≈'+(o.cycle_len/30.4).toFixed(1)+' months, stability '+(o.stability!=null?o.stability:o.fit)+'/1) as a regular wave, showing the timing of highs/lows. Red dashed = the cycle-based price forecast for the next '+proj+' days, continuing from today’s price. A detected rhythm extrapolated — not a guarantee; cycles can shift or break.');
+    setText('seasNote','Magenta = the dominant '+o.cycle_len+'-day cycle (≈'+(o.cycle_len/30.4).toFixed(1)+' months, stability '+(o.stability!=null?o.stability:o.fit)+'/1) as a regular wave, showing the timing of highs/lows. Red = a realistic day-by-day price path for the next '+proj+' days: the cycle’s drift plus what the market actually did on each calendar day/weekday over the last ~10 years — so it moves like real price, not a clean curve. A data-driven projection, not a guarantee; cycles can shift or break.');
   }catch(e){ var el=document.getElementById('seasSec'); if(el) el.style.opacity='0.55'; }
 }
 
