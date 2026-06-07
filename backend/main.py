@@ -503,11 +503,11 @@ async def _claude_text(prompt, max_tokens=700):
         return None
 
 @app.get("/api/macro-brief")
-async def get_macro_brief(request: Request):
+async def get_macro_brief(request: Request, refresh: int = 0):
     import json as _mjson
     from datetime import datetime as _dtm
     today = _dtm.utcnow().date().isoformat()
-    if _MACRO_CACHE["day"] == today and _MACRO_CACHE["data"]:
+    if not refresh and _MACRO_CACHE["day"] == today and _MACRO_CACHE["data"]:
         return _MACRO_CACHE["data"]
     facts = {"date": _dtm.utcnow().strftime("%B %d, %Y")}
     try:
@@ -591,6 +591,75 @@ async def get_macro_brief(request: Request):
             "generated_by": ("claude-verified" if verified else ("claude" if draft else "fallback"))}
     _MACRO_CACHE["day"] = today
     _MACRO_CACHE["data"] = data
+    return data
+
+
+# --- "Today's Read": AI plain-English summary of the whole dashboard (Claude, day-cached) ---
+_READ_CACHE = {"day": None, "data": None}
+
+@app.get("/api/daily-read")
+async def get_daily_read(refresh: int = 0):
+    import json as _rjson, httpx as _hx
+    from datetime import datetime as _dtm
+    today = _dtm.utcnow().date().isoformat()
+    if not refresh and _READ_CACHE["day"] == today and _READ_CACHE["data"]:
+        return _READ_CACHE["data"]
+    base = "https://alphacycle-production.up.railway.app"
+    f = {}
+    try:
+        async with _hx.AsyncClient(timeout=15) as c:
+            arc = (await c.get(base + "/api/arc-summary")).json()
+            cw = (await c.get(base + "/api/cycle-wave?asset=btc")).json()
+            rsi = (await c.get(base + "/api/rsi")).json()
+        sc = arc.get("arc_score")
+        f["arc_score"] = round(sc) if sc is not None else None
+        f["zone"] = arc.get("zone_name")
+        f["decision"] = ("BUY (all-in)" if (sc is not None and sc <= 25) else ("SELL (take profit)" if (sc is not None and sc >= 75) else "HOLD"))
+        f["btc_price_usd"] = round(arc.get("btc_price")) if arc.get("btc_price") else None
+        f["fear_greed"] = arc.get("fear_greed")
+        f["rsi"] = rsi.get("rsi")
+        f["rsi_zone"] = rsi.get("zone")
+        f["cycle_direction"] = cw.get("direction")
+        nt = cw.get("next_turn") or {}
+        f["next_cycle_turn"] = (nt.get("type") + " ~" + str(nt.get("date"))) if nt.get("type") else None
+    except Exception:
+        pass
+
+    style = ("VOICE: 'AlphaCycle — Today's Read'. Calm, plain US English a complete beginner understands instantly. "
+             "No hype, no emojis, no price predictions/targets, no financial advice, no jargon without a plain explanation.")
+    read = None
+    gen = (style + "\n\nDATE: " + _dtm.utcnow().strftime("%B %d, %Y") + "\nLIVE FACTS (use ONLY these, never invent): "
+           + _rjson.dumps(f) + "\n\nWrite ONE short paragraph (3-4 sentences) called Today's Read that tells a beginner, "
+           "in plain words: where Bitcoin is in its cycle right now (the score and zone), what the rule says to do, and "
+           "one line on the short-term picture (RSI / cycle direction). End by reminding it's context, not advice. "
+           'Return ONLY valid JSON: {"read": "..."}.')
+    draft = await _claude_text(gen, 380)
+    verified = None
+    if draft:
+        vp = (style + "\nLIVE FACTS (source of truth): " + _rjson.dumps(f) + "\nDRAFT:\n" + draft +
+              "\n\nReturn a corrected final version: every number must match the FACTS exactly (fix/remove otherwise, "
+              "add none), beginner-clear, on-voice, no advice. Return ONLY JSON {\"read\":\"...\"}.")
+        verified = await _claude_text(vp, 380)
+    final = verified or draft
+    if final:
+        try:
+            read = (_rjson.loads(final[final.find("{"): final.rfind("}") + 1]).get("read") or "").strip() or None
+        except Exception:
+            pass
+    if not read:
+        if f.get("arc_score") is not None:
+            read = ("Bitcoin's cycle score is %s out of 100 — %s. The rule says %s (buy only when it's extremely low under 25, "
+                    "take profit only when it's extremely high over 75, otherwise hold). Short term, the daily RSI is %s and the "
+                    "dominant cycle is %s. This is context to think with, not financial advice." % (
+                        f["arc_score"], f.get("zone") or "—", f.get("decision") or "HOLD",
+                        (str(f.get("rsi")) + " (" + (f.get("rsi_zone") or "") + ")") if f.get("rsi") is not None else "neutral",
+                        f.get("cycle_direction") or "mixed"))
+        else:
+            read = "Today's read is refreshing — open the dashboard for the live score. Context, not financial advice."
+    data = {"read": read, "facts": f, "asof": today,
+            "generated_by": ("claude-verified" if verified else ("claude" if draft else "fallback"))}
+    _READ_CACHE["day"] = today
+    _READ_CACHE["data"] = data
     return data
 
 
