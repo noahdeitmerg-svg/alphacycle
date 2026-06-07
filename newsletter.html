@@ -39,7 +39,7 @@
 
   <div class="report" id="report"><p class="meta">Generating…</p></div>
   <pre id="plain"></pre>
-  <div class="note">Sections 1–3 + the seasonal line auto-fill from the live dashboard endpoints. Fill the <b>Macro watch</b> + <b>Week ahead</b> boxes with this week's read (M2/liquidity, DXY, Fed, ETF flows, stablecoins, key data releases), then Copy plain text into Beehiiv/Substack. Gate the full issue to Pro; send the one-line read free as a funnel.</div>
+  <div class="note">Everything auto-fills from live data — incl. <b>Macro watch</b> + <b>Week ahead</b>, written automatically from real figures (Fed liquidity, M2, dollar/DXY, rates, Fear&amp;Greed) via the macro brief. Tweak any box if you want, then Copy plain text into Beehiiv/Substack. Gate the full issue to Pro; send the one-line read free as a funnel.</div>
 </div>
 <script>
 var API='https://alphacycle-production.up.railway.app';
@@ -49,8 +49,8 @@ function sign(n){ return (n>0?'+':'')+n; }
 function monthName(m){ return ['January','February','March','April','May','June','July','August','September','October','November','December'][m-1]; }
 
 async function fetchAll(){
-  var ep=['arc-summary','cycle-wave?asset=btc','seasonality','rsi','cycle-signals','seasonal-overlay'];
-  var keys=['arc','cw','sea','rsi','cyc','ov'];
+  var ep=['arc-summary','cycle-wave?asset=btc','seasonality','rsi','cycle-signals','seasonal-overlay','macro-brief'];
+  var keys=['arc','cw','sea','rsi','cyc','ov','mb'];
   var out={};
   for(var i=0;i<ep.length;i++){
     try{ out[keys[i]]=await (await fetch(API+'/api/'+ep[i],{cache:'no-store'})).json(); }
@@ -138,6 +138,8 @@ async function build(){
   D=await fetchAll(); D._t=Date.now();
   // preserve macro/ahead if user typed before regen
   try{ if(document.getElementById('macro')) D._macro=document.getElementById('macro').value; if(document.getElementById('ahead')) D._ahead=document.getElementById('ahead').value; }catch(e){}
+  // auto-fill Macro watch + Week ahead from the live macro brief (Claude/real data) if still empty
+  if(D.mb){ if(!D._macro||!D._macro.trim()) D._macro=D.mb.macro||''; if(!D._ahead||!D._ahead.trim()) D._ahead=D.mb.week_ahead||''; }
   if(!D.arc){ document.getElementById('report').innerHTML='<p class="err">Live data unavailable right now — try Regenerate in a moment.</p>'; document.getElementById('status').textContent='error'; return; }
   document.getElementById('report').innerHTML=buildText(D);
   document.getElementById('plain').textContent=buildPlain(D);
