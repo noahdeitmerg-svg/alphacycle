@@ -444,6 +444,136 @@ async def get_subscribers(token: str = ""):
     return {"count": len(_SUBS)}  # public: count only, no PII
 
 
+# --- auto macro + week-ahead brief (real data + Claude) for the newsletter ---
+_MACRO_CACHE = {"day": None, "data": None}
+
+async def _fred_series(sid, n=16):
+    key = _aos.getenv("FRED_API_KEY", "")
+    if not key or key in ("", "your_key_here"):
+        return []
+    import httpx
+    try:
+        async with httpx.AsyncClient(timeout=20) as c:
+            r = await c.get("https://api.stlouisfed.org/fred/series/observations",
+                            params={"series_id": sid, "api_key": key, "file_type": "json",
+                                    "sort_order": "desc", "limit": n})
+            obs = [o for o in r.json().get("observations", []) if o.get("value") not in (".", "", None)]
+            return [(o["date"], float(o["value"])) for o in obs]
+    except Exception:
+        return []
+
+async def _fred_macro():
+    out = {}
+    m2 = await _fred_series("M2SL", 14)
+    if m2:
+        out["m2_latest_bn"] = round(m2[0][1])
+        if len(m2) >= 13:
+            out["m2_yoy_pct"] = round((m2[0][1] / m2[12][1] - 1) * 100, 1)
+    dxy = await _fred_series("DTWEXBGS", 30)
+    if dxy:
+        out["dollar_index"] = round(dxy[0][1], 2)
+        if len(dxy) >= 5:
+            out["dollar_1m_chg_pct"] = round((dxy[0][1] / dxy[4][1] - 1) * 100, 2)
+    ff = await _fred_series("DFEDTARU", 3)
+    if ff:
+        out["fed_funds_upper_pct"] = ff[0][1]
+    t10 = await _fred_series("DGS10", 3)
+    if t10:
+        out["us_10y_pct"] = t10[0][1]
+    return out
+
+async def _claude_text(prompt, max_tokens=700):
+    key = _aos.getenv("ANTHROPIC_API_KEY") or _aos.getenv("CLAUDE_API_KEY") or ""
+    if not key:
+        return None
+    import httpx
+    try:
+        async with httpx.AsyncClient(timeout=45) as c:
+            r = await c.post("https://api.anthropic.com/v1/messages",
+                             headers={"x-api-key": key, "anthropic-version": "2023-06-01",
+                                      "content-type": "application/json"},
+                             json={"model": _aos.getenv("CLAUDE_MODEL", "claude-haiku-4-5-20251001"),
+                                   "max_tokens": max_tokens,
+                                   "messages": [{"role": "user", "content": prompt}]})
+            if r.status_code != 200:
+                return None
+            d = r.json()
+            return "".join(b.get("text", "") for b in d.get("content", []) if b.get("type") == "text")
+    except Exception:
+        return None
+
+@app.get("/api/macro-brief")
+async def get_macro_brief(request: Request):
+    import json as _mjson
+    from datetime import datetime as _dtm
+    today = _dtm.utcnow().date().isoformat()
+    if _MACRO_CACHE["day"] == today and _MACRO_CACHE["data"]:
+        return _MACRO_CACHE["data"]
+    facts = {"date": _dtm.utcnow().strftime("%B %d, %Y")}
+    try:
+        arc = await get_arc_summary(request)
+        facts["arc_score"] = round(arc.get("arc_score")) if arc.get("arc_score") is not None else None
+        facts["zone"] = arc.get("zone_name")
+        facts["btc_price_usd"] = round(arc.get("btc_price")) if arc.get("btc_price") else None
+        facts["fear_greed"] = arc.get("fear_greed")
+        nl = arc.get("net_liquidity_data") or {}
+        if nl.get("net_liquidity"):
+            facts["fed_net_liquidity_usd_tn"] = round(nl["net_liquidity"] / 1e6, 2)
+        if nl.get("walcl"):
+            facts["fed_balance_sheet_usd_tn"] = round(nl["walcl"] / 1e6, 2)
+    except Exception:
+        pass
+    try:
+        facts.update(await _fred_macro())
+    except Exception:
+        pass
+
+    prompt = (
+        "You write two short, factual sections for a Bitcoin investor newsletter (The ARC Report), dated "
+        + facts["date"] + ". Tone: calm, analytical, no hype, no price predictions, no financial advice. "
+        "Use ONLY the real figures provided; never invent numbers. If a figure is missing, speak qualitatively.\n\n"
+        "REAL DATA (JSON): " + _mjson.dumps(facts) + "\n\n"
+        "Return ONLY valid JSON (no markdown) with exactly two string keys:\n"
+        '"macro": 3-4 sentences interpreting these macro & crypto facts for Bitcoin risk appetite — '
+        "global liquidity / Fed balance sheet, the dollar (DXY), rates (Fed funds, 10Y), M2 if present, and sentiment. "
+        "Explain what expanding vs tightening liquidity, a stronger/weaker dollar, and higher/lower rates mean for BTC.\n"
+        '"week_ahead": 2-3 sentences naming the key upcoming U.S. macro releases relative to today using the normal '
+        "monthly cadence (CPI ~mid-month, the jobs report/NFP first Friday, FOMC if scheduled this period, PCE ~month-end) "
+        "and what to watch. Mark dates as approximate."
+    )
+    txt = await _claude_text(prompt, 750)
+    macro = week = None
+    if txt:
+        try:
+            j = _mjson.loads(txt[txt.find("{"): txt.rfind("}") + 1])
+            macro = (j.get("macro") or "").strip() or None
+            week = (j.get("week_ahead") or "").strip() or None
+        except Exception:
+            pass
+    if not macro:
+        liq = facts.get("fed_net_liquidity_usd_tn")
+        dxy = facts.get("dollar_index")
+        m2 = facts.get("m2_yoy_pct")
+        bits = []
+        if liq: bits.append("Fed net liquidity is ~$%.2fT" % liq)
+        if m2 is not None: bits.append("US M2 is %s%.1f%% YoY" % ("+" if m2 >= 0 else "", m2))
+        if dxy: bits.append("the broad dollar index is %.1f" % dxy)
+        if facts.get("us_10y_pct"): bits.append("the 10Y yield is %.2f%%" % facts["us_10y_pct"])
+        macro = ("Backdrop: " + ", ".join(bits) + ". " if bits else "") + (
+            "Fear & Greed is at %s. " % facts["fear_greed"] if facts.get("fear_greed") is not None else "") + (
+            "Expanding liquidity and a softer dollar are historically tailwinds for Bitcoin; tightening liquidity, "
+            "a strong dollar and higher rates are headwinds. Watch which way these are trending.")
+    if not week:
+        week = ("Watch the key U.S. releases in the days ahead — CPI (~mid-month), the jobs report (first Friday), "
+                "any scheduled FOMC decision, and PCE (~month-end). Cooler inflation supports risk appetite; hotter "
+                "prints tend to pressure Bitcoin. (Dates approximate — confirm on an economic calendar.)")
+    data = {"macro": macro, "week_ahead": week, "facts": facts, "asof": today,
+            "generated_by": "claude" if txt else "fallback"}
+    _MACRO_CACHE["day"] = today
+    _MACRO_CACHE["data"] = data
+    return data
+
+
 # --- seasonality (computed from full daily BTC history) ---
 _SEASON_CACHE = {"day": None, "data": None}
 
