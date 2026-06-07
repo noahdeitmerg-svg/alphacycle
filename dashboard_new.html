@@ -4,8 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AlphaCycle — Bitcoin Cycle Dashboard</title>
+<meta name="description" content="Live Bitcoin cycle dashboard: the ARC Index 0–100 score, buy/hold/sell decision, cycle wave, seasonality and RSI — auto-updating, free to view.">
 <link rel="icon" type="image/png" href="assets/icon.png">
 <link rel="apple-touch-icon" href="assets/icon-180.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#0a0e1a">
+<meta property="og:title" content="AlphaCycle — Bitcoin Cycle Dashboard">
+<meta property="og:description" content="The ARC Index: one transparent 0–100 score for where Bitcoin is in its cycle. Live, free to view.">
+<meta property="og:image" content="https://alphacycle.app/assets/og.png">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -400,6 +407,18 @@
     </div>
   </section>
 
+  <section style="margin-top:8px;">
+    <div class="card" style="text-align:center;padding:30px 24px;border-color:rgba(0,212,170,0.3);background:linear-gradient(160deg,rgba(0,212,170,0.10),rgba(255,255,255,0.02));">
+      <div class="sec-h" style="margin-bottom:6px;">Get the weekly ARC Report</div>
+      <div class="note" style="max-width:520px;margin:0 auto 16px;">Every Sunday: the cycle read + the macro that matters, in a 5-minute email. Free during launch.</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;max-width:440px;margin:0 auto;">
+        <input id="nlEmail" type="email" placeholder="you@email.com" style="flex:1;min-width:200px;padding:13px 16px;border-radius:10px;border:1px solid var(--bd2,rgba(255,255,255,0.14));background:rgba(255,255,255,0.05);color:#fff;font-size:15px;">
+        <button onclick="nlSubscribe()" style="font-family:var(--mono);font-size:13px;font-weight:700;background:var(--teal);color:#06231d;border:none;border-radius:10px;padding:13px 20px;cursor:pointer;">Get it free</button>
+      </div>
+      <div id="nlMsg" class="note" style="margin-top:10px;min-height:18px;"></div>
+    </div>
+  </section>
+
   <section class="foot">
     <div class="disc">AlphaCycle provides market data and historical analysis for educational purposes only. It is not financial, investment or trading advice. Cryptocurrency is volatile and you can lose money. Past performance does not guarantee future results.</div>
     <div class="note" style="margin-top:14px;">Updated <span id="updated">–</span> · <a class="nav-link" href="/">alphacycle.app</a></div>
@@ -410,6 +429,7 @@
 <script>
 const API='https://alphacycle-production.up.railway.app';
 function _t(e){try{fetch(API+'/api/track?e='+encodeURIComponent(e),{cache:'no-store'}).catch(function(){});}catch(_){}}
+function nlSubscribe(){var i=document.getElementById('nlEmail'),m=document.getElementById('nlMsg');var e=(i&&i.value||'').trim();if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)){if(m)m.textContent='Please enter a valid email.';return;}if(m)m.textContent='…';_t('cta_subscribe');fetch(API+'/api/subscribe?email='+encodeURIComponent(e)+'&src=dashboard',{cache:'no-store'}).then(function(r){return r.json();}).then(function(d){if(m)m.textContent=d.ok?'✓ You’re on the list — first ARC Report is on its way.':'Hmm, try again?';if(d.ok&&i)i.value='';}).catch(function(){if(m)m.textContent='Network error — try again.';});}
 _t('view_app');
 document.querySelectorAll('.bigm .v, .comp .val, .stat .v').forEach(function(e){var t=(e.textContent||'').trim(); if(t===''||t==='–') e.classList.add('skeleton');});
 function zoneInfo(s){ if(s<30)return{n:'DEEP VALUE',c:'#00DC78',k:'deep_value'}; if(s<40)return{n:'ACCUMULATION',c:'#00B4D8',k:'accumulation'}; if(s<60)return{n:'EXPANSION',c:'#58A6FF',k:'expansion'}; if(s<70)return{n:'RISK RISING',c:'#FF9500',k:'risk_rising'}; return{n:'EUPHORIA',c:'#FF3B3B',k:'euphoria'}; }
