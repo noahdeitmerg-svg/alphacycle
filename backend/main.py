@@ -1031,15 +1031,15 @@ async def get_cycle_wave(asset: str = "btc", lookback: int = 2190, projection: i
     # red price forecast: follows the dominant cycle (the magenta line) in RELATIVE terms — so red
     # and the cycle always rise and fall TOGETHER (no contradiction) — anchored to today's price,
     # PLUS the real 10y day-of-year/weekday tendencies for a lifelike daily zig-zag (not a clean curve).
-    def cyc_lvl(i):
-        return center + amp * math.cos(w * i - phi)
+    # same phase as the magenta cycle (so they agree on direction) but a realistic, capped
+    # amplitude (~peak-to-trough 25-35%), not the full visual range.
+    A = 0.05 + 0.09 * stab               # log-amplitude of the forecast's cycle component
     forecast = [None] * (n_disp + projection)
     forecast[n_disp - 1] = round(dprices[-1], 2)
     logp = math.log(dprices[-1])
-    prev_l = math.log(cyc_lvl(i_now))
     for k in range(1, projection + 1):
         gi = i_now + k
-        cur_l = math.log(cyc_lvl(gi)); r_cyc = cur_l - prev_l; prev_l = cur_l
+        r_cyc = A * (math.cos(w * gi - phi) - math.cos(w * (gi - 1) - phi))
         D = last + _td(days=k)
         logp += r_cyc + doy_tilt.get(D.timetuple().tm_yday, 0.0) + 0.5 * dow_tilt.get(D.weekday(), 0.0)
         forecast[(n_disp - 1) + k] = round(math.exp(logp), 2)
