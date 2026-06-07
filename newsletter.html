@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The ARC Report — AlphaCycle Newsletter Engine</title>
+<meta name="robots" content="noindex">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{--navy:#0a0e1a;--teal:#00D4AA;--ink:#e8edf4;--mut:#9aa6b8;--dim:#69748a;--bd:rgba(255,255,255,0.10);--card:rgba(255,255,255,0.04);--mono:'JetBrains Mono',monospace;--sans:'Instrument Sans',system-ui,sans-serif;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:var(--sans);background:radial-gradient(900px 600px at 15% -10%,rgba(0,212,170,0.08),transparent 60%),linear-gradient(180deg,#0a0e1a,#0c1322);color:var(--ink);min-height:100vh;padding:32px 18px;line-height:1.6;}
+  .wrap{max-width:820px;margin:0 auto;}
+  h1{font-size:24px;font-weight:700;}
+  .sub{color:var(--mut);font-family:var(--mono);font-size:12px;margin:6px 0 22px;}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;}
+  button{font-family:var(--mono);font-size:12px;background:rgba(0,212,170,0.12);color:var(--teal);border:1px solid rgba(0,212,170,0.4);border-radius:8px;padding:9px 16px;cursor:pointer;transition:background .15s;}
+  button:hover{background:rgba(0,212,170,0.22);}
+  button.alt{background:rgba(255,255,255,0.05);color:var(--ink);border-color:var(--bd);}
+  .report{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:30px 32px;backdrop-filter:blur(12px);box-shadow:0 10px 30px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.08);}
+  .report h2{font-size:13px;font-family:var(--mono);letter-spacing:0.12em;color:var(--teal);text-transform:uppercase;margin:22px 0 8px;}
+  .report h2:first-child{margin-top:0;}
+  .report .lead{font-size:20px;font-weight:700;line-height:1.4;}
+  .report p{margin:6px 0;font-size:15px;color:#dde3ec;}
+  .report .meta{font-family:var(--mono);font-size:12px;color:var(--mut);}
+  .pill{display:inline-block;font-family:var(--mono);font-size:12px;padding:2px 10px;border-radius:999px;border:1px solid var(--bd);margin-left:6px;}
+  textarea{width:100%;min-height:90px;background:rgba(255,255,255,0.04);border:1px solid var(--bd);border-radius:10px;color:var(--ink);font-family:var(--sans);font-size:14px;padding:12px;margin-top:6px;resize:vertical;}
+  .note{color:var(--dim);font-size:12px;margin-top:8px;}
+  .err{color:#ef4444;font-family:var(--mono);font-size:13px;}
+  hr{border:none;border-top:1px solid var(--bd);margin:20px 0;}
+  #plain{display:none;white-space:pre-wrap;background:rgba(0,0,0,0.3);border:1px solid var(--bd);border-radius:12px;padding:18px;font-family:var(--mono);font-size:12.5px;color:#cdd5e0;margin-top:14px;}
+</style></head>
+<body><div class="wrap">
+  <h1>The ARC Report <span class="pill">Newsletter Engine</span></h1>
+  <div class="sub" id="status">loading live data…</div>
+  <div class="toolbar">
+    <button onclick="build()">↻ Regenerate from live data</button>
+    <button class="alt" onclick="copyPlain()">📋 Copy plain text</button>
+    <button class="alt" onclick="togglePlain()">&lt;/&gt; Toggle plain text</button>
+  </div>
+
+  <div class="report" id="report"><p class="meta">Generating…</p></div>
+  <pre id="plain"></pre>
+  <div class="note">Sections 1–3 + the seasonal line auto-fill from the live dashboard endpoints. Fill the <b>Macro watch</b> + <b>Week ahead</b> boxes with this week's read (M2/liquidity, DXY, Fed, ETF flows, stablecoins, key data releases), then Copy plain text into Beehiiv/Substack. Gate the full issue to Pro; send the one-line read free as a funnel.</div>
+</div>
+<script>
+var API='https://alphacycle-production.up.railway.app';
+var D={};
+function fmt(n){ return (n==null)?'–':Number(n).toLocaleString('en-US'); }
+function sign(n){ return (n>0?'+':'')+n; }
+function monthName(m){ return ['January','February','March','April','May','June','July','August','September','October','November','December'][m-1]; }
+
+async function fetchAll(){
+  var ep=['arc-summary','cycle-wave?asset=btc','seasonality','rsi','cycle-signals','seasonal-overlay'];
+  var keys=['arc','cw','sea','rsi','cyc','ov'];
+  var out={};
+  for(var i=0;i<ep.length;i++){
+    try{ out[keys[i]]=await (await fetch(API+'/api/'+ep[i],{cache:'no-store'})).json(); }
+    catch(e){ out[keys[i]]=null; }
+  }
+  return out;
+}
+
+function buildText(d){
+  var arc=d.arc||{}, cw=d.cw||{}, sea=d.sea||{}, rsi=d.rsi||{}, cyc=d.cyc||{}, ov=d.ov||{};
+  var scoreN=arc.arc_score; var score=scoreN!=null?Math.round(scoreN):'–';
+  var zone=arc.zone_name||'–';
+  var decision=(scoreN==null)?'HOLD':(scoreN<=25?'BUY · ALL-IN':(scoreN>=75?'SELL · TAKE PROFIT':'HOLD'));
+  var price=arc.btc_price!=null?('$'+fmt(Math.round(arc.btc_price))):'–';
+  var now=new Date(); var wk=now.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+  // section 2 pieces
+  var rsiV=rsi.rsi!=null?rsi.rsi:'–'; var rsiZone=(rsi.zone||'').toLowerCase();
+  var rsiEdge=rsi.oversold?(' Historically, when this oversold, BTC was higher 30 days later '+rsi.oversold.win+'% of the time.'):'';
+  var mayer=cyc.mayer&&cyc.mayer.value!=null?cyc.mayer.value:'–';
+  var w200=cyc.ma200w&&cyc.ma200w.pct_above!=null?cyc.ma200w.pct_above:null;
+  var pi=cyc.pi||{};
+  // section 3 cycle
+  var msh=sea.months_since_halving!=null?sea.months_since_halving:'–';
+  var dir=cw.direction||'–'; var nt=cw.next_turn||{};
+  var ntDate=nt.date?new Date(nt.date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'–';
+  var clen=cw.cycle_len||'–';
+  // seasonal this/next month
+  var tm=ov.this_month, nm=ov.next_month;
+  var seaLine='';
+  if(tm){ seaLine='This month ('+tm.name+') has historically been '+(tm.dir==='up'?'positive':'weak')+' ('+(tm.median>0?'+':'')+tm.median+'% median, up '+tm.win+'% of years).'; }
+  // reliable months
+  var sig=(sea.month_signals||[]).map(function(m){return monthName(m.month)+' '+(m.dir==='up'?'↑':'↓');}).join(', ');
+
+  var html='';
+  html+='<h2>The ARC Report — Week of '+wk+'</h2>';
+  html+='<p class="lead">ARC <b style="color:var(--teal)">'+score+' / 100</b> — '+zone+'. Decision: <b>'+decision+'</b>. <span class="meta">BTC '+price+' · Fear&amp;Greed '+(arc.fear_greed!=null?arc.fear_greed:'–')+'</span></p>';
+
+  html+='<h2>1 · The read</h2>';
+  html+='<p>The cycle score sits at <b>'+score+'</b> ('+zone+'). The rule says <b>'+decision+'</b> — deploy fully only under 25, take profit only over 75, hold the middle.</p>';
+
+  html+='<h2>2 · What the gauges say</h2>';
+  html+='<p>Daily RSI is <b>'+rsiV+'</b> ('+rsiZone+').'+rsiEdge+' Mayer Multiple <b>'+mayer+'×</b> ('+(mayer!=='–'&&mayer<1?'below the 200-day average — undervalued':'vs the 200-day average')+'). '+
+        (w200!=null?('Price is <b>'+sign(w200)+'%</b> '+(Math.abs(w200)<5?'right on':(w200<0?'below':'above'))+' the 200-week moving average — the line that caught past bear bottoms. '):'')+
+        'Pi-Cycle Top: '+(pi.triggered?'<b style="color:#ef4444">triggered</b>':'far away, no top risk')+'.</p>';
+
+  html+='<h2>3 · Cycle &amp; timing</h2>';
+  html+='<p>We are <b>'+msh+' months</b> past the halving. The dominant ~'+clen+'-day cycle reads <b>'+dir+'</b>'+(nt.type?(', next projected '+nt.type+' around <b>'+ntDate+'</b>'):'')+'. '+seaLine+(sig?(' Only reliably seasonal months: '+sig+'.'):'')+'</p>';
+
+  html+='<h2>4 · Macro watch <span class="meta">(fill in)</span></h2>';
+  html+='<textarea id="macro" placeholder="Global M2 / liquidity (expanding or contracting?) · Dollar (DXY) · Fed rate-cut odds · ETF flows · stablecoin supply — what moved and what it means for BTC risk appetite.">'+(D._macro||'')+'</textarea>';
+
+  html+='<h2>5 · The week ahead <span class="meta">(fill in)</span></h2>';
+  html+='<textarea id="ahead" placeholder="Key macro releases this week (CPI, FOMC, NFP…) and what to watch.">'+(D._ahead||'')+'</textarea>';
+
+  html+='<h2>6 · Bottom line</h2>';
+  var allValue = (score!=='–'&&score<40) && (mayer!=='–'&&mayer<1.1);
+  html+='<p>'+(allValue?'The internal gauges cluster at the value end of the cycle (low score, undervalued, near the floor) — historically an accumulation backdrop, not a top. Patient, not euphoric.':'Read the numbers above and act only when the decision changes.')+' <span class="meta">Educational, not financial advice.</span></p>';
+
+  return html;
+}
+
+function buildPlain(d){
+  // strip to plain text from the rendered report + textarea values
+  var macro=(document.getElementById('macro')&&document.getElementById('macro').value)||D._macro||'[add macro read]';
+  var ahead=(document.getElementById('ahead')&&document.getElementById('ahead').value)||D._ahead||'[add week ahead]';
+  var arc=d.arc||{},cw=d.cw||{},rsi=d.rsi||{},cyc=d.cyc||{},sea=d.sea||{},ov=d.ov||{};
+  var scoreN=arc.arc_score; var score=scoreN!=null?Math.round(scoreN):'-';
+  var decision=(scoreN==null)?'HOLD':(scoreN<=25?'BUY - ALL-IN':(scoreN>=75?'SELL - TAKE PROFIT':'HOLD'));
+  var wk=new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+  var nt=cw.next_turn||{}; var ntDate=nt.date?new Date(nt.date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'-';
+  var tm=ov.this_month;
+  var t='THE ARC REPORT — Week of '+wk+'\n\n';
+  t+='THE READ: ARC '+score+'/100 — '+(arc.zone_name||'-')+'. Decision: '+decision+'. BTC $'+fmt(Math.round(arc.btc_price||0))+'.\n\n';
+  t+='1) THE READ\nScore '+score+' ('+(arc.zone_name||'-')+'). Rule: '+decision+' — all-in under 25, take profit over 75, hold the middle.\n\n';
+  t+='2) WHAT THE GAUGES SAY\nDaily RSI '+(rsi.rsi||'-')+' ('+(rsi.zone||'')+')'+(rsi.oversold?('; when this oversold, BTC was higher 30d later '+rsi.oversold.win+'% of the time'):'')+'. Mayer '+((cyc.mayer&&cyc.mayer.value)||'-')+'x. 200-week MA: price '+((cyc.ma200w&&cyc.ma200w.pct_above!=null)?sign(cyc.ma200w.pct_above)+'%':'-')+'. Pi-Cycle: '+((cyc.pi&&cyc.pi.triggered)?'TRIGGERED':'far away')+'.\n\n';
+  t+='3) CYCLE & TIMING\n'+(sea.months_since_halving||'-')+' months past halving. Dominant ~'+(cw.cycle_len||'-')+'d cycle: '+(cw.direction||'-')+', next '+(nt.type||'turn')+' ~'+ntDate+'.'+(tm?(' This month ('+tm.name+'): '+(tm.median>0?'+':'')+tm.median+'% median, up '+tm.win+'% of years.'):'')+'\n\n';
+  t+='4) MACRO WATCH\n'+macro+'\n\n';
+  t+='5) THE WEEK AHEAD\n'+ahead+'\n\n';
+  t+='6) BOTTOM LINE\n'+((score!=='-'&&score<40)?'Gauges cluster at the value end of the cycle — historically an accumulation backdrop, not a top. Patient, not euphoric.':'Act only when the decision changes.')+' Educational, not financial advice.\n\n— AlphaCycle · alphacycle.app';
+  return t;
+}
+
+async function build(){
+  document.getElementById('status').textContent='fetching live data…';
+  D=await fetchAll(); D._t=Date.now();
+  // preserve macro/ahead if user typed before regen
+  try{ if(document.getElementById('macro')) D._macro=document.getElementById('macro').value; if(document.getElementById('ahead')) D._ahead=document.getElementById('ahead').value; }catch(e){}
+  if(!D.arc){ document.getElementById('report').innerHTML='<p class="err">Live data unavailable right now — try Regenerate in a moment.</p>'; document.getElementById('status').textContent='error'; return; }
+  document.getElementById('report').innerHTML=buildText(D);
+  document.getElementById('plain').textContent=buildPlain(D);
+  document.getElementById('status').textContent='generated from live data · '+new Date().toLocaleString();
+}
+function togglePlain(){ var p=document.getElementById('plain'); document.getElementById('plain').textContent=buildPlain(D); p.style.display=p.style.display==='block'?'none':'block'; }
+function copyPlain(){ var t=buildPlain(D); navigator.clipboard.writeText(t).then(function(){ document.getElementById('status').textContent='✓ plain text copied — paste into Beehiiv/Substack'; },function(){ togglePlain(); }); }
+build();
+</script>
+</body></html>
