@@ -478,7 +478,7 @@
           <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4 4 10-11" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Regime alerts — email + Telegram</li>
           <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4 4 10-11" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Priority support</li>
         </ul>
-        <a class="btn btn-amber" href="/app.html">Go Pro</a>
+        <a class="btn btn-amber" href="/app.html" onclick="return goPro(event)">Go Pro</a>
       </div>
     </div>
   </div>
@@ -510,6 +510,14 @@
       <h2>Stop guessing. Start knowing.</h2>
       <p>Know exactly where Bitcoin is in the cycle — starting today.</p>
       <a class="btn btn-amber btn-lg" href="/app.html">Start Free — No Credit Card Required</a>
+      <div id="acCap" style="margin-top:28px;max-width:440px;margin-left:auto;margin-right:auto;">
+        <p style="font-size:14px;color:var(--mut,#9aa6b8);margin-bottom:10px;">Get <b>The ARC Report</b> — the weekly cycle &amp; macro read, free to your inbox:</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">
+          <input id="acEmail" type="email" placeholder="you@email.com" style="flex:1;min-width:200px;padding:13px 16px;border-radius:10px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:#fff;font-size:15px;">
+          <button class="btn btn-amber" onclick="acSubscribe()">Get the report</button>
+        </div>
+        <div id="acCapMsg" style="font-size:13px;color:var(--mut,#9aa6b8);margin-top:10px;min-height:18px;"></div>
+      </div>
     </div>
   </div>
 </section>
@@ -606,7 +614,25 @@
 })();
 </script>
 <script>
-(function(){var A='https://alphacycle-production.up.railway.app';
+// === AlphaCycle funnel: email capture + Go Pro (paste your Stripe Payment Link below) ===
+var AC_API='https://alphacycle-production.up.railway.app';
+var STRIPE_PRO_LINK=''; // <-- Noah: paste your Stripe Payment Link here (e.g. https://buy.stripe.com/xxx). Empty = capture email instead.
+function acSubscribe(src){
+  var inp=document.getElementById('acEmail'), msg=document.getElementById('acCapMsg');
+  var e=(inp&&inp.value||'').trim();
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)){ if(msg) msg.textContent='Please enter a valid email.'; return; }
+  if(msg) msg.textContent='…';
+  fetch(AC_API+'/api/subscribe?email='+encodeURIComponent(e)+'&src='+(src||'landing'),{cache:'no-store'})
+    .then(function(r){return r.json();}).then(function(d){ if(msg) msg.textContent=d.ok?'✓ You’re on the list — first ARC Report is on its way.':'Hmm, try again?'; if(d.ok&&inp) inp.value=''; })
+    .catch(function(){ if(msg) msg.textContent='Network error — try again.'; });
+  try{window._actrack&&window._actrack('cta_subscribe');}catch(_){}
+}
+function goPro(ev){
+  try{window._actrack&&window._actrack('cta_pro');}catch(_){}
+  if(STRIPE_PRO_LINK){ if(ev)ev.preventDefault(); window.open(STRIPE_PRO_LINK,'_blank'); return false; }
+  return true; // no link yet → fall through to /app.html
+}
+(function(){var A=AC_API;
 function t(e){try{fetch(A+'/api/track?e='+encodeURIComponent(e),{cache:'no-store'}).catch(function(){});}catch(_){}}
 window._actrack=t; t('view_landing');
 document.addEventListener('click',function(ev){var a=ev.target.closest('a'); if(a&&/\/app(\.html)?/.test(a.getAttribute('href')||'')){ t(/pro/i.test(a.textContent||'')?'cta_pro':'cta_start'); }});
