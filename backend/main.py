@@ -413,6 +413,37 @@ async def get_stats():
             "landing_to_app_pct": pct(va, vl), "landing_to_anyCTA_pct": pct(cs + cp, vl), "pro_intent_pct": pct(cp, vl)}
 
 
+# --- email / waitlist capture (start collecting leads now; swap to Beehiiv for durability) ---
+_SUBS_FILE = "/tmp/ac_subscribers.json"
+_SUBS = []
+try:
+    if _aos.path.exists(_SUBS_FILE):
+        _SUBS = _ajson.load(open(_SUBS_FILE))
+except Exception:
+    _SUBS = []
+
+@app.get("/api/subscribe")
+async def subscribe(email: str = "", src: str = ""):
+    from datetime import datetime as _dtm
+    e = (email or "").strip().lower()[:120]
+    if "@" in e and "." in e.split("@")[-1]:
+        if e not in [s.get("email") for s in _SUBS]:
+            _SUBS.append({"email": e, "src": (src or "")[:30], "ts": _dtm.utcnow().isoformat()})
+            try: _ajson.dump(_SUBS, open(_SUBS_FILE, "w"))
+            except Exception: pass
+        _METRICS["subscribe"] = _METRICS.get("subscribe", 0) + 1
+        try: _ajson.dump(_METRICS, open(_METRICS_FILE, "w"))
+        except Exception: pass
+        return {"ok": True, "count": len(_SUBS)}
+    return {"ok": False, "error": "invalid email"}
+
+@app.get("/api/subscribers")
+async def get_subscribers(token: str = ""):
+    if token and token == _aos.getenv("ADMIN_TOKEN", "alphacycle-admin"):
+        return {"count": len(_SUBS), "list": _SUBS}
+    return {"count": len(_SUBS)}  # public: count only, no PII
+
+
 # --- seasonality (computed from full daily BTC history) ---
 _SEASON_CACHE = {"day": None, "data": None}
 
