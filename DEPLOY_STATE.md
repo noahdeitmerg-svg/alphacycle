@@ -4,6 +4,15 @@
 
 **Workflow:** Nach jeder Änderung DEPLOY_STATE.md (und ggf. .cursor/rules/permanent-fixes.mdc) aktualisieren und alle Änderungen committen und pushen. Siehe permanent-fixes.mdc Abschnitt „Nach jeder Änderung (PFLICHT)“.
 
+## Letzter Session-Status (2026-06-07) — Cowork: Engines-Ausbau + Funnel + Produkt-Review-Pass
+- **Datei(en):** `backend/main.py`, `app.html`, `dashboard_new.html`, `index.html`, `newsletter.html` (neu), `site.webmanifest` (neu), `stats.html` (neu), Docs (`ALPHACYCLE_STRATEGY.md`, `GROWTH_TO_3K.md`, `VIDEO_SCRIPT.md`, `INSTAGRAM_LAUNCH_KIT.md`, `ALPHACYCLE_FACTORY_INTAKE.md`)
+- **Neue Backend-Endpoints (day-cached, pure-python, KEINE ARC-Formel-Änderung):** `/api/seasonality` (Confidence-Gate ≥70%), `/api/cycle-signals` (Pi-Cycle 111/2×350, Mayer, 200W), `/api/seasonal-pattern`, `/api/cycle-wave` (dominanter Zyklus per Sinus-Fit + Stabilitäts-Auswahl, regelmäßige Welle + gezackte tagesgenaue Preis-Forecast aus 10J day-of-year/-week, datentreu), `/api/rsi` (Wilder RSI14 + Forward-Edge), `/api/track`+`/api/stats` (Funnel-Analytics), `/api/subscribe`+`/api/subscribers` (E-Mail-Capture).
+- **Dashboard:** Engine 5 echter Daily-RSI (0–100-Zonenbalken); Engine 6 Cycle Wave (Seasonax-Stil + rote gezackte Forecast, BTC/ETH-Toggle); 6B Seasonality (nur ≥70%); 6C Cycle Extremes (Pi/Mayer/200W). Glass/3D-Cards, „HIDE/SHOW"-Collapse, Newsletter-Capture, PWA-Manifest + OG/SEO.
+- **Funnel:** Landing+Dashboard E-Mail-Capture („The ARC Report"); „Go Pro" Checkout-Link-Slot; `/stats.html` Analytics; `/newsletter.html` Newsletter-Engine (live aus Endpoints).
+- **Strategie/Content:** `ALPHACYCLE_STRATEGY.md`, `GROWTH_TO_3K.md`, `VIDEO_SCRIPT.md`, IG-Launch-Kit, Factory-Intake.
+- **Blocker (nur Noah):** Checkout-Link (Lemon Squeezy/Stripe) = #1 für Umsatz; Beehiiv (Liste+Versand); Telegram-Token (Alerts).
+- **Status:** committed + pushed (Railway/Netlify); per Headless-Render + Live-Endpoint-Checks verifiziert.
+
 ## Letzter Session-Status (2026-06-05) — Cowork: Brand + komplett neues Dashboard (app.html)
 - **Datei(en):** `app.html` (komplett neu gebaut), `dashboard_new.html` (Quelle), `index.html` (Favicon), `assets/logo.png|icon.png|icon-180.png|favicon-32.png` (neu), `content-factory/output/mklogo.py`, `DEPLOY_STATE.md`
 - **Brand:** AlphaCycle-Logo (Gemini) zu Web-Assets verarbeitet (tight crop, Icon-only, Favicon-Groessen) in `assets/`. Logo in Dashboard-Nav, Favicon auf Landing + Dashboard.
