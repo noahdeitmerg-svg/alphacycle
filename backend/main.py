@@ -876,19 +876,22 @@ async def get_cycle_wave(asset: str = "btc", lookback: int = 2190, projection: i
         raise HTTPException(503, f"price history unavailable: {ex}")
     rows = [{"date": r["date"][:10], "price": float(r["price"])} for r in (daily or []) if r.get("price")]
     rows.sort(key=lambda r: r["date"])
-    # day-of-week & month "tilts" from the FULL history (10y) for a realistic daily forecast path
-    _dow_sum, _dow_n, _mon_sum, _mon_n, _all = {}, {}, {}, {}, []
+    # day-of-year, day-of-week & month "tilts" from the FULL history (10y) for a realistic,
+    # jagged daily forecast path — what the market actually did on that calendar day/week/month.
+    _dow_sum, _dow_n, _mon_sum, _mon_n, _doy_sum, _doy_n, _all = {}, {}, {}, {}, {}, {}, []
     for _i in range(1, len(rows)):
         _p0, _p1 = rows[_i - 1]["price"], rows[_i]["price"]
         if _p0 > 0 and _p1 > 0:
             _lr = math.log(_p1 / _p0); _all.append(_lr)
             _d = _date.fromisoformat(rows[_i]["date"])
-            _wd, _mo = _d.weekday(), _d.month
+            _wd, _mo, _dy = _d.weekday(), _d.month, _d.timetuple().tm_yday
             _dow_sum[_wd] = _dow_sum.get(_wd, 0) + _lr; _dow_n[_wd] = _dow_n.get(_wd, 0) + 1
             _mon_sum[_mo] = _mon_sum.get(_mo, 0) + _lr; _mon_n[_mo] = _mon_n.get(_mo, 0) + 1
+            _doy_sum[_dy] = _doy_sum.get(_dy, 0) + _lr; _doy_n[_dy] = _doy_n.get(_dy, 0) + 1
     _gmean = (sum(_all) / len(_all)) if _all else 0.0
     dow_tilt = {k: _dow_sum[k] / _dow_n[k] - _gmean for k in _dow_sum}
     mon_tilt = {k: _mon_sum[k] / _mon_n[k] - _gmean for k in _mon_sum}
+    doy_tilt = {k: _doy_sum[k] / _doy_n[k] - _gmean for k in _doy_sum}  # granular daily texture
     rows = rows[-lookback:]
     n = len(rows)
     if n < 300:
@@ -1009,7 +1012,7 @@ async def get_cycle_wave(asset: str = "btc", lookback: int = 2190, projection: i
         m = trend_at(gi) + _cyc_log(gi)
         r_cyc = m - prev_m; prev_m = m
         D = last + _td(days=k)
-        logp += r_cyc + dow_tilt.get(D.weekday(), 0.0) + mon_tilt.get(D.month, 0.0)
+        logp += r_cyc + doy_tilt.get(D.timetuple().tm_yday, 0.0) + 0.5 * dow_tilt.get(D.weekday(), 0.0)
         forecast[(n_disp - 1) + k] = round(math.exp(logp), 2)
 
     data = {"asset": asset.upper(), "cycle_len": int(L), "fit": round(r2, 2),
