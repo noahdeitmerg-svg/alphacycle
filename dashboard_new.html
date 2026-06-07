@@ -215,6 +215,14 @@
     </div>
   </div></section>
 
+  <!-- TODAY'S READ (AI plain-English summary) -->
+  <section id="readSec">
+    <div class="card" style="border-color:rgba(0,212,170,0.3);background:linear-gradient(160deg,rgba(0,212,170,0.10),rgba(255,255,255,0.02));">
+      <div class="k" style="display:flex;align-items:center;gap:8px;">TODAY'S READ <span style="font-family:var(--mono);font-size:9px;letter-spacing:0.1em;padding:2px 7px;border-radius:999px;border:1px solid rgba(0,212,170,0.4);color:var(--teal);">AI · PLAIN ENGLISH</span></div>
+      <div id="dailyRead" style="font-size:16px;line-height:1.65;color:var(--ink);margin-top:10px;">Loading today’s read…</div>
+    </div>
+  </section>
+
   <!-- COMPONENTS -->
   <section>
     <div class="sec-eyebrow">ENGINE 1 · THE COMPOSITE</div>
@@ -508,6 +516,13 @@ async function loadAll(){
   loadCycleSignals();
   loadCycleWave('btc');
   loadRSI();
+  loadDailyRead();
+}
+async function loadDailyRead(){
+  try{
+    var r=await (await fetch(API+'/api/daily-read',{cache:'no-store'})).json();
+    if(r&&r.read){ var el=document.getElementById('dailyRead'); if(el) el.textContent=r.read; }
+  }catch(e){ var el=document.getElementById('dailyRead'); if(el) el.textContent='Today’s read is unavailable right now.'; }
 }
 
 async function loadRSI(){
