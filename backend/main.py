@@ -511,7 +511,9 @@ async def get_macro_brief(request: Request):
         return _MACRO_CACHE["data"]
     facts = {"date": _dtm.utcnow().strftime("%B %d, %Y")}
     try:
-        arc = await get_arc_summary(request)
+        import httpx as _hx
+        async with _hx.AsyncClient(timeout=15) as _c:
+            arc = (await _c.get("https://alphacycle-production.up.railway.app/api/arc-summary")).json()
         facts["arc_score"] = round(arc.get("arc_score")) if arc.get("arc_score") is not None else None
         facts["zone"] = arc.get("zone_name")
         facts["btc_price_usd"] = round(arc.get("btc_price")) if arc.get("btc_price") else None
