@@ -1028,20 +1028,18 @@ async def get_cycle_wave(asset: str = "btc", lookback: int = 2190, projection: i
     else:
         next_turn = {"type": "trough", "in_days": days_to_low,
                      "date": (last + _td(days=days_to_low)).isoformat()}
-    # red price forecast: a realistic DAILY path (one point per day), built purely from data —
-    # the cycle/trend drift (coupled to the magenta line) PLUS the real day-of-week and month
-    # tendencies from 10 years. No smoothing, no invented volatility: the zig-zag is the actual
-    # historical weekday/month behaviour, so it looks like price action, not a clean curve.
-    def _cyc_log(i):
-        return c1 * math.cos(w * i) + c2 * math.sin(w * i)
+    # red price forecast: follows the dominant cycle (the magenta line) in RELATIVE terms — so red
+    # and the cycle always rise and fall TOGETHER (no contradiction) — anchored to today's price,
+    # PLUS the real 10y day-of-year/weekday tendencies for a lifelike daily zig-zag (not a clean curve).
+    def cyc_lvl(i):
+        return center + amp * math.cos(w * i - phi)
     forecast = [None] * (n_disp + projection)
     forecast[n_disp - 1] = round(dprices[-1], 2)
     logp = math.log(dprices[-1])
-    prev_m = trend_at(i_now) + _cyc_log(i_now)
+    prev_l = math.log(cyc_lvl(i_now))
     for k in range(1, projection + 1):
         gi = i_now + k
-        m = trend_at(gi) + _cyc_log(gi)
-        r_cyc = m - prev_m; prev_m = m
+        cur_l = math.log(cyc_lvl(gi)); r_cyc = cur_l - prev_l; prev_l = cur_l
         D = last + _td(days=k)
         logp += r_cyc + doy_tilt.get(D.timetuple().tm_yday, 0.0) + 0.5 * dow_tilt.get(D.weekday(), 0.0)
         forecast[(n_disp - 1) + k] = round(math.exp(logp), 2)
