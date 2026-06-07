@@ -530,47 +530,65 @@ async def get_macro_brief(request: Request):
     except Exception:
         pass
 
-    prompt = (
-        "You write two short, factual sections for a Bitcoin investor newsletter (The ARC Report), dated "
-        + facts["date"] + ". Tone: calm, analytical, no hype, no price predictions, no financial advice. "
-        "Use ONLY the real figures provided; never invent numbers. If a figure is missing, speak qualitatively.\n\n"
-        "REAL DATA (JSON): " + _mjson.dumps(facts) + "\n\n"
-        "Return ONLY valid JSON (no markdown) with exactly two string keys:\n"
-        '"macro": 3-4 sentences interpreting these macro & crypto facts for Bitcoin risk appetite — '
-        "global liquidity / Fed balance sheet, the dollar (DXY), rates (Fed funds, 10Y), M2 if present, and sentiment. "
-        "Explain what expanding vs tightening liquidity, a stronger/weaker dollar, and higher/lower rates mean for BTC.\n"
-        '"week_ahead": 2-3 sentences naming the key upcoming U.S. macro releases relative to today using the normal '
-        "monthly cadence (CPI ~mid-month, the jobs report/NFP first Friday, FOMC if scheduled this period, PCE ~month-end) "
-        "and what to watch. Mark dates as approximate."
+    # Fixed brand voice — identical every week, beginner-friendly (real number -> plain meaning).
+    style = (
+        "VOICE (use this exact style every issue): 'The ARC Report' — calm, plain US English, written so a complete "
+        "beginner with no finance background instantly understands it. No hype, no emojis, no price predictions or "
+        "targets, no financial advice, no unexplained jargon. Method for every point: state the real number, then a "
+        "short simple sentence on what it means for Bitcoin. Keep the same structure and length every week."
     )
-    txt = await _claude_text(prompt, 750)
+    # Step 1 — generate
+    gen_prompt = (
+        style + "\n\nDATE: " + facts["date"] + "\nREAL DATA (JSON — use ONLY these numbers, never invent any): "
+        + _mjson.dumps(facts) + "\n\n"
+        "Write ONLY valid JSON (no markdown) with two string keys:\n"
+        '"macro": 3-5 short sentences. Cover Fed net liquidity / balance sheet, M2, the dollar (DXY), rates (Fed funds, '
+        "10Y) and Fear & Greed where present. For EACH: the real number, then a plain-English 'what this means for "
+        "Bitcoin'. Explain simply that more liquidity + a weaker dollar + lower rates is usually good for Bitcoin, and "
+        "the opposite is a headwind.\n"
+        '"week_ahead": 2-3 short sentences naming the key upcoming U.S. data (CPI ~mid-month, jobs report first Friday, '
+        "FOMC if scheduled, PCE ~month-end) and, in plain words, why each matters. Dates approximate."
+    )
+    draft = await _claude_text(gen_prompt, 750)
+    # Step 2 — verify & correct against the real facts before we use it
+    verified = None
+    if draft:
+        verify_prompt = (
+            style + "\n\nDATE: " + facts["date"] + "\nREAL DATA (JSON — the single source of truth): "
+            + _mjson.dumps(facts) + "\n\nDRAFT to review:\n" + draft + "\n\n"
+            "Return a corrected final version. Rules: (1) EVERY number in the text must exactly match the REAL DATA — "
+            "fix or remove any figure that doesn't, and never add numbers not in the data; (2) it must read so a total "
+            "beginner understands it — each fact followed by a simple 'what it means'; (3) match the VOICE exactly; "
+            "(4) add anything important that is in the data but missing; (5) no hype, predictions or advice. "
+            'Return ONLY valid JSON with keys "macro" and "week_ahead".'
+        )
+        verified = await _claude_text(verify_prompt, 750)
+    final = verified or draft
     macro = week = None
-    if txt:
+    if final:
         try:
-            j = _mjson.loads(txt[txt.find("{"): txt.rfind("}") + 1])
+            j = _mjson.loads(final[final.find("{"): final.rfind("}") + 1])
             macro = (j.get("macro") or "").strip() or None
             week = (j.get("week_ahead") or "").strip() or None
         except Exception:
             pass
     if not macro:
+        # Beginner-friendly fallback: real number -> plain meaning, built only from the real facts.
+        s = []
         liq = facts.get("fed_net_liquidity_usd_tn")
-        dxy = facts.get("dollar_index")
-        m2 = facts.get("m2_yoy_pct")
-        bits = []
-        if liq: bits.append("Fed net liquidity is ~$%.2fT" % liq)
-        if m2 is not None: bits.append("US M2 is %s%.1f%% YoY" % ("+" if m2 >= 0 else "", m2))
-        if dxy: bits.append("the broad dollar index is %.1f" % dxy)
-        if facts.get("us_10y_pct"): bits.append("the 10Y yield is %.2f%%" % facts["us_10y_pct"])
-        macro = ("Backdrop: " + ", ".join(bits) + ". " if bits else "") + (
-            "Fear & Greed is at %s. " % facts["fear_greed"] if facts.get("fear_greed") is not None else "") + (
-            "Expanding liquidity and a softer dollar are historically tailwinds for Bitcoin; tightening liquidity, "
-            "a strong dollar and higher rates are headwinds. Watch which way these are trending.")
+        if liq: s.append("Fed net liquidity is about $%.2f trillion — that's how much money is sloshing around the system; more of it usually helps Bitcoin." % liq)
+        if facts.get("m2_yoy_pct") is not None: s.append("The US money supply (M2) is %s%.1f%% versus a year ago — growing money supply has historically been a tailwind for Bitcoin." % ("+" if facts["m2_yoy_pct"] >= 0 else "", facts["m2_yoy_pct"]))
+        if facts.get("dollar_index"): s.append("The US dollar index is %.1f — a weaker dollar tends to help Bitcoin, a stronger one tends to weigh on it." % facts["dollar_index"])
+        if facts.get("us_10y_pct"): s.append("The 10-year Treasury yield is %.2f%% — higher rates make safe bonds more attractive and pull money away from risk assets like Bitcoin." % facts["us_10y_pct"])
+        if facts.get("fear_greed") is not None: s.append("Crypto Fear & Greed is %s out of 100 — low means people are fearful (historically closer to opportunity than danger)." % facts["fear_greed"])
+        macro = " ".join(s) if s else "Macro data is being refreshed — check back shortly."
     if not week:
-        week = ("Watch the key U.S. releases in the days ahead — CPI (~mid-month), the jobs report (first Friday), "
-                "any scheduled FOMC decision, and PCE (~month-end). Cooler inflation supports risk appetite; hotter "
-                "prints tend to pressure Bitcoin. (Dates approximate — confirm on an economic calendar.)")
+        week = ("Key US data to watch: inflation (CPI, ~mid-month) — cooler numbers usually help Bitcoin; the monthly "
+                "jobs report (first Friday); any Fed interest-rate decision (FOMC); and the Fed's preferred inflation "
+                "gauge (PCE, ~month-end). In short: softer inflation and easier policy support risk assets; hot data "
+                "pressures them. (Dates approximate — confirm on an economic calendar.)")
     data = {"macro": macro, "week_ahead": week, "facts": facts, "asof": today,
-            "generated_by": "claude" if txt else "fallback"}
+            "generated_by": ("claude-verified" if verified else ("claude" if draft else "fallback"))}
     _MACRO_CACHE["day"] = today
     _MACRO_CACHE["data"] = data
     return data
