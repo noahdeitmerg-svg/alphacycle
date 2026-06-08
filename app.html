@@ -707,7 +707,7 @@ async function loadAll(){
   countUp(document.getElementById('cLqV'),Math.round(co.liquidity)); setBar('cLqB',co.liquidity,zoneInfo(co.liquidity).c); document.getElementById('cLqV').style.color=zoneInfo(co.liquidity).c;
 
   // decision — aligned with the adaptive ladder (buy<=38, full<=20, take profit 72/80)
-  var dArc=(a.arc_score!=null?a.arc_score:(a.arc_display!=null?a.arc_display:50));
+  var dArc=(a.arc_score!=null?a.arc_score:(a.arc_display!=null?a.arc_display:arc));
   setText('dArc', Math.round(dArc));
   var act,sub,col,hi;
   if(dArc<=20){ act='BUY · FULL'; col='#00DC78'; hi='dr-buy'; sub='Deep value — the cycle-bottom zone. The rule is 100% invested here.'; }
@@ -872,10 +872,10 @@ async function loadDailyRead(){
 async function loadRSI(){
   try{
     var r=await (await fetch(API+'/api/rsi',{cache:'no-store'})).json();
-    var cur=r.rsi; var col=cur<25?'#22c55e':(cur>75?'#ef4444':'#58A6FF');
-    setText('rsiBigV', cur); document.getElementById('rsiBigV').style.color=col;
-    setText('rsiZoneS', (cur<25?'Oversold — washed out':(cur>75?'Overbought — running hot':'Neutral — mid-range')));
-    var mk=document.getElementById('rsiMarker'); if(mk) mk.style.left=Math.max(0,Math.min(100,cur))+'%';
+    var cur=r.rsi; var col=(cur==null)?'#58A6FF':(cur<25?'#22c55e':(cur>75?'#ef4444':'#58A6FF'));
+    setText('rsiBigV', cur==null?'–':cur); document.getElementById('rsiBigV').style.color=col;
+    setText('rsiZoneS', cur==null?'no data':(cur<25?'Oversold — washed out':(cur>75?'Overbought — running hot':'Neutral — mid-range')));
+    var mk=document.getElementById('rsiMarker'); if(mk) mk.style.left=Math.max(0,Math.min(100,(cur==null?50:cur)))+'%';
     var hc=r.hc||{}, r7=(hc.rsi7!=null?hc.rsi7:'–'), ab=hc.above_200dma, hh=(hc.horizon||7);
     function hcStat(id,on,col){ var e=document.getElementById(id); if(!e)return; if(on){e.textContent='● ACTIVE NOW';e.style.color='#04130f';e.style.background=col;e.style.borderColor='transparent';} else {e.textContent='○ not now';e.style.color='var(--mut)';e.style.background='transparent';e.style.borderColor='var(--bd2)';} }
     var bs=(hc.buy||{}), fs=(hc.fade||{}), be=bs.edge, fe=fs.edge;
