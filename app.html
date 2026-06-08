@@ -180,6 +180,7 @@
   <a href="/"><img src="assets/logo.png" alt="AlphaCycle"></a>
   <div class="nav-right">
     <span class="live-dot"><i></i>LIVE</span>
+    <span class="nav-link" id="langBtn" onclick="toggleLang()" style="cursor:pointer;border:1px solid var(--bd2);border-radius:8px;padding:3px 10px;">DE</span>
     <a class="nav-link" href="/">← Home</a>
     <a class="nav-link" href="#" onclick="loadAll();return false;">↻ Refresh</a>
   </div>
@@ -564,6 +565,7 @@ async function loadAll(){
   loadDecision();
   loadDemo();
   loadCompHist();
+  if(window.applyLang) applyLang();
 }
 var _compHist=null,_compChart=null;
 async function loadCompHist(){
@@ -941,8 +943,58 @@ function initCollapse(){
     });
   }catch(e){}
 }
+/* ---- EN/DE language toggle (reverse-map, dynamic values untouched) ---- */
+var TR={
+"WHERE BITCOIN IS RIGHT NOW":"WO BITCOIN GERADE STEHT",
+"ENGINE 1 · THE COMPOSITE":"ENGINE 1 · DER GESAMT-SCORE",
+"ENGINE 2 · DECISION":"ENGINE 2 · ENTSCHEIDUNG",
+"ENGINE 2B · LIVE DEMO ACCOUNT":"ENGINE 2B · LIVE-DEMOKONTO",
+"ENGINE 3 · TRACK RECORD":"ENGINE 3 · ERFOLGSBILANZ",
+"ENGINE 4 · CYCLE CLOCK":"ENGINE 4 · ZYKLUS-UHR",
+"ENGINE 5 · NEAR-TERM":"ENGINE 5 · KURZFRISTIG",
+"ENGINE 6 · CYCLE WAVE":"ENGINE 6 · ZYKLUS-WELLE",
+"ENGINE 6B · SEASONALITY":"ENGINE 6B · SAISONALITÄT",
+"ENGINE 6C · CYCLE EXTREMES":"ENGINE 6C · ZYKLUS-EXTREME",
+"ENGINE 7 · 10-YEAR HISTORY":"ENGINE 7 · 10-JAHRES-HISTORIE",
+"ENGINE 8 · REGIME TIMELINE":"ENGINE 8 · REGIME-VERLAUF",
+"What drives the score":"Was den Score treibt",
+"Your move, by the rule":"Dein Zug — nach der Regel",
+"$10,000 since 2021 — through a full cycle":"10.000 $ seit 2021 — durch einen ganzen Zyklus",
+"What each zone has returned, historically":"Was jede Zone historisch gebracht hat",
+"Where we are in the cycle":"Wo wir im Zyklus stehen",
+"30–90 day conditions":"Lage auf 30–90 Tage",
+"Are we rising or falling in the cycle?":"Steigen oder fallen wir im Zyklus?",
+"When Bitcoin tends to be strong or weak":"Wann Bitcoin typisch stark oder schwach ist",
+"Three time-tested top/bottom gauges":"Drei bewährte Top-/Boden-Anzeiger",
+"The ARC Index across every cycle":"Der ARC-Index über alle Zyklen",
+"Every regime change, dated":"Jeder Regimewechsel, datiert",
+"Get the weekly ARC Report":"Hol dir den wöchentlichen ARC-Report",
+"The ARC Index is <b>one transparent formula</b>: four independent signals, each scored 0–100, then weighted into a single number. Lower = historically safer, higher = historically riskier.":"Der ARC-Index ist <b>eine transparente Formel</b>: vier unabhängige Signale, je 0–100 bewertet und zu einer Zahl gewichtet. Niedrig = historisch sicherer, hoch = historisch riskanter.",
+"The backtested rule in one line: <b>buy extreme fear, sell extreme greed, hold the middle.</b> Here's exactly what it says today. Educational, not financial advice.":"Die getestete Regel in einem Satz: <b>extreme Angst kaufen, extreme Gier verkaufen, die Mitte halten.</b> Hier steht, was sie heute sagt. Bildung, keine Finanzberatung.",
+"Average <b>12-month forward BTC return</b> after entering each zone, from confirmed zone entries since 2017. Your current zone is highlighted.":"Durchschnittliche <b>12-Monats-BTC-Rendite</b> nach Eintritt in jede Zone, aus bestätigten Zoneneintritten seit 2017. Deine aktuelle Zone ist hervorgehoben.",
+"<b>Contextual only</b> — short-term oscillators. The ARC Index is the primary signal; these add texture on timing.":"<b>Nur Kontext</b> — kurzfristige Oszillatoren. Der ARC-Index ist das Hauptsignal; diese geben Feinheiten zum Timing.",
+"From 13 years of daily prices: where we are in the 4-year halving cycle, plus the only calendar months reliable enough to trust (up or down in ≥70% of years). Everything else is hidden as noise. Context, not a trade signal.":"Aus 13 Jahren Tagespreisen: wo wir im 4-Jahres-Halving-Zyklus stehen, plus die einzigen verlässlichen Kalendermonate (in ≥70% der Jahre hoch oder runter). Alles andere ist als Rauschen ausgeblendet. Kontext, kein Handelssignal.",
+"Three simple \"thermometers\" built from Bitcoin's own long-term averages. Each one has reliably flagged when Bitcoin got too hot (a top) or too cheap (a bottom) in past cycles. <b>Green = cheap, red = overheated.</b> The bar shows how far we are from the danger zone. They're a second opinion that should agree with the ARC score.":"Drei einfache „Thermometer“ aus Bitcoins eigenen Langzeit-Durchschnitten. Jedes hat in früheren Zyklen zuverlässig angezeigt, wann Bitcoin zu heiß (ein Top) oder zu billig (ein Boden) war. <b>Grün = billig, rot = überhitzt.</b> Der Balken zeigt, wie weit wir von der Gefahrenzone weg sind. Eine zweite Meinung, die zum ARC-Score passen sollte.",
+"← Home":"← Start",
+"↻ Refresh":"↻ Aktualisieren"
+};
+var TRR={}; for(var _k in TR){ TRR[TR[_k]]=_k; }
+function _norm(h){ return h.replace(/\s+/g,' ').trim(); }
+function applyLang(){
+  var de=(window._lang==='de');
+  document.querySelectorAll('.wrap .sec-eyebrow, .wrap .sec-h, .wrap .sec-tells, .nav-right .nav-link, .nav-right #langBtn').forEach(function(el){
+    if(el.id==='langBtn') return;
+    var t=_norm(el.innerHTML);
+    if(de){ if(TR[t]!==undefined) el.innerHTML=TR[t]; }
+    else { if(TRR[t]!==undefined) el.innerHTML=TRR[t]; }
+  });
+}
+function setLang(l){ window._lang=l; try{localStorage.setItem('ac_lang',l);}catch(e){} var b=document.getElementById('langBtn'); if(b) b.textContent=(l==='de'?'EN':'DE'); applyLang(); }
+function toggleLang(){ setLang(window._lang==='de'?'en':'de'); }
+(function(){ var saved='en'; try{ saved=localStorage.getItem('ac_lang')||'en'; }catch(e){} window._lang=saved; var b=document.getElementById('langBtn'); if(b) b.textContent=(saved==='de'?'EN':'DE'); })();
 initCollapse();
 applyGates();
+setLang(window._lang||'en');
 loadAll();
 setInterval(loadAll, 90000);
 </script>
