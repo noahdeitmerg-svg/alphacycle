@@ -181,6 +181,7 @@
   <div class="nav-right">
     <span class="live-dot"><i></i>LIVE</span>
     <span class="nav-link" id="langBtn" onclick="toggleLang()" style="cursor:pointer;border:1px solid var(--bd2);border-radius:8px;padding:3px 10px;">DE</span>
+    <span class="nav-link" id="shareBtn" onclick="shareX()" style="cursor:pointer;border:1px solid var(--bd2);border-radius:8px;padding:3px 10px;color:var(--teal);">Share 𝕏</span>
     <a class="nav-link" href="/">← Home</a>
     <a class="nav-link" href="#" onclick="loadAll();return false;">↻ Refresh</a>
   </div>
@@ -991,6 +992,16 @@ function applyLang(){
 }
 function setLang(l){ window._lang=l; try{localStorage.setItem('ac_lang',l);}catch(e){} var b=document.getElementById('langBtn'); if(b) b.textContent=(l==='de'?'EN':'DE'); applyLang(); }
 function toggleLang(){ setLang(window._lang==='de'?'en':'de'); }
+function shareX(){
+  var arc=(document.getElementById('arcNum')||{}).textContent||'';
+  var zone=(document.getElementById('arcZone')||{}).textContent||'';
+  var de=(window._lang==='de');
+  var txt=de?('Bitcoin ARC-Index: '+arc+'/100 — '+zone+'. Eine transparente Zahl zeigt, wo wir im Zyklus stehen. Struktur vor Emotion.')
+            :('Bitcoin ARC Index: '+arc+'/100 — '+zone+'. One transparent score for where we are in the cycle. Structure before emotion.');
+  var url='https://alphacycle.app/app';
+  window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent(txt)+'&url='+encodeURIComponent(url),'_blank','noopener');
+  try{_t&&_t('share_x');}catch(e){}
+}
 (function(){ var saved='en'; try{ saved=localStorage.getItem('ac_lang')||'en'; }catch(e){} window._lang=saved; var b=document.getElementById('langBtn'); if(b) b.textContent=(saved==='de'?'EN':'DE'); })();
 initCollapse();
 applyGates();
@@ -1000,4 +1011,4 @@ setInterval(loadAll, 90000);
 </script>
 </body>
 </html>
-  
+

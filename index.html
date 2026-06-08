@@ -234,6 +234,12 @@
     .ps-card{padding:24px;}
   }
 </style>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"AlphaCycle","applicationCategory":"FinanceApplication","operatingSystem":"Web","url":"https://alphacycle.app","description":"The ARC Index: one transparent 0-100 score that tells you where Bitcoin is in its market cycle, with a backtested decision rule that beat buy-and-hold.","offers":[{"@type":"Offer","price":"0","priceCurrency":"USD","name":"Free"},{"@type":"Offer","price":"29","priceCurrency":"USD","name":"Pro (monthly)"}]}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is the ARC Index?","acceptedAnswer":{"@type":"Answer","text":"ARC is a single 0-100 score that classifies where Bitcoin sits in its market cycle, across five regime zones from Deep Value to Euphoria."}},{"@type":"Question","name":"How is the score calculated?","acceptedAnswer":{"@type":"Answer","text":"One transparent formula blends four signals: the 200-week trend (35%), drawdown from the all-time high (30%), the Fear & Greed Index (20%) and Fed net liquidity (15%), backtested to 2017."}},{"@type":"Question","name":"Is this financial advice?","acceptedAnswer":{"@type":"Answer","text":"No. AlphaCycle measures structural risk and is educational and informational only. Always do your own research."}}]}
+</script>
 </head>
 <body>
 
@@ -308,9 +314,9 @@
 <!-- SOCIAL PROOF -->
 <div class="proof reveal">
   <div class="wrap proof-in">
-    <div class="proof-stat"><b>71×</b>$10k → $711k since 2017 (the rule)</div>
-    <div class="proof-stat"><b>5.0×</b>more than buy &amp; hold</div>
-    <div class="proof-stat"><b>−36%</b>max drawdown vs −84% holding</div>
+    <div class="proof-stat"><b id="pbMult">55×</b><span id="pbVal">$10k → $549k since 2017 (the rule)</span></div>
+    <div class="proof-stat"><b id="pbEdge">3.7×</b>more than buy &amp; hold</div>
+    <div class="proof-stat"><b id="pbDD">−48%</b>max drawdown vs −84% holding</div>
     <div class="proof-stat"><b>2017</b>backtested on daily data since</div>
   </div>
 </div>
@@ -321,15 +327,15 @@
     <div class="sec-head reveal">
       <span class="eyebrow">The Proof</span>
       <h2>$10,000 since 2017 — the rule vs just holding.</h2>
-      <p>One rule: all-in at ARC 25, all-out at ARC 75, hold the middle. Independently backtested on daily Bitcoin data since August 2017.</p>
+      <p>The adaptive ladder: buy 40% when Bitcoin is cheap, go 100% at the bottom, take profit in steps near euphoria. Backtested on daily Bitcoin data since August 2017.</p>
     </div>
     <div class="reveal" style="display:flex;gap:18px;flex-wrap:wrap;justify-content:center;margin-bottom:26px;">
-      <div class="ps-card" style="text-align:center;padding:22px 32px;flex:1;min-width:180px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mut);">ARC RULE</div><div style="font-size:34px;font-weight:700;color:var(--amber);line-height:1.2;">$711k</div><div style="font-size:13px;color:var(--mut);">71× · −36% drawdown</div></div>
-      <div class="ps-card" style="text-align:center;padding:22px 32px;flex:1;min-width:180px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mut);">HODL</div><div style="font-size:34px;font-weight:700;color:#eab308;line-height:1.2;">$142k</div><div style="font-size:13px;color:var(--mut);">14× · −84% drawdown</div></div>
-      <div class="ps-card" style="text-align:center;padding:22px 32px;flex:1;min-width:180px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mut);">EDGE</div><div style="font-size:34px;font-weight:700;color:var(--amber);line-height:1.2;">5.0×</div><div style="font-size:13px;color:var(--mut);">more, at half the risk</div></div>
+      <div class="ps-card" style="text-align:center;padding:22px 32px;flex:1;min-width:180px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mut);">ARC RULE</div><div style="font-size:34px;font-weight:700;color:var(--amber);line-height:1.2;" id="pcStrat">$549k</div><div style="font-size:13px;color:var(--mut);" id="pcStratS">55× · −48% drawdown</div></div>
+      <div class="ps-card" style="text-align:center;padding:22px 32px;flex:1;min-width:180px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mut);">HODL</div><div style="font-size:34px;font-weight:700;color:#eab308;line-height:1.2;" id="pcHodl">$147k</div><div style="font-size:13px;color:var(--mut);" id="pcHodlS">14.7× · −84% drawdown</div></div>
+      <div class="ps-card" style="text-align:center;padding:22px 32px;flex:1;min-width:180px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mut);">EDGE</div><div style="font-size:34px;font-weight:700;color:var(--amber);line-height:1.2;" id="pcEdge">3.7×</div><div style="font-size:13px;color:var(--mut);">more money, far less risk</div></div>
     </div>
     <div class="ps-card reveal" style="padding:16px;"><img src="assets/backtest.png" alt="ARC strategy vs HODL since 2017" style="width:100%;border-radius:10px;display:block;"></div>
-    <p class="reveal" style="text-align:center;color:var(--dim);font-size:12px;margin-top:14px;font-family:var(--mono);line-height:1.6;">6 trades in 9 years · sits in cash through every bear market · past performance does not guarantee future results · educational, not financial advice</p>
+    <p class="reveal" style="text-align:center;color:var(--dim);font-size:12px;margin-top:14px;font-family:var(--mono);line-height:1.6;">Only buys when Bitcoin is genuinely cheap (≈ once a cycle) · sits in cash through every bear market · past performance does not guarantee future results · educational, not financial advice</p>
   </div>
 </section>
 
@@ -443,6 +449,46 @@
   </div>
 </section>
 
+<!-- WHY ALPHACYCLE (vs alternatives) -->
+<section>
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Why AlphaCycle</span>
+      <h2>A number is not a decision.</h2>
+      <p>Other tools hand you a score, or fifty charts, and leave the hard part to you. AlphaCycle gives you the score, the rule, and the proof — in one place.</p>
+    </div>
+    <div class="reveal" style="overflow-x:auto;">
+      <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:1px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);border-radius:14px;overflow:hidden;min-width:560px;font-size:14px;">
+        <div style="background:#0d1320;padding:14px 16px;"></div>
+        <div style="background:rgba(0,212,170,0.10);padding:14px 16px;font-weight:700;color:var(--amber);font-family:var(--mono);text-align:center;">AlphaCycle</div>
+        <div style="background:#0d1320;padding:14px 16px;font-weight:700;color:var(--mut);font-family:var(--mono);text-align:center;">CBBI</div>
+        <div style="background:#0d1320;padding:14px 16px;font-weight:700;color:var(--mut);font-family:var(--mono);text-align:center;">BM&nbsp;Pro</div>
+        <div style="background:#0d1320;padding:13px 16px;color:var(--mut);">One clear 0–100 cycle score</div>
+        <div style="background:rgba(0,212,170,0.06);padding:13px 16px;text-align:center;color:#22c55e;">✓</div>
+        <div style="background:#0d1320;padding:13px 16px;text-align:center;color:#22c55e;">✓</div>
+        <div style="background:#0d1320;padding:13px 16px;text-align:center;color:var(--dim);">~50 charts</div>
+        <div style="background:#0d1320;padding:13px 16px;color:var(--mut);">An actual buy / hold / sell rule</div>
+        <div style="background:rgba(0,212,170,0.06);padding:13px 16px;text-align:center;color:#22c55e;">✓</div>
+        <div style="background:#0d1320;padding:13px 16px;text-align:center;color:#ef4444;">✗</div>
+        <div style="background:#0d1320;padding:13px 16px;text-align:center;color:#ef4444;">✗</div>
+        <div style="background:#0d1320;padding:13px 16px;color:var(--mut);">Live demo account (real track record)</div>
+        <div style="background:rgba(0,212,170,0.06);padding:13px 16px;text-align:center;color:#22c55e;">✓</div>
+        <div style="background:#0d1320;padding:13px 16px;text-align:center;color:#ef4444;">✗</div>
+        <div style="background:#0d1320;padding:13px 16px;text-align:center;color:#ef4444;">✗</div>
+        <div style="background:#0d1320;padding:13px 16px;color:var(--mut);">Plain-English daily read</div>
+        <div style="background:rgba(0,212,170,0.06);padding:13px 16px;text-align:center;color:#22c55e;">✓</div>
+        <div style="background:#0d1320;padding:13px 16px;text-align:center;color:#ef4444;">✗</div>
+        <div style="background:#0d1320;padding:13px 16px;text-align:center;color:var(--dim);">expert-level</div>
+        <div style="background:#0d1320;padding:13px 16px;color:var(--mut);">Price</div>
+        <div style="background:rgba(0,212,170,0.06);padding:13px 16px;text-align:center;color:var(--amber);font-weight:700;">Free / $29</div>
+        <div style="background:#0d1320;padding:13px 16px;text-align:center;color:var(--mut);">Free</div>
+        <div style="background:#0d1320;padding:13px 16px;text-align:center;color:var(--mut);">$29/mo</div>
+      </div>
+    </div>
+    <p class="reveal" style="text-align:center;color:var(--dim);font-size:12px;margin-top:12px;font-family:var(--mono);">Comparison reflects publicly available features as of 2026 · names are trademarks of their owners.</p>
+  </div>
+</section>
+
 <!-- PRICING -->
 <section id="pricing">
   <div class="wrap">
@@ -479,6 +525,8 @@
           <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4 4 10-11" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Everything in Free</li>
           <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4 4 10-11" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Decision Engine — the exact buy / hold / sell rule</li>
           <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4 4 10-11" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>10-year ARC history chart with cycle markers</li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4 4 10-11" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Live demo account — a real, dated track record</li>
+          <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4 4 10-11" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Daily signal to Telegram at noon</li>
           <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4 4 10-11" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Regime alerts — email + Telegram</li>
           <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4 4 10-11" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Priority support</li>
         </ul>
@@ -501,7 +549,7 @@
       <div class="qa reveal"><div class="qa-q">Is this financial advice?<span class="ar">+</span></div><div class="qa-a"><p>No. AlphaCycle measures structural risk — it does not predict price or tell you to buy or sell. It is educational and informational only. Always do your own research.</p></div></div>
       <div class="qa reveal"><div class="qa-q">What data sources do you use?<span class="ar">+</span></div><div class="qa-a"><p>Bitcoin price and OHLC from Kraken, sentiment from the Fear &amp; Greed Index, and liquidity from the Federal Reserve (WALCL, TGA, RRP). All primary, public sources.</p></div></div>
       <div class="qa reveal"><div class="qa-q">How accurate is the model?<span class="ar">+</span></div><div class="qa-a"><p>Every major cycle top and bottom since 2017 falls in the expected zone in backtest. ARC lags by design — it measures the present accurately rather than guessing the future.</p></div></div>
-      <div class="qa reveal"><div class="qa-q">Would following ARC have beaten just holding?<span class="ar">+</span></div><div class="qa-a"><p>In backtest, by a wide margin. One rule — all-in at ARC 25, all-out at ARC 75, hold the middle — turned $10,000 into about $711,000 since 2017, versus roughly $142,000 for buy-and-hold, at −36% max drawdown instead of −84%. It took six trades in nine years. This is an in-sample backtest (the edge holds across a wide range of thresholds, not one magic number); past performance does not guarantee future results.</p></div></div>
+      <div class="qa reveal"><div class="qa-q">Would following ARC have beaten just holding?<span class="ar">+</span></div><div class="qa-a"><p>In backtest, by a wide margin. The adaptive ladder — buy 40% when ARC is cheap (≤38), go 100% at the bottom, take profit in steps near euphoria — turned $10,000 into roughly $549,000 since 2017, versus about $147,000 for buy-and-hold, at −48% max drawdown instead of −84%. This is an in-sample backtest (the edge holds across a wide range of thresholds, not one magic number); past performance does not guarantee future results.</p></div></div>
       <div class="qa reveal"><div class="qa-q">Can I cancel anytime?<span class="ar">+</span></div><div class="qa-a"><p>Yes — Pro is monthly with no lock-in, cancel anytime. And during launch, everything is free.</p></div></div>
     </div>
   </div>
@@ -605,6 +653,20 @@
         animateTo(s);
         if(d.btc_price){ document.getElementById('arcBtc').textContent='$'+Math.round(d.btc_price).toLocaleString(); }
         if(d.fear_greed!=null){ document.getElementById('arcFg').textContent=Math.round(d.fear_greed); }
+      }).catch(function(){});
+  }catch(e){}
+  // live backtest proof numbers from the decision engine
+  try{
+    fetch('https://alphacycle-production.up.railway.app/api/ladder',{cache:'no-store'})
+      .then(function(r){return r.json();}).then(function(d){
+        var b=d.backtest||{}; if(!b.strategy_mult) return;
+        function kf(m){ var v=m*10000; return v>=1000000?('$'+(Math.round(v/100000)/10)+'M'):('$'+Math.round(v/1000)+'k'); }
+        var set=function(id,t){ var el=document.getElementById(id); if(el) el.textContent=t; };
+        set('pbMult',Math.round(b.strategy_mult)+'×'); set('pbVal','$10k → '+kf(b.strategy_mult)+' since 2017 (the rule)');
+        set('pbEdge',(Math.round(b.strategy_mult/b.hodl_mult*10)/10)+'×'); if(b.max_dd!=null) set('pbDD',b.max_dd+'%');
+        set('pcStrat',kf(b.strategy_mult)); set('pcStratS',Math.round(b.strategy_mult)+'× · '+(b.max_dd!=null?b.max_dd:-48)+'% drawdown');
+        set('pcHodl',kf(b.hodl_mult)); set('pcHodlS',(Math.round(b.hodl_mult*10)/10)+'× · '+(b.hodl_max_dd!=null?b.hodl_max_dd:-84)+'% drawdown');
+        set('pcEdge',(Math.round(b.strategy_mult/b.hodl_mult*10)/10)+'×');
       }).catch(function(){});
   }catch(e){}
 
