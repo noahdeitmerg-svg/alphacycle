@@ -450,7 +450,8 @@ if _static_dir.exists():
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[],
+    allow_origin_regex=r"https://([a-z0-9-]+\.)?alphacycle\.app|https://[a-z0-9-]+\.netlify\.app|http://localhost(:\d+)?|http://127\.0\.0\.1(:\d+)?",
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -511,9 +512,10 @@ async def subscribe(email: str = "", src: str = ""):
 
 @app.get("/api/subscribers")
 async def get_subscribers(token: str = ""):
-    if token and token == _aos.getenv("ADMIN_TOKEN", "alphacycle-admin"):
+    _admin = _aos.getenv("ADMIN_TOKEN", "")
+    if _admin and token and token == _admin:
         return {"count": len(_SUBS), "list": _SUBS}
-    return {"count": len(_SUBS)}  # public: count only, no PII
+    return {"count": len(_SUBS)}  # public: count only, no PII (no leaking default token)
 
 
 # --- auto macro + week-ahead brief (real data + Claude) for the newsletter ---
@@ -1844,7 +1846,8 @@ async def get_component_history(days: int = 1300):
 async def daily_telegram_test(token: str = ""):
     """Manual trigger to fire the daily Telegram summary now (ADMIN_TOKEN gated)."""
     import os as _os
-    if token != _os.getenv("ADMIN_TOKEN", "alphacycle-admin"):
+    _admin = _os.getenv("ADMIN_TOKEN", "")
+    if not _admin or token != _admin:
         raise HTTPException(403, "forbidden")
     text = await _compose_daily_telegram()
     sent = await _send_daily_telegram()
@@ -2828,6 +2831,10 @@ async def get_arc_summary(request: Request):
     except Exception as e2:
         logger.warning("arc-summary net_liquidity_data: %s", e2)
         out["net_liquidity_data"] = None
+    try:
+        out["refreshed_at"] = CACHE.get("refreshed_at")  # epoch ms of last successful data refresh
+    except Exception:
+        out["refreshed_at"] = None
     return api_response(out)
 
 

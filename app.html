@@ -275,7 +275,7 @@ header.hero h1, .hero-copy h1{
 
 
 /* @@OVERFLOW@@ text never escapes a card */
-.card,.comp,.bigm,.ps-card,.stat,.zrow{overflow:hidden;}
+.chart-canvas-box,.chart-wrap{overflow:hidden;}
 .comp .desc,.bigm .s,.note,.sec-tells,.comp .val,.bigm .v,.bigm .k,.comp .nm,.v,.s,.k{overflow-wrap:anywhere;word-break:break-word;min-width:0;}
 .grid>*{min-width:0;}
 </style>
@@ -347,7 +347,7 @@ header.hero h1, .hero-copy h1{
     <div style="display:flex;flex-wrap:wrap;gap:10px 22px;justify-content:center;font-family:var(--mono);font-size:12px;color:var(--mut);border:1px solid var(--bd);border-radius:12px;padding:12px 16px;background:rgba(255,255,255,0.02);">
       <span>One transparent formula — no black box</span><span style="color:var(--dim);">·</span>
       <span>Primary data: Kraken · Federal Reserve · Fear &amp; Greed</span><span style="color:var(--dim);">·</span>
-      <span>Updated live</span><span style="color:var(--dim);">·</span>
+      <span>Auto-updating</span><span style="color:var(--dim);">·</span>
       <span>No wallet, no sign-up to view</span>
     </div>
   </div>
@@ -452,11 +452,11 @@ header.hero h1, .hero-copy h1{
   <!-- BACKTEST PROOF (collapsible, collapsed by default) -->
   <section class="collapsed">
     <div class="sec-eyebrow clps" onclick="var c=this.closest('section').classList.toggle('collapsed');this.querySelector('.chev').textContent=c?'SHOW ▸':'HIDE ▾';">THE PROOF · ARC vs HODL<span class="chev">SHOW ▸</span></div>
-    <div class="sec-h">$10,000 since 2017 — <span style="color:var(--teal)" id="prfStratH">the rule $541k</span> vs <span style="color:#eab308" id="prfHodlH">HODL $142k</span></div>
+    <div class="sec-h">$10,000 since 2017 — <span style="color:var(--teal)" id="prfStratH">the rule $550k</span> vs <span style="color:#eab308" id="prfHodlH">HODL $142k</span></div>
     <div class="sec-tells">If you'd followed the <b>adaptive ladder</b> — buy 40% at ARC ≤38, go 100% at the bottom (ARC ≤20 or once a dip under 25 recovers), take profit 50% at ARC ≥72 and the rest at ≥80 — versus buying and holding Bitcoin the whole way. Same asset, same start. Backtested on daily data since August 2017. <span class="note">(tap to expand)</span></div>
     <div class="eng-body">
     <div class="grid g3" style="margin-bottom:16px;">
-      <div class="card bigm"><div class="k">ALPHACYCLE RULE</div><div class="v" style="color:var(--teal);" id="prfStrat">$541k</div><div class="s" id="prfStratS">54× · max drawdown −48%</div></div>
+      <div class="card bigm"><div class="k">ALPHACYCLE RULE</div><div class="v" style="color:var(--teal);" id="prfStrat">$550k</div><div class="s" id="prfStratS">55× · max drawdown −48%</div></div>
       <div class="card bigm"><div class="k">BUY &amp; HOLD</div><div class="v" style="color:#eab308;" id="prfHodl">$142k</div><div class="s" id="prfHodlS">14× · max drawdown −84%</div></div>
       <div class="card bigm"><div class="k">EDGE</div><div class="v" style="color:var(--teal);" id="prfEdge">3.8×</div><div class="s">more money, far less risk</div></div>
     </div>
@@ -737,7 +737,12 @@ async function loadAll(){
 
   // context
 
-  setText('updated', new Date().toLocaleString());
+  (function(){ var ra=a.refreshed_at; var el=document.getElementById('updated'); var dot=document.querySelector('.live-dot i');
+    if(ra){ var age=Math.round((Date.now()-ra)/60000); var fresh=age<180;
+      var ago=age<60?(age+'m'):(age<1440?(Math.round(age/60)+'h'):(Math.round(age/1440)+'d'));
+      if(el) el.textContent=new Date(ra).toLocaleString()+(fresh?'':' · ⚠ data '+ago+' old');
+      if(dot) dot.style.background=fresh?'var(--teal)':'#FF9500';
+    } else if(el){ el.textContent=new Date().toLocaleString(); } })();
 
   loadZones(z.k);
   loadChart();
@@ -1016,12 +1021,12 @@ async function loadZones(currentKey){
       var ret, sub, col;
       if(d.display_mode==='drawdown'){ ret=(d.avg_drawdown!=null?d.avg_drawdown.toFixed(0)+'%':'–'); col='#ef4444'; sub='avg max drawdown after entry'; }
       else if(d.display_mode==='reduce'){ ret='REDUCE'; col='#FF9500'; sub='historically negative — do not buy'; }
-      else { ret=(d.avg_12m!=null?'+'+d.avg_12m.toFixed(0)+'%':'–'); col='#22c55e'; sub=(d.win_rate_12m!=null?d.win_rate_12m.toFixed(0)+'% win rate':'')+(d.entry_count?(' · '+d.entry_count+' entries'):''); }
+      else { ret=(d.avg_12m!=null?'+'+d.avg_12m.toFixed(0)+'%':'–'); col='#22c55e'; var ec=d.entry_count||0; var wt=''; if(d.win_rate_12m!=null&&ec){ var wins=Math.round(d.win_rate_12m/100*ec); wt=(ec<5?(wins+'/'+ec+' up'):(d.win_rate_12m.toFixed(0)+'% up')); } sub=wt+(ec?(' · '+ec+(ec<5?' entries · small sample':' entries')):''); }
       var active=(o[0]===currentKey)?' active':'';
       html+='<div class="zrow'+active+'"><span class="dot" style="background:'+o[2]+'"></span><span class="zn" style="color:'+o[2]+'">'+o[1]+'</span><span class="zd">'+sub+'</span>'+(active?'<span class="zhere">YOU ARE HERE</span>':'')+'<span class="zr" style="color:'+col+'">'+ret+'</span></div>';
     });
     document.getElementById('zoneTable').innerHTML=html;
-    setText('zoneFoot','Based on '+total+' confirmed zone entries since 2017 · 12-month forward BTC returns.');
+    setText('zoneFoot','Based on '+total+' confirmed zone entries since 2017 (~2 cycles) · 12-month forward BTC returns · small samples — illustrative, not a guarantee.');
   }catch(e){ document.getElementById('zoneTable').innerHTML='<div class="note">Historical returns unavailable right now.</div>'; }
 }
 
