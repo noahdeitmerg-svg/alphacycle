@@ -497,7 +497,7 @@ header.hero h1, .hero-copy h1{
     <div class="card" id="weeklyCard" style="margin-bottom:14px;border-width:2px;">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:18px;flex-wrap:wrap;">
         <div style="min-width:150px;">
-          <div class="k">WEEKLY RSI (14)</div>
+          <div class="k">WEEKLY RSI · BIG PICTURE</div>
           <div class="v" id="wRsiV" style="font-size:48px;line-height:1;">–</div>
           <div class="s" id="wRsiZone">–</div>
         </div>
@@ -508,20 +508,20 @@ header.hero h1, .hero-copy h1{
         </div>
       </div>
     </div>
-    <div class="k" style="font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:0.12em;margin:4px 0 10px;">DAILY TIMING — FASTER SETUPS</div>
-    <div class="card" style="margin-bottom:14px;display:flex;gap:26px;align-items:center;flex-wrap:wrap;">
-      <div style="min-width:120px"><div class="k">DAILY RSI (14)</div><div class="v" id="rsiBigV" style="font-size:46px;line-height:1;">–</div><div class="s" id="rsiZoneS">–</div></div>
-      <div style="flex:1;min-width:250px;">
-        <div style="position:relative;margin-top:6px;">
-          <div style="height:18px;border-radius:9px;background:linear-gradient(90deg,#16a34a 0%,#22c55e 25%,#3a4456 25%,#3a4456 75%,#ef4444 75%,#b91c1c 100%);"></div>
-          <div id="rsiMarker" style="position:absolute;top:-7px;left:0%;transform:translateX(-50%);width:4px;height:32px;background:#fff;border-radius:2px;box-shadow:0 0 8px rgba(0,0,0,0.7);transition:left .4s;"></div>
+    <div class="k" style="font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:0.12em;margin:6px 0 10px;">TODAY · FASTER TIMING</div>
+    <div class="card" style="margin-bottom:12px;display:flex;gap:18px;align-items:center;flex-wrap:wrap;padding:14px 18px;">
+      <div style="min-width:92px"><div class="k">DAILY RSI (14)</div><div class="v" id="rsiBigV" style="font-size:32px;line-height:1;">–</div><div class="s" id="rsiZoneS" style="font-size:12px;">–</div></div>
+      <div style="flex:1;min-width:220px;">
+        <div style="position:relative;margin-top:4px;">
+          <div style="height:13px;border-radius:7px;background:linear-gradient(90deg,#16a34a 0%,#22c55e 25%,#3a4456 25%,#3a4456 75%,#ef4444 75%,#b91c1c 100%);"></div>
+          <div id="rsiMarker" style="position:absolute;top:-6px;left:0%;transform:translateX(-50%);width:3px;height:25px;background:#fff;border-radius:2px;box-shadow:0 0 8px rgba(0,0,0,0.7);transition:left .4s;"></div>
         </div>
-        <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--mut);margin-top:9px;">
+        <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--mut);margin-top:7px;">
           <span>0</span><span style="color:#22c55e">25 · oversold</span><span style="color:#ef4444">overbought · 75</span><span>100</span>
         </div>
       </div>
     </div>
-    <div class="note" style="margin:0 0 12px;">Two daily high-confidence setups — a fast 7-day RSI <b>plus a trend filter</b> (the key to reliability):</div>
+    <div class="note" style="margin:0 0 10px;">Two daily setups — a fast 7-day RSI <b>plus a trend filter</b>. They only light up when the odds are genuinely high:</div>
     <div class="grid g2" style="margin-bottom:14px;">
       <div class="card bigm" id="hcBuyCard" style="border-color:rgba(0,230,195,0.32);background:linear-gradient(160deg,rgba(0,230,195,0.08),rgba(255,255,255,0.012));">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
@@ -542,8 +542,9 @@ header.hero h1, .hero-copy h1{
         <div class="note" id="hcFadeN"></div>
       </div>
     </div>
-    <div class="note" id="rsiNote" style="margin-bottom:16px"></div>
-    <div class="grid g3" id="nearGrid"><div class="loading">Loading…</div></div>
+    <div class="note" id="rsiNote" style="margin-bottom:14px"></div>
+    <div class="k" style="font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:0.12em;margin:6px 0 9px;">OTHER OSCILLATORS · CONTEXT ONLY</div>
+    <div id="nearGrid" style="display:flex;flex-wrap:wrap;gap:8px;"><div class="loading">Loading…</div></div>
     </div>
   </section>
 
@@ -711,7 +712,7 @@ async function loadAll(){
   setText('dArc', Math.round(dArc));
   var act,sub,col,hi;
   if(dArc<=20){ act='BUY · FULL'; col='#00DC78'; hi='dr-buy'; sub='Deep value — the cycle-bottom zone. The rule is 100% invested here.'; }
-  else if(dArc<=38){ act='BUY · ACCUMULATE'; col='#00DC78'; hi='dr-buy'; sub='Cheap zone — the rule buys its first 40% here and adds the rest at the bottom.'; }
+  else if(dArc<=38){ act='BUY · ACCUMULATE'; col='#00DC78'; hi='dr-buy'; sub='Cheap zone (incl. Deep Value) — the rule buys 40% now and goes 100% only at the deepest point, ARC 20 or below.'; }
   else if(dArc>=80){ act='SELL · ALL OUT'; col='#FF3B3B'; hi='dr-sell'; sub='Euphoria — risk at a cycle high. The rule is fully in cash here.'; }
   else if(dArc>=72){ act='SELL · TAKE PROFIT'; col='#FF3B3B'; hi='dr-sell'; sub='Overheating — the rule takes the first 50% profit here, the rest by ARC 80.'; }
   else { act='HOLD'; col='#58A6FF'; hi='dr-hold'; var toBuy=Math.max(0,Math.round(dArc-38)), toSell=Math.max(0,Math.round(72-dArc)); sub='Mid-cycle — stay invested, don’t churn. Next buy step at ARC 38 ('+toBuy+' to go), first profit-take at ARC 72 ('+toSell+' to go).'; }
@@ -732,7 +733,7 @@ async function loadAll(){
   var NL={rsi:['Oversold','Neutral','Overbought'],mvrv:['Undervalued','Fair Value','Overvalued'],funding:['Low / Bearish','Neutral','Elevated'],puell:['Miner Stress','Healthy','Overheated'],power_law:['Below Fair','Fair Band','Extended'],pi_cycle:['Far from Top','Mid Range','Caution']};
   function nctx(k,v){ var i=v<33?0:(v<66?1:2); var col=v<33?'#00DC78':(v<66?'#FF9500':'#FF3B3B'); return '<div class="ctx" style="color:'+col+'">'+(NL[k]?NL[k][i]:'')+'</div>'; }
   var ng=document.getElementById('nearGrid'); ng.innerHTML='';
-  ['mvrv','funding','puell','power_law','pi_cycle'].forEach(function(k){ if(st[k]==null)return; var v=Math.round(st[k]); var c=zoneInfo(st[k]).c; var d=document.createElement('div'); d.className='card comp'; d.innerHTML='<div class="top"><span class="nm">'+labels[k]+'</span></div><div class="val" style="color:'+c+'">'+v+'</div>'+nctx(k,v)+'<div class="bar"><i style="width:'+Math.max(2,Math.min(100,st[k]))+'%;background:'+c+'"></i></div>'; ng.appendChild(d); });
+  ['mvrv','funding','puell','power_law','pi_cycle'].forEach(function(k){ if(st[k]==null)return; var v=Math.round(st[k]); var c=zoneInfo(st[k]).c; var i=v<33?0:(v<66?1:2); var lab=NL[k]?NL[k][i]:''; var d=document.createElement('div'); d.style.cssText='display:flex;align-items:center;gap:9px;border:1px solid var(--bd);border-radius:999px;padding:7px 14px;background:rgba(255,255,255,0.025);font-family:var(--mono);font-size:12px;'; d.innerHTML='<span style="color:var(--mut)">'+labels[k]+'</span><b style="color:'+c+';font-size:13px">'+v+'</b><span style="color:'+c+';font-size:11px">'+lab+'</span>'; ng.appendChild(d); });
 
   // context
 
@@ -902,7 +903,7 @@ async function loadRSI(){
       }
     }
     var bl=r.baseline?(' Baseline (any day): '+(r.baseline.median>0?'+':'')+r.baseline.median+'% / '+r.baseline.win+'% up.'):'';
-    setText('rsiNote','The gauge above is the classic RSI(14). The two setups use a faster 7-day RSI with a trend filter — that filter is what makes them reliable: a dip only counts as a BUY when Bitcoin is in an uptrend (above its 200-day average), and overbought only counts as a FADE when it is in a downtrend. The honest twist most people miss: plain overbought in a bull run is NOT a sell — on Bitcoin, momentum usually carries it higher.'+bl+' Numbers = median move over the next 7 days. Context, not a trade signal.');
+    setText('rsiNote','The trend filter is the key: a dip only counts as a BUY in an uptrend, overbought only as a FADE in a downtrend. The twist most miss — plain overbought in a bull run is NOT a sell; on Bitcoin momentum usually carries higher.'+bl+' Numbers = median move over 7 days. Context, not a trade signal.');
   }catch(e){}
 }
 
