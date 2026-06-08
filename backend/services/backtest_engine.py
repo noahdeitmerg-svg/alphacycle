@@ -528,6 +528,10 @@ async def run_daily_backtest_full() -> Dict[str, Any]:
                 "low": round(daily_low, 2),
                 "score": round(arc, 2),
                 "score_display": round(arc_display_score(arc), 2),
+                "c_trend": round(ma_200w_score, 2),
+                "c_drawdown": round(dd_score, 2),
+                "c_sentiment": round(fg_score, 2),
+                "c_liquidity": round(macro_liq, 2),
             })
 
     except Exception as e:

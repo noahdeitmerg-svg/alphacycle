@@ -21,7 +21,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/2.0.1/chartjs-plugin-zoom.min.js"></script>
 <style>
   :root{
-    --teal:#00D4AA; --teal2:#33e0bd; --blue:#58A6FF; --ink:#e8edf4; --mut:#9aa6b8; --dim:#69748a;
+    --teal:#00D4AA; --teal2:#33e0bd; --blue:#58A6FF; --ink:#eef2f8; --mut:#bcc6d6; --dim:#9aa6b8;
     --z-dv:#00DC78; --z-ac:#00B4D8; --z-ex:#58A6FF; --z-rr:#FF9500; --z-eu:#FF3B3B;
     --bd:rgba(255,255,255,0.08); --bd2:rgba(255,255,255,0.14);
     --card:rgba(255,255,255,0.035);
@@ -51,7 +51,7 @@
   section{padding:64px 0 0;}
   .sec-eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:0.2em;color:var(--teal);text-transform:uppercase;}
   .sec-h{font-size:clamp(22px,3vw,30px);font-weight:700;color:#fff;letter-spacing:-0.01em;margin:8px 0 6px;}
-  .sec-tells{font-size:14px;color:var(--mut);max-width:680px;margin-bottom:26px;}
+  .sec-tells{font-size:15px;color:var(--mut);max-width:680px;margin-bottom:26px;}
   .sec-tells b{color:var(--ink);font-weight:600;}
   .card{background:linear-gradient(160deg,rgba(255,255,255,0.07),rgba(255,255,255,0.02));border:1px solid var(--bd2);border-radius:18px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 10px 30px rgba(0,0,0,0.45),0 2px 6px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.10);}
   .card:hover{box-shadow:0 16px 44px rgba(0,0,0,0.55),0 3px 8px rgba(0,0,0,0.35),inset 0 1px 0 rgba(255,255,255,0.14);border-color:rgba(255,255,255,0.20);transform:translateY(-2px);}
@@ -85,12 +85,12 @@
   .comp .val{font-family:var(--mono);font-size:30px;font-weight:700;margin:8px 0 2px;}
   .comp .bar{height:6px;border-radius:4px;background:rgba(255,255,255,0.08);overflow:hidden;margin:8px 0;}
   .comp .bar i{display:block;height:100%;border-radius:4px;}
-  .comp .desc{font-size:12.5px;color:var(--mut);line-height:1.5;}
+  .comp .desc{font-size:13.5px;color:var(--mut);line-height:1.55;}
   /* BIG METRIC */
   .bigm{padding:26px;}
   .bigm .k{font-family:var(--mono);font-size:11px;letter-spacing:0.14em;color:var(--dim);}
   .bigm .v{font-family:var(--mono);font-size:34px;font-weight:700;color:#fff;margin:6px 0 4px;}
-  .bigm .s{font-size:13px;color:var(--mut);}
+  .bigm .s{font-size:14px;color:var(--mut);}
   /* ZONE TABLE (historical returns) */
   .zrow{display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:12px;background:var(--card);border:1px solid var(--bd);margin-bottom:10px;}
   .zrow.active{border-color:var(--teal);box-shadow:0 0 0 1px rgba(0,212,170,0.3),0 0 30px rgba(0,212,170,0.08);}
@@ -127,11 +127,11 @@
   @media(max-width:560px){.tf-hint{display:none;}}
   /* misc */
   .pill{display:inline-block;font-family:var(--mono);font-size:11px;padding:4px 11px;border-radius:999px;border:1px solid var(--bd2);color:var(--ink);}
-  .note{font-size:12px;color:var(--dim);font-family:var(--mono);}
+  .note{font-size:13px;color:var(--dim);font-family:var(--mono);}
   .pro-teaser{margin-top:16px;padding:14px 18px;border-radius:12px;border:1px solid rgba(0,212,170,0.22);background:rgba(0,212,170,0.05);display:flex;align-items:center;flex-wrap:wrap;gap:6px;}
   .foot{padding:56px 0 60px;text-align:center;}
-  .disc{max-width:700px;margin:0 auto;font-family:var(--mono);font-size:11px;color:var(--dim);line-height:1.6;}
-  .loading{color:var(--dim);font-family:var(--mono);font-size:13px;}
+  .disc{max-width:700px;margin:0 auto;font-family:var(--mono);font-size:12px;color:var(--dim);line-height:1.6;}
+  .loading{color:var(--dim);font-family:var(--mono);font-size:14px;}
   .card{transition:transform .2s ease, border-color .2s ease, box-shadow .2s ease; animation:cardIn .5s ease both;}
   .card:hover{transform:translateY(-2px);border-color:var(--bd2);box-shadow:0 10px 30px rgba(0,0,0,0.25);}
   @keyframes cardIn{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
@@ -229,10 +229,17 @@
     <div class="sec-h">What drives the score</div>
     <div class="sec-tells">The ARC Index is <b>one transparent formula</b>: four independent signals, each scored 0–100, then weighted into a single number. Lower = historically safer, higher = historically riskier.</div>
     <div class="grid g4">
-      <div class="card comp"><div class="top"><span class="nm">TREND</span><span class="wt">35%</span></div><div class="val" id="cTrendV">–</div><div class="bar"><i id="cTrendB"></i></div><div class="desc">Price vs the 200-week moving average. Low = far below the mean (historically cheap).</div></div>
-      <div class="card comp"><div class="top"><span class="nm">DRAWDOWN</span><span class="wt">30%</span></div><div class="val" id="cDdV">–</div><div class="bar"><i id="cDdB"></i></div><div class="desc">Distance from the all-time high. Low = deep drawdown (historically opportunity).</div></div>
-      <div class="card comp"><div class="top"><span class="nm">SENTIMENT</span><span class="wt">20%</span></div><div class="val" id="cFgV">–</div><div class="bar"><i id="cFgB"></i></div><div class="desc">The crypto Fear &amp; Greed Index. Low = extreme fear (contrarian-bullish).</div></div>
-      <div class="card comp"><div class="top"><span class="nm">LIQUIDITY</span><span class="wt">15%</span></div><div class="val" id="cLqV">–</div><div class="bar"><i id="cLqB"></i></div><div class="desc">Fed net liquidity impulse (WALCL − TGA − RRP), as a normalised 0–100 score. High = liquidity expanding.</div></div>
+      <div class="card comp" id="compcard-trend" onclick="showComp('trend')" style="cursor:pointer;"><div class="top"><span class="nm">TREND</span><span class="wt">35%</span></div><div class="val" id="cTrendV">–</div><div class="bar"><i id="cTrendB"></i></div><div class="desc">Price vs the 200-week moving average. Low = far below the mean (historically cheap).</div><div class="note" style="margin-top:8px;color:var(--teal);">tap for cycle chart →</div></div>
+      <div class="card comp" id="compcard-drawdown" onclick="showComp('drawdown')" style="cursor:pointer;"><div class="top"><span class="nm">DRAWDOWN</span><span class="wt">30%</span></div><div class="val" id="cDdV">–</div><div class="bar"><i id="cDdB"></i></div><div class="desc">Distance from the all-time high. Low = deep drawdown (historically opportunity).</div><div class="note" style="margin-top:8px;color:var(--teal);">tap for cycle chart →</div></div>
+      <div class="card comp" id="compcard-sentiment" onclick="showComp('sentiment')" style="cursor:pointer;"><div class="top"><span class="nm">SENTIMENT</span><span class="wt">20%</span></div><div class="val" id="cFgV">–</div><div class="bar"><i id="cFgB"></i></div><div class="desc">The crypto Fear &amp; Greed Index. Low = extreme fear (contrarian-bullish).</div><div class="note" style="margin-top:8px;color:var(--teal);">tap for cycle chart →</div></div>
+      <div class="card comp" id="compcard-liquidity" onclick="showComp('liquidity')" style="cursor:pointer;"><div class="top"><span class="nm">LIQUIDITY</span><span class="wt">15%</span></div><div class="val" id="cLqV">–</div><div class="bar"><i id="cLqB"></i></div><div class="desc">Fed net liquidity impulse (WALCL − TGA − RRP), as a normalised 0–100 score. High = liquidity expanding.</div><div class="note" style="margin-top:8px;color:var(--teal);">tap for cycle chart →</div></div>
+    </div>
+    <div class="card" id="compChartCard" style="margin-top:16px;padding:18px 18px 14px;display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+        <div id="compChartTitle" style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--teal);">–</div>
+        <div class="note">this cycle → today · score 0–100 (higher = more risk) vs BTC price</div>
+      </div>
+      <div class="chart-canvas-box" style="height:300px;"><canvas id="compChart"></canvas></div>
     </div>
   </section>
 
@@ -243,36 +250,33 @@
     <div class="sec-tells">The backtested rule in one line: <b>buy extreme fear, sell extreme greed, hold the middle.</b> Here's exactly what it says today. Educational, not financial advice.</div>
     <div class="gate-cta"><div class="gate-badge" onclick="unlockPro()">&#128274; Sign up free to unlock</div></div>
     <div class="gate-content">
-    <div id="dBanner" class="card" style="text-align:center;padding:26px;border-width:2px;">
-      <div class="k" style="font-size:11px;">YOUR MOVE RIGHT NOW · ARC <span id="dArc">–</span></div>
-      <div class="v" id="dAction" style="font-size:38px;margin-top:8px;">–</div>
-      <div class="s" id="dActionSub" style="font-size:15px;margin-top:8px;max-width:580px;margin-left:auto;margin-right:auto;line-height:1.5;">–</div>
-    </div>
-    <div class="grid g3" style="margin-top:14px;">
-      <div class="card bigm" id="dr-buy"><div class="k">ARC ≤ 25 · DEEP VALUE</div><div class="v" style="font-size:21px;color:#00DC78;">BUY · ALL-IN</div><div class="s">deploy 100% — the cycle's best entry</div></div>
-      <div class="card bigm" id="dr-hold"><div class="k">ARC 25–75 · MID-CYCLE</div><div class="v" style="font-size:21px;color:#58A6FF;">HOLD</div><div class="s">stay invested, don't churn the middle</div></div>
-      <div class="card bigm" id="dr-sell"><div class="k">ARC ≥ 75 · EUPHORIA</div><div class="v" style="font-size:21px;color:#FF3B3B;">SELL · TAKE PROFIT</div><div class="s">exit to cash, wait for the next bottom</div></div>
-    </div>
-    <!-- ADAPTIVE LADDER (regime-proof upgrade) -->
-    <div class="card" style="margin-top:14px;border-color:rgba(88,166,255,0.32);background:linear-gradient(160deg,rgba(88,166,255,0.08),rgba(255,255,255,0.012));">
-      <div class="k" style="color:#58A6FF;">ADAPTIVE LADDER · REGIME-PROOF MODE</div>
-      <div style="display:flex;gap:28px;align-items:center;flex-wrap:wrap;margin-top:12px;">
-        <div style="min-width:140px;">
-          <div class="s">TARGET ALLOCATION</div>
-          <div class="v" id="adAlloc" style="font-size:46px;line-height:1;color:#58A6FF;">–</div>
-          <div class="s" id="adZone" style="margin-top:2px;">–</div>
-          <div class="bar" style="margin-top:8px;max-width:160px;"><i id="adBar" style="background:#58A6FF;width:0%;"></i></div>
+    <!-- compact decision hero: current move + target allocation -->
+    <div id="dBanner" class="card" style="padding:20px 22px;border-width:2px;">
+      <div style="display:flex;gap:22px;flex-wrap:wrap;align-items:center;">
+        <div style="flex:1;min-width:210px;">
+          <div class="k" style="font-size:11px;">YOUR MOVE NOW · ARC <span id="dArc">–</span></div>
+          <div class="v" id="dAction" style="font-size:30px;margin-top:6px;line-height:1.05;">–</div>
+          <div class="s" id="dActionSub" style="font-size:14px;margin-top:6px;line-height:1.5;">–</div>
         </div>
-        <div style="flex:1;min-width:240px;">
-          <div id="adNext" style="font-size:15px;line-height:1.55;color:var(--ink);">–</div>
-          <div class="note" id="adRules" style="margin-top:10px;line-height:1.5;"></div>
+        <div style="width:1px;align-self:stretch;background:rgba(255,255,255,0.10);"></div>
+        <div style="flex:1;min-width:190px;">
+          <div class="k" style="font-size:11px;color:#58A6FF;">TARGET ALLOCATION · ADAPTIVE LADDER</div>
+          <div class="v" id="adAlloc" style="font-size:40px;line-height:1;color:#58A6FF;margin-top:4px;">–</div>
+          <div class="s" id="adZone" style="margin-top:2px;">–</div>
+          <div class="bar" style="margin-top:8px;max-width:220px;"><i id="adBar" style="background:#58A6FF;width:0%;"></i></div>
+          <div id="adNext" style="font-size:13.5px;line-height:1.5;color:var(--ink);margin-top:10px;">–</div>
         </div>
       </div>
-      <div class="note" id="adBack" style="margin-top:12px;border-top:1px solid rgba(255,255,255,0.06);padding-top:10px;"></div>
     </div>
-    <div class="card" style="margin-top:14px;text-align:center;padding:16px 20px;border-color:rgba(0,212,170,0.3);background:rgba(0,212,170,0.05);">
-      <span style="font-size:14px;color:var(--ink);">Backtested since 2017: the simple all-in/all-out rule turned <b style="color:var(--teal)">$10,000 → $711,000</b> (71×) vs <b>$142,000</b> HODL — at <b style="color:var(--teal)">−36% max drawdown</b> instead of −84%. The adaptive ladder above trades the same edge but <b>still buys if ARC never falls to 25 again</b>. <span class="note">Past performance ≠ future results.</span></span>
+    <!-- the fixed rule, three compact steps -->
+    <div class="grid g3" style="margin-top:14px;">
+      <div class="card bigm" id="dr-buy" style="padding:18px;"><div class="k">ACCUMULATE</div><div class="v" style="font-size:18px;color:#00DC78;">BUY THE DIP</div><div class="s">40% at ARC ≤ 38 · go 100% at the bottom (ARC ≤ 20, or once a dip under 25 recovers)</div></div>
+      <div class="card bigm" id="dr-hold" style="padding:18px;"><div class="k">MID-CYCLE</div><div class="v" style="font-size:18px;color:#58A6FF;">HOLD</div><div class="s">stay invested through the middle — don't churn</div></div>
+      <div class="card bigm" id="dr-sell" style="padding:18px;"><div class="k">TAKE PROFIT</div><div class="v" style="font-size:18px;color:#FF3B3B;">SELL IN STEPS</div><div class="s">50% at ARC ≥ 72 · the rest at ARC ≥ 80</div></div>
     </div>
+    <div class="note" id="adRules" style="margin-top:10px;line-height:1.5;"></div>
+    <!-- proof: outperforms HODL with less risk -->
+    <div class="card" id="adBack" style="margin-top:14px;text-align:center;padding:16px 20px;border-color:rgba(0,212,170,0.3);background:rgba(0,212,170,0.05);font-size:14px;color:var(--ink);line-height:1.6;">Loading backtest…</div>
     </div>
   </section>
 
@@ -554,6 +558,34 @@ async function loadAll(){
   loadDailyRead();
   loadDecision();
   loadDemo();
+  loadCompHist();
+}
+var _compHist=null,_compChart=null;
+async function loadCompHist(){
+  try{ _compHist=await (await fetch(API+'/api/component-history',{cache:'no-store'})).json();
+    if(_compHist&&_compHist.components){ showComp(window._compSel||'trend'); }
+  }catch(e){}
+}
+function showComp(k){
+  if(!_compHist||!_compHist.components||!_compHist.components[k])return;
+  window._compSel=k;
+  ['trend','drawdown','sentiment','liquidity'].forEach(function(id){ var el=document.getElementById('compcard-'+id); if(el){ el.style.outline=(id===k)?'2px solid var(--teal)':'none'; el.style.opacity=(id===k)?'1':'0.62'; } });
+  var comp=_compHist.components[k];
+  var cc=document.getElementById('compChartCard'); if(cc) cc.style.display='block';
+  var t=document.getElementById('compChartTitle'); if(t) t.textContent=comp.label;
+  if(!window.Chart) return;
+  var labels=_compHist.dates, score=comp.series, price=_compHist.price;
+  var col={trend:'#58A6FF',drawdown:'#00DC78',sentiment:'#FF9500',liquidity:'#33e0bd'}[k]||'#00D4AA';
+  if(_compChart) _compChart.destroy();
+  _compChart=new Chart(document.getElementById('compChart'),{type:'line',data:{labels:labels,datasets:[
+    {label:comp.label,data:score,yAxisID:'yS',borderColor:col,backgroundColor:col+'1f',borderWidth:2.2,pointRadius:0,fill:true,tension:0.2},
+    {label:'BTC price',data:price,yAxisID:'yP',borderColor:'rgba(234,179,8,0.6)',borderWidth:1.3,pointRadius:0,tension:0.2}
+  ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+    plugins:{legend:{display:true,labels:{color:'#bcc6d6',font:{family:'JetBrains Mono',size:11},usePointStyle:true,boxWidth:8}},
+      tooltip:{callbacks:{label:function(c){return c.dataset.yAxisID==='yP'?('BTC $'+fnum(Math.round(c.parsed.y))):(c.dataset.label+': '+Math.round(c.parsed.y)+' / 100');}}}},
+    scales:{x:{ticks:{color:'#9aa6b8',maxTicksLimit:7,font:{family:'JetBrains Mono',size:10}},grid:{display:false}},
+      yS:{position:'left',min:0,max:100,ticks:{color:'#9aa6b8',font:{family:'JetBrains Mono',size:10}},grid:{color:'rgba(255,255,255,0.05)'}},
+      yP:{position:'right',ticks:{color:'#9aa6b8',font:{family:'JetBrains Mono',size:10},callback:function(v){return '$'+(v>=1000?Math.round(v/1000)+'k':v);}},grid:{display:false}}}}});
 }
 async function loadDecision(){
   try{
@@ -565,12 +597,12 @@ async function loadDecision(){
     var nx=r.next_step||{};
     var ne=document.getElementById('adNext');
     if(ne) ne.innerHTML='<b style="color:#58A6FF;">Next move:</b> '+(nx.text||'–');
-    var rl=r.rules||{};
     var re=document.getElementById('adRules');
-    if(re) re.innerHTML='Buy 40% at <b>'+(rl.buy_40||'').replace(' (oder relativ billigste 5% der letzten 3 Jahre)','')+'</b> · scale to 100% at <b>ARC ≤ 28</b> · take profit 50% at <b>ARC ≥ 72</b>, rest at <b>≥ 80</b>. <span style="color:#58A6FF;">Regime-proof: keeps buying even if the bottom never reaches 25 again.</span>';
+    if(re) re.innerHTML='One fixed rule, applied every cycle: buy 40% at <b>ARC ≤ 38</b>, go 100% at the bottom (<b>ARC ≤ 20</b>, or once a dip under 25 recovers), take profit <b>50% at ≥ 72</b> and the rest at <b>≥ 80</b>. <span style="color:#58A6FF;">Keeps buying even if the bottom never reaches 25 again — and only trades when it is genuinely cheap (≈ once a cycle).</span>';
     var bt=r.backtest||{};
     var be=document.getElementById('adBack');
-    if(be) be.innerHTML='Backtested since '+(bt.since||'2017')+': <b style="color:#58A6FF;">'+bt.strategy_mult+'×</b> vs HODL '+bt.hodl_mult+'× · '+bt.trades+' trades in '+bt.buy_years+' buy-years (it only buys when cheap — roughly once a cycle, not every year).';
+    if(be){ var sdd=(bt.max_dd!=null?bt.max_dd:-48), hdd=(bt.hodl_max_dd!=null?bt.hodl_max_dd:-84);
+      be.innerHTML='Backtested since '+((bt.since||'2017').slice(0,4))+': <b style="color:var(--teal)">'+bt.strategy_mult+'×</b> vs <b style="color:#eab308">'+bt.hodl_mult+'×</b> for buy &amp; hold — and a far smaller worst-case loss: <b style="color:var(--teal)">'+sdd+'%</b> max drawdown vs <b>'+hdd+'%</b> for HODL. Same Bitcoin, '+bt.trades+' trades. <span class="note">Past performance ≠ future results.</span>'; }
   }catch(e){}
 }
 var _demoChart=null;
@@ -605,16 +637,19 @@ async function loadDemo(){
     var labels=r.chart.map(function(p){return p.date;});
     var vals=r.chart.map(function(p){return p.value;});
     var hodl=r.chart.map(function(p){return p.hodl;});
+    var btc=r.chart.map(function(p){return p.btc;});
     if(_demoChart){_demoChart.destroy();}
     _demoChart=new Chart(cv,{type:'line',data:{labels:labels,datasets:[
-      {label:'Adaptive Ladder',data:vals,borderColor:'#00D4AA',backgroundColor:'rgba(0,212,170,0.08)',borderWidth:2,pointRadius:0,fill:true,tension:0.2},
-      {label:'HODL',data:hodl,borderColor:'rgba(234,179,8,0.9)',borderWidth:1.4,pointRadius:0,tension:0.2}
+      {label:'Adaptive Ladder',data:vals,yAxisID:'y',borderColor:'#00D4AA',backgroundColor:'rgba(0,212,170,0.10)',borderWidth:2.2,pointRadius:0,fill:true,tension:0.2},
+      {label:'HODL',data:hodl,yAxisID:'y',borderColor:'rgba(234,179,8,0.9)',borderWidth:1.4,pointRadius:0,tension:0.2},
+      {label:'BTC price',data:btc,yAxisID:'yB',borderColor:'rgba(120,134,160,0.55)',borderWidth:1,borderDash:[4,3],pointRadius:0,tension:0.2}
     ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
-      plugins:{legend:{display:true,labels:{color:'#aab3c2',font:{family:'JetBrains Mono',size:11},usePointStyle:true,boxWidth:8}},
-        tooltip:{callbacks:{label:function(c){return c.dataset.label+': $'+fnum(Math.round(c.parsed.y));}}}},
+      plugins:{legend:{display:true,labels:{color:'#bcc6d6',font:{family:'JetBrains Mono',size:11},usePointStyle:true,boxWidth:8}},
+        tooltip:{callbacks:{label:function(c){return c.dataset.yAxisID==='yB'?('BTC $'+fnum(Math.round(c.parsed.y))):(c.dataset.label+': $'+fnum(Math.round(c.parsed.y)));}}}},
       scales:{
-        x:{ticks:{color:'#69748a',maxTicksLimit:7,font:{family:'JetBrains Mono',size:10}},grid:{display:false}},
-        y:{ticks:{color:'#69748a',font:{family:'JetBrains Mono',size:10},callback:function(v){return v>=1000?'$'+Math.round(v/1000)+'k':'$'+Math.round(v);}},grid:{color:'rgba(255,255,255,0.05)'}}
+        x:{ticks:{color:'#9aa6b8',maxTicksLimit:7,font:{family:'JetBrains Mono',size:10}},grid:{display:false}},
+        y:{position:'left',ticks:{color:'#9aa6b8',font:{family:'JetBrains Mono',size:10},callback:function(v){return v>=1000?'$'+Math.round(v/1000)+'k':'$'+Math.round(v);}},grid:{color:'rgba(255,255,255,0.05)'}},
+        yB:{position:'right',ticks:{color:'#7886a0',font:{family:'JetBrains Mono',size:10},callback:function(v){return '$'+(v>=1000?Math.round(v/1000)+'k':v);}},grid:{display:false}}
       }}});
   }catch(e){}
 }
@@ -672,8 +707,8 @@ async function loadCycleWave(asset){
         options:{animation:false,maintainAspectRatio:false,responsive:true,interaction:{mode:'index',intersect:false},
           plugins:{legend:{display:false},zoom:{zoom:{wheel:{enabled:false},pinch:{enabled:false}},pan:{enabled:false}},
             tooltip:{filter:function(it){return it.datasetIndex===0||it.datasetIndex===1;},callbacks:{title:function(it){return labels[it[0].dataIndex];},label:function(c){return (c.parsed.y!=null?c.dataset.label+': $'+Number(c.parsed.y).toLocaleString('en-US'):'');}}}},
-          scales:{x:{ticks:{color:'#6b7280',maxTicksLimit:9,maxRotation:0,font:{size:10},callback:function(v,i){var d=labels[i]; return d?d.slice(0,7):'';}},grid:{display:false}},
-            y:{ticks:{color:'#6b7280',font:{size:10},callback:function(v){return '$'+(v>=1000?Math.round(v/1000)+'k':v);}},grid:{color:'rgba(255,255,255,0.05)'}}}}});
+          scales:{x:{ticks:{color:'#9aa6b8',maxTicksLimit:9,maxRotation:0,font:{size:11},callback:function(v,i){var d=labels[i]; return d?d.slice(0,7):'';}},grid:{display:false}},
+            y:{ticks:{color:'#9aa6b8',font:{size:11},callback:function(v){return '$'+(v>=1000?Math.round(v/1000)+'k':v);}},grid:{color:'rgba(255,255,255,0.05)'}}}}});
     }
     var proj=labels.length-split;
     setText('seasNote','Magenta = the dominant '+o.cycle_len+'-day cycle (≈'+(o.cycle_len/30.4).toFixed(1)+' months, stability '+(o.stability!=null?o.stability:o.fit)+'/1) as a regular wave, showing the timing of highs/lows. Red = a realistic day-by-day price path for the next '+proj+' days: the cycle’s drift plus what the market actually did on each calendar day/weekday over the last ~10 years — so it moves like real price, not a clean curve. A data-driven projection, not a guarantee; cycles can shift or break.');

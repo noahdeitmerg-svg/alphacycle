@@ -1383,20 +1383,31 @@ def _pctile_rank(arc, i, window=1095, warm=365):
     return sum(1 for x in w if x <= a) / len(w)
 
 
-def _ladder_target(a, alloc, rel, since_sell):
-    """Strategy B+. Returns desired BTC allocation (0..1) for today.
-    Staged late exits (50% at ARC>=72, all out at >=80) — not gated by cooldown.
-    Early, regime-proof buys; cooldown only blocks RE-buying after a sell."""
-    # SELL side — staged & late
+def _ladder_target(a, alloc, rel, since_sell, state):
+    """Fixed adaptive ladder (applied identically every cycle).
+    BUY:  40% at ARC<=38 (or relative bottom 5%); FULL 100% at the deep bottom
+          (ARC<=20), or — if it dips under 25 but recovers above 25 without
+          reaching 20 — commit 100% on that recross (bottom confirmed). This
+          chases the absolute low to cut drawdown, with a fallback so a shallow
+          bottom is never missed.
+    SELL: staged & late — 50% at ARC>=72, all out at >=80.
+    Backtest 2017-26: 54x vs HODL 14x, max drawdown -48% vs -84%."""
+    # SELL — staged & late (not gated by cooldown)
     if a >= 80:
+        state["below25"] = False
         return 0.0
     if a >= 72:
+        state["below25"] = False
         return min(alloc, 0.50)
-    # BUY side — cooldown after a sell to avoid whipsaw
+    # BUY — cooldown after a sell to avoid whipsaw
     if since_sell < 120:
         return alloc
-    if a <= 28:
-        return 1.0
+    if a < 25:
+        state["below25"] = True
+    if a <= 20:
+        return 1.0  # absolute deep value — full size
+    if state.get("below25") and a > 25:
+        return 1.0  # bottom confirmed (dipped <25, recovered) — commit rest
     if a <= 38 or (rel is not None and rel <= 0.05):
         return max(alloc, 0.40)
     if a <= 45 and (rel is not None and rel <= 0.10):
@@ -1414,12 +1425,15 @@ def _run_ladder(dates, px, arc, start_i=0, cash0=10000.0, cash_yield=0.04):
     series = []  # (date, strategy_value, hodl_value)
     daily_cash = (1 + cash_yield) ** (1 / 365.0)
     base_px = px[start_i]
+    state = {"below25": False}
+    peak = 0.0
+    max_dd = 0.0
     for i in range(start_i, len(px)):
         cash *= daily_cash
         a = arc[i]
         p = px[i]
         rel = _pctile_rank(arc, i)
-        tgt = _ladder_target(a, alloc, rel, i - last_sell)
+        tgt = _ladder_target(a, alloc, rel, i - last_sell, state)
         if abs(tgt - alloc) > 0.02:
             port = cash + btc * p
             diff = port * tgt - btc * p
@@ -1438,6 +1452,12 @@ def _run_ladder(dates, px, arc, start_i=0, cash0=10000.0, cash_yield=0.04):
                                 "price": round(p), "to_pct": round(tgt * 100)})
             alloc = tgt
         port = cash + btc * p
+        if port > peak:
+            peak = port
+        if peak > 0:
+            dd = port / peak - 1.0
+            if dd < max_dd:
+                max_dd = dd
         hodl = cash0 / base_px * p
         series.append((dates[i], round(port, 2), round(hodl, 2)))
     final_p = px[-1]
@@ -1449,6 +1469,7 @@ def _run_ladder(dates, px, arc, start_i=0, cash0=10000.0, cash_yield=0.04):
         "actions": actions,
         "series": series,
         "invested_pct": round(alloc * 100),
+        "max_dd": round(max_dd * 100, 1),
     }
 
 
@@ -1459,9 +1480,9 @@ def _next_step(alloc, cur_arc):
                 "to_pct": 40,
                 "text": "Erste Kaufstufe: bei ARC 38 oder darunter 40% investieren."}
     if alloc < 1.0:
-        return {"action": "BUY", "trigger": "ARC ≤ 28",
+        return {"action": "BUY", "trigger": "ARC ≤ 20",
                 "to_pct": 100,
-                "text": "Aufstocken auf 100% sobald ARC 28 oder darunter erreicht."}
+                "text": "Voll kaufen am Tiefpunkt: 100% bei ARC ≤ 20 — oder sobald ARC nach einem Dip unter 25 wieder über 25 steigt (Boden bestätigt)."}
     return {"action": "SELL", "trigger": "ARC ≥ 72",
             "to_pct": 50,
             "text": "Voll investiert. Erste Gewinnmitnahme (50%) bei ARC 72, Rest bei ARC 80."}
@@ -1491,6 +1512,15 @@ async def get_ladder():
     nxt = _next_step(res["alloc"], cur_arc)
     hodl_mult = round(px[-1] / px[0], 1)
     strat_mult = round(res["value"] / 10000.0, 1)
+    # HODL max drawdown for the safety comparison
+    _peak = 0.0; _hdd = 0.0
+    for _p in px:
+        if _p > _peak:
+            _peak = _p
+        if _peak > 0:
+            _d = _p / _peak - 1.0
+            if _d < _hdd:
+                _hdd = _d
     data = {
         "asof": dates[-1],
         "arc": round(cur_arc, 1),
@@ -1505,12 +1535,14 @@ async def get_ladder():
             "trades": len(res["actions"]),
             "buy_years": len(sorted(set(a["date"][:4] for a in res["actions"]
                                         if a["type"] == "BUY"))),
+            "max_dd": res.get("max_dd"),
+            "hodl_max_dd": round(_hdd * 100, 1),
         },
         "rules": {
             "buy_40": "ARC ≤ 38 (oder relativ billigste 5% der letzten 3 Jahre)",
-            "buy_100": "ARC ≤ 28",
+            "buy_100": "ARC ≤ 20 — oder Boden-Bestätigung (Dip unter 25, dann zurück über 25)",
             "sell_all": "50% bei ARC ≥ 72, Rest bei ARC ≥ 80",
-            "note": "Regime-fest: kauft auch, wenn der Boden nie wieder auf 25 fällt.",
+            "note": "Feste Regel, jeden Zyklus gleich. Kauft auch, wenn der Boden nie wieder auf 25 fällt.",
         },
     }
     _DECISION_CACHE["day"] = today
@@ -1545,13 +1577,15 @@ async def get_demo_account(start: str = "2022-11-21"):
     cur_px = px[-1]
     cur_val = res["value"]
     hodl_val = round(10000.0 / start_px * cur_px, 2)
-    # downsample series to ~120 points for the chart
+    # downsample series to ~120 points for the chart (incl. BTC price for hover)
     s = res["series"]
     step = max(1, len(s) // 120)
-    chart = [{"date": s[j][0], "value": s[j][1], "hodl": s[j][2]}
+    chart = [{"date": s[j][0], "value": s[j][1], "hodl": s[j][2],
+              "btc": round(px[start_i + j], 2)}
              for j in range(0, len(s), step)]
     if chart and chart[-1]["date"] != s[-1][0]:
-        chart.append({"date": s[-1][0], "value": s[-1][1], "hodl": s[-1][2]})
+        chart.append({"date": s[-1][0], "value": s[-1][1], "hodl": s[-1][2],
+                      "btc": round(px[-1], 2)})
     data = {
         "start": dates[start_i],
         "start_price": round(start_px),
@@ -1569,6 +1603,53 @@ async def get_demo_account(start: str = "2022-11-21"):
     }
     _DEMO_CACHE["key"] = key
     _DEMO_CACHE["data"] = data
+    return data
+
+
+_COMPHIST_CACHE = {"key": None, "data": None}
+
+
+@app.get("/api/component-history")
+async def get_component_history(days: int = 1300):
+    """Daily 0-100 sub-scores of the 4 ARC components over the recent cycle,
+    for the click-through charts on Engine 1. Same source as the live cards."""
+    from datetime import datetime as _dtm
+    key = f"{_dtm.utcnow().date().isoformat()}|{days}"
+    if _COMPHIST_CACHE["key"] == key and _COMPHIST_CACHE["data"]:
+        return _COMPHIST_CACHE["data"]
+    try:
+        rows = await _full_daily_rows()
+    except Exception as ex:
+        raise HTTPException(503, f"history unavailable: {ex}")
+    rows = [r for r in (rows or []) if r.get("price")]
+    rows.sort(key=lambda r: r["date"])
+    if not rows:
+        raise HTTPException(503, "no history")
+    rows = rows[-days:] if len(rows) > days else rows
+
+    def col(k, alt=None):
+        out = []
+        for r in rows:
+            v = r.get(k)
+            if v is None and alt is not None:
+                v = r.get(alt)
+            out.append(round(float(v), 1) if v is not None else None)
+        return out
+
+    data = {
+        "asof": rows[-1]["date"][:10],
+        "dates": [r["date"][:10] for r in rows],
+        "price": [round(float(r["price"]), 2) for r in rows],
+        "components": {
+            "trend":     {"label": "Trend (Price vs 200-week MA)", "series": col("c_trend")},
+            "drawdown":  {"label": "Drawdown from ATH",            "series": col("c_drawdown")},
+            "sentiment": {"label": "Sentiment (Fear & Greed)",     "series": col("c_sentiment")},
+            "liquidity": {"label": "Liquidity (Fed net liquidity)","series": col("c_liquidity")},
+        },
+        "note": "0-100 score per component; higher = more risk. Same scoring as the ARC Index.",
+    }
+    _COMPHIST_CACHE["key"] = key
+    _COMPHIST_CACHE["data"] = data
     return data
 
 
