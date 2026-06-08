@@ -339,6 +339,76 @@ async def _refresh_loop():
         await asyncio.sleep(CACHE_TTL)
 
 
+_DAILY_TG_STATE = {"sent_date": None}
+
+
+async def _compose_daily_telegram() -> str:
+    """Build the daily summary text from the live endpoints. English, concise."""
+    import httpx
+    base = "https://alphacycle-production.up.railway.app"
+    arc = {}
+    lad = {}
+    async with httpx.AsyncClient(timeout=25) as c:
+        try:
+            arc = (await c.get(base + "/api/arc-summary")).json()
+        except Exception as e:
+            logger.warning("daily tg arc fetch: %s", e)
+        try:
+            lad = (await c.get(base + "/api/ladder")).json()
+        except Exception as e:
+            logger.warning("daily tg ladder fetch: %s", e)
+    score = arc.get("arc_score")
+    score_txt = f"{float(score):.0f}" if score is not None else "?"
+    zone = lad.get("zone") or arc.get("zone") or "-"
+    price = arc.get("btc_price")
+    price_txt = f"${float(price):,.0f}" if price else "-"
+    mom = arc.get("arc_momentum_30d")
+    mom_txt = (f"{mom:+.1f}" if isinstance(mom, (int, float)) else "-")
+    invested = lad.get("invested_pct")
+    nxt = (lad.get("next_step") or {}).get("text") or ""
+    from datetime import date as _date
+    msg = (
+        f"\U0001F4C5 AlphaCycle Daily - {_date.today().isoformat()}\n\n"
+        f"ARC Index: {score_txt} - {zone}\n"
+        f"BTC: {price_txt}\n"
+        f"30d momentum: {mom_txt}\n\n"
+        f"Adaptive ladder: {invested}% invested\n"
+        f"Next move: {nxt}\n\n"
+        f"- alphacycle.app/app"
+    )
+    return msg
+
+
+async def _send_daily_telegram():
+    try:
+        from alerts import send_telegram
+        text = await _compose_daily_telegram()
+        return await asyncio.to_thread(send_telegram, text)
+    except Exception as e:
+        logger.warning("send daily telegram failed: %s", e)
+        return False
+
+
+async def _daily_telegram_loop():
+    """Fire one Telegram summary per day around 12:00 Europe/Berlin (DST-safe)."""
+    from datetime import datetime, timedelta
+    while True:
+        try:
+            try:
+                from zoneinfo import ZoneInfo
+                now = datetime.now(ZoneInfo("Europe/Berlin"))
+            except Exception:
+                now = datetime.utcnow() + timedelta(hours=2)
+            today = now.date().isoformat()
+            if now.hour == 12 and _DAILY_TG_STATE["sent_date"] != today:
+                ok = await _send_daily_telegram()
+                _DAILY_TG_STATE["sent_date"] = today
+                logger.info("daily telegram fired for %s (ok=%s)", today, ok)
+        except Exception as e:
+            logger.warning("daily telegram loop error: %s", e)
+        await asyncio.sleep(55)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Alpha Cycle Intelligence API starting…")
@@ -356,8 +426,10 @@ async def lifespan(app: FastAPI):
         logger.warning("Backtest cache clear init failed: %s", e)
     await refresh_cache(force=True)
     task = asyncio.create_task(_refresh_loop())
+    daily_tg_task = asyncio.create_task(_daily_telegram_loop())
     yield
     task.cancel()
+    daily_tg_task.cancel()
     logger.info("Alpha Cycle API shut down.")
 
 
@@ -1659,6 +1731,17 @@ async def get_component_history(days: int = 1300):
     _COMPHIST_CACHE["key"] = key
     _COMPHIST_CACHE["data"] = data
     return data
+
+
+@app.get("/api/daily-telegram-test")
+async def daily_telegram_test(token: str = ""):
+    """Manual trigger to fire the daily Telegram summary now (ADMIN_TOKEN gated)."""
+    import os as _os
+    if token != _os.getenv("ADMIN_TOKEN", "alphacycle-admin"):
+        raise HTTPException(403, "forbidden")
+    text = await _compose_daily_telegram()
+    sent = await _send_daily_telegram()
+    return {"sent": bool(sent), "preview": text}
 
 
 # -- HELPERS --------------------------------------------------------------------
@@ -3748,3 +3831,4 @@ async def get_decision(request: Request):
             result["suggested_position"] = decision_override
     _set_cached_response("decision", result)
     return api_response(result)
+
