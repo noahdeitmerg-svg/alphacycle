@@ -400,10 +400,23 @@ header.hero h1, .hero-copy h1{
   <!-- LIVE DEMO ACCOUNT -->
   <section class="pro-gate">
     <div class="sec-eyebrow">ENGINE 2B · LIVE DEMO ACCOUNT</div>
-    <div class="sec-h">$10,000 — the rule, running live since 2026</div>
-    <div class="sec-tells">A transparent, automatically-updated track record: start with <b>$10,000 at the beginning of 2026</b> and follow the fixed rule. Watch how it protects capital — it waits in cash and only buys when Bitcoin gets genuinely cheap. Every move is dated below; runs live, no cherry-picking.</div>
+    <div class="sec-h">Run the rule on your own money</div>
+    <div class="sec-tells">Pick any <b>start date</b> and <b>starting amount</b> — the account value, the chart and every trade recalculate instantly. It is the exact same fixed rule, applied to your scenario. Default: $10,000 from 2021.</div>
     <div class="gate-cta"><div class="gate-badge" onclick="unlockPro()">&#128274; Sign up free to unlock</div></div>
     <div class="gate-content">
+    <div class="card" style="display:flex;gap:16px 20px;flex-wrap:wrap;align-items:flex-end;padding:16px 18px;margin-bottom:14px;">
+      <div><div class="k" style="font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:0.1em;margin-bottom:5px;">START DATE</div>
+        <input type="date" id="demoStartIn" value="2021-01-01" min="2017-08-17" onchange="runDemo()" style="background:rgba(255,255,255,0.05);border:1px solid var(--bd2);border-radius:9px;color:var(--ink);font-family:var(--mono);font-size:14px;padding:9px 11px;color-scheme:dark;"></div>
+      <div><div class="k" style="font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:0.1em;margin-bottom:5px;">STARTING CAPITAL ($)</div>
+        <input type="number" id="demoCapIn" value="10000" min="100" step="100" onchange="runDemo()" style="background:rgba(255,255,255,0.05);border:1px solid var(--bd2);border-radius:9px;color:var(--ink);font-family:var(--mono);font-size:14px;padding:9px 11px;width:150px;"></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+        <button class="tf-btn" onclick="demoPreset('2017-08-17')">2017</button>
+        <button class="tf-btn" onclick="demoPreset('2021-01-01')">2021</button>
+        <button class="tf-btn" onclick="demoPreset('2022-11-21')">2022 low</button>
+        <button class="tf-btn" onclick="demoPreset('2026-01-01')">2026</button>
+      </div>
+      <button class="tf-btn on" onclick="runDemo()" style="margin-left:auto;">Recalculate →</button>
+    </div>
     <div class="grid g3">
       <div class="card bigm"><div class="k">ACCOUNT VALUE</div><div class="v" id="demoVal" style="color:var(--teal);">–</div><div class="s" id="demoMult">–</div></div>
       <div class="card bigm"><div class="k">HODL · SAME START</div><div class="v" id="demoHodl" style="color:#eab308;">–</div><div class="s" id="demoHodlMult">–</div></div>
@@ -743,16 +756,20 @@ async function loadDecision(){
 }
 function setHTML(id,h){ var el=document.getElementById(id); if(el) el.innerHTML=h; }
 var _demoChart=null;
-async function loadDemo(){
+async function loadDemo(start,capital){
   try{
-    var r=await (await fetch(API+'/api/demo-account',{cache:'no-store'})).json();
+    var sIn=document.getElementById('demoStartIn'), cIn=document.getElementById('demoCapIn');
+    start = start || (sIn&&sIn.value) || '2021-01-01';
+    capital = capital || (cIn&&parseFloat(cIn.value)) || 10000;
+    var r=await (await fetch(API+'/api/demo-account?start='+encodeURIComponent(start)+'&capital='+encodeURIComponent(capital),{cache:'no-store'})).json();
     if(!r||r.value==null) return;
+    if(sIn&&r.start) sIn.value=r.start;
     setText('demoVal','$'+fnum(Math.round(r.value)));
     setText('demoMult',r.value_mult+'× · since '+r.start);
     setText('demoHodl','$'+fnum(Math.round(r.hodl_value)));
     setText('demoHodlMult',r.hodl_mult+'× buy & hold');
     setText('demoInv',r.invested_pct+'%');
-    setText('demoStart','started $'+fnum(r.start_capital)+' at $'+fnum(r.start_price)+' BTC');
+    setText('demoStart','$'+fnum(Math.round(r.start_capital))+' start · BTC $'+fnum(r.start_price)+' · '+r.start);
     // trade log
     var log=document.getElementById('demoLog');
     if(log&&r.actions){
@@ -790,6 +807,8 @@ async function loadDemo(){
       }}});
   }catch(e){}
 }
+function runDemo(){ var sEl=document.getElementById('demoStartIn'), cEl=document.getElementById('demoCapIn'); loadDemo(sEl&&sEl.value, cEl&&parseFloat(cEl.value)); }
+function demoPreset(d){ var el=document.getElementById('demoStartIn'); if(el) el.value=d; runDemo(); }
 async function loadDailyRead(){
   try{
     var r=await (await fetch(API+'/api/daily-read',{cache:'no-store'})).json();
@@ -1079,7 +1098,7 @@ var TR={
 "ENGINE 8 · REGIME TIMELINE":"ENGINE 8 · REGIME-VERLAUF",
 "What drives the score":"Was den Score treibt",
 "Your move, by the rule":"Dein Zug — nach der Regel",
-"$10,000 — the rule, running live since 2026":"10.000 $ — die Regel, live seit 2026",
+"Run the rule on your own money":"Wende die Regel auf dein eigenes Geld an",
 "What each zone has returned, historically":"Was jede Zone historisch gebracht hat",
 "Where we are in the cycle":"Wo wir im Zyklus stehen",
 "30–90 day conditions":"Lage auf 30–90 Tage",

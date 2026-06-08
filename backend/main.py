@@ -1633,10 +1633,16 @@ _DEMO_CACHE = {"key": None, "data": None}
 
 
 @app.get("/api/demo-account")
-async def get_demo_account(start: str = "2026-01-01"):
-    """Live demo account: runs the adaptive ladder from a cycle-bottom start date."""
+async def get_demo_account(start: str = "2021-01-01", capital: float = 10000):
+    """Live demo account: runs the adaptive ladder from a user-chosen start date
+    and starting capital. Everything (value, HODL, chart, trades) scales to input."""
     from datetime import datetime as _dtm
-    key = f"{_dtm.utcnow().date().isoformat()}|{start}"
+    try:
+        capital = float(capital)
+    except Exception:
+        capital = 10000.0
+    capital = max(100.0, min(capital, 100_000_000.0))
+    key = f"{_dtm.utcnow().date().isoformat()}|{start}|{round(capital,2)}"
     if _DEMO_CACHE["key"] == key and _DEMO_CACHE["data"]:
         return _DEMO_CACHE["data"]
     try:
@@ -1651,11 +1657,11 @@ async def get_demo_account(start: str = "2026-01-01"):
         if dd >= start:
             start_i = i
             break
-    res = _run_ladder(dates, px, arc, start_i=start_i)
+    res = _run_ladder(dates, px, arc, start_i=start_i, cash0=capital)
     start_px = px[start_i]
     cur_px = px[-1]
     cur_val = res["value"]
-    hodl_val = round(10000.0 / start_px * cur_px, 2)
+    hodl_val = round(capital / start_px * cur_px, 2)
     # downsample series to ~120 points for the chart (incl. BTC price for hover)
     s = res["series"]
     step = max(1, len(s) // 120)
@@ -1670,11 +1676,12 @@ async def get_demo_account(start: str = "2026-01-01"):
         "start_price": round(start_px),
         "asof": dates[-1],
         "current_price": round(cur_px),
-        "start_capital": 10000,
+        "start_capital": round(capital, 2),
         "value": cur_val,
-        "value_mult": round(cur_val / 10000.0, 2),
+        "value_mult": round(cur_val / capital, 2),
         "hodl_value": hodl_val,
-        "hodl_mult": round(hodl_val / 10000.0, 2),
+        "hodl_mult": round(hodl_val / capital, 2),
+        "data_start": dates[0],
         "invested_pct": res["invested_pct"],
         "actions": res["actions"],
         "n_actions": len(res["actions"]),
