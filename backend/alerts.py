@@ -166,3 +166,71 @@ def check_and_fire_alerts(arc_score: float, btc_price=None) -> dict:
     except Exception as e:
         logger.warning("check_and_fire_alerts error (non-fatal): %s", e)
         return {"status": "error", "error": str(e)}
+
+
+# --- Decision-engine (adaptive ladder) action alerts ---------------------------
+# Fire a Telegram message when the ladder produces a NEW action (buy/sell step).
+# Dedup + anti-spam: only fire for an action dated within the last few days, and
+# never twice for the same action date (tracked in a small state file).
+
+import json as _json
+_DECISION_STATE = "/tmp/ac_last_decision_alert.json"
+
+
+def _read_decision_state():
+    try:
+        with open(_DECISION_STATE) as fh:
+            return _json.load(fh)
+    except Exception:
+        return {}
+
+
+def _write_decision_state(d):
+    try:
+        with open(_DECISION_STATE, "w") as fh:
+            _json.dump(d, fh)
+    except Exception as e:
+        logger.warning("decision state write failed: %s", e)
+
+
+def check_and_fire_decision_alert(action: dict, btc_price=None) -> dict:
+    """action = latest ladder action {date,type,arc,price,to_pct}. Fires a Telegram
+    message only when this is a genuinely new action (dated within ~4 days) we have
+    not alerted on yet. Never raises."""
+    try:
+        if not action or not action.get("date"):
+            return {"status": "skip", "reason": "no action"}
+        from datetime import date as _date
+        try:
+            ad = _date.fromisoformat(action["date"][:10])
+            age = (_date.today() - ad).days
+        except Exception:
+            age = 999
+        if age > 4:
+            return {"status": "stale", "age": age}
+        st = _read_decision_state()
+        if st.get("date") == action["date"] and st.get("to_pct") == action.get("to_pct"):
+            return {"status": "already_fired"}
+        is_buy = action.get("type") == "BUY"
+        head = "\U0001F7E2 BUY SIGNAL" if is_buy else "\U0001F534 SELL SIGNAL"
+        verb = "Target allocation raised to" if is_buy else "Take profit — allocation cut to"
+        price = ""
+        try:
+            if action.get("price"):
+                price = f"\nBTC: ${float(action['price']):,.0f}"
+        except Exception:
+            pass
+        msg = (
+            f"\U0001F4CA ALPHACYCLE DECISION — {head}\n\n"
+            f"{verb} {action.get('to_pct')}% invested.\n"
+            f"ARC Index: {action.get('arc')}{price}\n\n"
+            f"The adaptive ladder just moved. Structure before emotion.\n"
+            f"— AlphaCycle · alphacycle.app/app"
+        )
+        sent = send_telegram(msg)
+        _write_decision_state({"date": action["date"], "to_pct": action.get("to_pct"), "type": action.get("type")})
+        logger.info("decision alert %s %s%% (telegram_sent=%s)", action.get("type"), action.get("to_pct"), sent)
+        return {"status": "fired", "telegram_sent": sent}
+    except Exception as e:
+        logger.warning("check_and_fire_decision_alert error (non-fatal): %s", e)
+        return {"status": "error", "error": str(e)}

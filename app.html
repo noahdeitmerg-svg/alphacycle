@@ -301,16 +301,16 @@
   <!-- BACKTEST PROOF (collapsible, collapsed by default) -->
   <section class="collapsed">
     <div class="sec-eyebrow clps" onclick="var c=this.closest('section').classList.toggle('collapsed');this.querySelector('.chev').textContent=c?'SHOW ▸':'HIDE ▾';">THE PROOF · ARC vs HODL<span class="chev">SHOW ▸</span></div>
-    <div class="sec-h">$10,000 since 2017 — <span style="color:var(--teal)">ARC rule $711k</span> vs <span style="color:#eab308">HODL $142k</span></div>
-    <div class="sec-tells">If you'd followed one rule — <b>all-in at ARC 25, all-out at ARC 75, hold the middle</b> — versus buying and holding Bitcoin the whole way. Same asset, same start. Independently backtested on daily data since August 2017. <span class="note">(tap to expand)</span></div>
+    <div class="sec-h">$10,000 since 2017 — <span style="color:var(--teal)" id="prfStratH">the rule $541k</span> vs <span style="color:#eab308" id="prfHodlH">HODL $142k</span></div>
+    <div class="sec-tells">If you'd followed the <b>adaptive ladder</b> — buy 40% at ARC ≤38, go 100% at the bottom (ARC ≤20 or once a dip under 25 recovers), take profit 50% at ARC ≥72 and the rest at ≥80 — versus buying and holding Bitcoin the whole way. Same asset, same start. Backtested on daily data since August 2017. <span class="note">(tap to expand)</span></div>
     <div class="eng-body">
     <div class="grid g3" style="margin-bottom:16px;">
-      <div class="card bigm"><div class="k">ARC RULE</div><div class="v" style="color:var(--teal);">$711k</div><div class="s">71× · max drawdown −36%</div></div>
-      <div class="card bigm"><div class="k">HODL</div><div class="v" style="color:#eab308;">$142k</div><div class="s">14× · max drawdown −84%</div></div>
-      <div class="card bigm"><div class="k">EDGE</div><div class="v" style="color:var(--teal);">5.0×</div><div class="s">more, at less than half the risk</div></div>
+      <div class="card bigm"><div class="k">ALPHACYCLE RULE</div><div class="v" style="color:var(--teal);" id="prfStrat">$541k</div><div class="s" id="prfStratS">54× · max drawdown −48%</div></div>
+      <div class="card bigm"><div class="k">BUY &amp; HOLD</div><div class="v" style="color:#eab308;" id="prfHodl">$142k</div><div class="s" id="prfHodlS">14× · max drawdown −84%</div></div>
+      <div class="card bigm"><div class="k">EDGE</div><div class="v" style="color:var(--teal);" id="prfEdge">3.8×</div><div class="s">more money, far less risk</div></div>
     </div>
-    <div class="card" style="padding:14px;"><img src="assets/backtest.png" alt="ARC strategy vs HODL equity curve" style="width:100%;border-radius:8px;display:block;"></div>
-    <div class="note" style="margin-top:8px;">6 trades in 9 years. The strategy sits in cash through every bear market (the gently rising steps — cash parked at ~4%) and re-enters at the next bottom. Past performance does not guarantee future results — educational, not financial advice.</div>
+    <div class="card" style="padding:14px;"><img src="assets/backtest.png?v=2" alt="AlphaCycle adaptive ladder vs buy &amp; hold equity curve" style="width:100%;border-radius:8px;display:block;"></div>
+    <div class="note" style="margin-top:8px;">It buys only when Bitcoin is genuinely cheap (≈ once a cycle), sits mostly in cash through bear markets (uninvested cash earns ~4%), and takes profit in steps near euphoria. Past performance does not guarantee future results — educational, not financial advice.</div>
     </div>
   </section>
 
@@ -347,17 +347,17 @@
       <div style="min-width:120px"><div class="k">DAILY RSI (14)</div><div class="v" id="rsiBigV" style="font-size:46px;line-height:1;">–</div><div class="s" id="rsiZoneS">–</div></div>
       <div style="flex:1;min-width:250px;">
         <div style="position:relative;margin-top:6px;">
-          <div style="height:18px;border-radius:9px;background:linear-gradient(90deg,#16a34a 0%,#22c55e 30%,#3a4456 30%,#3a4456 70%,#ef4444 70%,#b91c1c 100%);"></div>
+          <div style="height:18px;border-radius:9px;background:linear-gradient(90deg,#16a34a 0%,#22c55e 25%,#3a4456 25%,#3a4456 75%,#ef4444 75%,#b91c1c 100%);"></div>
           <div id="rsiMarker" style="position:absolute;top:-7px;left:0%;transform:translateX(-50%);width:4px;height:32px;background:#fff;border-radius:2px;box-shadow:0 0 8px rgba(0,0,0,0.7);transition:left .4s;"></div>
         </div>
         <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--mut);margin-top:9px;">
-          <span>0</span><span style="color:#22c55e">30 · oversold</span><span style="color:#ef4444">overbought · 70</span><span>100</span>
+          <span>0</span><span style="color:#22c55e">25 · oversold</span><span style="color:#ef4444">overbought · 75</span><span>100</span>
         </div>
       </div>
     </div>
     <div class="grid g2" style="margin-bottom:14px;">
-      <div class="card bigm"><div class="k">AFTER OVERSOLD &lt;30 · NEXT 30D</div><div class="v" id="rsiOsV" style="font-size:20px;">–</div><div class="s" id="rsiOsS">–</div></div>
-      <div class="card bigm"><div class="k">AFTER OVERBOUGHT &gt;70 · NEXT 30D</div><div class="v" id="rsiObV" style="font-size:20px;">–</div><div class="s" id="rsiObS">–</div></div>
+      <div class="card bigm"><div class="k">AFTER OVERSOLD &lt;25 · NEXT 30D</div><div class="v" id="rsiOsV" style="font-size:20px;">–</div><div class="s" id="rsiOsS">–</div></div>
+      <div class="card bigm"><div class="k">AFTER OVERBOUGHT &gt;75 · NEXT 30D</div><div class="v" id="rsiObV" style="font-size:20px;">–</div><div class="s" id="rsiObS">–</div></div>
     </div>
     <div class="note" id="rsiNote" style="margin-bottom:16px"></div>
     <div class="grid g3" id="nearGrid"><div class="loading">Loading…</div></div>
@@ -411,12 +411,12 @@
   <!-- CYCLE EXTREMES (moving averages) -->
   <section id="cycSec">
     <div class="sec-eyebrow">ENGINE 6C · CYCLE EXTREMES</div>
-    <div class="sec-h">The averages that mark tops &amp; bottoms</div>
-    <div class="sec-tells">The classic price-extension signals — Pi Cycle, Mayer Multiple, 200-week MA — tested across every cycle since 2013. Where they sit now lines up with the ARC read.</div>
+    <div class="sec-h">Three time-tested top/bottom gauges</div>
+    <div class="sec-tells">Three simple "thermometers" built from Bitcoin's own long-term averages. Each one has reliably flagged when Bitcoin got too hot (a top) or too cheap (a bottom) in past cycles. <b>Green = cheap, red = overheated.</b> The bar shows how far we are from the danger zone. They're a second opinion that should agree with the ARC score.</div>
     <div class="grid g3">
-      <div class="card bigm"><div class="k">PI CYCLE TOP</div><div class="v" id="cycPiV" style="font-size:24px;">–</div><div class="bar" style="margin:9px 0 7px;"><i id="cycPiBar" style="width:0%;background:#22c55e;"></i></div><div class="s" id="cycPiS">distance from a top signal</div></div>
-      <div class="card bigm"><div class="k">MAYER MULTIPLE</div><div class="v" id="cycMayV" style="font-size:24px;">–</div><div class="bar" style="margin:9px 0 7px;"><i id="cycMayBar" style="width:0%;background:#22c55e;"></i></div><div class="s" id="cycMayS">price vs the 200-day average</div></div>
-      <div class="card bigm"><div class="k">200-WEEK MA</div><div class="v" id="cyc200V" style="font-size:24px;">–</div><div class="bar" style="margin:9px 0 7px;"><i id="cyc200Bar" style="width:0%;background:#22c55e;"></i></div><div class="s" id="cyc200S">distance from the bear-market floor</div></div>
+      <div class="card bigm"><div class="k">PI CYCLE TOP</div><div class="v" id="cycPiV" style="font-size:24px;">–</div><div class="bar" style="margin:9px 0 7px;"><i id="cycPiBar" style="width:0%;background:#22c55e;"></i></div><div class="s" id="cycPiS">how far above a classic top signal we are</div></div>
+      <div class="card bigm"><div class="k">MAYER MULTIPLE</div><div class="v" id="cycMayV" style="font-size:24px;">–</div><div class="bar" style="margin:9px 0 7px;"><i id="cycMayBar" style="width:0%;background:#22c55e;"></i></div><div class="s" id="cycMayS">price ÷ its 200-day average — under 1 = cheap, over ~2.4 = hot</div></div>
+      <div class="card bigm"><div class="k">200-WEEK MA</div><div class="v" id="cyc200V" style="font-size:24px;">–</div><div class="bar" style="margin:9px 0 7px;"><i id="cyc200Bar" style="width:0%;background:#22c55e;"></i></div><div class="s" id="cyc200S">how far above the bear-market price floor we sit</div></div>
     </div>
     <div class="note" id="cycNote" style="margin-top:6px;"></div>
   </section>
@@ -581,16 +581,19 @@ function showComp(k){
   if(!window.Chart) return;
   var labels=_compHist.dates, score=comp.series, price=_compHist.price;
   var col={trend:'#58A6FF',drawdown:'#00DC78',sentiment:'#FF9500',liquidity:'#33e0bd'}[k]||'#00D4AA';
+  // for liquidity, show the ABSOLUTE Fed net liquidity ($T) on the right axis instead of BTC price
+  var hasAbs=!!comp.abs, rData=hasAbs?comp.abs:price, rLabel=hasAbs?(comp.abs_label||'value'):'BTC price';
+  function rFmt(v){ return hasAbs?('$'+(Math.round(v*100)/100)+'T'):('$'+(v>=1000?Math.round(v/1000)+'k':Math.round(v))); }
   if(_compChart) _compChart.destroy();
   _compChart=new Chart(document.getElementById('compChart'),{type:'line',data:{labels:labels,datasets:[
     {label:comp.label,data:score,yAxisID:'yS',borderColor:col,backgroundColor:col+'1f',borderWidth:2.2,pointRadius:0,fill:true,tension:0.2},
-    {label:'BTC price',data:price,yAxisID:'yP',borderColor:'rgba(234,179,8,0.6)',borderWidth:1.3,pointRadius:0,tension:0.2}
+    {label:rLabel,data:rData,yAxisID:'yP',borderColor:hasAbs?'rgba(51,224,189,0.7)':'rgba(234,179,8,0.6)',borderWidth:1.4,pointRadius:0,tension:0.2}
   ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
     plugins:{legend:{display:true,labels:{color:'#bcc6d6',font:{family:'JetBrains Mono',size:11},usePointStyle:true,boxWidth:8}},
-      tooltip:{callbacks:{label:function(c){return c.dataset.yAxisID==='yP'?('BTC $'+fnum(Math.round(c.parsed.y))):(c.dataset.label+': '+Math.round(c.parsed.y)+' / 100');}}}},
+      tooltip:{callbacks:{label:function(c){return c.dataset.yAxisID==='yP'?(rLabel+': '+rFmt(c.parsed.y)):(c.dataset.label+': '+Math.round(c.parsed.y)+' / 100');}}}},
     scales:{x:{ticks:{color:'#9aa6b8',maxTicksLimit:7,font:{family:'JetBrains Mono',size:10}},grid:{display:false}},
       yS:{position:'left',min:0,max:100,ticks:{color:'#9aa6b8',font:{family:'JetBrains Mono',size:10}},grid:{color:'rgba(255,255,255,0.05)'}},
-      yP:{position:'right',ticks:{color:'#9aa6b8',font:{family:'JetBrains Mono',size:10},callback:function(v){return '$'+(v>=1000?Math.round(v/1000)+'k':v);}},grid:{display:false}}}}});
+      yP:{position:'right',ticks:{color:'#9aa6b8',font:{family:'JetBrains Mono',size:10},callback:rFmt},grid:{display:false}}}}});
 }
 async function loadDecision(){
   try{
@@ -608,8 +611,17 @@ async function loadDecision(){
     var be=document.getElementById('adBack');
     if(be){ var sdd=(bt.max_dd!=null?bt.max_dd:-48), hdd=(bt.hodl_max_dd!=null?bt.hodl_max_dd:-84);
       be.innerHTML='Backtested since '+((bt.since||'2017').slice(0,4))+': <b style="color:var(--teal)">'+bt.strategy_mult+'×</b> vs <b style="color:#eab308">'+bt.hodl_mult+'×</b> for buy &amp; hold — and a far smaller worst-case loss: <b style="color:var(--teal)">'+sdd+'%</b> max drawdown vs <b>'+hdd+'%</b> for HODL. Same Bitcoin, '+bt.trades+' trades. <span class="note">Past performance ≠ future results.</span>'; }
+    // THE PROOF section (live)
+    function kfmt(m){ var v=m*10000; return v>=1000000?('$'+(Math.round(v/100000)/10)+'M'):('$'+Math.round(v/1000)+'k'); }
+    var sdd2=(bt.max_dd!=null?bt.max_dd:-48), hdd2=(bt.hodl_max_dd!=null?bt.hodl_max_dd:-84);
+    var sm=bt.strategy_mult, hm=bt.hodl_mult;
+    if(sm){ setHTML('prfStratH','the rule '+kfmt(sm)); setHTML('prfHodlH','HODL '+kfmt(hm));
+      setText('prfStrat',kfmt(sm)); setText('prfStratS',Math.round(sm)+'× · max drawdown '+sdd2+'%');
+      setText('prfHodl',kfmt(hm)); setText('prfHodlS',Math.round(hm)+'× · max drawdown '+hdd2+'%');
+      setText('prfEdge',(Math.round(sm/hm*10)/10)+'×'); }
   }catch(e){}
 }
+function setHTML(id,h){ var el=document.getElementById(id); if(el) el.innerHTML=h; }
 var _demoChart=null;
 async function loadDemo(){
   try{

@@ -340,6 +340,17 @@ async def _fetch_fred(series_id: str) -> list:
         return []
 
 
+def _net_liq_abs_at(date_str: str, net_liq_by_date: Dict[str, float]):
+    """Latest absolute net liquidity (in $ trillions) on or before date_str."""
+    best = None
+    for d, v in net_liq_by_date.items():
+        if d <= date_str and (best is None or d > best[0]):
+            best = (d, v)
+    if best is None:
+        return None
+    return round(best[1] / 1_000_000.0, 3)  # WALCL is in $millions -> $trillions
+
+
 def _get_net_liq_impulse_score(date_str: str, net_liq_by_date: Dict[str, float]) -> float:
     """Net Liq impulse score matching compute_arc_score() methodology.
     Uses 30d + 90d change with coefficients 2.5 and 1.5."""
@@ -532,6 +543,7 @@ async def run_daily_backtest_full() -> Dict[str, Any]:
                 "c_drawdown": round(dd_score, 2),
                 "c_sentiment": round(fg_score, 2),
                 "c_liquidity": round(macro_liq, 2),
+                "c_liq_abs": _net_liq_abs_at(item["date"], net_liq_by_date),
             })
 
     except Exception as e:

@@ -1310,7 +1310,7 @@ async def get_rsi(period: int = 14, horizon: int = 30):
         al = (al * (period - 1) + max(-ch, 0)) / period
         rsi[i] = 100.0 if al == 0 else round(100 - 100 / (1 + ag / al), 1)
     cur = rsi[-1]
-    zone = "Oversold" if cur < 30 else ("Overbought" if cur > 70 else "Neutral")
+    zone = "Oversold" if cur < 25 else ("Overbought" if cur > 75 else "Neutral")
 
     def edge(enter):
         rets = []
@@ -1323,8 +1323,8 @@ async def get_rsi(period: int = 14, horizon: int = 30):
         return {"median": round(_st.median(rets) * 100, 1), "avg": round(_st.mean(rets) * 100, 1),
                 "win": round(up / len(rets) * 100), "n": len(rets)}
 
-    oversold = edge(lambda a, b: a >= 30 and b < 30)      # crosses INTO oversold
-    overbought = edge(lambda a, b: a <= 70 and b > 70)    # crosses INTO overbought
+    oversold = edge(lambda a, b: a >= 25 and b < 25)      # crosses INTO deep oversold (<25)
+    overbought = edge(lambda a, b: a <= 75 and b > 75)    # crosses INTO true overbought (>75)
     # baseline: average horizon-day forward return on any day (for comparison)
     base_rets = [p[i + horizon] / p[i] - 1 for i in range(period, n - horizon)]
     baseline = {"median": round(_st.median(base_rets) * 100, 1),
@@ -1476,16 +1476,16 @@ def _run_ladder(dates, px, arc, start_i=0, cash0=10000.0, cash_yield=0.04):
 def _next_step(alloc, cur_arc):
     """Plain-language next move given current allocation + ARC."""
     if alloc < 0.40:
-        return {"action": "BUY", "trigger": "ARC ≤ 38",
+        return {"action": "BUY", "trigger": "ARC \u2264 38",
                 "to_pct": 40,
-                "text": "Erste Kaufstufe: bei ARC 38 oder darunter 40% investieren."}
+                "text": "First buy step: invest 40% at ARC 38 or below."}
     if alloc < 1.0:
-        return {"action": "BUY", "trigger": "ARC ≤ 20",
+        return {"action": "BUY", "trigger": "ARC \u2264 20",
                 "to_pct": 100,
-                "text": "Voll kaufen am Tiefpunkt: 100% bei ARC ≤ 20 — oder sobald ARC nach einem Dip unter 25 wieder über 25 steigt (Boden bestätigt)."}
-    return {"action": "SELL", "trigger": "ARC ≥ 72",
+                "text": "Go 100% at the bottom: ARC 20 or below \u2014 or once ARC dips under 25 and then recovers above it (bottom confirmed)."}
+    return {"action": "SELL", "trigger": "ARC \u2265 72",
             "to_pct": 50,
-            "text": "Voll investiert. Erste Gewinnmitnahme (50%) bei ARC 72, Rest bei ARC 80."}
+            "text": "Fully invested. Take profit 50% at ARC 72, the rest at ARC 80."}
 
 
 _DECISION_CACHE = {"day": None, "data": None}
@@ -1539,12 +1539,19 @@ async def get_ladder():
             "hodl_max_dd": round(_hdd * 100, 1),
         },
         "rules": {
-            "buy_40": "ARC ≤ 38 (oder relativ billigste 5% der letzten 3 Jahre)",
-            "buy_100": "ARC ≤ 20 — oder Boden-Bestätigung (Dip unter 25, dann zurück über 25)",
-            "sell_all": "50% bei ARC ≥ 72, Rest bei ARC ≥ 80",
-            "note": "Feste Regel, jeden Zyklus gleich. Kauft auch, wenn der Boden nie wieder auf 25 fällt.",
+            "buy_40": "ARC \u2264 38 (or the cheapest 5% of the last 3 years)",
+            "buy_100": "ARC \u2264 20 \u2014 or bottom confirmed (dips under 25, then back above)",
+            "sell_all": "50% at ARC \u2265 72, the rest at ARC \u2265 80",
+            "note": "Fixed rule, the same every cycle. Keeps buying even if the bottom never reaches 25 again.",
         },
     }
+    # Fire a Telegram alert if the ladder just produced a new action (safe/no-op if unset)
+    try:
+        if res["actions"]:
+            from alerts import check_and_fire_decision_alert
+            await asyncio.to_thread(check_and_fire_decision_alert, res["actions"][-1], px[-1])
+    except Exception as _e:
+        logger.warning("decision alert hook failed: %s", _e)
     _DECISION_CACHE["day"] = today
     _DECISION_CACHE["data"] = data
     return data
@@ -1644,7 +1651,8 @@ async def get_component_history(days: int = 1300):
             "trend":     {"label": "Trend (Price vs 200-week MA)", "series": col("c_trend")},
             "drawdown":  {"label": "Drawdown from ATH",            "series": col("c_drawdown")},
             "sentiment": {"label": "Sentiment (Fear & Greed)",     "series": col("c_sentiment")},
-            "liquidity": {"label": "Liquidity (Fed net liquidity)","series": col("c_liquidity")},
+            "liquidity": {"label": "Liquidity (Fed net liquidity)","series": col("c_liquidity"),
+                          "abs": col("c_liq_abs"), "abs_label": "Fed net liquidity ($T)", "abs_unit": "T"},
         },
         "note": "0-100 score per component; higher = more risk. Same scoring as the ARC Index.",
     }
