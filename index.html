@@ -550,6 +550,9 @@
       <div class="qa reveal"><div class="qa-q">What data sources do you use?<span class="ar">+</span></div><div class="qa-a"><p>Bitcoin price and OHLC from Kraken, sentiment from the Fear &amp; Greed Index, and liquidity from the Federal Reserve (WALCL, TGA, RRP). All primary, public sources.</p></div></div>
       <div class="qa reveal"><div class="qa-q">How accurate is the model?<span class="ar">+</span></div><div class="qa-a"><p>Every major cycle top and bottom since 2017 falls in the expected zone in backtest. ARC lags by design — it measures the present accurately rather than guessing the future.</p></div></div>
       <div class="qa reveal"><div class="qa-q">Would following ARC have beaten just holding?<span class="ar">+</span></div><div class="qa-a"><p>In backtest, by a wide margin. The adaptive ladder — buy 40% when ARC is cheap (≤38), go 100% at the bottom, take profit in steps near euphoria — turned $10,000 into roughly $549,000 since 2017, versus about $147,000 for buy-and-hold, at −48% max drawdown instead of −84%. This is an in-sample backtest (the edge holds across a wide range of thresholds, not one magic number); past performance does not guarantee future results.</p></div></div>
+      <div class="qa reveal"><div class="qa-q">How is this different from free tools like CBBI?<span class="ar">+</span></div><div class="qa-a"><p>Free indices hand you a number and leave the hard part — what to actually do — to you. AlphaCycle adds the missing half: a transparent buy/hold/sell rule, a live demo account with a real dated track record, and a plain-English daily read. The score is free; Pro sells the decision.</p></div></div>
+      <div class="qa reveal"><div class="qa-q">Do I need a wallet or to connect funds?<span class="ar">+</span></div><div class="qa-a"><p>No. AlphaCycle never touches your coins, keys or exchange. It is a read-only signal you check — nothing to connect, nothing at risk.</p></div></div>
+      <div class="qa reveal"><div class="qa-q">I'm a beginner — is this for me?<span class="ar">+</span></div><div class="qa-a"><p>Especially. The whole point is one number plus a plain-English "today's read," so you don't need to decode fifty charts. If you can read a speedometer, you can read ARC.</p></div></div>
       <div class="qa reveal"><div class="qa-q">Can I cancel anytime?<span class="ar">+</span></div><div class="qa-a"><p>Yes — Pro is monthly with no lock-in, cancel anytime. And during launch, everything is free.</p></div></div>
     </div>
   </div>
@@ -704,5 +707,21 @@ window._actrack=t; t('view_landing');
 document.addEventListener('click',function(ev){var a=ev.target.closest('a'); if(a&&/\/app(\.html)?/.test(a.getAttribute('href')||'')){ t(/pro/i.test(a.textContent||'')?'cta_pro':'cta_start'); }});
 })();
 </script>
+<!-- STICKY MOBILE CTA -->
+<style>
+  #mcta{display:none;}
+  @media(max-width:680px){
+    #mcta{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:60;gap:10px;align-items:center;justify-content:space-between;
+      padding:10px 14px;background:rgba(8,11,18,0.92);backdrop-filter:blur(12px);border-top:1px solid rgba(255,255,255,0.1);}
+    #mcta b{font-family:var(--mono);font-size:13px;color:#fff;}
+    #mcta small{display:block;font-size:11px;color:var(--mut,#9aa6b8);font-family:var(--mono);}
+    #mcta a{white-space:nowrap;}
+    body{padding-bottom:64px;}
+  }
+</style>
+<div id="mcta">
+  <span><b>Start free</b><small>No card · no wallet</small></span>
+  <a class="btn btn-amber" href="/app.html" style="padding:10px 18px;">Open dashboard →</a>
+</div>
 </body>
 </html>
