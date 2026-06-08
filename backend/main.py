@@ -1384,17 +1384,23 @@ def _pctile_rank(arc, i, window=1095, warm=365):
 
 
 def _ladder_target(a, alloc, rel, since_sell):
-    """Strategy B. Returns desired BTC allocation (0..1) for today."""
+    """Strategy B+. Returns desired BTC allocation (0..1) for today.
+    Staged late exits (50% at ARC>=72, all out at >=80) — not gated by cooldown.
+    Early, regime-proof buys; cooldown only blocks RE-buying after a sell."""
+    # SELL side — staged & late
+    if a >= 80:
+        return 0.0
+    if a >= 72:
+        return min(alloc, 0.50)
+    # BUY side — cooldown after a sell to avoid whipsaw
     if since_sell < 120:
-        return alloc  # cooldown after a sell
+        return alloc
     if a <= 28:
         return 1.0
     if a <= 38 or (rel is not None and rel <= 0.05):
         return max(alloc, 0.40)
     if a <= 45 and (rel is not None and rel <= 0.10):
         return max(alloc, 0.40)
-    if a >= 75:
-        return 0.0
     return alloc
 
 
@@ -1456,9 +1462,9 @@ def _next_step(alloc, cur_arc):
         return {"action": "BUY", "trigger": "ARC ≤ 28",
                 "to_pct": 100,
                 "text": "Aufstocken auf 100% sobald ARC 28 oder darunter erreicht."}
-    return {"action": "SELL", "trigger": "ARC ≥ 75",
-            "to_pct": 0,
-            "text": "Voll investiert. Komplett verkaufen bei ARC 75 oder darüber."}
+    return {"action": "SELL", "trigger": "ARC ≥ 72",
+            "to_pct": 50,
+            "text": "Voll investiert. Erste Gewinnmitnahme (50%) bei ARC 72, Rest bei ARC 80."}
 
 
 _DECISION_CACHE = {"day": None, "data": None}
@@ -1503,7 +1509,7 @@ async def get_ladder():
         "rules": {
             "buy_40": "ARC ≤ 38 (oder relativ billigste 5% der letzten 3 Jahre)",
             "buy_100": "ARC ≤ 28",
-            "sell_all": "ARC ≥ 75",
+            "sell_all": "50% bei ARC ≥ 72, Rest bei ARC ≥ 80",
             "note": "Regime-fest: kauft auch, wenn der Boden nie wieder auf 25 fällt.",
         },
     }

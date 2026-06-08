@@ -567,7 +567,7 @@ async function loadDecision(){
     if(ne) ne.innerHTML='<b style="color:#58A6FF;">Next move:</b> '+(nx.text||'–');
     var rl=r.rules||{};
     var re=document.getElementById('adRules');
-    if(re) re.innerHTML='Buy 40% at <b>'+(rl.buy_40||'').replace(' (oder relativ billigste 5% der letzten 3 Jahre)','')+'</b> · scale to 100% at <b>ARC ≤ 28</b> · all-out at <b>ARC ≥ 75</b>. <span style="color:#58A6FF;">Regime-proof: keeps buying even if the bottom never reaches 25 again.</span>';
+    if(re) re.innerHTML='Buy 40% at <b>'+(rl.buy_40||'').replace(' (oder relativ billigste 5% der letzten 3 Jahre)','')+'</b> · scale to 100% at <b>ARC ≤ 28</b> · take profit 50% at <b>ARC ≥ 72</b>, rest at <b>≥ 80</b>. <span style="color:#58A6FF;">Regime-proof: keeps buying even if the bottom never reaches 25 again.</span>';
     var bt=r.backtest||{};
     var be=document.getElementById('adBack');
     if(be) be.innerHTML='Backtested since '+(bt.since||'2017')+': <b style="color:#58A6FF;">'+bt.strategy_mult+'×</b> vs HODL '+bt.hodl_mult+'× · '+bt.trades+' trades in '+bt.buy_years+' buy-years (it only buys when cheap — roughly once a cycle, not every year).';
