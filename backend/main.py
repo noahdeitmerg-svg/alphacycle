@@ -1354,6 +1354,16 @@ async def get_rsi(period: int = 14, horizon: int = 30):
 # risk Noah flagged) — buys at 38/relative even if ARC never hits 25 again.
 # ============================================================================
 
+async def _full_daily_rows():
+    """Full daily backtest rows (date/price/score/arc_score) — same source as
+    history-daily/zone-history, which reliably carry the per-day ARC score."""
+    rows = CACHE.get("backtest_results", []) if CACHE else []
+    if not rows:
+        bt = await run_daily_backtest_full()
+        rows = bt.get("results", []) if isinstance(bt, dict) else (bt or [])
+    return rows
+
+
 def _decision_series(daily):
     rows = [r for r in (daily or []) if r.get("price") and
             (r.get("arc_score") is not None or r.get("score") is not None)]
@@ -1461,8 +1471,7 @@ async def get_ladder():
     if _DECISION_CACHE["day"] == today and _DECISION_CACHE["data"]:
         return _DECISION_CACHE["data"]
     try:
-        from services.backtest_engine import _load_or_build_daily_cache
-        daily = await _load_or_build_daily_cache()
+        daily = await _full_daily_rows()
     except Exception as ex:
         raise HTTPException(503, f"price history unavailable: {ex}")
     dates, px, arc = _decision_series(daily)
@@ -1514,11 +1523,12 @@ async def get_demo_account(start: str = "2022-11-21"):
     if _DEMO_CACHE["key"] == key and _DEMO_CACHE["data"]:
         return _DEMO_CACHE["data"]
     try:
-        from services.backtest_engine import _load_or_build_daily_cache
-        daily = await _load_or_build_daily_cache()
+        daily = await _full_daily_rows()
     except Exception as ex:
         raise HTTPException(503, f"price history unavailable: {ex}")
     dates, px, arc = _decision_series(daily)
+    if len(px) < 50:
+        raise HTTPException(503, "insufficient history")
     start_i = 0
     for i, dd in enumerate(dates):
         if dd >= start:
