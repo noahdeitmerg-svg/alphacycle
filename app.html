@@ -309,8 +309,8 @@
   <!-- LIVE DEMO ACCOUNT -->
   <section class="pro-gate">
     <div class="sec-eyebrow">ENGINE 2B · LIVE DEMO ACCOUNT</div>
-    <div class="sec-h">$10,000 since 2021 — through a full cycle</div>
-    <div class="sec-tells">A transparent, automatically-updated track record: start with <b>$10,000 at the start of 2021</b> — right at a cycle top — and follow the fixed rule. Note it refuses to buy the top, waits, and still leaves buy &amp; hold far behind. Every move is dated below; runs live, no cherry-picking.</div>
+    <div class="sec-h">$10,000 — the rule, running live since 2026</div>
+    <div class="sec-tells">A transparent, automatically-updated track record: start with <b>$10,000 at the beginning of 2026</b> and follow the fixed rule. Watch how it protects capital — it waits in cash and only buys when Bitcoin gets genuinely cheap. Every move is dated below; runs live, no cherry-picking.</div>
     <div class="gate-cta"><div class="gate-badge" onclick="unlockPro()">&#128274; Sign up free to unlock</div></div>
     <div class="gate-content">
     <div class="grid g3">
@@ -965,7 +965,9 @@ function initCollapse(){
       for(var i=start;i<kids.length;i++) body.appendChild(kids[i]);
       sec.appendChild(body);
       eye.classList.add('clps');
+      var _lbl=(eye.textContent||'');
       var chev=document.createElement('span'); chev.className='chev'; chev.textContent='HIDE ▾'; eye.appendChild(chev);
+      if(!/ENGINE 1 |ENGINE 2 ·|ENGINE 2B/.test(_lbl)){ sec.classList.add('collapsed'); chev.textContent='SHOW ▸'; }
       eye.addEventListener('click',function(){ var col=sec.classList.toggle('collapsed'); chev.textContent=col?'SHOW ▸':'HIDE ▾'; if(!col){ setTimeout(function(){ try{ if(sec.querySelector('#arcChart')&&window._arcChart){window._arcChart.resize();_autoFitPrice&&_autoFitPrice();} if(sec.querySelector('#seaCycleChart')&&_seaCycleChart){_seaCycleChart.resize();} if(sec.querySelector('#seasChart')&&_seasChart){_seasChart.resize();} }catch(e){} },80); } });
     });
   }catch(e){}
@@ -986,7 +988,7 @@ var TR={
 "ENGINE 8 · REGIME TIMELINE":"ENGINE 8 · REGIME-VERLAUF",
 "What drives the score":"Was den Score treibt",
 "Your move, by the rule":"Dein Zug — nach der Regel",
-"$10,000 since 2021 — through a full cycle":"10.000 $ seit 2021 — durch einen ganzen Zyklus",
+"$10,000 — the rule, running live since 2026":"10.000 $ — die Regel, live seit 2026",
 "What each zone has returned, historically":"Was jede Zone historisch gebracht hat",
 "Where we are in the cycle":"Wo wir im Zyklus stehen",
 "30–90 day conditions":"Lage auf 30–90 Tage",
@@ -1009,11 +1011,14 @@ var TRR={}; for(var _k in TR){ TRR[TR[_k]]=_k; }
 function _norm(h){ return h.replace(/\s+/g,' ').trim(); }
 function applyLang(){
   var de=(window._lang==='de');
-  document.querySelectorAll('.wrap .sec-eyebrow, .wrap .sec-h, .wrap .sec-tells, .nav-right .nav-link, .nav-right #langBtn').forEach(function(el){
-    if(el.id==='langBtn') return;
-    var t=_norm(el.innerHTML);
-    if(de){ if(TR[t]!==undefined) el.innerHTML=TR[t]; }
-    else { if(TRR[t]!==undefined) el.innerHTML=TRR[t]; }
+  document.querySelectorAll('.wrap .sec-eyebrow, .wrap .sec-h, .wrap .sec-tells, .nav-right .nav-link').forEach(function(el){
+    if(el.id==='langBtn'||el.id==='shareBtn') return;
+    var raw=el.innerHTML;
+    var cm=raw.match(/<span class="chev">[\s\S]*?<\/span>\s*$/);
+    var chev=cm?cm[0]:'';
+    var core=_norm(chev?raw.slice(0,raw.length-chev.length):raw);
+    var tr=de?TR[core]:TRR[core];
+    if(tr!==undefined) el.innerHTML=tr+chev;
   });
 }
 function setLang(l){ window._lang=l; try{localStorage.setItem('ac_lang',l);}catch(e){} var b=document.getElementById('langBtn'); if(b) b.textContent=(l==='de'?'EN':'DE'); applyLang(); }
