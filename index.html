@@ -233,6 +233,97 @@
     .proof-stat{flex:1 1 42%;}
     .ps-card{padding:24px;}
   }
+
+/* @@PREMIUM2030@@ */
+/* ===================== PREMIUM "DeFi 2030" THEME ===================== */
+:root{
+  --acc1:#00E6C3; --acc2:#21d4fb; --acc3:#8b5cf6;
+  --hair:rgba(255,255,255,0.10); --hair2:rgba(255,255,255,0.16);
+  --grad-acc:linear-gradient(135deg,#00E6C3 0%,#21d4fb 55%,#7aa2ff 100%);
+}
+/* deep layered aurora background */
+body{
+  background:
+    radial-gradient(900px 620px at 6% -12%, rgba(0,230,195,0.16), transparent 60%),
+    radial-gradient(820px 600px at 102% -4%, rgba(139,92,246,0.15), transparent 55%),
+    radial-gradient(760px 760px at 50% 118%, rgba(33,212,251,0.11), transparent 60%),
+    #060912 !important;
+  background-attachment:fixed !important;
+}
+body::before{content:'';position:fixed;inset:-25%;z-index:-2;pointer-events:none;
+  background:
+    radial-gradient(38% 40% at 22% 28%, rgba(0,230,195,0.12), transparent 70%),
+    radial-gradient(34% 44% at 80% 22%, rgba(139,92,246,0.12), transparent 70%),
+    radial-gradient(30% 36% at 60% 90%, rgba(33,212,251,0.10), transparent 70%);
+  filter:blur(46px);animation:auroraFloat 20s ease-in-out infinite alternate;}
+@keyframes auroraFloat{0%{transform:translate3d(0,0,0) scale(1);}100%{transform:translate3d(0,-2.5%,0) scale(1.07);}}
+body::after{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:0.04;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+
+/* glass cards — landing + dashboard */
+.card,.ps-card,.feat,.plan,.qa,.gauge-card,.trust,.stat,.comp,.bigm,.zrow{
+  background:linear-gradient(158deg, rgba(255,255,255,0.058), rgba(255,255,255,0.012)) !important;
+  border:1px solid var(--hair) !important;
+  border-radius:18px !important;
+  backdrop-filter:blur(18px) saturate(125%);-webkit-backdrop-filter:blur(18px) saturate(125%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.07), 0 20px 50px -24px rgba(0,0,0,0.75) !important;
+  transition:transform .4s cubic-bezier(.2,.8,.2,1), box-shadow .4s, border-color .4s !important;
+}
+.card:hover,.ps-card:hover,.feat:hover,.plan:hover,.qa:hover,.bigm:hover,.comp:hover{
+  transform:translateY(-4px) !important;
+  border-color:rgba(0,230,195,0.34) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.10), 0 30px 64px -26px rgba(0,0,0,0.85), 0 0 46px -14px rgba(0,230,195,0.30) !important;
+}
+/* featured plan / decision banner get an accent ring */
+.plan.pro,#dBanner{position:relative;border-color:rgba(0,230,195,0.30) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.10), 0 26px 60px -24px rgba(0,0,0,0.8), 0 0 60px -18px rgba(0,230,195,0.30) !important;}
+
+/* gradient hero headline */
+header.hero h1, .hero-copy h1{
+  background:linear-gradient(108deg,#ffffff 38%, #9ff3e6 70%, #b9a6ff 100%);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;
+}
+/* gauge glow */
+.gauge-card{position:relative !important;}
+.gauge-card::after{content:'';position:absolute;left:50%;top:34%;width:300px;height:300px;
+  transform:translate(-50%,-50%);background:radial-gradient(closest-side, rgba(0,230,195,0.16), transparent 70%);
+  pointer-events:none;animation:pulseGlow 4.5s ease-in-out infinite;z-index:0;}
+@keyframes pulseGlow{0%,100%{opacity:.55;}50%{opacity:1;}}
+.gnum,.gauge-num{ text-shadow:0 0 28px rgba(0,230,195,0.45); }
+
+/* premium buttons */
+.btn-amber,.btn.btn-amber{
+  background:var(--grad-acc) !important;color:#04130f !important;border:none !important;font-weight:700;
+  box-shadow:0 12px 34px -12px rgba(0,230,195,0.65), inset 0 1px 0 rgba(255,255,255,0.4) !important;
+  transition:transform .25s, box-shadow .25s, filter .25s !important;}
+.btn-amber:hover{transform:translateY(-2px);filter:brightness(1.05);box-shadow:0 18px 44px -12px rgba(0,230,195,0.78), inset 0 1px 0 rgba(255,255,255,0.5) !important;}
+.btn-ghost{border:1px solid var(--hair2) !important;background:rgba(255,255,255,0.035) !important;backdrop-filter:blur(8px);}
+.btn-ghost:hover{border-color:rgba(0,230,195,0.4) !important;}
+
+/* eyebrows / pills with accent */
+.eyebrow,.sec-eyebrow{color:var(--acc1) !important;}
+.pill{border:1px solid var(--hair2) !important;background:linear-gradient(135deg,rgba(0,230,195,0.10),rgba(139,92,246,0.08)) !important;}
+
+/* nav: deeper glass */
+.nav,nav{background:rgba(6,9,18,0.72) !important;backdrop-filter:blur(18px) saturate(130%) !important;border-bottom:1px solid var(--hair) !important;}
+
+/* section headings tighter + brighter */
+.sec-h,.sec-head h2,h2{letter-spacing:-0.015em;}
+
+/* trust strip + notes a touch brighter on glass */
+.note{color:#9fb0c6 !important;}
+
+/* accent bars (component / allocation) get the gradient */
+.comp .bar i,.bar i{background:var(--grad-acc) !important;}
+
+/* live dot / accents to acc1 */
+.live-dot,.live-dot i{color:var(--acc1) !important;}
+.live-dot i{background:var(--acc1) !important;box-shadow:0 0 0 4px rgba(0,230,195,0.18) !important;}
+
+/* smooth scaling on interactive nav chips */
+#langBtn,#shareBtn{transition:border-color .2s, background .2s, transform .2s;}
+#langBtn:hover,#shareBtn:hover{border-color:rgba(0,230,195,0.45) !important;transform:translateY(-1px);}
+
 </style>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"SoftwareApplication","name":"AlphaCycle","applicationCategory":"FinanceApplication","operatingSystem":"Web","url":"https://alphacycle.app","description":"The ARC Index: one transparent 0-100 score that tells you where Bitcoin is in its market cycle, with a backtested decision rule that beat buy-and-hold.","offers":[{"@type":"Offer","price":"0","priceCurrency":"USD","name":"Free"},{"@type":"Offer","price":"29","priceCurrency":"USD","name":"Pro (monthly)"}]}
