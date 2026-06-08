@@ -1452,10 +1452,61 @@ async def get_rsi(period: int = 14, horizon: int = 7):
           "buy": {"active": bool(r7 is not None and r7 < 30 and above200), "edge": buy_edge},
           "fade": {"active": bool(r7 is not None and r7 > 75 and not above200), "edge": fade_edge}}
 
+    # --- WEEKLY RSI(14): rare extremes = strong signals ---
+    from datetime import date as _wd
+    wkmap = {}
+    for i in range(n):
+        try:
+            yy, mm, dd2 = [int(x) for x in d[i].split('-')]
+            iso = _wd(yy, mm, dd2).isocalendar()
+            wkmap[(iso[0], iso[1])] = p[i]
+        except Exception:
+            continue
+    wk_keys = sorted(wkmap)
+    wp = [wkmap[k] for k in wk_keys]
+    nW = len(wp)
+    weekly = None
+    if nW > 20:
+        WPER = 14
+        wrsi = [None] * nW
+        g0 = sum(max(wp[i] - wp[i - 1], 0) for i in range(1, WPER + 1))
+        l0 = sum(max(wp[i - 1] - wp[i], 0) for i in range(1, WPER + 1))
+        a0, b0 = g0 / WPER, l0 / WPER
+        wrsi[WPER] = 100.0 if b0 == 0 else 100 - 100 / (1 + a0 / b0)
+        for i in range(WPER + 1, nW):
+            ch = wp[i] - wp[i - 1]
+            a0 = (a0 * (WPER - 1) + max(ch, 0)) / WPER
+            b0 = (b0 * (WPER - 1) + max(-ch, 0)) / WPER
+            wrsi[i] = 100.0 if b0 == 0 else 100 - 100 / (1 + a0 / b0)
+        WH = 4  # 4-week forward window
+
+        def _wedge(op, thr):
+            rr = []
+            for i in range(WPER + 1, nW - WH):
+                if wrsi[i] is None or wrsi[i - 1] is None:
+                    continue
+                cross = (wrsi[i] > thr and wrsi[i - 1] <= thr) if op == ">" else (wrsi[i] < thr and wrsi[i - 1] >= thr)
+                if cross:
+                    rr.append(wp[i + WH] / wp[i] - 1)
+            if len(rr) < 5:
+                return None
+            up = sum(1 for x in rr if x > 0)
+            return {"median": round(_st.median(rr) * 100, 1), "win": round(up / len(rr) * 100), "n": len(rr)}
+
+        cur_w = round(wrsi[-1], 1)
+        floor_w = round(min(x for x in wrsi if x is not None))
+        weekly = {
+            "rsi": cur_w,
+            "floor": floor_w,
+            "horizon_weeks": WH,
+            "breakout": {"active": bool(cur_w > 70), "level": 70, "edge": _wedge(">", 70)},
+            "overheated": {"active": bool(cur_w > 85), "level": 85, "edge": _wedge(">", 85)},
+        }
+
     data = {"asof": d[-1], "period": period, "horizon": horizon,
             "rsi": cur, "zone": zone,
             "oversold": oversold, "overbought": overbought, "baseline": baseline,
-            "hc": hc, "recent": recent}
+            "hc": hc, "weekly": weekly, "recent": recent}
     _RSI_CACHE["key"] = key
     _RSI_CACHE["data"] = data
     return data

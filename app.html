@@ -490,10 +490,25 @@ header.hero h1, .hero-copy h1{
   <!-- NEAR TERM -->
   <section class="pro-gate">
     <div class="sec-eyebrow">ENGINE 5 · NEAR-TERM</div>
-    <div class="sec-h">30–90 day conditions</div>
-    <div class="sec-tells"><b>Contextual only</b> — short-term oscillators. The ARC Index is the primary signal; these add texture on timing.</div>
+    <div class="sec-h">Momentum &amp; timing</div>
+    <div class="sec-tells">The <b>weekly RSI</b> is the big-picture momentum signal — its extremes are rare and meaningful. Faster daily setups add short-term timing. The ARC Index stays the primary signal; these add texture.</div>
     <div class="gate-cta"><div class="gate-badge" onclick="unlockPro()">&#128274; Sign up free to unlock</div></div>
     <div class="gate-content">
+    <div class="card" id="weeklyCard" style="margin-bottom:14px;border-width:2px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:18px;flex-wrap:wrap;">
+        <div style="min-width:150px;">
+          <div class="k">WEEKLY RSI (14)</div>
+          <div class="v" id="wRsiV" style="font-size:48px;line-height:1;">–</div>
+          <div class="s" id="wRsiZone">–</div>
+        </div>
+        <div style="flex:1;min-width:250px;">
+          <div id="wSigStatus" style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:0.08em;padding:4px 12px;border-radius:999px;display:inline-block;border:1px solid var(--bd2);color:var(--mut);">–</div>
+          <div id="wSigMain" style="font-size:15px;color:var(--ink);line-height:1.6;margin-top:10px;">–</div>
+          <div class="note" id="wSigEdge" style="margin-top:8px;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="k" style="font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:0.12em;margin:4px 0 10px;">DAILY TIMING — FASTER SETUPS</div>
     <div class="card" style="margin-bottom:14px;display:flex;gap:26px;align-items:center;flex-wrap:wrap;">
       <div style="min-width:120px"><div class="k">DAILY RSI (14)</div><div class="v" id="rsiBigV" style="font-size:46px;line-height:1;">–</div><div class="s" id="rsiZoneS">–</div></div>
       <div style="flex:1;min-width:250px;">
@@ -506,7 +521,7 @@ header.hero h1, .hero-copy h1{
         </div>
       </div>
     </div>
-    <div class="sec-tells" style="margin:0 0 12px;">Two high-confidence setups — both use a fast 7-day RSI <b>plus a trend filter</b>, the key to reliability:</div>
+    <div class="note" style="margin:0 0 12px;">Two daily high-confidence setups — a fast 7-day RSI <b>plus a trend filter</b> (the key to reliability):</div>
     <div class="grid g2" style="margin-bottom:14px;">
       <div class="card bigm" id="hcBuyCard" style="border-color:rgba(0,230,195,0.32);background:linear-gradient(160deg,rgba(0,230,195,0.08),rgba(255,255,255,0.012));">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
@@ -869,6 +884,23 @@ async function loadRSI(){
     var bn=document.getElementById('hcBuyN'); if(bn) bn.innerHTML = be?('median over '+hh+'d, '+be.n+' times since 2017 · now: RSI-7 '+r7+', BTC '+(ab?'above':'below')+' the 200-day MA'):'not enough history';
     setText('hcFadeEdge', fe?(fe.median+'% · only '+fe.win+'% higher'):'–');
     var fn2=document.getElementById('hcFadeN'); if(fn2) fn2.innerHTML = fe?((100-fe.win)+'% of the time LOWER over '+hh+'d, '+fe.n+' times · fires only in a downtrend'):'not enough history';
+    var w=r.weekly;
+    if(w){
+      setText('wRsiV', w.rsi);
+      var wv=document.getElementById('wRsiV'); if(wv) wv.style.color=(w.breakout.active?'#22c55e':(w.overheated.active?'#FF9500':'#58A6FF'));
+      setText('wRsiZone', w.overheated.active?'Overheated (>85)':(w.breakout.active?'Bull momentum (>70)':'Neutral · floor ~'+w.floor));
+      var ws=document.getElementById('wSigStatus'), wm=document.getElementById('wSigMain'), we=document.getElementById('wSigEdge');
+      if(ws&&wm&&we){
+        if(w.overheated.active){ ws.textContent='● OVERHEATED'; ws.style.background='#FF9500'; ws.style.color='#1a1205'; ws.style.borderColor='transparent';
+          wm.innerHTML='Weekly RSI is above <b>85</b> — a late-stage, historically overheated reading, and very rare. This is where to watch the ARC score and cycle engines for a top.'; we.innerHTML=''; }
+        else if(w.breakout.active){ ws.textContent='● BULL MOMENTUM'; ws.style.background='var(--teal)'; ws.style.color='#04130f'; ws.style.borderColor='transparent';
+          var e=w.breakout.edge;
+          wm.innerHTML='Weekly RSI broke above <b>70</b> — on Bitcoin this is a <b>breakout, not a top</b>. Momentum has historically carried higher.';
+          we.innerHTML = e?('<b style="color:var(--teal)">+'+e.median+'% median · '+e.win+'% higher</b> over the next '+w.horizon_weeks+' weeks ('+e.n+' times since 2017).'):''; }
+        else { ws.textContent='○ no strong signal'; ws.style.background='transparent'; ws.style.color='var(--mut)'; ws.style.borderColor='var(--bd2)';
+          wm.innerHTML='Weekly RSI is <b>'+w.rsi+'</b> — neutral. Bitcoin\'s weekly RSI almost never gets oversold (it bottoms near '+w.floor+'), so there is no reliable weekly dip-buy. A strong signal only appears above <b>70</b> (bull momentum) or above <b>85</b> (overheated).'; we.innerHTML=''; }
+      }
+    }
     var bl=r.baseline?(' Baseline (any day): '+(r.baseline.median>0?'+':'')+r.baseline.median+'% / '+r.baseline.win+'% up.'):'';
     setText('rsiNote','The gauge above is the classic RSI(14). The two setups use a faster 7-day RSI with a trend filter — that filter is what makes them reliable: a dip only counts as a BUY when Bitcoin is in an uptrend (above its 200-day average), and overbought only counts as a FADE when it is in a downtrend. The honest twist most people miss: plain overbought in a bull run is NOT a sell — on Bitcoin, momentum usually carries it higher.'+bl+' Numbers = median move over the next 7 days. Context, not a trade signal.');
   }catch(e){}
