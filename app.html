@@ -283,8 +283,8 @@
   <!-- LIVE DEMO ACCOUNT -->
   <section class="pro-gate">
     <div class="sec-eyebrow">ENGINE 2B · LIVE DEMO ACCOUNT</div>
-    <div class="sec-h">$10,000 since the last cycle bottom</div>
-    <div class="sec-tells">A transparent, automatically-updated track record: start with <b>$10,000 at the Nov-2022 bottom</b> and follow the adaptive ladder. Every move is dated below. This runs live and updates daily — no cherry-picking.</div>
+    <div class="sec-h">$10,000 since 2021 — through a full cycle</div>
+    <div class="sec-tells">A transparent, automatically-updated track record: start with <b>$10,000 at the start of 2021</b> — right at a cycle top — and follow the fixed rule. Note it refuses to buy the top, waits, and still leaves buy &amp; hold far behind. Every move is dated below; runs live, no cherry-picking.</div>
     <div class="gate-cta"><div class="gate-badge" onclick="unlockPro()">&#128274; Sign up free to unlock</div></div>
     <div class="gate-content">
     <div class="grid g3">
@@ -400,7 +400,12 @@
       <div class="card bigm"><div class="k">WEAKEST MONTH</div><div class="v" id="seaWorst" style="font-size:24px;">–</div><div class="s" id="seaWorstS">–</div></div>
       <div class="card bigm"><div class="k">NEXT 90 DAYS</div><div class="v" id="seaFwd2" style="font-size:24px;">–</div><div class="s" id="seaFwdS">–</div></div>
     </div>
-    <div class="note" id="seaFoot" style="margin-top:6px;"></div>
+    <div class="card" style="margin-top:14px;padding:18px;">
+      <div style="font-family:var(--mono);font-size:13px;color:var(--teal);margin-bottom:10px;">AVERAGE RETURN BY MONTH · since 2013</div>
+      <div class="chart-canvas-box" style="height:240px;"><canvas id="seaMonthChart"></canvas></div>
+      <div class="note" style="margin-top:8px;">Green = up months, red = down · brighter bar = reliable (same direction in ≥70% of years) · hover for win-rate.</div>
+    </div>
+    <div class="note" id="seaFoot" style="margin-top:8px;"></div>
   </section>
 
   <!-- CYCLE EXTREMES (moving averages) -->
@@ -409,9 +414,9 @@
     <div class="sec-h">The averages that mark tops &amp; bottoms</div>
     <div class="sec-tells">The classic price-extension signals — Pi Cycle, Mayer Multiple, 200-week MA — tested across every cycle since 2013. Where they sit now lines up with the ARC read.</div>
     <div class="grid g3">
-      <div class="card bigm"><div class="k">PI CYCLE TOP</div><div class="v" id="cycPiV" style="font-size:24px;">–</div><div class="s" id="cycPiS">distance from a top signal</div></div>
-      <div class="card bigm"><div class="k">MAYER MULTIPLE</div><div class="v" id="cycMayV" style="font-size:24px;">–</div><div class="s" id="cycMayS">price vs the 200-day average</div></div>
-      <div class="card bigm"><div class="k">200-WEEK MA</div><div class="v" id="cyc200V" style="font-size:24px;">–</div><div class="s" id="cyc200S">distance from the bear-market floor</div></div>
+      <div class="card bigm"><div class="k">PI CYCLE TOP</div><div class="v" id="cycPiV" style="font-size:24px;">–</div><div class="bar" style="margin:9px 0 7px;"><i id="cycPiBar" style="width:0%;background:#22c55e;"></i></div><div class="s" id="cycPiS">distance from a top signal</div></div>
+      <div class="card bigm"><div class="k">MAYER MULTIPLE</div><div class="v" id="cycMayV" style="font-size:24px;">–</div><div class="bar" style="margin:9px 0 7px;"><i id="cycMayBar" style="width:0%;background:#22c55e;"></i></div><div class="s" id="cycMayS">price vs the 200-day average</div></div>
+      <div class="card bigm"><div class="k">200-WEEK MA</div><div class="v" id="cyc200V" style="font-size:24px;">–</div><div class="bar" style="margin:9px 0 7px;"><i id="cyc200Bar" style="width:0%;background:#22c55e;"></i></div><div class="s" id="cyc200S">distance from the bear-market floor</div></div>
     </div>
     <div class="note" id="cycNote" style="margin-top:6px;"></div>
   </section>
@@ -738,6 +743,14 @@ async function loadSeasonality(){
     else { var f=conf[0]; var up=f.dir==='up'; setText('seaFwd2',up?'Bullish':'Bearish'); document.getElementById('seaFwd2').style.color=up?'#22c55e':'#ef4444'; setText('seaFwdS',f.hor+'d lean · '+(f.median>0?'+':'')+f.median+'% typ · '+f.win+'% yrs up'); }
     var wk=(s.week_signals||[]).length; var yr=(s.range?s.range.from.slice(0,4)+'–'+s.range.to.slice(0,4):'');
     setText('seaFoot','Months shown only if up or down in ≥70% of years ('+yr+'). Weekly was checked too — '+(wk?'a few weeks cross 70%, but that is within chance, so treated as noise':'nothing reliable')+'. Context, not a trade signal.');
+    if(window.Chart && s.months){
+      var mn=['J','F','M','A','M','J','J','A','S','O','N','D'];
+      var full=['January','February','March','April','May','June','July','August','September','October','November','December'];
+      var av=s.months.map(function(m){return m.avg;});
+      var cols=s.months.map(function(m){var up=m.dir==='up';return up?(m.high_conf?'#22c55e':'rgba(34,197,94,0.42)'):(m.high_conf?'#ef4444':'rgba(239,68,68,0.42)');});
+      if(window._seaMonthChart) window._seaMonthChart.destroy();
+      window._seaMonthChart=new Chart(document.getElementById('seaMonthChart'),{type:'bar',data:{labels:mn,datasets:[{data:av,backgroundColor:cols,borderRadius:4,maxBarThickness:42}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{title:function(i){return full[i[0].dataIndex];},label:function(c){var m=s.months[c.dataIndex];return ['avg '+(m.avg>0?'+':'')+m.avg+'%','up '+m.win+'% of '+m.n+' years'];}}}},scales:{x:{ticks:{color:'#9aa6b8',font:{family:'JetBrains Mono',size:11}},grid:{display:false}},y:{ticks:{color:'#9aa6b8',font:{family:'JetBrains Mono',size:10},callback:function(v){return v+'%';}},grid:{color:'rgba(255,255,255,0.05)'}}}}});
+    }
   }catch(e){ var el=document.getElementById('seaSec'); if(el) el.style.opacity='0.55'; }
 }
 
@@ -756,6 +769,14 @@ async function loadCycleSignals(){
     setText('cyc200V', pa!=null?((pa>0?'+':'')+pa+'%'):'–');
     document.getElementById('cyc200V').style.color=(pa==null?'#fff':(Math.abs(pa)<10?'#22c55e':(pa<100?'#58A6FF':'#FF9500')));
     setText('cyc200S', pa!=null?(Math.abs(pa)<5?'sitting on the bear-market floor':(pa<0?'below the floor':'above the floor')):'');
+    // position bars (visual)
+    var piRisk=pi.triggered?100:Math.max(3,Math.min(100,100-(pi.gap_pct||0)*0.5));
+    var pb=document.getElementById('cycPiBar'); if(pb){ pb.style.width=piRisk+'%'; pb.style.background=pi.triggered?'#ef4444':(piRisk<40?'#22c55e':piRisk<70?'#FF9500':'#ef4444'); }
+    var mf=may.value!=null?Math.max(3,Math.min(100,may.value/4*100)):0;
+    var mb=document.getElementById('cycMayBar'); if(mb){ mb.style.width=mf+'%'; mb.style.background=mc; }
+    var wcol=(pa==null?'#9aa6b8':(Math.abs(pa)<10?'#22c55e':(pa<100?'#58A6FF':'#FF9500')));
+    var wf=pa!=null?Math.max(3,Math.min(100,pa/3)):0;
+    var wb=document.getElementById('cyc200Bar'); if(wb){ wb.style.width=wf+'%'; wb.style.background=wcol; }
     setText('cycNote','Pi Cycle marked the 2017 and 2021 tops to within 1–2 days — the best daily-average pair we tested. It did not fire this cycle (the post-ETF run stayed too muted). All three now point to the value end, matching the ARC score. Context, not a trade signal.');
   }catch(e){ var el=document.getElementById('cycSec'); if(el) el.style.opacity='0.55'; }
 }

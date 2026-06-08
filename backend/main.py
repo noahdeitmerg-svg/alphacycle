@@ -1554,7 +1554,7 @@ _DEMO_CACHE = {"key": None, "data": None}
 
 
 @app.get("/api/demo-account")
-async def get_demo_account(start: str = "2022-11-21"):
+async def get_demo_account(start: str = "2021-01-01"):
     """Live demo account: runs the adaptive ladder from a cycle-bottom start date."""
     from datetime import datetime as _dtm
     key = f"{_dtm.utcnow().date().isoformat()}|{start}"
