@@ -571,31 +571,52 @@ header.hero h1, .hero-copy h1{
       <p>Other tools hand you a score, or fifty charts, and leave the hard part to you. AlphaCycle gives you the score, the rule, and the proof — in one place.</p>
     </div>
     <div class="reveal" style="overflow-x:auto;">
-      <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:1px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);border-radius:14px;overflow:hidden;min-width:560px;font-size:14px;">
-        <div style="background:#0d1320;padding:14px 16px;"></div>
-        <div style="background:rgba(0,212,170,0.10);padding:14px 16px;font-weight:700;color:var(--amber);font-family:var(--mono);text-align:center;">AlphaCycle</div>
-        <div style="background:#0d1320;padding:14px 16px;font-weight:700;color:var(--mut);font-family:var(--mono);text-align:center;">CBBI</div>
-        <div style="background:#0d1320;padding:14px 16px;font-weight:700;color:var(--mut);font-family:var(--mono);text-align:center;">BM&nbsp;Pro</div>
-        <div style="background:#0d1320;padding:13px 16px;color:var(--mut);">One clear 0–100 cycle score</div>
-        <div style="background:rgba(0,212,170,0.06);padding:13px 16px;text-align:center;color:#22c55e;">✓</div>
-        <div style="background:#0d1320;padding:13px 16px;text-align:center;color:#22c55e;">✓</div>
-        <div style="background:#0d1320;padding:13px 16px;text-align:center;color:var(--dim);">~50 charts</div>
-        <div style="background:#0d1320;padding:13px 16px;color:var(--mut);">An actual buy / hold / sell rule</div>
-        <div style="background:rgba(0,212,170,0.06);padding:13px 16px;text-align:center;color:#22c55e;">✓</div>
-        <div style="background:#0d1320;padding:13px 16px;text-align:center;color:#ef4444;">✗</div>
-        <div style="background:#0d1320;padding:13px 16px;text-align:center;color:#ef4444;">✗</div>
-        <div style="background:#0d1320;padding:13px 16px;color:var(--mut);">Live demo account (real track record)</div>
-        <div style="background:rgba(0,212,170,0.06);padding:13px 16px;text-align:center;color:#22c55e;">✓</div>
-        <div style="background:#0d1320;padding:13px 16px;text-align:center;color:#ef4444;">✗</div>
-        <div style="background:#0d1320;padding:13px 16px;text-align:center;color:#ef4444;">✗</div>
-        <div style="background:#0d1320;padding:13px 16px;color:var(--mut);">Plain-English daily read</div>
-        <div style="background:rgba(0,212,170,0.06);padding:13px 16px;text-align:center;color:#22c55e;">✓</div>
-        <div style="background:#0d1320;padding:13px 16px;text-align:center;color:#ef4444;">✗</div>
-        <div style="background:#0d1320;padding:13px 16px;text-align:center;color:var(--dim);">expert-level</div>
-        <div style="background:#0d1320;padding:13px 16px;color:var(--mut);">Price</div>
-        <div style="background:rgba(0,212,170,0.06);padding:13px 16px;text-align:center;color:var(--amber);font-weight:700;">Free / $29</div>
-        <div style="background:#0d1320;padding:13px 16px;text-align:center;color:var(--mut);">Free</div>
-        <div style="background:#0d1320;padding:13px 16px;text-align:center;color:var(--mut);">$29/mo</div>
+      <style>
+        .cmp{display:grid;grid-template-columns:1.5fr 1.15fr 1fr 1fr;min-width:600px;font-size:14.5px;border:1px solid var(--hair);border-radius:18px;overflow:hidden;background:linear-gradient(158deg,rgba(255,255,255,0.05),rgba(255,255,255,0.012));backdrop-filter:blur(16px);box-shadow:inset 0 1px 0 rgba(255,255,255,0.06),0 24px 60px -28px rgba(0,0,0,0.8);}
+        .cmp>div{padding:15px 18px;border-bottom:1px solid rgba(255,255,255,0.055);display:flex;align-items:center;}
+        .cmp .lbl{color:var(--mut);}
+        .cmp .hd{justify-content:center;font-family:var(--mono);font-weight:700;letter-spacing:0.05em;color:var(--mut);}
+        .cmp .ctr{justify-content:center;}
+        .cmp .hi{background:linear-gradient(180deg,rgba(0,230,195,0.11),rgba(0,230,195,0.045));}
+        .cmp .ah{color:#00E6C3;text-shadow:0 0 18px rgba(0,230,195,0.45);position:relative;}
+        .cmp .ah small{display:block;font-size:9px;letter-spacing:0.16em;color:#00E6C3;opacity:0.85;margin-top:3px;}
+        .cmp .yes{color:#34d399;font-size:19px;text-shadow:0 0 13px rgba(52,211,153,0.55);}
+        .cmp .no{color:#ef5350;opacity:0.5;font-size:16px;}
+        .cmp .dim{color:var(--dim);font-size:13px;}
+        .cmp .price{font-family:var(--mono);font-weight:700;}
+        .cmp .pa{color:#00E6C3;text-shadow:0 0 16px rgba(0,230,195,0.4);}
+        .cmp>div:nth-last-child(-n+4){border-bottom:none;}
+      </style>
+      <div class="cmp">
+        <div></div>
+        <div class="hd ah hi">AlphaCycle<small>★ RECOMMENDED</small></div>
+        <div class="hd">CBBI</div>
+        <div class="hd">BM&nbsp;Pro</div>
+
+        <div class="lbl">One clear 0–100 cycle score</div>
+        <div class="ctr hi yes">✓</div>
+        <div class="ctr yes">✓</div>
+        <div class="ctr dim">~50 charts</div>
+
+        <div class="lbl">An actual buy / hold / sell rule</div>
+        <div class="ctr hi yes">✓</div>
+        <div class="ctr no">✗</div>
+        <div class="ctr no">✗</div>
+
+        <div class="lbl">Live demo account (real track record)</div>
+        <div class="ctr hi yes">✓</div>
+        <div class="ctr no">✗</div>
+        <div class="ctr no">✗</div>
+
+        <div class="lbl">Plain-English daily read</div>
+        <div class="ctr hi yes">✓</div>
+        <div class="ctr no">✗</div>
+        <div class="ctr dim">expert-level</div>
+
+        <div class="lbl">Price</div>
+        <div class="ctr hi price pa">Free / $29</div>
+        <div class="ctr price" style="color:var(--mut);">Free</div>
+        <div class="ctr price" style="color:var(--mut);">$29/mo</div>
       </div>
     </div>
     <p class="reveal" style="text-align:center;color:var(--dim);font-size:12px;margin-top:12px;font-family:var(--mono);">Comparison reflects publicly available features as of 2026 · names are trademarks of their owners.</p>
