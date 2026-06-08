@@ -1403,10 +1403,54 @@ async def get_rsi(period: int = 14, horizon: int = 7):
                 "win": round(sum(1 for x in base_rets if x > 0) / len(base_rets) * 100),
                 "n": len(base_rets)} if base_rets else None
     recent = [{"date": d[i], "rsi": rsi[i]} for i in range(max(period, n - 120), n)]
+
+    # --- HIGH-CONFIDENCE DIP SETUP: RSI(7) oversold WHILE price > 200-day MA ---
+    # A short-period RSI dip that only counts inside an uptrend (Connors-style
+    # trend filter). On BTC this is the most reliable RSI edge: a dip to buy,
+    # not a falling knife. Measured over a 7-day forward window.
+    def _rsi_p(per):
+        rr = [None] * n
+        if n < per + 1:
+            return rr
+        g0 = sum(max(p[i] - p[i - 1], 0) for i in range(1, per + 1))
+        l0 = sum(max(p[i - 1] - p[i], 0) for i in range(1, per + 1))
+        a0, b0 = g0 / per, l0 / per
+        rr[per] = 100.0 if b0 == 0 else 100 - 100 / (1 + a0 / b0)
+        for i in range(per + 1, n):
+            ch = p[i] - p[i - 1]
+            a0 = (a0 * (per - 1) + max(ch, 0)) / per
+            b0 = (b0 * (per - 1) + max(-ch, 0)) / per
+            rr[i] = 100.0 if b0 == 0 else 100 - 100 / (1 + a0 / b0)
+        return rr
+    rsi7 = _rsi_p(7)
+    sma200 = [None] * n
+    for i in range(n):
+        if i >= 199:
+            sma200[i] = sum(p[i - 199:i + 1]) / 200.0
+    HC_THR = 30
+    HC_H = 7
+    hc_rets = []
+    for i in range(8, n - HC_H):
+        if rsi7[i] is None or rsi7[i - 1] is None or sma200[i] is None:
+            continue
+        if rsi7[i] < HC_THR and rsi7[i - 1] >= HC_THR and p[i] > sma200[i]:
+            hc_rets.append(p[i + HC_H] / p[i] - 1)
+    hc_edge = None
+    if hc_rets:
+        up = sum(1 for x in hc_rets if x > 0)
+        hc_edge = {"median": round(_st.median(hc_rets) * 100, 1),
+                   "win": round(up / len(hc_rets) * 100), "n": len(hc_rets)}
+    above200 = sma200[-1] is not None and p[-1] > sma200[-1]
+    hc_active = rsi7[-1] is not None and rsi7[-1] < HC_THR and above200
+    hc = {"active": bool(hc_active),
+          "rsi7": round(rsi7[-1], 1) if rsi7[-1] is not None else None,
+          "above_200dma": bool(above200),
+          "threshold": HC_THR, "horizon": HC_H, "edge": hc_edge}
+
     data = {"asof": d[-1], "period": period, "horizon": horizon,
             "rsi": cur, "zone": zone,
             "oversold": oversold, "overbought": overbought, "baseline": baseline,
-            "recent": recent}
+            "hc": hc, "recent": recent}
     _RSI_CACHE["key"] = key
     _RSI_CACHE["data"] = data
     return data

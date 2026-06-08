@@ -506,6 +506,14 @@ header.hero h1, .hero-copy h1{
         </div>
       </div>
     </div>
+    <div class="card" id="hcCard" style="margin-bottom:14px;border-color:rgba(0,230,195,0.34);background:linear-gradient(160deg,rgba(0,230,195,0.09),rgba(255,255,255,0.012));">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+        <div class="k" style="color:var(--teal);font-size:12px;letter-spacing:0.12em;">⚡ HIGH-CONFIDENCE DIP SIGNAL</div>
+        <div id="hcStatus" style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:0.08em;padding:4px 12px;border-radius:999px;border:1px solid var(--bd2);color:var(--mut);">–</div>
+      </div>
+      <div id="hcMain" style="font-size:15px;color:var(--ink);line-height:1.6;margin-top:10px;">–</div>
+      <div class="note" id="hcEdge" style="margin-top:9px;"></div>
+    </div>
     <div class="grid g2" style="margin-bottom:14px;">
       <div class="card bigm"><div class="k">AFTER OVERSOLD &lt;25 · NEXT 7D</div><div class="v" id="rsiOsV" style="font-size:20px;">–</div><div class="s" id="rsiOsS">–</div></div>
       <div class="card bigm"><div class="k">AFTER OVERBOUGHT &gt;75 · NEXT 7D</div><div class="v" id="rsiObV" style="font-size:20px;">–</div><div class="s" id="rsiObS">–</div></div>
@@ -844,6 +852,15 @@ async function loadRSI(){
     setText('rsiBigV', cur); document.getElementById('rsiBigV').style.color=col;
     setText('rsiZoneS', (cur<25?'Oversold — washed out':(cur>75?'Overbought — running hot':'Neutral — mid-range')));
     var mk=document.getElementById('rsiMarker'); if(mk) mk.style.left=Math.max(0,Math.min(100,cur))+'%';
+    var hc=r.hc||{};
+    var hst=document.getElementById('hcStatus');
+    if(hst){ if(hc.active){ hst.textContent='● ACTIVE NOW'; hst.style.color='#04130f'; hst.style.background='var(--teal)'; hst.style.borderColor='var(--teal)'; }
+      else { hst.textContent='○ not active'; hst.style.color='var(--mut)'; hst.style.background='transparent'; hst.style.borderColor='var(--bd2)'; } }
+    var hm=document.getElementById('hcMain');
+    if(hm){ var r7=(hc.rsi7!=null?hc.rsi7:'–'); var r7c=(hc.rsi7!=null&&hc.rsi7<30?'#22c55e':'#fff');
+      hm.innerHTML='Fires only when the <b>7-day RSI is oversold</b> (under 30) <b>and</b> Bitcoin sits <b>above its 200-day average</b> — a dip inside an uptrend, not a falling knife.<br><span style="color:var(--mut)">Right now: RSI-7 = <b style="color:'+r7c+'">'+r7+'</b> · BTC is <b>'+(hc.above_200dma?'above':'below')+'</b> the 200-day average → '+(hc.active?'<b style="color:#22c55e">signal ACTIVE</b>':'waiting for a dip')+'.</span>'; }
+    var he=document.getElementById('hcEdge'), ed=hc.edge;
+    if(he){ he.innerHTML = ed ? ('Historically: <b style="color:var(--teal)">+'+ed.median+'% median</b> · <b style="color:var(--teal)">'+ed.win+'% higher</b> over the next '+(hc.horizon||7)+' days ('+ed.n+' times since 2017) — vs roughly +0.4% / 52% on any random day.') : 'Not enough history yet.'; }
     setText('rsiOsV', r.oversold?((r.oversold.median>0?'+':'')+r.oversold.median+'%'):'–'); document.getElementById('rsiOsV').style.color='#22c55e';
     setText('rsiOsS', r.oversold?(r.oversold.win+'% of the time BTC was higher 7 days later ('+r.oversold.n+' cases)'):'—');
     setText('rsiObV', r.overbought?((r.overbought.median>0?'+':'')+r.overbought.median+'%'):'–'); document.getElementById('rsiObV').style.color=(r.overbought&&r.overbought.median<0?'#ef4444':'#58A6FF');
