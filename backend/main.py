@@ -1427,25 +1427,30 @@ async def get_rsi(period: int = 14, horizon: int = 7):
     for i in range(n):
         if i >= 199:
             sma200[i] = sum(p[i - 199:i + 1]) / 200.0
-    HC_THR = 30
     HC_H = 7
-    hc_rets = []
-    for i in range(8, n - HC_H):
-        if rsi7[i] is None or rsi7[i - 1] is None or sma200[i] is None:
-            continue
-        if rsi7[i] < HC_THR and rsi7[i - 1] >= HC_THR and p[i] > sma200[i]:
-            hc_rets.append(p[i + HC_H] / p[i] - 1)
-    hc_edge = None
-    if hc_rets:
-        up = sum(1 for x in hc_rets if x > 0)
-        hc_edge = {"median": round(_st.median(hc_rets) * 100, 1),
-                   "win": round(up / len(hc_rets) * 100), "n": len(hc_rets)}
+
+    def _setup_edge(cross_fn):
+        rr = []
+        for i in range(8, n - HC_H):
+            if rsi7[i] is None or rsi7[i - 1] is None or sma200[i] is None:
+                continue
+            if cross_fn(i):
+                rr.append(p[i + HC_H] / p[i] - 1)
+        if not rr:
+            return None
+        up = sum(1 for x in rr if x > 0)
+        return {"median": round(_st.median(rr) * 100, 1),
+                "win": round(up / len(rr) * 100), "n": len(rr)}
+
+    # BUY: RSI(7) oversold (<30) while ABOVE the 200-day MA (dip in an uptrend)
+    buy_edge = _setup_edge(lambda i: rsi7[i] < 30 and rsi7[i - 1] >= 30 and p[i] > sma200[i])
+    # FADE: RSI(7) overbought (>75) while BELOW the 200-day MA (failed bounce in a downtrend)
+    fade_edge = _setup_edge(lambda i: rsi7[i] > 75 and rsi7[i - 1] <= 75 and p[i] < sma200[i])
     above200 = sma200[-1] is not None and p[-1] > sma200[-1]
-    hc_active = rsi7[-1] is not None and rsi7[-1] < HC_THR and above200
-    hc = {"active": bool(hc_active),
-          "rsi7": round(rsi7[-1], 1) if rsi7[-1] is not None else None,
-          "above_200dma": bool(above200),
-          "threshold": HC_THR, "horizon": HC_H, "edge": hc_edge}
+    r7 = round(rsi7[-1], 1) if rsi7[-1] is not None else None
+    hc = {"rsi7": r7, "above_200dma": bool(above200), "horizon": HC_H,
+          "buy": {"active": bool(r7 is not None and r7 < 30 and above200), "edge": buy_edge},
+          "fade": {"active": bool(r7 is not None and r7 > 75 and not above200), "edge": fade_edge}}
 
     data = {"asof": d[-1], "period": period, "horizon": horizon,
             "rsi": cur, "zone": zone,
