@@ -477,7 +477,10 @@ async def track_event(e: str = ""):
     return {"ok": True}
 
 @app.get("/api/stats")
-async def get_stats():
+async def get_stats(token: str = ""):
+    _admin = _aos.getenv("ADMIN_TOKEN", "")
+    if not _admin or token != _admin:
+        return {"ok": False, "error": "forbidden"}  # funnel metrics are private
     m = dict(_METRICS)
     def g(k): return m.get(k, 0)
     def pct(a, b): return round(a / b * 100, 1) if b else 0.0
@@ -496,12 +499,14 @@ except Exception:
     _SUBS = []
 
 @app.get("/api/subscribe")
-async def subscribe(email: str = "", src: str = ""):
+@limiter.limit("20/minute")
+async def subscribe(request: Request, email: str = "", src: str = ""):
     from datetime import datetime as _dtm
     e = (email or "").strip().lower()[:120]
     if "@" in e and "." in e.split("@")[-1]:
         if e not in [s.get("email") for s in _SUBS]:
             _SUBS.append({"email": e, "src": (src or "")[:30], "ts": _dtm.utcnow().isoformat()})
+            logger.info("NEW LEAD: %s (src=%s) total=%s", e, (src or "")[:30], len(_SUBS))  # persists in Railway logs
             try: _ajson.dump(_SUBS, open(_SUBS_FILE, "w"))
             except Exception: pass
         _METRICS["subscribe"] = _METRICS.get("subscribe", 0) + 1
@@ -3377,8 +3382,9 @@ async def get_zone_history(request: Request):
     # Override context with live ARC if available (cached backtest can lag)
     live_arc = None
     try:
-        combined = CACHE.get("combined", {})
-        live_arc = combined.get("combined_score")
+        _bt = CACHE.get("backtest_results") or []
+        if _bt:
+            live_arc = _bt[-1].get("arc_score", _bt[-1].get("score"))  # real ARC, never combined
     except Exception:
         live_arc = None
 

@@ -47,7 +47,8 @@
 var A='https://alphacycle-production.up.railway.app';
 function load(){
   document.getElementById('status').textContent='loading…';
-  fetch(A+'/api/stats',{cache:'no-store'}).then(function(r){return r.json();}).then(function(d){
+  var _tok=(location.search.match(/[?&]token=([^&]+)/)||[])[1]||location.hash.replace('#','');
+  fetch(A+'/api/stats?token='+encodeURIComponent(_tok||''),{cache:'no-store'}).then(function(r){return r.json();}).then(function(d){ if(d&&d.ok===false){document.body.insertAdjacentHTML('afterbegin','<p style="color:#FF9500;font-family:monospace;padding:12px">Private — open as /stats.html?token=YOUR_ADMIN_TOKEN</p>');return;}
     document.getElementById('vl').textContent=d.landing_views;
     document.getElementById('va').textContent=d.app_views;
     document.getElementById('cs').textContent=d.start_free_clicks;

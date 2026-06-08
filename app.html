@@ -459,7 +459,7 @@ header.hero h1, .hero-copy h1{
       <div class="card bigm"><div class="k">EDGE</div><div class="v" style="color:var(--teal);" id="prfEdge">3.8×</div><div class="s">more money, far less risk</div></div>
     </div>
     <div class="card" style="padding:14px;"><img src="assets/backtest.png?v=2" alt="AlphaCycle adaptive ladder vs buy &amp; hold equity curve" style="width:100%;border-radius:8px;display:block;"></div>
-    <div class="note" style="margin-top:8px;">It buys only when Bitcoin is genuinely cheap (≈ once a cycle), sits mostly in cash through bear markets (uninvested cash earns ~4%), and takes profit in steps near euphoria. Past performance does not guarantee future results — educational, not financial advice.</div>
+    <div class="note" style="margin-top:8px;">It buys only when Bitcoin is genuinely cheap (≈ once a cycle), sits mostly in cash through bear markets (uninvested cash earns ~4%), and takes profit in steps near euphoria. <b>In-sample backtest over ~2 cycles</b> — illustrative, not a guarantee; past performance does not guarantee future results — educational, not financial advice.</div>
     </div>
   </section>
 
@@ -800,7 +800,7 @@ async function loadDecision(){
     var bt=r.backtest||{};
     var be=document.getElementById('adBack');
     if(be){ var sdd=(bt.max_dd!=null?bt.max_dd:-48), hdd=(bt.hodl_max_dd!=null?bt.hodl_max_dd:-84);
-      be.innerHTML='Backtested since '+((bt.since||'2017').slice(0,4))+': <b style="color:var(--teal)">'+bt.strategy_mult+'×</b> vs <b style="color:#eab308">'+bt.hodl_mult+'×</b> for buy &amp; hold — and a far smaller worst-case loss: <b style="color:var(--teal)">'+sdd+'%</b> max drawdown vs <b>'+hdd+'%</b> for HODL. Same Bitcoin, '+bt.trades+' trades. <span class="note">Past performance ≠ future results.</span>'; }
+      be.innerHTML='Backtested since '+((bt.since||'2017').slice(0,4))+': <b style="color:var(--teal)">'+bt.strategy_mult+'×</b> vs <b style="color:#eab308">'+bt.hodl_mult+'×</b> for buy &amp; hold — and a far smaller worst-case loss: <b style="color:var(--teal)">'+sdd+'%</b> max drawdown vs <b>'+hdd+'%</b> for HODL. Same Bitcoin, '+bt.trades+' trades. <span class="note">In-sample over ~2 cycles · past performance ≠ future results.</span>'; }
     // THE PROOF section (live)
     function kfmt(m){ var v=m*10000; return v>=1000000?('$'+(Math.round(v/100000)/10)+'M'):('$'+Math.round(v/1000)+'k'); }
     var sdd2=(bt.max_dd!=null?bt.max_dd:-48), hdd2=(bt.hodl_max_dd!=null?bt.hodl_max_dd:-84);
