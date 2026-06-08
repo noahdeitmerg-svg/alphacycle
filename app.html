@@ -217,6 +217,16 @@
     </div>
   </div></section>
 
+  <!-- TRUST STRIP -->
+  <div class="wrap" style="margin-top:14px;">
+    <div style="display:flex;flex-wrap:wrap;gap:10px 22px;justify-content:center;font-family:var(--mono);font-size:12px;color:var(--mut);border:1px solid var(--bd);border-radius:12px;padding:12px 16px;background:rgba(255,255,255,0.02);">
+      <span>One transparent formula — no black box</span><span style="color:var(--dim);">·</span>
+      <span>Primary data: Kraken · Federal Reserve · Fear &amp; Greed</span><span style="color:var(--dim);">·</span>
+      <span>Updated live</span><span style="color:var(--dim);">·</span>
+      <span>No wallet, no sign-up to view</span>
+    </div>
+  </div>
+
   <!-- TODAY'S READ (AI plain-English summary) -->
   <section id="readSec">
     <div class="card" style="padding:28px 30px;box-sizing:border-box;border-color:rgba(0,212,170,0.28);background:linear-gradient(160deg,rgba(0,212,170,0.08),rgba(255,255,255,0.015));">
@@ -525,13 +535,15 @@ async function loadAll(){
   countUp(document.getElementById('cFgV'),Math.round(co.fear_greed)); setBar('cFgB',co.fear_greed,zoneInfo(co.fear_greed).c); document.getElementById('cFgV').style.color=zoneInfo(co.fear_greed).c;
   countUp(document.getElementById('cLqV'),Math.round(co.liquidity)); setBar('cLqB',co.liquidity,zoneInfo(co.liquidity).c); document.getElementById('cLqV').style.color=zoneInfo(co.liquidity).c;
 
-  // decision — clear backtested rule (buy<=25 / hold / sell>=75)
+  // decision — aligned with the adaptive ladder (buy<=38, full<=20, take profit 72/80)
   var dArc=(a.arc_score!=null?a.arc_score:(a.arc_display!=null?a.arc_display:50));
   setText('dArc', Math.round(dArc));
   var act,sub,col,hi;
-  if(dArc<=25){ act='BUY · ALL-IN'; col='#00DC78'; hi='dr-buy'; sub='Deep value — extreme fear. Historically the strongest entry of the cycle. Deploy fully.'; }
-  else if(dArc>=75){ act='SELL · TAKE PROFIT'; col='#FF3B3B'; hi='dr-sell'; sub='Euphoria — risk is at a cycle high. Exit to cash and wait for the next deep-value bottom.'; }
-  else { act='HOLD'; col='#58A6FF'; hi='dr-hold'; var toBuy=Math.max(0,Math.round(dArc-25)), toSell=Math.max(0,Math.round(75-dArc)); sub='Mid-cycle — stay invested, don’t churn. All-in trigger at ARC 25 ('+toBuy+' to go), take-profit at ARC 75 ('+toSell+' to go).'; }
+  if(dArc<=20){ act='BUY · FULL'; col='#00DC78'; hi='dr-buy'; sub='Deep value — the cycle-bottom zone. The rule is 100% invested here.'; }
+  else if(dArc<=38){ act='BUY · ACCUMULATE'; col='#00DC78'; hi='dr-buy'; sub='Cheap zone — the rule buys its first 40% here and adds the rest at the bottom.'; }
+  else if(dArc>=80){ act='SELL · ALL OUT'; col='#FF3B3B'; hi='dr-sell'; sub='Euphoria — risk at a cycle high. The rule is fully in cash here.'; }
+  else if(dArc>=72){ act='SELL · TAKE PROFIT'; col='#FF3B3B'; hi='dr-sell'; sub='Overheating — the rule takes the first 50% profit here, the rest by ARC 80.'; }
+  else { act='HOLD'; col='#58A6FF'; hi='dr-hold'; var toBuy=Math.max(0,Math.round(dArc-38)), toSell=Math.max(0,Math.round(72-dArc)); sub='Mid-cycle — stay invested, don’t churn. Next buy step at ARC 38 ('+toBuy+' to go), first profit-take at ARC 72 ('+toSell+' to go).'; }
   var ae=document.getElementById('dAction'); if(ae){ae.textContent=act; ae.style.color=col;}
   setText('dActionSub', sub);
   var bn=document.getElementById('dBanner'); if(bn) bn.style.borderColor=col;
