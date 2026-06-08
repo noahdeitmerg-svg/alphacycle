@@ -264,6 +264,20 @@ header.hero h1, .hero-copy h1{
 #langBtn,#shareBtn{transition:border-color .2s, background .2s, transform .2s;}
 #langBtn:hover,#shareBtn:hover{border-color:rgba(0,230,195,0.45) !important;transform:translateY(-1px);}
 
+
+/* @@TOUR@@ guided tour */
+#tourOverlay{display:none;position:fixed;inset:0;z-index:9000;}
+#tourSpot{position:fixed;border-radius:14px;box-shadow:0 0 0 9999px rgba(4,7,14,0.82),0 0 36px rgba(0,230,195,0.45);border:1.5px solid rgba(0,230,195,0.7);transition:all .42s cubic-bezier(.2,.8,.2,1);pointer-events:none;z-index:9001;}
+#tourCard{position:fixed;z-index:9002;max-width:350px;width:calc(100% - 24px);
+  background:linear-gradient(158deg,rgba(20,30,48,0.97),rgba(11,17,29,0.97));border:1px solid rgba(0,230,195,0.38);
+  border-radius:16px;padding:18px 20px;box-shadow:0 26px 64px -20px rgba(0,0,0,0.88),0 0 40px -16px rgba(0,230,195,0.35);
+  backdrop-filter:blur(16px);transition:top .42s cubic-bezier(.2,.8,.2,1), left .42s cubic-bezier(.2,.8,.2,1);}
+
+
+/* @@OVERFLOW@@ text never escapes a card */
+.card,.comp,.bigm,.ps-card,.stat,.zrow{overflow:hidden;}
+.comp .desc,.bigm .s,.note,.sec-tells,.comp .val,.bigm .v,.bigm .k,.comp .nm,.v,.s,.k{overflow-wrap:anywhere;word-break:break-word;min-width:0;}
+.grid>*{min-width:0;}
 </style>
 </head>
 <body>
@@ -274,6 +288,7 @@ header.hero h1, .hero-copy h1{
     <span class="live-dot"><i></i>LIVE</span>
     <span class="nav-link" id="langBtn" onclick="toggleLang()" style="cursor:pointer;border:1px solid var(--bd2);border-radius:8px;padding:3px 10px;">DE</span>
     <span class="nav-link" id="shareBtn" onclick="shareX()" style="cursor:pointer;border:1px solid var(--bd2);border-radius:8px;padding:3px 10px;color:var(--teal);">Share 𝕏</span>
+    <span class="nav-link" id="tourBtn" onclick="startTour()" style="cursor:pointer;border:1px solid var(--bd2);border-radius:8px;padding:3px 10px;">Guide</span>
     <a class="nav-link" href="/">← Home</a>
     <a class="nav-link" href="#" onclick="loadAll();return false;">↻ Refresh</a>
   </div>
@@ -281,16 +296,22 @@ header.hero h1, .hero-copy h1{
 
 <div class="wrap">
 
-  <!-- FIRST-VISIT ONBOARDING -->
-  <div id="onboard" style="display:none;margin-top:16px;border:1px solid rgba(0,212,170,0.3);background:linear-gradient(160deg,rgba(0,212,170,0.10),rgba(255,255,255,0.015));border-radius:14px;padding:16px 18px;position:relative;">
-    <button onclick="dismissOnb()" aria-label="close" style="position:absolute;top:10px;right:12px;background:none;border:none;color:var(--mut);font-size:18px;cursor:pointer;line-height:1;">×</button>
-    <div class="k" style="color:var(--teal);font-family:var(--mono);font-size:11px;letter-spacing:0.14em;">NEW HERE? 30-SECOND ORIENTATION</div>
-    <div style="margin-top:8px;font-size:14.5px;color:#eef2f8;line-height:1.65;max-width:880px;">
-      <b>1.</b> The big number is the <b>ARC Index</b> (0 = historically cheap, 100 = expensive). &nbsp;
-      <b>2.</b> <b>"Today's Read"</b> explains it in plain English. &nbsp;
-      <b>3.</b> <b>Engine 2</b> shows your move and how much to be invested. &nbsp;
-      <b>4.</b> <b>Engine 2B</b> is a real account running the rule since 2021. Everything else is detail — tap any section to expand.
+  <!-- GUIDED TOUR -->
+  <div id="tourOverlay">
+    <div id="tourSpot"></div>
+    <div id="tourCard">
+      <div id="tourStep" style="font-family:var(--mono);font-size:11px;color:var(--teal);letter-spacing:0.14em;">1 / 5</div>
+      <div id="tourTitle" style="font-size:18px;font-weight:700;color:#fff;margin:7px 0 6px;"></div>
+      <div id="tourText" style="font-size:14px;color:var(--mut);line-height:1.6;"></div>
+      <div style="display:flex;gap:8px;align-items:center;margin-top:15px;">
+        <span onclick="endTour()" style="cursor:pointer;font-size:12px;color:var(--dim);font-family:var(--mono);">Skip</span>
+        <span style="flex:1;"></span>
+        <button onclick="tourPrev()" class="tf-btn" id="tourPrevBtn">Back</button>
+        <button onclick="tourNext()" id="tourNextBtn" class="tf-btn on">Next →</button>
+      </div>
     </div>
+  </div>
+
   </div>
 
   <!-- HERO -->
@@ -486,8 +507,8 @@ header.hero h1, .hero-copy h1{
       </div>
     </div>
     <div class="grid g2" style="margin-bottom:14px;">
-      <div class="card bigm"><div class="k">AFTER OVERSOLD &lt;25 · NEXT 30D</div><div class="v" id="rsiOsV" style="font-size:20px;">–</div><div class="s" id="rsiOsS">–</div></div>
-      <div class="card bigm"><div class="k">AFTER OVERBOUGHT &gt;75 · NEXT 30D</div><div class="v" id="rsiObV" style="font-size:20px;">–</div><div class="s" id="rsiObS">–</div></div>
+      <div class="card bigm"><div class="k">AFTER OVERSOLD &lt;25 · NEXT 7D</div><div class="v" id="rsiOsV" style="font-size:20px;">–</div><div class="s" id="rsiOsS">–</div></div>
+      <div class="card bigm"><div class="k">AFTER OVERBOUGHT &gt;75 · NEXT 7D</div><div class="v" id="rsiObV" style="font-size:20px;">–</div><div class="s" id="rsiObS">–</div></div>
     </div>
     <div class="note" id="rsiNote" style="margin-bottom:16px"></div>
     <div class="grid g3" id="nearGrid"><div class="loading">Loading…</div></div>
@@ -819,16 +840,16 @@ async function loadDailyRead(){
 async function loadRSI(){
   try{
     var r=await (await fetch(API+'/api/rsi',{cache:'no-store'})).json();
-    var cur=r.rsi; var col=cur<30?'#22c55e':(cur>70?'#ef4444':'#58A6FF');
+    var cur=r.rsi; var col=cur<25?'#22c55e':(cur>75?'#ef4444':'#58A6FF');
     setText('rsiBigV', cur); document.getElementById('rsiBigV').style.color=col;
-    setText('rsiZoneS', (cur<30?'Oversold — washed out':(cur>70?'Overbought — running hot':'Neutral — mid-range')));
+    setText('rsiZoneS', (cur<25?'Oversold — washed out':(cur>75?'Overbought — running hot':'Neutral — mid-range')));
     var mk=document.getElementById('rsiMarker'); if(mk) mk.style.left=Math.max(0,Math.min(100,cur))+'%';
     setText('rsiOsV', r.oversold?((r.oversold.median>0?'+':'')+r.oversold.median+'%'):'–'); document.getElementById('rsiOsV').style.color='#22c55e';
-    setText('rsiOsS', r.oversold?(r.oversold.win+'% of the time BTC was higher 30 days later ('+r.oversold.n+' cases)'):'—');
+    setText('rsiOsS', r.oversold?(r.oversold.win+'% of the time BTC was higher 7 days later ('+r.oversold.n+' cases)'):'—');
     setText('rsiObV', r.overbought?((r.overbought.median>0?'+':'')+r.overbought.median+'%'):'–'); document.getElementById('rsiObV').style.color=(r.overbought&&r.overbought.median<0?'#ef4444':'#58A6FF');
-    setText('rsiObS', r.overbought?(r.overbought.win+'% of the time BTC was higher 30 days later ('+r.overbought.n+' cases)'):'—');
+    setText('rsiObS', r.overbought?(r.overbought.win+'% of the time BTC was higher 7 days later ('+r.overbought.n+' cases)'):'—');
     var bl=r.baseline?(' Baseline (any day): '+(r.baseline.median>0?'+':'')+r.baseline.median+'% / '+r.baseline.win+'% up.'):'';
-    setText('rsiNote','RSI(14) measures short-term momentum 0–100. The white marker shows today. Below 30 = oversold (washed out), above 70 = overbought. Honest BTC quirk: overbought has NOT been a reliable sell — momentum often carried higher; oversold (like now) has given a mild edge.'+bl+' Numbers = median move over the next 30 days. Context, not a trade signal.');
+    setText('rsiNote','RSI(14) measures short-term momentum 0–100. The white marker shows today. Below 25 = oversold (washed out), above 75 = overbought. Honest BTC quirk: overbought has NOT been a reliable sell — momentum often carried higher; oversold (like now) has given a mild edge.'+bl+' Numbers = median move over the next 7 days (RSI is a short-term signal — its edge fades by 30 days). Context, not a trade signal.');
   }catch(e){}
 }
 
@@ -1147,8 +1168,46 @@ function shareX(){
 initCollapse();
 applyGates();
 setLang(window._lang||'en');
-(function(){ try{ if(!localStorage.getItem('ac_onboarded')){ var e=document.getElementById('onboard'); if(e) e.style.display='block'; } }catch(_){ var e=document.getElementById('onboard'); if(e) e.style.display='block'; } })();
-function dismissOnb(){ var e=document.getElementById('onboard'); if(e) e.style.display='none'; try{localStorage.setItem('ac_onboarded','1');}catch(_){} }
+/* @@TOUR@@ */
+var TOUR=[
+ {sel:'.gauge-card', t:'The ARC Index', d:'This dial is the heart of AlphaCycle. 0 = Bitcoin is historically cheap, 100 = historically expensive. One number for the whole cycle — no charts to decode.'},
+ {sel:'#readSec', t:"Today's Read", d:"Every day this explains the score in plain English — what it means and what to watch. If you read nothing else, read this."},
+ {sel:'#dBanner', t:'Your move, right now', d:'The decision engine: what the tested rule says to do today, and how much of your money it would have invested.'},
+ {sel:'#demoStartIn', fallback:'#demoVal', t:'Try it on your own money', d:'A real account running the rule since 2021. Set your own start date and amount — the value, chart and trades recalculate instantly.'},
+ {sel:'#compcard-trend', t:'What drives the score', d:'The four signals behind ARC — tap any card for its full history. Everything below is optional detail, collapsed to keep things calm. You can reopen this guide any time via "Guide" at the top.'}
+];
+var _tourI=0;
+function startTour(){ _tourI=0; var o=document.getElementById('tourOverlay'); if(o){o.style.display='block'; tourShow();} }
+function endTour(){ var o=document.getElementById('tourOverlay'); if(o)o.style.display='none'; try{localStorage.setItem('ac_tour_done','1');}catch(e){} }
+function tourNext(){ if(_tourI<TOUR.length-1){_tourI++; tourShow();} else endTour(); }
+function tourPrev(){ if(_tourI>0){_tourI--; tourShow();} }
+function tourShow(){
+  var step=TOUR[_tourI];
+  var el=document.querySelector(step.sel)||(step.fallback&&document.querySelector(step.fallback));
+  if(!el){ if(_tourI<TOUR.length-1){_tourI++; tourShow();} else endTour(); return; }
+  el.scrollIntoView({behavior:'smooth',block:'center'});
+  setTimeout(function(){
+    var r=el.getBoundingClientRect(), pad=10;
+    var spot=document.getElementById('tourSpot');
+    spot.style.top=(r.top-pad)+'px'; spot.style.left=(r.left-pad)+'px';
+    spot.style.width=(r.width+pad*2)+'px'; spot.style.height=(r.height+pad*2)+'px';
+    var card=document.getElementById('tourCard');
+    document.getElementById('tourTitle').textContent=step.t;
+    document.getElementById('tourText').textContent=step.d;
+    document.getElementById('tourStep').textContent=(_tourI+1)+' / '+TOUR.length;
+    document.getElementById('tourPrevBtn').style.visibility=(_tourI===0?'hidden':'visible');
+    document.getElementById('tourNextBtn').textContent=(_tourI===TOUR.length-1?'Got it ✓':'Next →');
+    var ch=card.offsetHeight||190;
+    var top=(window.innerHeight-r.bottom < ch+34)? Math.max(12, r.top-pad-12-ch) : (r.bottom+pad+12);
+    if(top<12) top=12;
+    card.style.top=top+'px';
+    var left=Math.min(Math.max(12, r.left), Math.max(12, window.innerWidth-366));
+    card.style.left=left+'px';
+  }, 430);
+}
+window.addEventListener('keydown',function(e){ if(document.getElementById('tourOverlay')&&document.getElementById('tourOverlay').style.display==='block'){ if(e.key==='Escape')endTour(); else if(e.key==='ArrowRight'||e.key==='Enter')tourNext(); else if(e.key==='ArrowLeft')tourPrev(); } });
+(function(){ try{ if(!localStorage.getItem('ac_tour_done')){ setTimeout(startTour, 1400); } }catch(e){} })();
+
 loadAll();
 setInterval(loadAll, 90000);
 </script>

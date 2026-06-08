@@ -1352,7 +1352,7 @@ async def get_cycle_wave(asset: str = "btc", lookback: int = 2190, projection: i
 _RSI_CACHE = {"key": None, "data": None}
 
 @app.get("/api/rsi")
-async def get_rsi(period: int = 14, horizon: int = 30):
+async def get_rsi(period: int = 14, horizon: int = 7):
     from datetime import datetime as _dtm
     import statistics as _st
     key = f"{_dtm.utcnow().date().isoformat()}|{period}|{horizon}"
