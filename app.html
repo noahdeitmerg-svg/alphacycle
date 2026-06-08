@@ -1191,11 +1191,19 @@ applyGates();
 setLang(window._lang||'en');
 /* @@TOUR@@ */
 var TOUR=[
- {sel:'.gauge-card', t:'The ARC Index', d:'This dial is the heart of AlphaCycle. 0 = Bitcoin is historically cheap, 100 = historically expensive. One number for the whole cycle — no charts to decode.'},
- {sel:'#readSec', t:"Today's Read", d:"Every day this explains the score in plain English — what it means and what to watch. If you read nothing else, read this."},
- {sel:'#dBanner', t:'Your move, right now', d:'The decision engine: what the tested rule says to do today, and how much of your money it would have invested.'},
- {sel:'#demoStartIn', fallback:'#demoVal', t:'Try it on your own money', d:'A real account running the rule since 2021. Set your own start date and amount — the value, chart and trades recalculate instantly.'},
- {sel:'#compcard-trend', t:'What drives the score', d:'The four signals behind ARC — tap any card for its full history. Everything below is optional detail, collapsed to keep things calm. You can reopen this guide any time via "Guide" at the top.'}
+ {sel:'.gauge-card', t:'1 · The ARC Index', d:'The big dial. 0 = Bitcoin historically cheap, 100 = expensive. One number for the whole cycle — no charts to decode.'},
+ {sel:'#readSec', t:"2 · Today's Read", d:"The score explained in plain English, fresh every day. If you read one thing, read this."},
+ {sel:'#compcard-trend', t:'Engine 1 · What drives the score', d:'The four signals behind ARC: trend, drawdown, sentiment, liquidity. Tap any card to see its full history.'},
+ {sel:'#dBanner', t:'Engine 2 · Your move', d:'The tested rule: what to do right now and how much of your money to have invested.'},
+ {sel:'#demoStartIn', fallback:'#demoVal', t:'Engine 2B · Live demo account', d:'A real account running the rule since 2021. Set your own start date and amount — everything recalculates instantly.'},
+ {sel:'#zoneTable', t:'Engine 3 · Track record', d:'What Bitcoin returned, on average, in the 12 months after entering each zone — historically.'},
+ {sel:'#ccPhase', t:'Engine 4 · Cycle clock', d:'Where we are in the 4-year cycle: how long since the last top and how deep the drawdown is.'},
+ {sel:'#hcBuyCard', fallback:'#rsiBigV', t:'Engine 5 · Near-term signals', d:'Short-term RSI setups with a trend filter — they only fire when the odds of a bounce (or pullback) are genuinely high.'},
+ {sel:'#cwLen', t:'Engine 6 · Cycle wave', d:'The dominant rhythm detected in the price, projected forward — are we rising or falling in the cycle right now.'},
+ {sel:'#seaHmo2', t:'Engine 6B · Seasonality', d:'Which calendar months Bitcoin has been reliably strong or weak across 13 years of data.'},
+ {sel:'#cycPiV', t:'Engine 6C · Cycle extremes', d:'The classic top/bottom gauges — Pi Cycle, Mayer Multiple, 200-week MA. Green = cheap, red = overheated.'},
+ {sel:'#arcChart', t:'Engine 7 · 10-year history', d:'The ARC score across the whole history against price — see how tops landed in the red zone and bottoms in green.'},
+ {sel:'#regimeFeed', t:'Engine 8 · Regime timeline', d:'Every time the market changed regime, dated. Restart this guide any time via "Guide" at the top. That is the full tour!'}
 ];
 var _tourI=0;
 function startTour(){ _tourI=0; var o=document.getElementById('tourOverlay'); if(o){o.style.display='block'; tourShow();} }
@@ -1206,6 +1214,8 @@ function tourShow(){
   var step=TOUR[_tourI];
   var el=document.querySelector(step.sel)||(step.fallback&&document.querySelector(step.fallback));
   if(!el){ if(_tourI<TOUR.length-1){_tourI++; tourShow();} else endTour(); return; }
+  var sec=el.closest&&el.closest('section');
+  if(sec&&sec.classList.contains('collapsed')){ sec.classList.remove('collapsed'); var cv=sec.querySelector('.chev'); if(cv)cv.textContent='HIDE ▾'; try{window.dispatchEvent(new Event('resize'));}catch(e){} }
   el.scrollIntoView({behavior:'smooth',block:'center'});
   setTimeout(function(){
     var r=el.getBoundingClientRect(), pad=10;
@@ -1224,7 +1234,7 @@ function tourShow(){
     card.style.top=top+'px';
     var left=Math.min(Math.max(12, r.left), Math.max(12, window.innerWidth-366));
     card.style.left=left+'px';
-  }, 430);
+  }, 500);
 }
 window.addEventListener('keydown',function(e){ if(document.getElementById('tourOverlay')&&document.getElementById('tourOverlay').style.display==='block'){ if(e.key==='Escape')endTour(); else if(e.key==='ArrowRight'||e.key==='Enter')tourNext(); else if(e.key==='ArrowLeft')tourPrev(); } });
 (function(){ try{ if(!localStorage.getItem('ac_tour_done')){ setTimeout(startTour, 1400); } }catch(e){} })();
