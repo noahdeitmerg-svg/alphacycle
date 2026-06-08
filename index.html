@@ -339,6 +339,28 @@
   </div>
 </section>
 
+<!-- LIVE TRACK RECORD (demo account) -->
+<section>
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Live Track Record</span>
+      <h2>A real account, running since 2021.</h2>
+      <p>Not a cherry-picked backtest — a $10,000 demo started at a cycle top in 2021 that follows the exact rule, updates every day, and shows every dated move. Watch it in the dashboard, live.</p>
+    </div>
+    <div class="reveal" style="display:flex;gap:18px;flex-wrap:wrap;justify-content:center;margin-bottom:22px;">
+      <div class="ps-card" style="text-align:center;padding:22px 32px;flex:1;min-width:170px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mut);">ACCOUNT VALUE</div><div style="font-size:34px;font-weight:700;color:var(--amber);line-height:1.2;" id="dmVal">$56k</div><div style="font-size:13px;color:var(--mut);" id="dmMult">5.6× · since 2021</div></div>
+      <div class="ps-card" style="text-align:center;padding:22px 32px;flex:1;min-width:170px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mut);">JUST HOLDING</div><div style="font-size:34px;font-weight:700;color:#eab308;line-height:1.2;" id="dmHodl">$21k</div><div style="font-size:13px;color:var(--mut);" id="dmHodlMult">2.1× · same start</div></div>
+      <div class="ps-card" style="text-align:center;padding:22px 32px;flex:1;min-width:170px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mut);">INVESTED NOW</div><div style="font-size:34px;font-weight:700;color:#06b6d4;line-height:1.2;" id="dmInv">40%</div><div style="font-size:13px;color:var(--mut);">by the rule, today</div></div>
+    </div>
+    <div class="ps-card reveal" style="padding:18px 20px;">
+      <div style="font-family:var(--mono);font-size:12px;color:var(--mut);margin-bottom:10px;">EVERY MOVE, DATED</div>
+      <div id="dmLog" style="font-size:13.5px;color:var(--mut);">Loading the live track record…</div>
+    </div>
+    <div class="reveal" style="text-align:center;margin-top:18px;"><a class="btn btn-amber btn-lg" href="/app.html">See it live in the dashboard →</a></div>
+    <p class="reveal" style="text-align:center;color:var(--dim);font-size:12px;margin-top:12px;font-family:var(--mono);">Hypothetical, in-sample demo on daily data · uninvested cash earns ~4% · educational, not financial advice.</p>
+  </div>
+</section>
+
 <!-- PROBLEM / SOLUTION -->
 <section>
   <div class="wrap">
@@ -670,6 +692,27 @@
         set('pcStrat',kf(b.strategy_mult)); set('pcStratS',Math.round(b.strategy_mult)+'× · '+(b.max_dd!=null?b.max_dd:-48)+'% drawdown');
         set('pcHodl',kf(b.hodl_mult)); set('pcHodlS',(Math.round(b.hodl_mult*10)/10)+'× · '+(b.hodl_max_dd!=null?b.hodl_max_dd:-84)+'% drawdown');
         set('pcEdge',(Math.round(b.strategy_mult/b.hodl_mult*10)/10)+'×');
+      }).catch(function(){});
+  }catch(e){}
+  // live demo account track record
+  try{
+    fetch('https://alphacycle-production.up.railway.app/api/demo-account',{cache:'no-store'})
+      .then(function(r){return r.json();}).then(function(d){
+        if(!d||d.value==null) return;
+        function k(v){ return v>=1000?('$'+Math.round(v/1000)+'k'):('$'+Math.round(v)); }
+        var set=function(id,t){ var el=document.getElementById(id); if(el) el.textContent=t; };
+        set('dmVal',k(d.value)); set('dmMult',d.value_mult+'× · since '+(d.start||'2021').slice(0,4));
+        set('dmHodl',k(d.hodl_value)); set('dmHodlMult',d.hodl_mult+'× · same start');
+        set('dmInv',d.invested_pct+'%');
+        var log=document.getElementById('dmLog');
+        if(log&&d.actions){ log.innerHTML=d.actions.map(function(a){
+          var c=a.type==='BUY'?'#22c55e':'#ef4444';
+          return '<div style="display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.06);">'
+            +'<span style="font-family:var(--mono);color:var(--dim);min-width:84px;">'+a.date+'</span>'
+            +'<span style="font-weight:700;color:'+c+';min-width:42px;">'+a.type+'</span>'
+            +'<span style="flex:1;">to '+a.to_pct+'% invested</span>'
+            +'<span style="font-family:var(--mono);color:var(--mut);">ARC '+a.arc+' · $'+(a.price>=1000?Math.round(a.price/1000)+'k':a.price)+'</span></div>';
+        }).join(''); }
       }).catch(function(){});
   }catch(e){}
 

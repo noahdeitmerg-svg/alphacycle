@@ -190,6 +190,18 @@
 
 <div class="wrap">
 
+  <!-- FIRST-VISIT ONBOARDING -->
+  <div id="onboard" style="display:none;margin-top:16px;border:1px solid rgba(0,212,170,0.3);background:linear-gradient(160deg,rgba(0,212,170,0.10),rgba(255,255,255,0.015));border-radius:14px;padding:16px 18px;position:relative;">
+    <button onclick="dismissOnb()" aria-label="close" style="position:absolute;top:10px;right:12px;background:none;border:none;color:var(--mut);font-size:18px;cursor:pointer;line-height:1;">×</button>
+    <div class="k" style="color:var(--teal);font-family:var(--mono);font-size:11px;letter-spacing:0.14em;">NEW HERE? 30-SECOND ORIENTATION</div>
+    <div style="margin-top:8px;font-size:14.5px;color:#eef2f8;line-height:1.65;max-width:880px;">
+      <b>1.</b> The big number is the <b>ARC Index</b> (0 = historically cheap, 100 = expensive). &nbsp;
+      <b>2.</b> <b>"Today's Read"</b> explains it in plain English. &nbsp;
+      <b>3.</b> <b>Engine 2</b> shows your move and how much to be invested. &nbsp;
+      <b>4.</b> <b>Engine 2B</b> is a real account running the rule since 2021. Everything else is detail — tap any section to expand.
+    </div>
+  </div>
+
   <!-- HERO -->
   <section class="hero"><div class="hero-in">
     <div class="card gauge-card">
@@ -1020,6 +1032,8 @@ function shareX(){
 initCollapse();
 applyGates();
 setLang(window._lang||'en');
+(function(){ try{ if(!localStorage.getItem('ac_onboarded')){ var e=document.getElementById('onboard'); if(e) e.style.display='block'; } }catch(_){ var e=document.getElementById('onboard'); if(e) e.style.display='block'; } })();
+function dismissOnb(){ var e=document.getElementById('onboard'); if(e) e.style.display='none'; try{localStorage.setItem('ac_onboarded','1');}catch(_){} }
 loadAll();
 setInterval(loadAll, 90000);
 </script>
