@@ -358,6 +358,21 @@ header.hero h1, .hero-copy h1{
     </div>
   </section>
 
+  <!-- YOUR POSITION (personal, private to the browser) -->
+  <section id="posSec">
+    <div class="sec-eyebrow">YOUR POSITION</div>
+    <div class="sec-h">What the rule says to do with your stack</div>
+    <div class="sec-tells">Private to your browser — <b>nothing is sent to our servers</b>. Enter your Bitcoin and see how the rule would position <b>your</b> money today, updated live every visit.</div>
+    <div class="card" style="padding:22px 24px;">
+      <div style="display:flex;gap:16px 20px;flex-wrap:wrap;align-items:flex-end;">
+        <div><div style="font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:0.1em;margin-bottom:5px;">YOUR BITCOIN (BTC)</div><input id="posBtc" type="number" step="0.001" min="0" placeholder="0.5" oninput="savePos()" style="background:rgba(255,255,255,0.05);border:1px solid var(--bd2);border-radius:9px;color:var(--ink);font-family:var(--mono);font-size:15px;padding:10px 12px;width:150px;color-scheme:dark;"></div>
+        <div><div style="font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:0.1em;margin-bottom:5px;">AVG BUY PRICE ($ · optional)</div><input id="posCost" type="number" step="100" min="0" placeholder="—" oninput="savePos()" style="background:rgba(255,255,255,0.05);border:1px solid var(--bd2);border-radius:9px;color:var(--ink);font-family:var(--mono);font-size:15px;padding:10px 12px;width:150px;color-scheme:dark;"></div>
+        <button class="tf-btn" onclick="clearPos()" style="margin-left:auto;">Clear</button>
+      </div>
+      <div id="posResult" style="margin-top:18px;"><span class="note">Enter your Bitcoin above to see your personalized read.</span></div>
+    </div>
+  </section>
+
   <!-- COMPONENTS -->
   <section>
     <div class="sec-eyebrow">ENGINE 1 · THE COMPOSITE</div>
@@ -753,8 +768,34 @@ async function loadAll(){
   loadDecision();
   loadDemo();
   loadCompHist();
+  window._lastA=a; renderPos();
   if(window.applyLang) applyLang();
 }
+function renderPos(){
+  var box=document.getElementById('posResult'); if(!box) return;
+  var bEl=document.getElementById('posBtc'), cEl=document.getElementById('posCost');
+  var btc=parseFloat(bEl&&bEl.value)||0, cost=parseFloat(cEl&&cEl.value)||0;
+  var a=window._lastA||{}, L=window._ladder||{};
+  var price=a.btc_price, arc=Math.round(a.arc_score||a.arc_display||0);
+  if(!btc||!price){ box.innerHTML='<span class="note">Enter your Bitcoin above to see your personalized read.</span>'; return; }
+  var val=btc*price, inv=(L.invested_pct!=null?L.invested_pct:null);
+  var pl=''; if(cost>0){ var u=(price-cost)*btc, pct=(price/cost-1)*100; pl='<div style="margin-top:10px;font-size:14px;">Unrealized P/L: <b style="color:'+(u>=0?'#22c55e':'#ef4444')+'">'+(u>=0?'+':'')+'$'+fnum(Math.round(u))+' ('+(pct>=0?'+':'')+pct.toFixed(0)+'%)</b></div>'; }
+  var st,sc,line;
+  if(arc<=20){ st='ACCUMULATE'; sc='#22c55e'; line='Deep value — the rule is 100% invested here. Hold everything; add if you have dry powder.'; }
+  else if(arc<=38){ st='ACCUMULATE'; sc='#22c55e'; line='Cheap zone — the rule is building a position (40% in, going 100% only at the bottom, ARC ≤20). Holding is fine; this is not a sell.'; }
+  else if(arc>=80){ st='TAKE PROFIT'; sc='#ef4444'; line='Euphoria — the rule is fully in cash. This is where it has historically de-risked the stack.'; }
+  else if(arc>=72){ st='TRIM'; sc='#FF9500'; line='Risk rising — the rule takes the first 50% profit here. Consider trimming toward a lower target.'; }
+  else { st='HOLD'; sc='#58A6FF'; line='Mid-cycle — the rule holds through the middle. Don\'t churn; stay invested.'; }
+  box.innerHTML='<div style="display:flex;gap:28px;flex-wrap:wrap;">'
+   +'<div><div class="k">YOUR STACK</div><div class="v" style="font-size:32px;color:var(--teal);">$'+fnum(Math.round(val))+'</div><div class="s">'+btc+' BTC @ $'+fnum(Math.round(price))+'</div></div>'
+   +'<div><div class="k">RULE STANCE · ARC '+arc+'</div><div class="v" style="font-size:26px;color:'+sc+';">'+st+'</div><div class="s">'+(inv!=null?('target '+inv+'% invested'):(L.zone||''))+'</div></div>'
+   +'</div>'+pl
+   +'<div style="font-size:14.5px;color:var(--ink);line-height:1.6;margin-top:14px;">'+line+'</div>'
+   +'<div class="note" style="margin-top:8px;">Saved only in this browser · educational, not advice.</div>';
+}
+function savePos(){ try{localStorage.setItem('ac_pos',JSON.stringify({b:(document.getElementById('posBtc')||{}).value||'',c:(document.getElementById('posCost')||{}).value||''}));}catch(e){} renderPos(); }
+function clearPos(){ ['posBtc','posCost'].forEach(function(id){var e=document.getElementById(id); if(e)e.value='';}); try{localStorage.removeItem('ac_pos');}catch(e){} renderPos(); }
+(function(){ try{ var p=JSON.parse(localStorage.getItem('ac_pos')||'{}'); var b=document.getElementById('posBtc'),c=document.getElementById('posCost'); if(b&&p.b)b.value=p.b; if(c&&p.c)c.value=p.c; }catch(e){} })();
 var _compHist=null,_compChart=null;
 async function loadCompHist(){
   try{ _compHist=await (await fetch(API+'/api/component-history',{cache:'no-store'})).json();
@@ -789,6 +830,7 @@ async function loadDecision(){
   try{
     var r=await (await fetch(API+'/api/ladder',{cache:'no-store'})).json();
     if(!r||r.invested_pct==null) return;
+    window._ladder=r; renderPos();
     var el=document.getElementById('adAlloc'); if(el) el.textContent=r.invested_pct+'%';
     var bar=document.getElementById('adBar'); if(bar) bar.style.width=Math.max(2,r.invested_pct)+'%';
     setText('adZone','ARC '+Math.round(r.arc)+' · '+r.zone);
