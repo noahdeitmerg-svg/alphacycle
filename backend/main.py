@@ -402,11 +402,40 @@ async def _daily_telegram_loop():
             today = now.date().isoformat()
             if now.hour == 12 and _DAILY_TG_STATE["sent_date"] != today:
                 ok = await _send_daily_telegram()
-                _DAILY_TG_STATE["sent_date"] = today
-                logger.info("daily telegram fired for %s (ok=%s)", today, ok)
+                if ok:
+                    _DAILY_TG_STATE["sent_date"] = today
+                logger.info("daily telegram attempt for %s (ok=%s)", today, ok)
         except Exception as e:
             logger.warning("daily telegram loop error: %s", e)
         await asyncio.sleep(55)
+
+
+@app.get("/api/telegram-status")
+async def telegram_status():
+    """Safe diagnostic: shows whether Telegram env vars are present (booleans only,
+    never the values) and the daily-loop state. No secrets exposed."""
+    import os as _os
+    from datetime import datetime as _dt, timedelta as _td
+    tz_ok = True
+    try:
+        from zoneinfo import ZoneInfo
+        berlin = _dt.now(ZoneInfo("Europe/Berlin"))
+    except Exception:
+        tz_ok = False
+        berlin = _dt.utcnow() + _td(hours=2)
+    bot = _os.getenv("TELEGRAM_BOT_TOKEN", "")
+    chan = _os.getenv("TELEGRAM_ALERT_CHANNEL_ID", "")
+    return {
+        "bot_token_set": bool(bot),
+        "channel_id_set": bool(chan),
+        "channel_id_preview": (chan[:4] + "…" if chan else ""),
+        "daily_loop_sent_date": _DAILY_TG_STATE.get("sent_date"),
+        "berlin_hour_now": berlin.hour,
+        "berlin_time_now": berlin.strftime("%Y-%m-%d %H:%M"),
+        "fires_at": "12:xx Europe/Berlin",
+        "tz_resolved": tz_ok,
+        "ready": bool(bot and chan),
+    }
 
 
 @asynccontextmanager
