@@ -334,6 +334,10 @@ header.hero h1, .hero-copy h1{
       <div class="sec-eyebrow">WHERE BITCOIN IS RIGHT NOW</div>
       <h1 id="heroHeadline">Reading the cycle…</h1>
       <p class="lede" id="heroLede">The ARC Index condenses trend, drawdown, sentiment and liquidity into one score so you know whether to accumulate, hold, or take risk off.</p>
+      <div id="heroMove" style="display:none;margin-top:16px;align-items:center;gap:10px;flex-wrap:wrap;font-family:var(--mono);font-size:13px;">
+        <span style="color:var(--dim);letter-spacing:0.1em;">RIGHT NOW</span>
+        <span id="heroMovePill" style="font-weight:700;padding:5px 14px;border-radius:999px;border:1px solid var(--bd2);">–</span>
+      </div>
       <div class="hero-stats">
         <div class="stat"><div class="k">BTC PRICE</div><div class="v" id="hBtc">–</div></div>
         <div class="stat"><div class="k">FEAR &amp; GREED</div><div class="v" id="hFg">–</div></div>
@@ -475,6 +479,25 @@ header.hero h1, .hero-copy h1{
     </div>
     <div class="card" style="padding:14px;"><img src="assets/backtest.png?v=2" alt="AlphaCycle adaptive ladder vs buy &amp; hold equity curve" style="width:100%;border-radius:8px;display:block;"></div>
     <div class="note" style="margin-top:8px;">It buys only when Bitcoin is genuinely cheap (≈ once a cycle), sits mostly in cash through bear markets (uninvested cash earns ~4%), and takes profit in steps near euphoria. <b>In-sample backtest over ~2 cycles</b> — illustrative, not a guarantee; past performance does not guarantee future results — educational, not financial advice.</div>
+    </div>
+  </section>
+
+  <!-- PRO VALUE -->
+  <section>
+    <div class="card" style="border-color:rgba(240,180,41,0.32);background:linear-gradient(160deg,rgba(240,180,41,0.07),rgba(255,255,255,0.012));padding:24px 26px;">
+      <div class="k" style="color:var(--amber);letter-spacing:0.14em;">ALPHACYCLE PRO · $29/mo</div>
+      <div class="sec-h" style="margin:8px 0 4px;">Everything that tells you what to do</div>
+      <div class="sec-tells" style="margin-bottom:14px;">The score is free. Pro is the layer that turns it into action — and keeps you on the right side of the cycle.</div>
+      <div style="display:flex;gap:10px 26px;flex-wrap:wrap;font-size:14.5px;color:var(--ink);line-height:1.5;">
+        <span style="color:#22c55e;">✓</span><span style="flex:0 1 auto;">Decision Engine — the exact buy / hold / sell rule</span>
+        <span style="color:#22c55e;">✓</span><span>Live demo account &amp; your position tracker</span>
+        <span style="color:#22c55e;">✓</span><span>Weekly RSI signal + daily Telegram alerts</span>
+        <span style="color:#22c55e;">✓</span><span>10-year history &amp; every regime shift, dated</span>
+      </div>
+      <div style="margin-top:18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+        <a class="tf-btn on" href="/#pricing" style="font-size:15px;padding:11px 22px;text-decoration:none;">Go Pro →</a>
+        <span class="note">Free to view during launch · cancel anytime · no wallet, no risk</span>
+      </div>
     </div>
   </section>
 
@@ -733,6 +756,8 @@ async function loadAll(){
   setText('dActionSub', sub);
   var bn=document.getElementById('dBanner'); if(bn) bn.style.borderColor=col;
   ['dr-buy','dr-hold','dr-sell'].forEach(function(id){ var e=document.getElementById(id); if(e){ e.style.outline=(id===hi)?('2px solid '+col):'none'; e.style.opacity=(id===hi)?'1':'0.5'; } });
+  var hm=document.getElementById('heroMove'), hmp=document.getElementById('heroMovePill');
+  if(hm&&hmp){ hm.style.display='flex'; hmp.textContent='ARC '+Math.round(dArc)+' · '+z.n+' · '+act; hmp.style.color=col; hmp.style.borderColor=col; hmp.style.background=col+'14'; }
 
   // cycle
   setText('ccPhase', a.phase_context||'–');
