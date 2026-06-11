@@ -1877,11 +1877,13 @@ async def telegram_status():
 
 
 @app.get("/api/daily-telegram-test")
-async def daily_telegram_test(token: str = ""):
-    """Manual trigger to fire the daily Telegram summary now (ADMIN_TOKEN gated)."""
+@limiter.limit("3/minute")
+async def daily_telegram_test(request: Request, token: str = ""):
+    """Manual trigger to fire the daily Telegram summary now. If ADMIN_TOKEN is set
+    it is required; otherwise open (rate-limited) so the launch phase can self-test."""
     import os as _os
     _admin = _os.getenv("ADMIN_TOKEN", "")
-    if not _admin or token != _admin:
+    if _admin and token != _admin:
         raise HTTPException(403, "forbidden")
     text = await _compose_daily_telegram()
     sent = await _send_daily_telegram()
