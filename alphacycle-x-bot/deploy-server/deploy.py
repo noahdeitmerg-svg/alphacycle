@@ -132,10 +132,13 @@ async def deploy(request: Request):
         out = (result.stdout or "")[:200]
         if fallback_used:
             out = f"[fallback: fetch+reset] {out}"
-        send_telegram(
-            "\u2705 AlphaCycle Bot deployed successfully\n\n"
-            f"<code>{out}</code>"
-        )
+        # Success notifications are OFF by default (too noisy on every push).
+        # Set DEPLOY_NOTIFY_SUCCESS=1 in the deploy-server env to re-enable.
+        if os.getenv("DEPLOY_NOTIFY_SUCCESS", "0") == "1":
+            send_telegram(
+                "\u2705 AlphaCycle Bot deployed successfully\n\n"
+                f"<code>{out}</code>"
+            )
         return {"status": "deployed"}
 
     except Exception as e:
